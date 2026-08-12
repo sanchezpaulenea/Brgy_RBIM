@@ -168,6 +168,40 @@ class User extends Authenticatable
             ->exists();
     }
 
+    public function hasRole(string $roleName): bool
+    {
+        return $this->roles()
+            ->where('role_name', $roleName)
+            ->exists();
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole(Role::SUPER_ADMIN);
+    }
+
+    /**
+     * Guest-only accounts are restricted from system administrator modules.
+     * Users who also hold Admin or Super Admin are not treated as guests.
+     */
+    public function isGuest(): bool
+    {
+        return $this->hasRole(Role::GUEST) && ! $this->isSystemAdministrator();
+    }
+
+    /**
+     * Whether the user holds a system administrator role (Admin or Super Admin).
+     * Super Admin takes precedence over Guest when both roles are assigned.
+     */
+    public function isSystemAdministrator(): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return $this->hasRole(Role::ADMIN);
+    }
+
     /**
      * @return HasMany<UserLog, $this>
      */

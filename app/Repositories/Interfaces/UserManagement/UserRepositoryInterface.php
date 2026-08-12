@@ -2,6 +2,8 @@
 
 namespace App\Repositories\Interfaces\UserManagement;
 
+use App\Models\BarangayPersonnel\BarangayPersonnel;
+use App\Models\BarangayPersonnel\PersonnelPosition;
 use App\Models\UserManagement\User;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -20,7 +22,29 @@ interface UserRepositoryInterface
 
     public function resetPassword(User $user, string $plainPassword): User;
 
-    public function getSystemSetting(string $key): string;
-
     public function personnelIsLinked(int $personnelId, ?int $exceptUserId = null): bool;
+
+    /**
+     * @return Collection<int, BarangayPersonnel>
+     */
+    public function listUnlinkedPersonnel(): Collection;
+
+    public function reassignRoleAssignor(int $fromUserId, int $toUserId): void;
+
+    public function deleteRoleAssignments(User $user): void;
+
+    public function delete(User $user): bool;
+
+    public function hasLoginHistory(int $userId): bool;
+
+    public function hasAssignedRolesToOthers(int $userId): bool;
+
+    /**
+     * @return Collection<int, PersonnelPosition>
+     */
+    public function listAllPositions(): Collection;
+
+    public function findUnlinkedPersonnelByPosition(int $positionId): ?BarangayPersonnel;
+
+    public function createPersonnelForPosition(int $positionId, string $positionName): BarangayPersonnel;
 }

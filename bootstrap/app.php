@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureSystemAdministrator;
 use App\Http\Middleware\EnsureUserHasPermission;
 use App\Providers\AuthServiceProvider;
 use App\Providers\RepositoryServiceProvider;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'permission' => EnsureUserHasPermission::class,
+            'system.admin' => EnsureSystemAdministrator::class,
         ]);
     })
     ->withProviders([

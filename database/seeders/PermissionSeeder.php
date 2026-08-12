@@ -27,6 +27,7 @@ class PermissionSeeder extends Seeder
             ['permission_id' => 15, 'permission' => 'setting.view'],
             ['permission_id' => 16, 'permission' => 'setting.update'],
             ['permission_id' => 17, 'permission' => 'user.changepassword'],
+            ['permission_id' => 18, 'permission' => 'user.delete'],
         ], ['permission_id'], ['permission']);
     }
 }

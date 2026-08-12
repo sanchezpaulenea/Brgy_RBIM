@@ -25,6 +25,24 @@ const routes = [
         meta: { requiresAuth: true },
     },
     {
+        path: '/settings',
+        name: 'settings',
+        component: () => import('@/pages/SettingsPage.vue'),
+        meta: { requiresAuth: true, requiresSystemAdministrator: true },
+    },
+    {
+        path: '/lookups',
+        name: 'lookups',
+        component: () => import('@/pages/LookupsPage.vue'),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/forbidden',
+        name: 'forbidden',
+        component: () => import('@/pages/ForbiddenPage.vue'),
+        meta: { requiresAuth: true },
+    },
+    {
         path: '/:pathMatch(.*)*',
         redirect: '/login',
     },
@@ -63,6 +81,10 @@ router.beforeEach(async (to) => {
         && !to.meta.allowWhileMustChangePassword
     ) {
         return { name: 'change-password' };
+    }
+
+    if (to.meta.requiresSystemAdministrator && !auth.isSystemAdministrator.value) {
+        return { name: 'forbidden' };
     }
 
     return true;

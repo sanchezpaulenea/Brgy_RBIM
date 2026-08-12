@@ -15,7 +15,7 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('user.view');
+        return $user->isSystemAdministrator() && $user->hasPermission('user.view');
     }
 
     /**
@@ -23,7 +23,7 @@ class UserPolicy
      */
     public function view(User $user, User $model): bool
     {
-        return $user->hasPermission('user.view');
+        return $user->isSystemAdministrator() && $user->hasPermission('user.view');
     }
 
     /**
@@ -31,7 +31,7 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermission('user.create');
+        return $user->isSystemAdministrator() && $user->hasPermission('user.create');
     }
 
     /**
@@ -39,7 +39,7 @@ class UserPolicy
      */
     public function updateStatus(User $user, User $model): bool
     {
-        return $user->hasPermission('user.updatestatus');
+        return $user->isSystemAdministrator() && $user->hasPermission('user.updatestatus');
     }
 
     /**
@@ -47,7 +47,15 @@ class UserPolicy
      */
     public function resetPassword(User $user, User $model): bool
     {
-        return $user->hasPermission('user.resetpassword');
+        return $user->isSystemAdministrator() && $user->hasPermission('user.resetpassword');
+    }
+
+    /**
+     * Permanently delete a user account.
+     */
+    public function delete(User $user, User $model): bool
+    {
+        return $user->isSystemAdministrator() && $user->hasPermission('user.delete');
     }
 
     /**

@@ -7,7 +7,7 @@ use App\Models\Authentication\UserLog;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Authentication\SessionRepositoryInterface;
 use App\Repositories\Interfaces\Authentication\UserLogRepositoryInterface;
-use App\Repositories\Interfaces\SystemSetting\SystemSettingRepositoryInterface;
+use App\Services\Setting\SettingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +19,7 @@ class SessionService
     public function __construct(
         protected SessionRepositoryInterface $sessionRepository,
         protected UserLogRepositoryInterface $userLogRepository,
-        protected SystemSettingRepositoryInterface $systemSettingRepository,
+        protected SettingService $settingService,
     ) {}
 
     /**
@@ -144,8 +144,8 @@ class SessionService
      */
     private function handleFailedPasswordAttempt(User $user, Request $request): void
     {
-        $maxAttempts = (int) $this->systemSettingRepository->getValue('max_login_attempts');
-        $lockoutMinutes = (int) $this->systemSettingRepository->getValue('account_lockout_minutes');
+        $maxAttempts = $this->settingService->get('max_login_attempts');
+        $lockoutMinutes = $this->settingService->get('account_lockout_minutes');
         $recentFailed = $this->userLogRepository->countRecentFailedAttempts($user->user_id, $lockoutMinutes);
 
         if ($recentFailed + 1 >= $maxAttempts) {
@@ -169,7 +169,7 @@ class SessionService
             return;
         }
 
-        $lockoutMinutes = (int) $this->systemSettingRepository->getValue('account_lockout_minutes');
+        $lockoutMinutes = $this->settingService->get('account_lockout_minutes');
         $lastLockTime = $this->userLogRepository->getLastLockTime($user->user_id);
 
         if ($lastLockTime && now()->diffInMinutes($lastLockTime) >= $lockoutMinutes) {

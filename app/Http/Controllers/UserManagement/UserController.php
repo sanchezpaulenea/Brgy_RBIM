@@ -96,4 +96,31 @@ class UserController extends Controller
             'user' => $updated,
         ]);
     }
+
+    /**
+     * GET /api/v1/users/create-options
+     */
+    public function createOptions(): JsonResponse
+    {
+        $this->authorize('create', User::class);
+
+        return response()->json($this->userService->getCreateOptions());
+    }
+
+    /**
+     * DELETE /api/v1/users/{user}
+     */
+    public function destroy(User $user): JsonResponse
+    {
+        $this->authorize('delete', $user);
+
+        /** @var User $performedBy */
+        $performedBy = request()->user();
+
+        $this->userService->deleteUser($performedBy, $user);
+
+        return response()->json([
+            'message' => 'User account deleted successfully.',
+        ]);
+    }
 }

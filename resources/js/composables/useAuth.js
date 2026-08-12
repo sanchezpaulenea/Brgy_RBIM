@@ -1,4 +1,5 @@
 import { computed, ref } from 'vue';
+import { ROLES } from '@/constants/roles';
 import * as authService from '@/services/authService';
 
 const user = ref(null);
@@ -85,6 +86,19 @@ export function useAuth() {
         return permissions.value.includes(permission);
     }
 
+    function hasRole(roleName) {
+        return roles.value.includes(roleName);
+    }
+
+    const isSystemAdministrator = computed(() => (
+        roles.value.includes(ROLES.SUPER_ADMIN)
+        || roles.value.includes(ROLES.ADMIN)
+    ));
+
+    const isGuest = computed(() => (
+        roles.value.includes(ROLES.GUEST) && !isSystemAdministrator.value
+    ));
+
     return {
         user,
         roles,
@@ -93,10 +107,13 @@ export function useAuth() {
         loading,
         isAuthenticated,
         mustChangePassword,
+        isGuest,
+        isSystemAdministrator,
         initialize,
         login,
         logout,
         changePassword,
         hasPermission,
+        hasRole,
     };
 }

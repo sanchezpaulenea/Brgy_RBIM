@@ -11,6 +11,6 @@ class UserLogPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('userlog.view');
+        return $user->isSystemAdministrator() && $user->hasPermission('userlog.view');
     }
 }

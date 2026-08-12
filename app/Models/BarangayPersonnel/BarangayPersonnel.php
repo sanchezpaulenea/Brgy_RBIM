@@ -4,6 +4,7 @@ namespace App\Models\BarangayPersonnel;
 
 use App\Models\UserManagement\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class BarangayPersonnel extends Model
@@ -30,6 +31,14 @@ class BarangayPersonnel extends Model
     protected $casts = [
         'personnel_date_of_birth' => 'date',
     ];
+
+    /**
+     * @return BelongsTo<PersonnelPosition, $this>
+     */
+    public function position(): BelongsTo
+    {
+        return $this->belongsTo(PersonnelPosition::class, 'position_id', 'position_id');
+    }
 
     /**
      * @return HasOne<User, $this>

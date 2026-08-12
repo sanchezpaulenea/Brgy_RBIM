@@ -3,14 +3,14 @@
 namespace App\Services\Authentication;
 
 use App\Models\UserManagement\User;
-use App\Repositories\Interfaces\SystemSetting\SystemSettingRepositoryInterface;
+use App\Services\Setting\SettingService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthService
 {
     public function __construct(
-        protected SystemSettingRepositoryInterface $systemSettingRepository
+        protected SettingService $settingService
     ) {}
 
     /**
@@ -26,7 +26,7 @@ class AuthService
             ]);
         }
 
-        $minLength = (int) $this->systemSettingRepository->getValue('password_min_length');
+        $minLength = $this->settingService->get('password_min_length');
 
         if (strlen($newPassword) < $minLength) {
             throw ValidationException::withMessages([

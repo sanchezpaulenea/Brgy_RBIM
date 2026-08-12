@@ -16,7 +16,7 @@ class UserRolePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('userrole.view');
+        return $user->isSystemAdministrator() && $user->hasPermission('userrole.view');
     }
 
     /**
@@ -24,7 +24,7 @@ class UserRolePolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermission('userrole.create');
+        return $user->isSystemAdministrator() && $user->hasPermission('userrole.create');
     }
 
     /**
@@ -32,6 +32,6 @@ class UserRolePolicy
      */
     public function updateStatus(User $user, UserRole $userRole): bool
     {
-        return $user->hasPermission('userrole.updatestatus');
+        return $user->isSystemAdministrator() && $user->hasPermission('userrole.updatestatus');
     }
 }

@@ -8,6 +8,24 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Role extends Model
 {
+    public const ENCODER = 'Encoder';
+
+    public const ADMIN = 'Admin';
+
+    public const SUPER_ADMIN = 'Super Admin';
+
+    public const GUEST = 'Guest';
+
+    /**
+     * Roles that may access system administrator modules.
+     *
+     * @var list<string>
+     */
+    public const SYSTEM_ADMINISTRATOR_ROLES = [
+        self::ADMIN,
+        self::SUPER_ADMIN,
+    ];
+
     protected $table = 'role';
 
     protected $primaryKey = 'role_id';

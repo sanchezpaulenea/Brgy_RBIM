@@ -8,10 +8,12 @@ use App\Repositories\Authentication\UserLogRepository;
 use App\Repositories\Interfaces\AuditLog\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\Authentication\SessionRepositoryInterface;
 use App\Repositories\Interfaces\Authentication\UserLogRepositoryInterface;
-use App\Repositories\Interfaces\SystemSetting\SystemSettingRepositoryInterface;
+use App\Repositories\Interfaces\Lookup\LookupRepositoryInterface;
+use App\Repositories\Interfaces\Setting\SettingRepositoryInterface;
 use App\Repositories\Interfaces\UserManagement\UserRepositoryInterface;
 use App\Repositories\Interfaces\UserManagement\UserRoleRepositoryInterface;
-use App\Repositories\SystemSetting\SystemSettingRepository;
+use App\Repositories\Lookup\LookupRepository;
+use App\Repositories\Setting\SettingRepository;
 use App\Repositories\UserManagement\UserRepository;
 use App\Repositories\UserManagement\UserRoleRepository;
 use Illuminate\Support\ServiceProvider;
@@ -26,9 +28,10 @@ class RepositoryServiceProvider extends ServiceProvider
     {
         $this->app->bind(SessionRepositoryInterface::class, SessionRepository::class);
         $this->app->bind(UserLogRepositoryInterface::class, UserLogRepository::class);
-        $this->app->bind(SystemSettingRepositoryInterface::class, SystemSettingRepository::class);
+        $this->app->bind(SettingRepositoryInterface::class, SettingRepository::class);
         $this->app->bind(AuditLogRepositoryInterface::class, AuditLogRepository::class);
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
         $this->app->bind(UserRoleRepositoryInterface::class, UserRoleRepository::class);
+        $this->app->bind(LookupRepositoryInterface::class, LookupRepository::class);
     }
 }
