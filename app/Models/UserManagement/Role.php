@@ -4,6 +4,7 @@ namespace App\Models\UserManagement;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Role extends Model
 {
@@ -14,6 +15,22 @@ class Role extends Model
     public $timestamps = false;
 
     protected $fillable = ['role_name'];
+
+    /**
+     * @return HasMany<RolePermission, $this>
+     */
+    public function rolePermissions(): HasMany
+    {
+        return $this->hasMany(RolePermission::class, 'role_id', 'role_id');
+    }
+
+    /**
+     * @return HasMany<UserRole, $this>
+     */
+    public function userRoles(): HasMany
+    {
+        return $this->hasMany(UserRole::class, 'role_id', 'role_id');
+    }
 
     /**
      * @return BelongsToMany<Permission, $this>

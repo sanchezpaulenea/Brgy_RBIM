@@ -5,17 +5,64 @@ namespace App\Policies\UserManagement;
 use App\Models\UserManagement\User;
 
 /**
- * Authorizes actions a User can perform on their own account.
+ * Authorizes user account management actions.
  * Registered in AuthServiceProvider.
  */
 class UserPolicy
 {
     /**
-     * Any authenticated user who holds the `user.changepassword` permission
-     * may change their own password.
+     * List all user accounts.
+     */
+    public function viewAny(User $user): bool
+    {
+        return $user->hasPermission('user.view');
+    }
+
+    /**
+     * View a single user account.
+     */
+    public function view(User $user, User $model): bool
+    {
+        return $user->hasPermission('user.view');
+    }
+
+    /**
+     * Create a new user account.
+     */
+    public function create(User $user): bool
+    {
+        return $user->hasPermission('user.create');
+    }
+
+    /**
+     * Change a user's account status.
+     */
+    public function updateStatus(User $user, User $model): bool
+    {
+        return $user->hasPermission('user.updatestatus');
+    }
+
+    /**
+     * Reset a user's password to the system default.
+     */
+    public function resetPassword(User $user, User $model): bool
+    {
+        return $user->hasPermission('user.resetpassword');
+    }
+
+    /**
+     * Change the authenticated user's own password.
      */
     public function changePassword(User $user): bool
     {
         return $user->hasPermission('user.changepassword');
+    }
+
+    /**
+     * End the authenticated user's own session.
+     */
+    public function logout(User $user): bool
+    {
+        return true;
     }
 }

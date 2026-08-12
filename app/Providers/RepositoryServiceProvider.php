@@ -2,8 +2,18 @@
 
 namespace App\Providers;
 
-use App\Repositories\Authentication\AuthRepository;
-use App\Repositories\Interfaces\Authentication\AuthRepositoryInterface;
+use App\Repositories\AuditLog\AuditLogRepository;
+use App\Repositories\Authentication\SessionRepository;
+use App\Repositories\Authentication\UserLogRepository;
+use App\Repositories\Interfaces\AuditLog\AuditLogRepositoryInterface;
+use App\Repositories\Interfaces\Authentication\SessionRepositoryInterface;
+use App\Repositories\Interfaces\Authentication\UserLogRepositoryInterface;
+use App\Repositories\Interfaces\SystemSetting\SystemSettingRepositoryInterface;
+use App\Repositories\Interfaces\UserManagement\UserRepositoryInterface;
+use App\Repositories\Interfaces\UserManagement\UserRoleRepositoryInterface;
+use App\Repositories\SystemSetting\SystemSettingRepository;
+use App\Repositories\UserManagement\UserRepository;
+use App\Repositories\UserManagement\UserRoleRepository;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -12,11 +22,13 @@ use Illuminate\Support\ServiceProvider;
  */
 class RepositoryServiceProvider extends ServiceProvider
 {
-    /**
-     * Register repository bindings.
-     */
     public function register(): void
     {
-        $this->app->bind(AuthRepositoryInterface::class, AuthRepository::class);
+        $this->app->bind(SessionRepositoryInterface::class, SessionRepository::class);
+        $this->app->bind(UserLogRepositoryInterface::class, UserLogRepository::class);
+        $this->app->bind(SystemSettingRepositoryInterface::class, SystemSettingRepository::class);
+        $this->app->bind(AuditLogRepositoryInterface::class, AuditLogRepository::class);
+        $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
+        $this->app->bind(UserRoleRepositoryInterface::class, UserRoleRepository::class);
     }
 }

@@ -29,6 +29,11 @@ class UserRole extends Model
         'assigned_at' => 'datetime',
     ];
 
+    public function getRouteKeyName(): string
+    {
+        return 'user_role_id';
+    }
+
     /**
      * @return BelongsTo<User, $this>
      */

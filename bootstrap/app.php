@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureUserHasPermission;
 use App\Providers\AuthServiceProvider;
 use App\Providers\RepositoryServiceProvider;
 use Illuminate\Foundation\Application;
@@ -20,6 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
          * The Vue SPA must send requests with the correct Origin header.
          */
         $middleware->statefulApi();
+
+        $middleware->alias([
+            'permission' => EnsureUserHasPermission::class,
+        ]);
     })
     ->withProviders([
         RepositoryServiceProvider::class,
