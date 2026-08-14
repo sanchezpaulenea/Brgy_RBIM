@@ -2,11 +2,6 @@ import http from '@/services/http';
 
 export const LOOKUP_TYPES = [
     { value: 'personnel-position', label: 'Personnel Position', writable: true },
-    { value: 'personnel-status', label: 'Personnel Status', writable: false },
-    { value: 'user-status', label: 'User Status', writable: false },
-    { value: 'login-status', label: 'Login Status', writable: false },
-    { value: 'action', label: 'Action', writable: false },
-    { value: 'permission', label: 'Permission', writable: false },
 ];
 
 export async function fetchLookups(type) {

@@ -2,7 +2,7 @@
     <AppLayout title="Lookup Tables">
         <div class="space-y-6">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div class="max-w-sm flex-1">
+                <div v-if="LOOKUP_TYPES.length > 1" class="max-w-sm flex-1">
                     <label for="lookup-type" class="mb-1.5 block text-sm font-medium text-slate-700">
                         Lookup type
                     </label>
@@ -21,6 +21,7 @@
                         </option>
                     </select>
                 </div>
+                <div v-else class="flex-1"></div>
 
                 <button
                     type="button"
