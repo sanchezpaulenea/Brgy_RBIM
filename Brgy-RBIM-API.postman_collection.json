@@ -1,0 +1,438 @@
+{
+  "info": {
+    "name": "Brgy-RBIM API",
+    "_postman_id": "brgy-rbim-api-collection",
+    "description": "Barangay RBIM API collection. Base URL: http://localhost:8000.\n\n## Auth flow (Sanctum stateful / cookie-session)\n\nThis API uses Sanctum in **stateful (SPA) mode** — there are no Bearer tokens. Authentication is entirely cookie-based:\n\n1. **GET /sanctum/csrf-cookie** — seeds the `XSRF-TOKEN` cookie. Must run first.\n2. **POST /api/v1/auth/login** — Laravel calls `Auth::login()` and `$request->session()->regenerate()`. On success, the server sets a `laravel_session` cookie. Postman's cookie jar stores it automatically.\n3. All subsequent requests are authenticated by the `laravel_session` cookie sent automatically by the cookie jar. No manual token handling needed.\n\n### CSRF header on mutating requests\nEvery POST and PATCH request must include the `X-XSRF-TOKEN` header. Postman reads the `XSRF-TOKEN` cookie value and sends it as a header automatically **if you enable \"Automatically follow redirects\" and \"Send cookies\" in Postman settings**, or you can copy the cookie value into the `xsrf_token` collection variable and let the pre-set header send it.\n\n> **Tip:** In Postman Desktop, go to **Settings → General** and make sure **\"Automatically follow redirects\"** and **\"Send cookies\"** are both on. The cookie jar will then handle the session cookie and XSRF token transparently.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "xsrf_token",
+      "value": "",
+      "type": "string",
+      "description": "Value of the XSRF-TOKEN cookie set by GET /sanctum/csrf-cookie. Copy it here if Postman does not forward it automatically via the cookie jar. Used in the X-XSRF-TOKEN header on all POST and PATCH requests."
+    },
+    {
+      "key": "user_id",
+      "value": "1",
+      "type": "string",
+      "description": "ID of the target user for /users/{user} routes."
+    },
+    {
+      "key": "user_role_id",
+      "value": "1",
+      "type": "string",
+      "description": "ID of the target user-role record for /user-roles/{userRole}/status."
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Automatically read the XSRF-TOKEN cookie Sanctum sets after",
+          "// GET /sanctum/csrf-cookie and store it as a collection variable.",
+          "// This runs before EVERY request in the collection (both folders),",
+          "// so {{xsrf_token}} in the X-XSRF-TOKEN header is always current.",
+          "const xsrfCookie = pm.cookies.get('XSRF-TOKEN');",
+          "if (xsrfCookie) {",
+          "    pm.collectionVariables.set('xsrf_token', decodeURIComponent(xsrfCookie));",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "Endpoints for CSRF seeding, login/logout, current-user info, audit logs, and password management.\n\n**Request order matters:** run Get CSRF Cookie first, then Login. The session cookie set by Login is carried automatically by Postman's cookie jar for all subsequent requests.",
+      "item": [
+        {
+          "name": "Get CSRF Cookie",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/sanctum/csrf-cookie",
+              "host": ["{{base_url}}"],
+              "path": ["sanctum", "csrf-cookie"]
+            },
+            "description": "**Run this first, before Login.**\n\nTells Sanctum to issue the `XSRF-TOKEN` cookie. Postman's cookie jar stores it automatically. The value is then forwarded as the `X-XSRF-TOKEN` header on every subsequent POST/PATCH via the `{{xsrf_token}}` variable (or automatically by the cookie jar if Postman's cookie forwarding is enabled).\n\nNo request body. No session required."
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Value of the XSRF-TOKEN cookie set by Get CSRF Cookie. Required by Sanctum's CSRF middleware on all POST requests."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"password\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "**Run after Get CSRF Cookie.**\n\nAuthenticates the user via `Auth::login()` and `$request->session()->regenerate()`. On success, the server sets a `laravel_session` cookie — Postman's cookie jar picks it up automatically and sends it with every subsequent request. No token is returned.\n\n**Rules (LoginRequest):**\n- `username` — required, string, max 45 characters\n- `password` — required, string"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "CSRF token required by Sanctum on all POST requests."
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            },
+            "description": "Invalidates the current session. Requires an active `laravel_session` cookie (sent automatically by the cookie jar). No request body needed."
+          }
+        },
+        {
+          "name": "Get Authenticated User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "me"]
+            },
+            "description": "Returns the currently authenticated user's profile. Session cookie is sent automatically by the cookie jar. No request body needed."
+          }
+        },
+        {
+          "name": "Get Auth Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/logs",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "logs"]
+            },
+            "description": "Returns the audit/activity logs for the currently authenticated user. Session cookie is sent automatically by the cookie jar. No request body needed."
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "CSRF token required by Sanctum on all POST requests."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\n  \"current_password\": \"old_password\",\n  \"new_password\": \"new_password\",\n  \"new_password_confirmation\": \"new_password\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/password/change",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "password", "change"]
+            },
+            "description": "Changes the authenticated user's own password. Session cookie is sent automatically by the cookie jar.\n\n**Rules (ChangePasswordRequest):**\n- `current_password` — required, string\n- `new_password` — required, string, must be confirmed\n- `new_password_confirmation` — must match `new_password` (Laravel `confirmed` rule)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Management",
+      "description": "Endpoints for listing, creating, and inspecting users, updating their status, resetting passwords, and managing role assignments. All endpoints require an active session — the `laravel_session` cookie is sent automatically by Postman's cookie jar after a successful Login.",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users"]
+            },
+            "description": "Returns a list of all users. Session cookie sent automatically. No request body needed."
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "CSRF token required by Sanctum on all POST requests."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\n  \"username\": \"jdelacruz\",\n  \"personnel_id\": 1,\n  \"role_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users"]
+            },
+            "description": "Creates a new user account and links it to an existing barangay personnel record.\n\n**Rules (StoreUserRequest):**\n- `username` — required, string, max 45, unique in `user.username`\n- `personnel_id` — required, integer, must exist in `barangay_personnel.personnel_id`, unique in `user.personnel_id` (one account per personnel)\n- `role_id` — required, integer, must exist in `role.role_id`"
+          }
+        },
+        {
+          "name": "Get User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "{{user_id}}"]
+            },
+            "description": "Returns a single user by their ID. Set the `user_id` collection variable to the target user's ID. Session cookie sent automatically. No request body needed."
+          }
+        },
+        {
+          "name": "Update User Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "CSRF token required by Sanctum on all PATCH requests."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\n  \"user_status_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "{{user_id}}", "status"]
+            },
+            "description": "Updates the status of a user account.\n\n**Rules (UpdateUserStatusRequest):**\n- `user_status_id` — required, integer, must exist in `user_status.user_status_id`"
+          }
+        },
+        {
+          "name": "Reset User Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "CSRF token required by Sanctum on all POST requests."
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "{{user_id}}", "reset-password"]
+            },
+            "description": "Resets the target user's password to a system-generated default. No request body — the controller uses no Form Request for this action. Session cookie sent automatically."
+          }
+        },
+        {
+          "name": "Get User Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}/roles",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "{{user_id}}", "roles"]
+            },
+            "description": "Returns all roles assigned to the target user. Session cookie sent automatically. No request body needed."
+          }
+        },
+        {
+          "name": "Assign Role to User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "CSRF token required by Sanctum on all POST requests."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\n  \"role_id\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}/roles",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "{{user_id}}", "roles"]
+            },
+            "description": "Assigns an additional role to the target user.\n\n**Rules (StoreUserRoleRequest):**\n- `role_id` — required, integer, must exist in `role.role_id`, must not already be assigned to this user (unique per user in `user_role`)"
+          }
+        },
+        {
+          "name": "Update User Role Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "CSRF token required by Sanctum on all PATCH requests."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\n  \"enable\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/user-roles/{{user_role_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "user-roles", "{{user_role_id}}", "status"]
+            },
+            "description": "Enables or disables a specific user-role assignment.\n\n**Rules (UpdateUserRoleStatusRequest):**\n- `enable` — required, boolean (`true` to enable, `false` to disable)\n\nSet the `user_role_id` collection variable to the target `user_role` record ID."
+          }
+        }
+      ]
+    }
+  ]
+}

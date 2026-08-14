@@ -3,6 +3,7 @@
 namespace App\Models\BarangayPersonnel;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PersonnelStatus extends Model
 {
@@ -15,4 +16,12 @@ class PersonnelStatus extends Model
     protected $fillable = [
         'personnel_status',
     ];
+
+    /**
+     * @return HasMany<BarangayPersonnel, $this>
+     */
+    public function personnel(): HasMany
+    {
+        return $this->hasMany(BarangayPersonnel::class, 'personnel_status_id', 'personnel_status_id');
+    }
 }

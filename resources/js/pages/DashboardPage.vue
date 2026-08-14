@@ -28,9 +28,25 @@
                         </dd>
                     </div>
                 </dl>
+
+                <div class="mt-6 flex flex-wrap gap-3">
+                    <RouterLink
+                        to="/lookups"
+                        class="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800"
+                    >
+                        Browse lookups
+                    </RouterLink>
+                    <RouterLink
+                        v-if="isSystemAdministrator"
+                        to="/settings"
+                        class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                    >
+                        Manage settings
+                    </RouterLink>
+                </div>
             </article>
 
-            <aside class="space-y-6">
+            <aside v-if="isSystemAdministrator" class="space-y-6">
                 <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500">
                         Roles
@@ -72,8 +88,9 @@
 </template>
 
 <script setup>
+import { RouterLink } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { useAuth } from '@/composables/useAuth';
 
-const { user, roles, permissions } = useAuth();
+const { user, roles, permissions, isSystemAdministrator } = useAuth();
 </script>

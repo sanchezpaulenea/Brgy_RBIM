@@ -15,6 +15,8 @@ class DatabaseSeeder extends Seeder
             UserStatusSeeder::class,
             LoginStatusSeeder::class,
             ActionSeeder::class,
+            PersonnelPositionSeeder::class,
+            PersonnelStatusSeeder::class,
             RoleSeeder::class,
             PermissionSeeder::class,
             RolePermissionSeeder::class,

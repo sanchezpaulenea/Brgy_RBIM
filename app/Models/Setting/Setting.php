@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Models\SystemSetting;
+namespace App\Models\Setting;
 
 use Illuminate\Database\Eloquent\Model;
 
-class SystemSetting extends Model
+class Setting extends Model
 {
     protected $table = 'system_setting';
 
@@ -19,9 +19,13 @@ class SystemSetting extends Model
         'description',
     ];
 
+    public function getRouteKeyName(): string
+    {
+        return 'setting_id';
+    }
+
     /**
-     * Retrieve a typed setting value by key.
-     * Casts the raw varchar value to the correct PHP type based on `data_type`.
+     * Cast the raw varchar value to the correct PHP type based on `data_type`.
      */
     public function getTypedValue(): mixed
     {

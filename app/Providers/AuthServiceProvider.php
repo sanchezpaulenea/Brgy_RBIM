@@ -2,10 +2,18 @@
 
 namespace App\Providers;
 
+use App\Models\AuditLog\AuditLog;
+use App\Models\Authentication\UserLog;
 use App\Models\Lookup\Lookup;
+use App\Models\Setting\Setting;
 use App\Models\UserManagement\User;
-use App\Policies\LookupPolicy;
+use App\Models\UserManagement\UserRole;
+use App\Policies\AuditLog\AuditLogPolicy;
+use App\Policies\Authentication\UserLogPolicy;
+use App\Policies\Lookup\LookupPolicy;
+use App\Policies\Setting\SettingPolicy;
 use App\Policies\UserManagement\UserPolicy;
+use App\Policies\UserManagement\UserRolePolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -16,23 +24,19 @@ use Illuminate\Support\ServiceProvider;
 class AuthServiceProvider extends ServiceProvider
 {
     /**
-     * Boot policy registrations.
-     *
      * @var array<class-string, class-string>
      */
     protected array $policies = [
         User::class => UserPolicy::class,
+        UserRole::class => UserRolePolicy::class,
+        UserLog::class => UserLogPolicy::class,
+        AuditLog::class => AuditLogPolicy::class,
         Lookup::class => LookupPolicy::class,
+        Setting::class => SettingPolicy::class,
     ];
 
-    /**
-     * Register any application services.
-     */
     public function register(): void {}
 
-    /**
-     * Bootstrap auth/policy services.
-     */
     public function boot(): void
     {
         foreach ($this->policies as $model => $policy) {
