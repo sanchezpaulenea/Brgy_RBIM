@@ -16,6 +16,12 @@ interface UserRepositoryInterface
 
     public function findById(int $userId): ?User;
 
+    public function findByUsername(string $username): ?User;
+
+    public function lockUserAccount(int $userId): void;
+
+    public function unlockUserAccount(int $userId): void;
+
     public function create(array $attributes): User;
 
     public function updateStatus(User $user, int $userStatusId): User;

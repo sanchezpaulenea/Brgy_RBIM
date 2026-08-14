@@ -4,14 +4,14 @@ namespace App\Providers;
 
 use App\Models\AuditLog\AuditLog;
 use App\Models\Authentication\UserLog;
-use App\Models\Lookup\Lookup;
+use App\Models\BarangayPersonnel\PersonnelPosition;
 use App\Models\Setting\Setting;
 use App\Models\UserManagement\User;
 use App\Models\UserManagement\UserRole;
 use App\Policies\AuditLog\AuditLogPolicy;
 use App\Policies\Authentication\UserLogPolicy;
-use App\Policies\Lookup\LookupPolicy;
-use App\Policies\Setting\SettingPolicy;
+use App\Policies\BarangayPersonnel\BarangayPersonnelPolicy;
+use App\Policies\SystemSetting\SystemSettingPolicy;
 use App\Policies\UserManagement\UserPolicy;
 use App\Policies\UserManagement\UserRolePolicy;
 use Illuminate\Support\Facades\Gate;
@@ -31,8 +31,8 @@ class AuthServiceProvider extends ServiceProvider
         UserRole::class => UserRolePolicy::class,
         UserLog::class => UserLogPolicy::class,
         AuditLog::class => AuditLogPolicy::class,
-        Lookup::class => LookupPolicy::class,
-        Setting::class => SettingPolicy::class,
+        PersonnelPosition::class => BarangayPersonnelPolicy::class,
+        Setting::class => SystemSettingPolicy::class,
     ];
 
     public function register(): void {}

@@ -6,9 +6,10 @@ use App\Models\AuditLog\Action;
 use App\Models\BarangayPersonnel\BarangayPersonnel;
 use App\Models\UserManagement\Role;
 use App\Models\UserManagement\User;
+use App\Models\UserManagement\UserStatus;
 use App\Repositories\Interfaces\AuditLog\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\UserManagement\UserRepositoryInterface;
-use App\Services\Setting\SettingService;
+use App\Services\SystemSetting\SystemSettingService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
@@ -21,7 +22,7 @@ class UserService
         protected UserRepositoryInterface $userRepository,
         protected UserRoleService $userRoleService,
         protected AuditLogRepositoryInterface $auditLogRepository,
-        protected SettingService $settingService,
+        protected SystemSettingService $settingService,
     ) {}
 
     /**
@@ -175,6 +176,22 @@ class UserService
             'personnel' => $personnel,
             'positions' => $positions,
         ];
+    }
+
+    /**
+     * @return array<int, array{id: int, label: string, can_login: bool}>
+     */
+    public function listUserStatuses(): array
+    {
+        return UserStatus::query()
+            ->orderBy('user_status')
+            ->get()
+            ->map(fn (UserStatus $status) => [
+                'id' => $status->user_status_id,
+                'label' => $status->user_status,
+                'can_login' => $status->can_login,
+            ])
+            ->all();
     }
 
     public function deleteUser(User $performedBy, User $user): void

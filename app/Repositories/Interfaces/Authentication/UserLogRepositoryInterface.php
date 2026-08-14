@@ -3,6 +3,7 @@
 namespace App\Repositories\Interfaces\Authentication;
 
 use App\Models\Authentication\UserLog;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
 interface UserLogRepositoryInterface
@@ -14,11 +15,11 @@ interface UserLogRepositoryInterface
         string $device
     ): UserLog;
 
-    public function updateLogoutTime(int $userLogId, string $logoutTime): void;
+    public function updateLogoutTime(int $userLogId, Carbon $logoutTime): void;
 
     public function countRecentFailedAttempts(int $userId, int $withinMinutes): int;
 
-    public function getLastLockTime(int $userId): ?string;
+    public function getLastLockTime(int $userId): ?Carbon;
 
     /**
      * @return Collection<int, UserLog>

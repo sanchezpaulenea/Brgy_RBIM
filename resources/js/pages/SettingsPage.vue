@@ -566,7 +566,7 @@ async function loadCreateOptions() {
 
 async function loadUserStatuses() {
     try {
-        const items = await lookupService.fetchLookups('user-status');
+        const items = await lookupService.fetchUserStatuses();
         userStatuses.value = items.map((item) => ({
             id: item.id,
             label: item.label,
@@ -606,7 +606,7 @@ async function handleCreatePosition() {
     error.value = '';
 
     try {
-        const item = await lookupService.createLookup('personnel-position', {
+        const item = await lookupService.createPersonnelPosition({
             position_name: newPositionName.value.trim(),
         });
 

@@ -1,33 +1,17 @@
 <template>
-    <AppLayout title="Lookup Tables">
+    <AppLayout title="Personnel Positions">
         <div class="space-y-6">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div v-if="LOOKUP_TYPES.length > 1" class="max-w-sm flex-1">
-                    <label for="lookup-type" class="mb-1.5 block text-sm font-medium text-slate-700">
-                        Lookup type
-                    </label>
-                    <select
-                        id="lookup-type"
-                        v-model="selectedType"
-                        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                        @change="loadLookups"
-                    >
-                        <option
-                            v-for="type in LOOKUP_TYPES"
-                            :key="type.value"
-                            :value="type.value"
-                        >
-                            {{ type.label }}
-                        </option>
-                    </select>
+                <div class="flex-1">
+                    <h2 class="text-lg font-semibold text-slate-900">Personnel Positions</h2>
+                    <p class="text-sm text-slate-600">Manage barangay personnel position lookup values.</p>
                 </div>
-                <div v-else class="flex-1"></div>
 
                 <button
                     type="button"
                     class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
                     :disabled="loading"
-                    @click="loadLookups"
+                    @click="loadPositions"
                 >
                     Refresh
                 </button>
@@ -77,15 +61,14 @@
             </article>
 
             <div v-if="loading && !items.length" class="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 shadow-sm">
-                Loading lookup values...
+                Loading personnel positions...
             </div>
 
             <div v-else class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div class="border-b border-slate-200 px-4 py-3">
                     <p class="text-sm text-slate-600">
                         {{ items.length }} record{{ items.length === 1 ? '' : 's' }}
-                        <span v-if="selectedTypeMeta?.writable" class="text-slate-400">· writable</span>
-                        <span v-else class="text-slate-400">· read-only</span>
+                        <span class="text-slate-400">· writable</span>
                     </p>
                 </div>
 
@@ -95,13 +78,6 @@
                             <tr>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">ID</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Label</th>
-                                <th
-                                    v-for="column in extraColumns"
-                                    :key="column"
-                                    class="px-4 py-3 text-left font-semibold text-slate-600"
-                                >
-                                    {{ column }}
-                                </th>
                                 <th v-if="canDeletePosition" class="px-4 py-3 text-right font-semibold text-slate-600">
                                     Action
                                 </th>
@@ -114,13 +90,6 @@
                                 </td>
                                 <td class="px-4 py-3 font-medium text-slate-900">
                                     {{ item.label }}
-                                </td>
-                                <td
-                                    v-for="column in extraColumns"
-                                    :key="`${item.id}-${column}`"
-                                    class="px-4 py-3 text-slate-600"
-                                >
-                                    {{ formatExtraValue(item[column]) }}
                                 </td>
                                 <td v-if="canDeletePosition" class="px-4 py-3 text-right">
                                     <button
@@ -135,7 +104,7 @@
                             </tr>
                             <tr v-if="!items.length">
                                 <td
-                                    :colspan="2 + extraColumns.length + (canDeletePosition ? 1 : 0)"
+                                    :colspan="canDeletePosition ? 3 : 2"
                                     class="px-4 py-8 text-center text-slate-500"
                                 >
                                     No records found.
@@ -158,9 +127,6 @@ import * as lookupService from '@/services/lookupService';
 
 const { hasPermission, isSystemAdministrator } = useAuth();
 
-const { LOOKUP_TYPES } = lookupService;
-
-const selectedType = ref('personnel-position');
 const items = ref([]);
 const loading = ref(false);
 const creating = ref(false);
@@ -170,45 +136,25 @@ const createError = ref('');
 const error = ref('');
 const successMessage = ref('');
 
-const selectedTypeMeta = computed(() => LOOKUP_TYPES.find((type) => type.value === selectedType.value));
-
 const canCreatePosition = computed(() => (
-    selectedType.value === 'personnel-position'
-    && isSystemAdministrator.value
+    isSystemAdministrator.value
     && hasPermission('pposition.create')
 ));
 
 const canDeletePosition = computed(() => (
-    selectedType.value === 'personnel-position'
-    && isSystemAdministrator.value
+    isSystemAdministrator.value
     && hasPermission('pposition.delete')
 ));
 
-const extraColumns = computed(() => {
-    if (!items.value.length) {
-        return selectedType.value === 'user-status' ? ['can_login'] : [];
-    }
-
-    return Object.keys(items.value[0]).filter((key) => !['id', 'label'].includes(key));
-});
-
-function formatExtraValue(value) {
-    if (typeof value === 'boolean') {
-        return value ? 'Yes' : 'No';
-    }
-
-    return value ?? '—';
-}
-
-async function loadLookups() {
+async function loadPositions() {
     loading.value = true;
     error.value = '';
     successMessage.value = '';
 
     try {
-        items.value = await lookupService.fetchLookups(selectedType.value);
+        items.value = await lookupService.fetchPersonnelPositions();
     } catch (err) {
-        error.value = extractErrorMessage(err, 'Unable to load lookup values.');
+        error.value = extractErrorMessage(err, 'Unable to load personnel positions.');
         items.value = [];
     } finally {
         loading.value = false;
@@ -221,7 +167,7 @@ async function handleCreate() {
     successMessage.value = '';
 
     try {
-        const item = await lookupService.createLookup(selectedType.value, {
+        const item = await lookupService.createPersonnelPosition({
             position_name: newPositionName.value.trim(),
         });
 
@@ -247,7 +193,7 @@ async function handleDelete(id) {
     successMessage.value = '';
 
     try {
-        await lookupService.deleteLookup(selectedType.value, id);
+        await lookupService.deletePersonnelPosition(id);
         items.value = items.value.filter((item) => item.id !== id);
         successMessage.value = 'Position deleted successfully.';
     } catch (err) {
@@ -257,5 +203,5 @@ async function handleDelete(id) {
     }
 }
 
-onMounted(loadLookups);
+onMounted(loadPositions);
 </script>

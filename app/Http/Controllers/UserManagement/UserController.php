@@ -108,6 +108,18 @@ class UserController extends Controller
     }
 
     /**
+     * GET /api/v1/user-statuses
+     */
+    public function statusOptions(): JsonResponse
+    {
+        $this->authorize('viewAny', User::class);
+
+        return response()->json([
+            'items' => $this->userService->listUserStatuses(),
+        ]);
+    }
+
+    /**
      * DELETE /api/v1/users/{user}
      */
     public function destroy(User $user): JsonResponse

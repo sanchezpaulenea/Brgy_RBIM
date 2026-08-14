@@ -6,14 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Authentication\LoginRequest;
 use App\Models\Authentication\UserLog;
 use App\Models\UserManagement\User;
-use App\Services\Authentication\SessionService;
+use App\Services\Authentication\AuthenticationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
     public function __construct(
-        protected SessionService $sessionService
+        protected AuthenticationService $authenticationService
     ) {}
 
     /**
@@ -23,7 +23,7 @@ class AuthController extends Controller
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        $result = $this->sessionService->login(
+        $result = $this->authenticationService->login(
             $request->validated('username'),
             $request->validated('password'),
             $request
@@ -51,7 +51,7 @@ class AuthController extends Controller
 
         $this->authorize('logout', $user);
 
-        $this->sessionService->logout($user, $request);
+        $this->authenticationService->logout($user, $request);
 
         return response()->json(['message' => 'Logged out successfully.']);
     }
@@ -85,7 +85,7 @@ class AuthController extends Controller
         $this->authorize('viewAny', UserLog::class);
 
         return response()->json([
-            'logs' => $this->sessionService->listLoginHistory(),
+            'logs' => $this->authenticationService->listLoginHistory(),
         ]);
     }
 }

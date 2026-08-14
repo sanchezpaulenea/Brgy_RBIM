@@ -5,6 +5,7 @@ namespace App\Repositories\Authentication;
 use App\Models\Authentication\LoginStatus;
 use App\Models\Authentication\UserLog;
 use App\Repositories\Interfaces\Authentication\UserLogRepositoryInterface;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
 class UserLogRepository implements UserLogRepositoryInterface
@@ -15,33 +16,44 @@ class UserLogRepository implements UserLogRepositoryInterface
         string $ipAddress,
         string $device
     ): UserLog {
-        $now = now()->toDateTimeString();
+        $timestamp = Carbon::now(config('app.timezone'));
 
         return UserLog::create([
             'user_id' => $userId,
-            'login_time' => $now,
-            'logout_time' => $now,
+            'login_time' => $timestamp->copy()->format('Y-m-d H:i:s'),
+            'logout_time' => $timestamp->copy()->format('Y-m-d H:i:s'),
             'login_status_id' => $loginStatusId,
             'ip_address' => $ipAddress,
             'device' => mb_substr($device, 0, 45),
         ]);
     }
 
-    public function updateLogoutTime(int $userLogId, string $logoutTime): void
+    public function updateLogoutTime(int $userLogId, Carbon $logoutTime): void
     {
-        UserLog::where('user_log_id', $userLogId)->update(['logout_time' => $logoutTime]);
+        $value = $logoutTime
+            ->copy()
+            ->setTimezone(config('app.timezone'))
+            ->format('Y-m-d H:i:s');
+
+        UserLog::where('user_log_id', $userLogId)->update(['logout_time' => $value]);
     }
 
     public function countRecentFailedAttempts(int $userId, int $withinMinutes): int
     {
+        if ($withinMinutes <= 0) {
+            return 0;
+        }
+
+        $threshold = Carbon::now(config('app.timezone'))->subMinutes($withinMinutes);
+
         return UserLog::query()
             ->where('user_id', $userId)
             ->where('login_status_id', LoginStatus::INVALID_PASSWORD)
-            ->where('login_time', '>=', now()->subMinutes($withinMinutes))
+            ->where('login_time', '>=', $threshold->format('Y-m-d H:i:s'))
             ->count();
     }
 
-    public function getLastLockTime(int $userId): ?string
+    public function getLastLockTime(int $userId): ?Carbon
     {
         $log = UserLog::query()
             ->where('user_id', $userId)
@@ -49,7 +61,7 @@ class UserLogRepository implements UserLogRepositoryInterface
             ->latest('login_time')
             ->first();
 
-        return $log?->login_time?->toDateTimeString();
+        return $log?->login_time?->setTimezone(config('app.timezone'));
     }
 
     /**

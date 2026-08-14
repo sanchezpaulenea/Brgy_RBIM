@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnforceSessionTimeout;
 use App\Http\Middleware\EnsureSystemAdministrator;
 use App\Http\Middleware\EnsureUserHasPermission;
 use App\Providers\AuthServiceProvider;
@@ -26,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'permission' => EnsureUserHasPermission::class,
             'system.admin' => EnsureSystemAdministrator::class,
+            'session.timeout' => EnforceSessionTimeout::class,
         ]);
     })
     ->withProviders([

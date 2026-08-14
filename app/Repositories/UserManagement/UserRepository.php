@@ -32,6 +32,23 @@ class UserRepository implements UserRepositoryInterface
             ->first();
     }
 
+    public function findByUsername(string $username): ?User
+    {
+        return User::with(['userStatus', 'roles.permissions'])
+            ->where('username', $username)
+            ->first();
+    }
+
+    public function lockUserAccount(int $userId): void
+    {
+        User::where('user_id', $userId)->update(['user_status_id' => 3]);
+    }
+
+    public function unlockUserAccount(int $userId): void
+    {
+        User::where('user_id', $userId)->update(['user_status_id' => 1]);
+    }
+
     public function create(array $attributes): User
     {
         return User::create($attributes);

@@ -1,15 +1,12 @@
 <?php
 
-namespace App\Http\Requests\Lookup;
+namespace App\Http\Requests\BarangayPersonnel;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StorePersonnelPositionRequest extends FormRequest
 {
-    /**
-     * Authorization is handled in LookupController via LookupPolicy.
-     */
     public function authorize(): bool
     {
         return true;
@@ -37,6 +34,7 @@ class StorePersonnelPositionRequest extends FormRequest
     {
         return [
             'position_name.required' => 'Position name is required.',
+            'position_name.max' => 'Position name must not exceed 45 characters.',
             'position_name.unique' => 'This position name already exists.',
         ];
     }
