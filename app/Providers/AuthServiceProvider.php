@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\AuditLog\AuditLog;
 use App\Models\Authentication\UserLog;
+use App\Models\BarangayPersonnel\BarangayPersonnel;
 use App\Models\BarangayPersonnel\PersonnelPosition;
 use App\Models\Setting\Setting;
 use App\Models\UserManagement\User;
@@ -11,6 +12,7 @@ use App\Models\UserManagement\UserRole;
 use App\Policies\AuditLog\AuditLogPolicy;
 use App\Policies\Authentication\UserLogPolicy;
 use App\Policies\BarangayPersonnel\BarangayPersonnelPolicy;
+use App\Policies\BarangayPersonnel\PersonnelPolicy;
 use App\Policies\SystemSetting\SystemSettingPolicy;
 use App\Policies\UserManagement\UserPolicy;
 use App\Policies\UserManagement\UserRolePolicy;
@@ -32,6 +34,7 @@ class AuthServiceProvider extends ServiceProvider
         UserLog::class => UserLogPolicy::class,
         AuditLog::class => AuditLogPolicy::class,
         PersonnelPosition::class => BarangayPersonnelPolicy::class,
+        BarangayPersonnel::class => PersonnelPolicy::class,
         Setting::class => SystemSettingPolicy::class,
     ];
 

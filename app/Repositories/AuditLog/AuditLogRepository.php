@@ -22,12 +22,12 @@ class AuditLogRepository implements AuditLogRepositoryInterface
             'user_id' => $performedByUserId,
             'action_id' => $actionId,
             'record_id' => $recordId,
-            'description' => $description,
-            'old_value' => $oldValue,
-            'new_value' => $newValue,
+            'description' => mb_substr($description, 0, 255),
+            'old_value' => $oldValue === null ? null : mb_substr($oldValue, 0, 45),
+            'new_value' => mb_substr($newValue, 0, 45),
             'performed_at' => now()->toDateTimeString(),
-            'target' => $target,
-            'entity' => $entity,
+            'target' => mb_substr($target, 0, 45),
+            'entity' => mb_substr($entity, 0, 45),
         ]);
     }
 

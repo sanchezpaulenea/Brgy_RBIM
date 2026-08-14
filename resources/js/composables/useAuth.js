@@ -90,14 +90,35 @@ export function useAuth() {
         return roles.value.includes(roleName);
     }
 
+    const isSuperAdmin = computed(() => roles.value.includes(ROLES.SUPER_ADMIN));
+
     const isSystemAdministrator = computed(() => (
-        roles.value.includes(ROLES.SUPER_ADMIN)
-        || roles.value.includes(ROLES.ADMIN)
+        isSuperAdmin.value || roles.value.includes(ROLES.ADMIN)
     ));
 
     const isGuest = computed(() => (
         roles.value.includes(ROLES.GUEST) && !isSystemAdministrator.value
     ));
+
+    function hasAnyPermission(requiredPermissions) {
+        return requiredPermissions.some((permission) => permissions.value.includes(permission));
+    }
+
+    function canAccessRoute(meta = {}) {
+        if (meta.requiresSuperAdmin && !isSuperAdmin.value) {
+            return false;
+        }
+
+        if (Array.isArray(meta.requiresPermissions) && meta.requiresPermissions.length > 0) {
+            return hasAnyPermission(meta.requiresPermissions);
+        }
+
+        if (meta.requiresSystemAdministrator && !isSystemAdministrator.value) {
+            return false;
+        }
+
+        return true;
+    }
 
     return {
         user,
@@ -108,12 +129,15 @@ export function useAuth() {
         isAuthenticated,
         mustChangePassword,
         isGuest,
+        isSuperAdmin,
         isSystemAdministrator,
         initialize,
         login,
         logout,
         changePassword,
         hasPermission,
+        hasAnyPermission,
         hasRole,
+        canAccessRoute,
     };
 }

@@ -6,6 +6,12 @@ export async function fetchUsers() {
     return data.users;
 }
 
+export async function fetchUser(userId) {
+    const { data } = await http.get(`/users/${userId}`);
+
+    return data.user;
+}
+
 export async function fetchCreateOptions() {
     const { data } = await http.get('/users/create-options');
 
@@ -32,6 +38,24 @@ export async function resetUserPassword(userId) {
     return data.user;
 }
 
-export async function deleteUser(userId) {
-    await http.delete(`/users/${userId}`);
+export async function fetchUserRoles(userId) {
+    const { data } = await http.get(`/users/${userId}/roles`);
+
+    return data.roles;
+}
+
+export async function assignUserRole(userId, roleId) {
+    const { data } = await http.post(`/users/${userId}/roles`, {
+        role_id: roleId,
+    });
+
+    return data.user_role;
+}
+
+export async function updateUserRoleStatus(userRoleId, enable) {
+    const { data } = await http.patch(`/user-roles/${userRoleId}/status`, {
+        enable,
+    });
+
+    return data.user_role;
 }

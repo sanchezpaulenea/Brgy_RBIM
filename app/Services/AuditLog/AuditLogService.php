@@ -42,7 +42,9 @@ class AuditLogService
             'new_value' => $log->new_value,
             'target' => $log->target,
             'entity' => $log->entity,
-            'performed_at' => $log->performed_at,
+            'performed_at' => $log->performed_at
+                ?->timezone(config('app.timezone'))
+                ->format('Y-m-d H:i:s'),
         ];
     }
 }

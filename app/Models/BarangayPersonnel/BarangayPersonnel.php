@@ -32,12 +32,25 @@ class BarangayPersonnel extends Model
         'personnel_date_of_birth' => 'date',
     ];
 
+    public function getRouteKeyName(): string
+    {
+        return 'personnel_id';
+    }
+
     /**
      * @return BelongsTo<PersonnelPosition, $this>
      */
     public function position(): BelongsTo
     {
         return $this->belongsTo(PersonnelPosition::class, 'position_id', 'position_id');
+    }
+
+    /**
+     * @return BelongsTo<PersonnelStatus, $this>
+     */
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(PersonnelStatus::class, 'personnel_status_id', 'personnel_status_id');
     }
 
     /**

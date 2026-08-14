@@ -4,9 +4,11 @@ namespace App\Providers;
 
 use App\Repositories\AuditLog\AuditLogRepository;
 use App\Repositories\Authentication\UserLogRepository;
+use App\Repositories\BarangayPersonnel\BarangayPersonnelRepository;
 use App\Repositories\BarangayPersonnel\PersonnelPositionRepository;
 use App\Repositories\Interfaces\AuditLog\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\Authentication\UserLogRepositoryInterface;
+use App\Repositories\Interfaces\BarangayPersonnel\BarangayPersonnelRepositoryInterface;
 use App\Repositories\Interfaces\BarangayPersonnel\PersonnelPositionRepositoryInterface;
 use App\Repositories\Interfaces\Setting\SettingRepositoryInterface;
 use App\Repositories\Interfaces\UserManagement\UserRepositoryInterface;
@@ -30,5 +32,6 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
         $this->app->bind(UserRoleRepositoryInterface::class, UserRoleRepository::class);
         $this->app->bind(PersonnelPositionRepositoryInterface::class, PersonnelPositionRepository::class);
+        $this->app->bind(BarangayPersonnelRepositoryInterface::class, BarangayPersonnelRepository::class);
     }
 }

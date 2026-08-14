@@ -1,62 +1,46 @@
 <template>
-    <GuestLayout
-        title="Sign in"
-        subtitle="Enter your credentials to access the barangay information system."
-    >
-        <form
-            class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-            @submit.prevent="handleSubmit"
-        >
+    <GuestLayout>
+        <form class="rbim-card px-6 py-7 sm:px-8" @submit.prevent="handleSubmit">
+            <p class="mb-6 text-center text-sm text-slate-500">
+                Enter your credentials to continue.
+            </p>
+
             <div v-if="generalError" class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {{ generalError }}
             </div>
 
             <div class="space-y-5">
-                <div>
-                    <label for="username" class="mb-1.5 block text-sm font-medium text-slate-700">
-                        Username
-                    </label>
+                <div class="text-center">
+                    <label for="username" class="rbim-label text-center">Username</label>
                     <input
                         id="username"
                         v-model="form.username"
                         type="text"
                         autocomplete="username"
                         required
-                        class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                        :class="{ 'border-red-400 focus:border-red-400 focus:ring-red-100': errors.username }"
-                        placeholder="Enter your username"
+                        class="rbim-input"
+                        :class="{ 'rbim-input-error': errors.username }"
                     >
-                    <p v-if="errors.username" class="mt-1.5 text-sm text-red-600">
-                        {{ errors.username }}
-                    </p>
+                    <p v-if="errors.username" class="rbim-error text-left">{{ errors.username }}</p>
                 </div>
 
-                <div>
-                    <label for="password" class="mb-1.5 block text-sm font-medium text-slate-700">
-                        Password
-                    </label>
+                <div class="text-center">
+                    <label for="password" class="rbim-label text-center">Password</label>
                     <input
                         id="password"
                         v-model="form.password"
                         type="password"
                         autocomplete="current-password"
                         required
-                        class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                        :class="{ 'border-red-400 focus:border-red-400 focus:ring-red-100': errors.password }"
-                        placeholder="Enter your password"
+                        class="rbim-input"
+                        :class="{ 'rbim-input-error': errors.password }"
                     >
-                    <p v-if="errors.password" class="mt-1.5 text-sm text-red-600">
-                        {{ errors.password }}
-                    </p>
+                    <p v-if="errors.password" class="rbim-error text-left">{{ errors.password }}</p>
                 </div>
             </div>
 
-            <button
-                type="submit"
-                class="mt-6 w-full rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
-                :disabled="loading"
-            >
-                {{ loading ? 'Signing in...' : 'Sign in' }}
+            <button type="submit" class="rbim-btn mt-6 w-full" :disabled="loading">
+                {{ loading ? 'Signing in...' : 'Login' }}
             </button>
         </form>
     </GuestLayout>
@@ -122,7 +106,10 @@ async function handleSubmit() {
 
         errors.username = validationErrors.username ?? '';
         errors.password = validationErrors.password ?? '';
-        generalError.value = extractErrorMessage(error, 'Unable to sign in. Please check your credentials.');
+
+        if (!errors.username && !errors.password) {
+            generalError.value = extractErrorMessage(error, 'Unable to sign in. Please check your credentials.');
+        }
     }
 }
 </script>

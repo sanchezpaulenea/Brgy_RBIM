@@ -4,6 +4,7 @@ use App\Http\Controllers\AuditLog\AuditLogController;
 use App\Http\Controllers\Authentication\AuthController;
 use App\Http\Controllers\Authentication\PasswordController;
 use App\Http\Controllers\BarangayPersonnel\BarangayPersonnelController;
+use App\Http\Controllers\BarangayPersonnel\PersonnelController;
 use App\Http\Controllers\SystemSetting\SystemSettingController;
 use App\Http\Controllers\UserManagement\UserController;
 use App\Http\Controllers\UserManagement\UserRoleController;
@@ -40,6 +41,10 @@ Route::prefix('v1')->group(function () {
             Route::get('users/{user}/roles', [UserRoleController::class, 'index'])->name('users.roles.index');
             Route::post('users/{user}/roles', [UserRoleController::class, 'store'])->name('users.roles.store');
             Route::patch('user-roles/{userRole}/status', [UserRoleController::class, 'updateStatus'])->name('user-roles.update-status');
+
+            Route::get('barangay-personnel', [PersonnelController::class, 'index'])->name('barangay-personnel.index');
+            Route::post('barangay-personnel', [PersonnelController::class, 'store'])->name('barangay-personnel.store');
+            Route::patch('barangay-personnel/{personnel}', [PersonnelController::class, 'update'])->name('barangay-personnel.update');
 
             Route::post('personnel-positions', [BarangayPersonnelController::class, 'store'])->name('personnel-positions.store');
             Route::delete('personnel-positions/{position}', [BarangayPersonnelController::class, 'destroy'])->name('personnel-positions.destroy');

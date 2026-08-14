@@ -8,4 +8,42 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-brand: #2d4c39;
+    --color-brand-dark: #243d2e;
+    --color-brand-light: #3d654c;
+    --color-brand-muted: #e8eee9;
+}
+
+@layer components {
+    .rbim-input {
+        @apply w-full rounded-lg border border-gray-400 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-brand/20 disabled:cursor-not-allowed disabled:bg-slate-50;
+    }
+
+    .rbim-input-error {
+        @apply border-red-500 focus:border-red-500 focus:ring-red-100;
+    }
+
+    .rbim-btn {
+        @apply inline-flex items-center justify-center rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60;
+    }
+
+    .rbim-btn-outline {
+        @apply inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60;
+    }
+
+    .rbim-btn-danger {
+        @apply inline-flex items-center justify-center rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60;
+    }
+
+    .rbim-card {
+        @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+    }
+
+    .rbim-label {
+        @apply mb-1.5 block text-sm font-medium text-slate-700;
+    }
+
+    .rbim-error {
+        @apply mt-1.5 text-sm text-red-600;
+    }
 }

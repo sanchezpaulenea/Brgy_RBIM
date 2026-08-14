@@ -1,6 +1,6 @@
 <template>
-    <AppLayout title="Forbidden">
-        <section class="rounded-2xl border border-red-200 bg-white p-8 text-center shadow-sm">
+    <AppLayout title="Access denied">
+        <section class="rbim-card p-8 text-center">
             <p class="text-sm font-semibold uppercase tracking-wider text-red-600">
                 403 Forbidden
             </p>
@@ -8,18 +8,11 @@
                 Access denied
             </h2>
             <p class="mx-auto mt-3 max-w-lg text-sm text-slate-600">
-                System administrator modules are restricted to Admin and Super Admin accounts.
-                Super Admin access applies even when a Guest role is also assigned.
+                This module is restricted to Admin and Super Admin accounts.
             </p>
-
-            <div class="mt-6 flex flex-wrap justify-center gap-3">
-                <RouterLink
-                    to="/dashboard"
-                    class="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800"
-                >
-                    Back to dashboard
-                </RouterLink>
-            </div>
+            <RouterLink to="/dashboard" class="rbim-btn mt-6 inline-flex">
+                Back to home
+            </RouterLink>
         </section>
     </AppLayout>
 </template>
