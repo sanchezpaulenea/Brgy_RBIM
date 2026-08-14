@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import GuestLayout from '@/layouts/GuestLayout.vue';
 import { useAuth } from '@/composables/useAuth';
@@ -84,6 +84,12 @@ const errors = reactive({
 });
 
 const generalError = ref('');
+
+onMounted(() => {
+    if (route.query.reason === 'inactive') {
+        generalError.value = 'You have been logged out due to inactivity.';
+    }
+});
 
 function clearErrors() {
     errors.username = '';

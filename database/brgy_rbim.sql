@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Aug 08, 2026 at 04:28 PM
+-- Generation Time: Aug 13, 2026 at 06:43 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS `permission` (
   `permission` varchar(45) NOT NULL,
   PRIMARY KEY (`permission_id`),
   UNIQUE KEY `uq_permission` (`permission_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `permission`
@@ -372,9 +372,9 @@ INSERT INTO `user` (`user_id`, `username`, `password_hash`, `created_at`, `user_
 DROP TABLE IF EXISTS `user_log`;
 CREATE TABLE IF NOT EXISTS `user_log` (
   `user_log_id` int NOT NULL AUTO_INCREMENT,
-  `user_id` int NOT NULL,
+  `user_id` int DEFAULT NULL,
   `login_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `logout_time` datetime NOT NULL,
+  `logout_time` datetime DEFAULT NULL,
   `login_status_id` int NOT NULL,
   `ip_address` varchar(45) NOT NULL,
   `device` varchar(45) NOT NULL,

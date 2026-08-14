@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Lookup\Lookup;
 use App\Models\UserManagement\User;
+use App\Policies\LookupPolicy;
 use App\Policies\UserManagement\UserPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -20,6 +22,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected array $policies = [
         User::class => UserPolicy::class,
+        Lookup::class => LookupPolicy::class,
     ];
 
     /**
