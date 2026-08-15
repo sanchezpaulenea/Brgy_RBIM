@@ -2,16 +2,21 @@
 
 namespace App\Services\BarangayPersonnel;
 
-use App\Models\AuditLog\Action;
 use App\Models\BarangayPersonnel\BarangayPersonnel;
+use App\Models\Logs\Action;
 use App\Models\UserManagement\User;
-use App\Repositories\Interfaces\AuditLog\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\BarangayPersonnel\BarangayPersonnelRepositoryInterface;
 use App\Repositories\Interfaces\BarangayPersonnel\PersonnelPositionRepositoryInterface;
+use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class BarangayPersonnelService
 {
+    public const ACTIVE_STATUS_ID = 1;
+
+    public const DUPLICATE_MESSAGE = 'A personnel record with the same name and date of birth already exists. Please verify before continuing.';
+
     public function __construct(
         protected BarangayPersonnelRepositoryInterface $personnelRepository,
         protected PersonnelPositionRepositoryInterface $personnelPositionRepository,
@@ -35,8 +40,11 @@ class BarangayPersonnelService
      */
     public function createPersonnel(User $performedBy, array $data): array
     {
+        $this->assertNoUnconfirmedDuplicate($data);
+
         return DB::transaction(function () use ($performedBy, $data) {
             $positionId = $this->resolvePositionId($performedBy, $data);
+            $this->assertPositionAvailable($positionId);
 
             $personnel = $this->personnelRepository->create([
                 'position_id' => $positionId,
@@ -45,7 +53,7 @@ class BarangayPersonnelService
                 'personnel_middle_name' => $data['personnel_middle_name'] ?? null,
                 'personnel_suffix' => $data['personnel_suffix'] ?? null,
                 'personnel_date_of_birth' => $data['personnel_date_of_birth'],
-                'personnel_status_id' => $data['personnel_status_id'],
+                'personnel_status_id' => $data['personnel_status_id'] ?? self::ACTIVE_STATUS_ID,
             ]);
 
             $this->auditLogRepository->log(
@@ -69,9 +77,17 @@ class BarangayPersonnelService
      */
     public function updatePersonnel(User $performedBy, BarangayPersonnel $personnel, array $data): array
     {
+        $this->assertNoUnconfirmedDuplicate($data, $personnel->personnel_id);
+
         $oldName = $this->fullName($personnel);
 
         return DB::transaction(function () use ($performedBy, $personnel, $data, $oldName) {
+            if (! empty($data['position_id'])) {
+                $this->assertPositionAvailable((int) $data['position_id'], $personnel->personnel_id);
+            }
+
+            unset($data['confirm_duplicate'], $data['position_name']);
+
             $updated = $this->personnelRepository->update($personnel, $data);
 
             $this->auditLogRepository->log(
@@ -114,6 +130,49 @@ class BarangayPersonnelService
             'full_name' => $fullName,
             'label' => $fullName,
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function assertNoUnconfirmedDuplicate(array $data, ?int $excludePersonnelId = null): void
+    {
+        if (! empty($data['confirm_duplicate'])) {
+            return;
+        }
+
+        $match = $this->personnelRepository->findMatchingIdentity(
+            $data['personnel_last_name'],
+            $data['personnel_first_name'],
+            $data['personnel_middle_name'] ?? null,
+            $data['personnel_suffix'] ?? null,
+            (string) $data['personnel_date_of_birth'],
+            $excludePersonnelId,
+        );
+
+        if ($match !== null) {
+            throw ValidationException::withMessages([
+                'duplicate' => [self::DUPLICATE_MESSAGE],
+            ]);
+        }
+    }
+
+    private function assertPositionAvailable(int $positionId, ?int $excludePersonnelId = null): void
+    {
+        $position = $this->personnelPositionRepository->findById($positionId);
+
+        if ($position === null) {
+            return;
+        }
+
+        $position->load(['personnel' => fn ($query) => $query->where('personnel_status_id', self::ACTIVE_STATUS_ID)]);
+        $holder = $position->personnel->first();
+
+        if ($holder !== null && $holder->personnel_id !== $excludePersonnelId) {
+            throw ValidationException::withMessages([
+                'position_id' => ['This position is already held by an active barangay personnel.'],
+            ]);
+        }
     }
 
     /**

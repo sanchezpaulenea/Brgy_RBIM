@@ -87,11 +87,26 @@ const routes = [
     {
         path: '/settings/audit-logs',
         name: 'audit-logs',
-        component: () => import('@/pages/settings/AuditLogsPage.vue'),
+        component: () => import('@/pages/logs/LogsPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresPermissions: ['auditlog.view'],
+            logType: 'audit',
+        },
+    },
+    {
+        path: '/settings/user-logs',
+        name: 'user-logs',
+        component: () => import('@/pages/logs/LogsPage.vue'),
         meta: {
             requiresAuth: true,
             requiresPermissions: ['userlog.view'],
+            logType: 'login',
         },
+    },
+    {
+        path: '/settings/logs',
+        redirect: { name: 'audit-logs' },
     },
     {
         path: '/lookups',

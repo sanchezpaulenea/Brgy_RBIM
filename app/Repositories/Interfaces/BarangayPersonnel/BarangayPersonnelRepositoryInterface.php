@@ -14,6 +14,15 @@ interface BarangayPersonnelRepositoryInterface
 
     public function findById(int $personnelId): ?BarangayPersonnel;
 
+    public function findMatchingIdentity(
+        string $lastName,
+        string $firstName,
+        ?string $middleName,
+        ?string $suffix,
+        string $dateOfBirth,
+        ?int $excludePersonnelId = null,
+    ): ?BarangayPersonnel;
+
     /**
      * @param  array<string, mixed>  $attributes
      */

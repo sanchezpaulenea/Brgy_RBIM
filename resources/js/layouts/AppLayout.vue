@@ -91,33 +91,34 @@
                         </button>
 
                         <div v-show="settingsOpen || isSettingsRoute" class="ml-3 mt-1 space-y-1 border-l border-white/20 pl-3">
-                            <template v-if="canViewLookups">
-                                <p class="px-2 pt-1 text-[11px] font-semibold uppercase tracking-wider text-white/55">
-                                    Lookup tables
-                                </p>
-                                <RouterLink
-                                    v-for="item in lookupItems"
-                                    :key="item.name"
-                                    :to="{ name: item.name }"
-                                    class="block rounded-lg px-2 py-1.5 text-sm transition"
-                                    :class="route.name === item.name ? 'bg-white text-brand' : 'text-white/85 hover:bg-white/10'"
-                                    @click="sidebarOpen = false"
-                                >
-                                    {{ item.label }}
-                                </RouterLink>
-                            </template>
-
                             <RouterLink
-                                v-if="canViewLogs"
-                                :to="{ name: 'audit-logs' }"
+                                v-for="item in lookupItems"
+                                v-show="canViewLookups"
+                                :key="item.name"
+                                :to="{ name: item.name }"
                                 class="block rounded-lg px-2 py-1.5 text-sm transition"
-                                :class="[
-                                    canViewLookups ? 'mt-2' : '',
-                                    route.name === 'audit-logs' ? 'bg-white text-brand' : 'text-white/85 hover:bg-white/10',
-                                ]"
+                                :class="route.name === item.name ? 'bg-white text-brand' : 'text-white/85 hover:bg-white/10'"
                                 @click="sidebarOpen = false"
                             >
-                                Audit logs
+                                {{ item.label }}
+                            </RouterLink>
+                            <RouterLink
+                                v-if="canViewAuditLogs"
+                                :to="{ name: 'audit-logs' }"
+                                class="block rounded-lg px-2 py-1.5 text-sm transition"
+                                :class="route.name === 'audit-logs' ? 'bg-white text-brand' : 'text-white/85 hover:bg-white/10'"
+                                @click="sidebarOpen = false"
+                            >
+                                Audit log
+                            </RouterLink>
+                            <RouterLink
+                                v-if="canViewUserLogs"
+                                :to="{ name: 'user-logs' }"
+                                class="block rounded-lg px-2 py-1.5 text-sm transition"
+                                :class="route.name === 'user-logs' ? 'bg-white text-brand' : 'text-white/85 hover:bg-white/10'"
+                                @click="sidebarOpen = false"
+                            >
+                                User log
                             </RouterLink>
                             <RouterLink
                                 v-if="canViewSystemSettings"
@@ -178,8 +179,9 @@ const canViewSystemSettings = computed(() => (
     hasPermission('setting.view') || hasPermission('setting.update')
 ));
 
-const canViewLogs = computed(() => hasPermission('userlog.view'));
-
+const canViewAuditLogs = computed(() => hasPermission('auditlog.view'));
+const canViewUserLogs = computed(() => hasPermission('userlog.view'));
+const canViewLogs = computed(() => canViewAuditLogs.value || canViewUserLogs.value);
 const canViewLookups = computed(() => isSuperAdmin.value);
 
 const canViewSettingsMenu = computed(() => (

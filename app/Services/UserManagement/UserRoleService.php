@@ -2,10 +2,10 @@
 
 namespace App\Services\UserManagement;
 
-use App\Models\AuditLog\Action;
+use App\Models\Logs\Action;
 use App\Models\UserManagement\User;
 use App\Models\UserManagement\UserRole;
-use App\Repositories\Interfaces\AuditLog\AuditLogRepositoryInterface;
+use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\UserManagement\UserRoleRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;

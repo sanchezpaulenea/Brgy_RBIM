@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Aug 13, 2026 at 06:43 PM
+-- Generation Time: Aug 15, 2026 at 07:20 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS `permission` (
   `permission` varchar(45) NOT NULL,
   PRIMARY KEY (`permission_id`),
   UNIQUE KEY `uq_permission` (`permission_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `permission`
@@ -184,7 +184,9 @@ INSERT INTO `permission` (`permission_id`, `permission`) VALUES
 (14, 'pposition.delete'),
 (15, 'setting.view'),
 (16, 'setting.update'),
-(17, 'user.changepassword');
+(17, 'user.changepassword'),
+(18, 'auditlog.view'),
+(19, 'user.delete');
 
 -- --------------------------------------------------------
 
@@ -271,7 +273,7 @@ CREATE TABLE IF NOT EXISTS `role_permission` (
   PRIMARY KEY (`role_permission_id`),
   UNIQUE KEY `uq_permission_assignment` (`role_id`,`permission_id`),
   KEY `permission_role` (`permission_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `role_permission`
@@ -282,6 +284,7 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (16, 2, 15),
 (17, 2, 16),
 (18, 2, 17),
+(23, 2, 18),
 (7, 3, 1),
 (10, 3, 2),
 (8, 3, 3),
@@ -297,6 +300,8 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (6, 3, 13),
 (5, 3, 14),
 (20, 3, 17),
+(22, 3, 18),
+(24, 3, 19),
 (21, 4, 17);
 
 -- --------------------------------------------------------

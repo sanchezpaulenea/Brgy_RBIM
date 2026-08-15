@@ -6,6 +6,7 @@ use App\Models\BarangayPersonnel\BarangayPersonnel;
 use App\Models\BarangayPersonnel\PersonnelPosition;
 use App\Models\UserManagement\User;
 use App\Models\UserManagement\UserRole;
+use App\Models\UserManagement\UserStatus;
 use App\Repositories\Interfaces\UserManagement\UserRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -41,12 +42,12 @@ class UserRepository implements UserRepositoryInterface
 
     public function lockUserAccount(int $userId): void
     {
-        User::where('user_id', $userId)->update(['user_status_id' => 3]);
+        User::where('user_id', $userId)->update(['user_status_id' => UserStatus::LOCKED]);
     }
 
     public function unlockUserAccount(int $userId): void
     {
-        User::where('user_id', $userId)->update(['user_status_id' => 1]);
+        User::where('user_id', $userId)->update(['user_status_id' => UserStatus::ACTIVE]);
     }
 
     public function create(array $attributes): User

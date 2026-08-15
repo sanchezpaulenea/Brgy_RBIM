@@ -2,10 +2,10 @@
 
 namespace App\Services\SystemSetting;
 
-use App\Models\AuditLog\Action;
+use App\Models\Logs\Action;
 use App\Models\Setting\Setting;
 use App\Models\UserManagement\User;
-use App\Repositories\Interfaces\AuditLog\AuditLogRepositoryInterface;
+use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\Setting\SettingRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 

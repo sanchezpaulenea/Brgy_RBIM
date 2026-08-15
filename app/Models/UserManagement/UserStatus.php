@@ -15,6 +15,15 @@ class UserStatus extends Model
 
     protected $fillable = ['user_status', 'can_login'];
 
+    /** Seeded user_status_id constants for use throughout the application. */
+    public const ACTIVE = 1;
+
+    public const DISABLED = 2;
+
+    public const LOCKED = 3;
+
+    public const SUSPENDED = 4;
+
     /**
      * @var array<string, string>
      */

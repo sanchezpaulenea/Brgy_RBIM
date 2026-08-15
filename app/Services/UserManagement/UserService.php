@@ -2,13 +2,15 @@
 
 namespace App\Services\UserManagement;
 
-use App\Models\AuditLog\Action;
 use App\Models\BarangayPersonnel\BarangayPersonnel;
+use App\Models\Logs\Action;
 use App\Models\UserManagement\Role;
 use App\Models\UserManagement\User;
 use App\Models\UserManagement\UserStatus;
-use App\Repositories\Interfaces\AuditLog\AuditLogRepositoryInterface;
+use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
+use App\Repositories\Interfaces\UserManagement\RoleInterface;
 use App\Repositories\Interfaces\UserManagement\UserRepositoryInterface;
+use App\Repositories\Interfaces\UserManagement\UserStatusInterface;
 use App\Services\SystemSetting\SystemSettingService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -23,6 +25,8 @@ class UserService
         protected UserRoleService $userRoleService,
         protected AuditLogRepositoryInterface $auditLogRepository,
         protected SystemSettingService $settingService,
+        protected RoleInterface $roleRepository,
+        protected UserStatusInterface $userStatusRepository,
     ) {}
 
     /**
@@ -145,9 +149,8 @@ class UserService
      */
     public function getCreateOptions(): array
     {
-        $roles = Role::query()
-            ->orderBy('role_name')
-            ->get(['role_id', 'role_name'])
+        $roles = $this->roleRepository
+            ->all()
             ->map(fn (Role $role) => [
                 'role_id' => $role->role_id,
                 'role_name' => $role->role_name,
@@ -183,9 +186,8 @@ class UserService
      */
     public function listUserStatuses(): array
     {
-        return UserStatus::query()
-            ->orderBy('user_status')
-            ->get()
+        return $this->userStatusRepository
+            ->all()
             ->map(fn (UserStatus $status) => [
                 'id' => $status->user_status_id,
                 'label' => $status->user_status,
@@ -255,6 +257,15 @@ class UserService
             'must_change_password' => $user->must_change_password,
             'created_at' => $user->created_at,
             'roles' => $user->roles->pluck('role_name'),
+            'role_assignments' => $user->userRoles
+                ->map(fn ($assignment) => [
+                    'user_role_id' => $assignment->user_role_id,
+                    'role_id' => $assignment->role_id,
+                    'role_name' => $assignment->role?->role_name,
+                    'enable' => (bool) $assignment->enable,
+                ])
+                ->values()
+                ->all(),
         ];
     }
 
@@ -266,10 +277,14 @@ class UserService
     /**
      * @param  array{personnel_id?: int, position_id?: int}  $data
      */
-    private function resolvePersonnelId(array $data): int
+    private function resolvePersonnelId(array $data): ?int
     {
         if (! empty($data['personnel_id'])) {
             return (int) $data['personnel_id'];
+        }
+
+        if (empty($data['position_id'])) {
+            return null;
         }
 
         $positionId = (int) $data['position_id'];

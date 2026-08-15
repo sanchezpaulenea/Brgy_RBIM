@@ -20,6 +20,44 @@ class BarangayPersonnelRepository implements BarangayPersonnelRepositoryInterfac
             ->get();
     }
 
+    public function findMatchingIdentity(
+        string $lastName,
+        string $firstName,
+        ?string $middleName,
+        ?string $suffix,
+        string $dateOfBirth,
+        ?int $excludePersonnelId = null,
+    ): ?BarangayPersonnel {
+        $query = BarangayPersonnel::query()
+            ->where('personnel_last_name', $lastName)
+            ->where('personnel_first_name', $firstName)
+            ->whereDate('personnel_date_of_birth', $dateOfBirth);
+
+        if ($middleName === null || $middleName === '') {
+            $query->where(function ($builder): void {
+                $builder->whereNull('personnel_middle_name')
+                    ->orWhere('personnel_middle_name', '');
+            });
+        } else {
+            $query->where('personnel_middle_name', $middleName);
+        }
+
+        if ($suffix === null || $suffix === '') {
+            $query->where(function ($builder): void {
+                $builder->whereNull('personnel_suffix')
+                    ->orWhere('personnel_suffix', '');
+            });
+        } else {
+            $query->where('personnel_suffix', $suffix);
+        }
+
+        if ($excludePersonnelId !== null) {
+            $query->where('personnel_id', '!=', $excludePersonnelId);
+        }
+
+        return $query->first();
+    }
+
     public function findById(int $personnelId): ?BarangayPersonnel
     {
         return BarangayPersonnel::query()

@@ -55,3 +55,10 @@ export function formatDateTime(value) {
 export function formatSettingLabel(key) {
     return String(key).replaceAll('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 }
+
+export function todayDate() {
+    const now = new Date();
+    const offset = now.getTimezoneOffset();
+
+    return new Date(now.getTime() - (offset * 60_000)).toISOString().slice(0, 10);
+}

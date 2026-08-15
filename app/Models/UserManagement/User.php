@@ -3,6 +3,7 @@
 namespace App\Models\UserManagement;
 
 use App\Models\BarangayPersonnel\BarangayPersonnel;
+use App\Models\Logs\UserLog;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -208,7 +209,7 @@ class User extends Authenticatable
     public function userLogs(): HasMany
     {
         return $this->hasMany(
-            \App\Models\Authentication\UserLog::class,
+            UserLog::class,
             'user_id',
             'user_id'
         );

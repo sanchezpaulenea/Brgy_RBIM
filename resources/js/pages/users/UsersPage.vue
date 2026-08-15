@@ -29,15 +29,35 @@
                     <PersonnelSearch
                         v-model="createForm.personnel_id"
                         :options="personnelOptions"
-                        hint="Optional. Search an existing personnel record. Roles are assigned separately."
+                        hint="Leave this blank to create a Guest account. Staff roles require a personnel record."
                         :error="createErrors.personnel_id"
                     />
+                    <div>
+                        <label for="role_id" class="rbim-label">Role</label>
+                        <select
+                            id="role_id"
+                            v-model="createForm.role_id"
+                            required
+                            class="rbim-input"
+                            :class="{ 'rbim-input-error': createErrors.role_id }"
+                        >
+                            <option value="">Select role</option>
+                            <option
+                                v-for="role in createRoleOptions"
+                                :key="role.role_id"
+                                :value="role.role_id"
+                            >
+                                {{ role.role_name }}
+                            </option>
+                        </select>
+                        <p v-if="createErrors.role_id" class="rbim-error">{{ createErrors.role_id }}</p>
+                    </div>
                     <div class="sm:col-span-2">
                         <button type="submit" class="rbim-btn" :disabled="creatingUser">
                             {{ creatingUser ? 'Creating...' : 'Create account' }}
                         </button>
                         <p class="mt-2 text-xs text-slate-500">
-                            New accounts receive the default password and must change it on first login. Assign roles after the account is created.
+                            New accounts receive the default password and must change it on first login.
                         </p>
                     </div>
                 </form>
@@ -167,12 +187,23 @@
                 </div>
             </div>
         </div>
+
+        <ConfirmDialog
+            :open="confirm.open"
+            :title="confirm.title"
+            :message="confirm.message"
+            :confirm-label="confirm.confirmLabel"
+            :variant="confirm.variant"
+            @confirm="confirm.onConfirm?.()"
+            @cancel="handleConfirmCancel"
+        />
     </AppLayout>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import PersonnelSearch from '@/components/PersonnelSearch.vue';
 import { ROLES } from '@/constants/roles';
 import { useAuth } from '@/composables/useAuth';
@@ -201,11 +232,23 @@ const successMessage = ref('');
 const createForm = reactive({
     username: '',
     personnel_id: null,
+    role_id: '',
 });
 
 const createErrors = reactive({
     username: '',
     personnel_id: '',
+    role_id: '',
+});
+
+const confirm = reactive({
+    open: false,
+    title: '',
+    message: '',
+    confirmLabel: 'Confirm',
+    variant: 'primary',
+    onConfirm: null,
+    onCancel: null,
 });
 
 const canCreateUser = computed(() => hasPermission('user.create'));
@@ -236,13 +279,38 @@ const assignableRoles = computed(() => {
     });
 });
 
-function starterRoleId(hasPersonnel) {
-    const match = createOptions.roles.find((role) => (
-        role.role_name === (hasPersonnel ? ROLES.ENCODER : ROLES.GUEST)
-    ));
+const createRoleOptions = computed(() => {
+    const hasPersonnel = Boolean(createForm.personnel_id);
 
-    return match?.role_id ?? null;
+    return createOptions.roles.filter((role) => (
+        hasPersonnel ? role.role_name !== ROLES.GUEST : role.role_name === ROLES.GUEST
+    ));
+});
+
+function handleConfirmCancel() {
+    confirm.open = false;
+    confirm.onCancel?.();
 }
+
+function askConfirm({ title, message, confirmLabel = 'Continue', variant = 'primary' }) {
+    return new Promise((resolve) => {
+        confirm.open = true;
+        confirm.title = title;
+        confirm.message = message;
+        confirm.confirmLabel = confirmLabel;
+        confirm.variant = variant;
+        confirm.onConfirm = () => {
+            confirm.open = false;
+            resolve(true);
+        };
+        confirm.onCancel = () => resolve(false);
+    });
+}
+
+watch(() => createForm.personnel_id, () => {
+    const first = createRoleOptions.value[0];
+    createForm.role_id = first?.role_id ?? '';
+});
 
 async function loadUsers() {
     loadingUsers.value = true;
@@ -266,6 +334,9 @@ async function loadOptions() {
         ]);
 
         createOptions.roles = options.roles ?? [];
+        if (!createForm.personnel_id && createRoleOptions.value[0]) {
+            createForm.role_id = createRoleOptions.value[0].role_id;
+        }
         userStatuses.value = statuses.map((item) => ({ id: item.id, label: item.label }));
         personnelOptions.value = personnel.length
             ? personnel
@@ -283,12 +354,14 @@ async function handleCreateUser() {
     creatingUser.value = true;
     createErrors.username = '';
     createErrors.personnel_id = '';
+    createErrors.role_id = '';
     error.value = '';
     successMessage.value = '';
 
     const hasPersonnel = Boolean(createForm.personnel_id);
     const payload = {
         username: createForm.username.trim(),
+        role_id: Number(createForm.role_id),
     };
 
     if (hasPersonnel) {
@@ -296,32 +369,20 @@ async function handleCreateUser() {
     }
 
     try {
-        let created;
-
-        try {
-            created = await userService.createUser(payload);
-        } catch (err) {
-            const validationErrors = extractValidationErrors(err);
-            const starterId = starterRoleId(hasPersonnel);
-
-            if (validationErrors.role_id && !validationErrors.personnel_id && !validationErrors.position_id && starterId) {
-                payload.role_id = starterId;
-                created = await userService.createUser(payload);
-            } else {
-                throw err;
-            }
-        }
+        const created = await userService.createUser(payload);
 
         users.value = [...users.value, created].sort((a, b) => a.username.localeCompare(b.username));
         createForm.username = '';
         createForm.personnel_id = null;
+        createForm.role_id = '';
         await loadOptions();
-        successMessage.value = `Account "${created.username}" created. Assign additional roles from the table.`;
+        successMessage.value = `Account "${created.username}" created.`;
     } catch (err) {
         const validationErrors = extractValidationErrors(err);
         createErrors.username = validationErrors.username ?? '';
         createErrors.personnel_id = validationErrors.personnel_id ?? validationErrors.position_id ?? '';
-        error.value = (createErrors.username || createErrors.personnel_id)
+        createErrors.role_id = validationErrors.role_id ?? '';
+        error.value = (createErrors.username || createErrors.personnel_id || createErrors.role_id)
             ? ''
             : extractErrorMessage(err, 'Unable to create user account.');
     } finally {
@@ -329,25 +390,61 @@ async function handleCreateUser() {
     }
 }
 
+/**
+ * The selected id must be read before awaiting the dialog: opening it re-renders
+ * this page, and Vue re-applies the `:value` binding, snapping the select back to
+ * the account's current status.
+ */
 async function handleStatusChange(account, event) {
+    const select = event.target;
+    const nextStatusId = Number(select.value);
+
+    if (!nextStatusId || nextStatusId === Number(account.user_status_id)) {
+        select.value = account.user_status_id;
+
+        return;
+    }
+
+    const nextStatusLabel = userStatuses.value
+        .find((status) => Number(status.id) === nextStatusId)?.label ?? 'the selected status';
+
+    const allowed = await askConfirm({
+        title: 'Update account status',
+        message: `Set "${account.username}" to ${nextStatusLabel}?`,
+        confirmLabel: 'Update status',
+    });
+
+    if (!allowed) {
+        select.value = account.user_status_id;
+
+        return;
+    }
+
     updatingStatusId.value = account.user_id;
     error.value = '';
     successMessage.value = '';
 
     try {
-        const updated = await userService.updateUserStatus(account.user_id, Number(event.target.value));
+        const updated = await userService.updateUserStatus(account.user_id, nextStatusId);
         users.value = users.value.map((row) => (row.user_id === updated.user_id ? updated : row));
-        successMessage.value = `Updated status for "${account.username}".`;
+        successMessage.value = `Updated status for "${account.username}" to ${updated.user_status}.`;
     } catch (err) {
         error.value = extractErrorMessage(err, 'Unable to update user status.');
-        event.target.value = account.user_status_id;
+        select.value = account.user_status_id;
     } finally {
         updatingStatusId.value = null;
     }
 }
 
 async function handleResetPassword(userId) {
-    if (!window.confirm('Reset this account password to the system default?')) {
+    const allowed = await askConfirm({
+        title: 'Reset password',
+        message: 'Reset this account password to the system default?',
+        confirmLabel: 'Reset password',
+        variant: 'danger',
+    });
+
+    if (!allowed) {
         return;
     }
 
@@ -407,6 +504,17 @@ async function handleAssignRole(account) {
 }
 
 async function handleRoleStatus(assignment) {
+    const allowed = await askConfirm({
+        title: assignment.enable ? 'Disable role' : 'Enable role',
+        message: `${assignment.enable ? 'Disable' : 'Enable'} the ${assignment.role_name} role for this user?`,
+        confirmLabel: assignment.enable ? 'Disable' : 'Enable',
+        variant: assignment.enable ? 'danger' : 'primary',
+    });
+
+    if (!allowed) {
+        return;
+    }
+
     error.value = '';
 
     try {

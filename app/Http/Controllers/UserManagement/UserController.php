@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\UserManagement;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UserManagement\ResetUserPasswordRequest;
 use App\Http\Requests\UserManagement\StoreUserRequest;
 use App\Http\Requests\UserManagement\UpdateUserStatusRequest;
 use App\Models\UserManagement\User;
@@ -82,12 +83,12 @@ class UserController extends Controller
     /**
      * POST /api/v1/users/{user}/reset-password
      */
-    public function resetPassword(User $user): JsonResponse
+    public function resetPassword(ResetUserPasswordRequest $request, User $user): JsonResponse
     {
         $this->authorize('resetPassword', $user);
 
         /** @var User $performedBy */
-        $performedBy = request()->user();
+        $performedBy = $request->user();
 
         $updated = $this->userService->resetPassword($performedBy, $user);
 

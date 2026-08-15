@@ -5,7 +5,13 @@
                 Enter your credentials to continue.
             </p>
 
-            <div v-if="generalError" class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div v-if="lockoutSeconds > 0" class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                {{ lockoutMessage }}
+                <span class="mt-1 block font-semibold">
+                    You can try again in {{ lockoutLabel }}.
+                </span>
+            </div>
+            <div v-else-if="generalError" class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {{ generalError }}
             </div>
 
@@ -39,7 +45,7 @@
                 </div>
             </div>
 
-            <button type="submit" class="rbim-btn mt-6 w-full" :disabled="loading">
+            <button type="submit" class="rbim-btn mt-6 w-full" :disabled="loading || lockoutSeconds > 0">
                 {{ loading ? 'Signing in...' : 'Login' }}
             </button>
         </form>
@@ -47,7 +53,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import GuestLayout from '@/layouts/GuestLayout.vue';
 import { useAuth } from '@/composables/useAuth';
@@ -68,6 +74,52 @@ const errors = reactive({
 });
 
 const generalError = ref('');
+const lockoutMessage = ref('');
+const lockoutSeconds = ref(0);
+let lockoutTimer = null;
+let lockoutEndsAt = 0;
+
+const lockoutLabel = computed(() => {
+    const minutes = Math.floor(lockoutSeconds.value / 60);
+    const seconds = String(lockoutSeconds.value % 60).padStart(2, '0');
+
+    return `${minutes}:${seconds}`;
+});
+
+function stopLockoutTimer() {
+    if (lockoutTimer) {
+        clearInterval(lockoutTimer);
+        lockoutTimer = null;
+    }
+}
+
+/**
+ * Derives the remaining time from a fixed deadline rather than decrementing a
+ * counter, so a throttled or backgrounded tab does not fall behind the server.
+ */
+function tickLockout() {
+    lockoutSeconds.value = Math.max(0, Math.ceil((lockoutEndsAt - Date.now()) / 1000));
+
+    if (lockoutSeconds.value <= 0) {
+        stopLockoutTimer();
+    }
+}
+
+function startLockoutTimer(seconds) {
+    stopLockoutTimer();
+
+    const totalSeconds = Math.max(0, Number.parseInt(seconds, 10) || 0);
+
+    if (totalSeconds <= 0) {
+        lockoutSeconds.value = 0;
+
+        return;
+    }
+
+    lockoutEndsAt = Date.now() + totalSeconds * 1000;
+    tickLockout();
+    lockoutTimer = setInterval(tickLockout, 1000);
+}
 
 onMounted(() => {
     if (route.query.reason === 'inactive') {
@@ -75,13 +127,20 @@ onMounted(() => {
     }
 });
 
+onUnmounted(stopLockoutTimer);
+
 function clearErrors() {
     errors.username = '';
     errors.password = '';
     generalError.value = '';
+    lockoutMessage.value = '';
 }
 
 async function handleSubmit() {
+    if (lockoutSeconds.value > 0) {
+        return;
+    }
+
     clearErrors();
 
     try {
@@ -106,6 +165,18 @@ async function handleSubmit() {
 
         errors.username = validationErrors.username ?? '';
         errors.password = validationErrors.password ?? '';
+
+        if (validationErrors.lockout_remaining_seconds) {
+            startLockoutTimer(validationErrors.lockout_remaining_seconds);
+        }
+
+        if (lockoutSeconds.value > 0) {
+            lockoutMessage.value = errors.username || 'Your account is locked.';
+            errors.username = '';
+            form.password = '';
+
+            return;
+        }
 
         if (!errors.username && !errors.password) {
             generalError.value = extractErrorMessage(error, 'Unable to sign in. Please check your credentials.');

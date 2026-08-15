@@ -2,11 +2,11 @@
 
 namespace App\Services\BarangayPersonnel;
 
-use App\Models\AuditLog\Action;
 use App\Models\BarangayPersonnel\PersonnelPosition;
+use App\Models\Logs\Action;
 use App\Models\UserManagement\User;
-use App\Repositories\Interfaces\AuditLog\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\BarangayPersonnel\PersonnelPositionRepositoryInterface;
+use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;

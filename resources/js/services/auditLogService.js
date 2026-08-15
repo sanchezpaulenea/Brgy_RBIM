@@ -5,9 +5,3 @@ export async function fetchAuditLogs(params = {}) {
 
     return data.logs;
 }
-
-export async function fetchLoginLogs() {
-    const { data } = await http.get('/auth/logs');
-
-    return data.logs;
-}

@@ -20,8 +20,8 @@
 </template>
 
 <script setup>
-const cityLogo = '/images/city-of-baguio.png';
-const brgyLogo = '/images/brgy-happy-hallow.png';
+const cityLogo = '/img/city-of-baguio.png';
+const brgyLogo = '/img/brgy-happy-hallow.png';
 
 defineProps({
     sizeClass: {

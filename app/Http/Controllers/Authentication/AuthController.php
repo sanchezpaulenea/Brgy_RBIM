@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Authentication;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Authentication\LoginRequest;
-use App\Models\Authentication\UserLog;
 use App\Models\UserManagement\User;
 use App\Services\Authentication\AuthenticationService;
 use Illuminate\Http\JsonResponse;
@@ -74,18 +73,6 @@ class AuthController extends Controller
             ],
             'roles' => $user->roles->pluck('role_name'),
             'permissions' => $user->permissions()->pluck('permission'),
-        ]);
-    }
-
-    /**
-     * GET /api/v1/auth/logs
-     */
-    public function userLogs(Request $request): JsonResponse
-    {
-        $this->authorize('viewAny', UserLog::class);
-
-        return response()->json([
-            'logs' => $this->authenticationService->listLoginHistory(),
         ]);
     }
 }

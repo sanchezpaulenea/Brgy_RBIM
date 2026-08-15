@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\UserManagement;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\UserManagement\StoreUserRoleRequest;
+use App\Http\Requests\UserManagement\AssignUserRoleRequest;
 use App\Http\Requests\UserManagement\UpdateUserRoleStatusRequest;
 use App\Models\UserManagement\User;
 use App\Models\UserManagement\UserRole;
@@ -32,7 +32,7 @@ class UserRoleController extends Controller
     /**
      * POST /api/v1/users/{user}/roles
      */
-    public function store(StoreUserRoleRequest $request, User $user): JsonResponse
+    public function store(AssignUserRoleRequest $request, User $user): JsonResponse
     {
         $this->authorize('create', UserRole::class);
 

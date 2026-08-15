@@ -1,10 +1,11 @@
 <?php
 
-use App\Http\Controllers\AuditLog\AuditLogController;
 use App\Http\Controllers\Authentication\AuthController;
 use App\Http\Controllers\Authentication\PasswordController;
 use App\Http\Controllers\BarangayPersonnel\BarangayPersonnelController;
 use App\Http\Controllers\BarangayPersonnel\PersonnelController;
+use App\Http\Controllers\Logs\AuditLogController;
+use App\Http\Controllers\Logs\UserLogController;
 use App\Http\Controllers\SystemSetting\SystemSettingController;
 use App\Http\Controllers\UserManagement\UserController;
 use App\Http\Controllers\UserManagement\UserRoleController;
@@ -18,10 +19,6 @@ Route::prefix('v1')->group(function () {
             Route::post('logout', [AuthController::class, 'logout'])->name('auth.logout');
             Route::get('me', [AuthController::class, 'me'])->name('auth.me');
             Route::post('password/change', [PasswordController::class, 'change'])->name('auth.password.change');
-
-            Route::middleware('system.admin')->group(function () {
-                Route::get('logs', [AuthController::class, 'userLogs'])->name('auth.logs');
-            });
         });
     });
 
@@ -53,6 +50,7 @@ Route::prefix('v1')->group(function () {
             Route::patch('settings/{setting}', [SystemSettingController::class, 'update'])->name('settings.update');
 
             Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+            Route::get('user-logs', [UserLogController::class, 'index'])->name('user-logs.index');
         });
     });
 });
