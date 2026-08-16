@@ -32,6 +32,8 @@ class PasswordController extends Controller
             $request->validated('new_password')
         );
 
-        return response()->json(['message' => 'Password changed successfully.']);
+        $this->authenticationService->logout($user, $request);
+
+        return response()->json(['message' => 'Password changed successfully. Please log in with your new password.']);
     }
 }

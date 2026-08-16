@@ -70,13 +70,7 @@ export function useAuth() {
 
         try {
             await authService.changePassword(payload);
-
-            if (user.value) {
-                user.value = {
-                    ...user.value,
-                    must_change_password: false,
-                };
-            }
+            clearSession();
         } finally {
             loading.value = false;
         }

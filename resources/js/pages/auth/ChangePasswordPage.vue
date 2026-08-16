@@ -169,10 +169,10 @@ async function handleSubmit() {
 
     try {
         await changePassword({ ...form });
-        successMessage.value = 'Password updated successfully. Redirecting...';
+        successMessage.value = 'Password updated successfully. Redirecting to login...';
 
         setTimeout(async () => {
-            await router.push({ name: 'dashboard' });
+            await router.push({ name: 'login', query: { reason: 'password_changed' } });
         }, 800);
     } catch (error) {
         const validationErrors = extractValidationErrors(error);

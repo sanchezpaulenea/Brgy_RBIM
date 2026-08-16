@@ -5,7 +5,10 @@
                 Enter your credentials to continue.
             </p>
 
-            <div v-if="lockoutSeconds > 0" class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <div v-if="successMessage" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                {{ successMessage }}
+            </div>
+            <div v-else-if="lockoutSeconds > 0" class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                 {{ lockoutMessage }}
                 <span class="mt-1 block font-semibold">
                     You can try again in {{ lockoutLabel }}.
@@ -74,6 +77,7 @@ const errors = reactive({
 });
 
 const generalError = ref('');
+const successMessage = ref('');
 const lockoutMessage = ref('');
 const lockoutSeconds = ref(0);
 let lockoutTimer = null;
@@ -124,6 +128,8 @@ function startLockoutTimer(seconds) {
 onMounted(() => {
     if (route.query.reason === 'inactive') {
         generalError.value = 'You have been logged out due to inactivity.';
+    } else if (route.query.reason === 'password_changed') {
+        successMessage.value = 'Password updated successfully. Please log in with your new password.';
     }
 });
 
@@ -133,6 +139,7 @@ function clearErrors() {
     errors.username = '';
     errors.password = '';
     generalError.value = '';
+    successMessage.value = '';
     lockoutMessage.value = '';
 }
 
