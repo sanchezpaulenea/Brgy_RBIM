@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Logs;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Logs\AuditLogFilterRequest;
+use App\Http\Requests\Logs\IndexAuditLogRequest;
 use App\Models\Logs\AuditLog;
 use App\Services\Logs\AuditLogService;
 use Illuminate\Http\JsonResponse;
@@ -17,7 +17,7 @@ class AuditLogController extends Controller
     /**
      * GET /api/v1/audit-logs
      */
-    public function index(AuditLogFilterRequest $request): JsonResponse
+    public function index(IndexAuditLogRequest $request): JsonResponse
     {
         $this->authorize('viewAny', AuditLog::class);
 

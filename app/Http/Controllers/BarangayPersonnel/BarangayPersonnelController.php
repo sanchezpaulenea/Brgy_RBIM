@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\BarangayPersonnel;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\BarangayPersonnel\DeletePositionRequest;
-use App\Http\Requests\BarangayPersonnel\StorePositionRequest;
+use App\Http\Requests\BarangayPersonnel\StorePersonnelPositionRequest;
 use App\Models\BarangayPersonnel\PersonnelPosition;
 use App\Models\UserManagement\User;
 use App\Services\BarangayPersonnel\PersonnelPositionService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class BarangayPersonnelController extends Controller
 {
@@ -31,7 +31,7 @@ class BarangayPersonnelController extends Controller
     /**
      * POST /api/v1/personnel-positions
      */
-    public function store(StorePositionRequest $request): JsonResponse
+    public function store(StorePersonnelPositionRequest $request): JsonResponse
     {
         $this->authorize('create', PersonnelPosition::class);
 
@@ -52,7 +52,7 @@ class BarangayPersonnelController extends Controller
     /**
      * DELETE /api/v1/personnel-positions/{position}
      */
-    public function destroy(DeletePositionRequest $request, PersonnelPosition $position): JsonResponse
+    public function destroy(Request $request, PersonnelPosition $position): JsonResponse
     {
         $this->authorize('delete', $position);
 
