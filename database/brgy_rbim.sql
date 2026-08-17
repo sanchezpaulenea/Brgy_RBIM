@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Aug 08, 2026 at 04:28 PM
+-- Generation Time: Aug 17, 2026 at 10:24 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `v1_rbim`
+-- Database: `brgy_rbim`
 --
 
 -- --------------------------------------------------------
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS `audit_log` (
   PRIMARY KEY (`audit_id`),
   KEY `action` (`action_id`),
   KEY `audit_user` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `audit_log`
@@ -79,7 +79,16 @@ INSERT INTO `audit_log` (`audit_id`, `user_id`, `action_id`, `record_id`, `descr
 (2, 1, 1, 2, 'Create user account', NULL, 'laila', '2026-08-06 23:56:57', 'account', 'user'),
 (3, 1, 1, 1, 'Create barangay personnel record', NULL, 'ellen', '2026-08-06 23:59:23', 'record', 'barangay personnel'),
 (4, 1, 1, 2, 'Create barangay personnel record', NULL, 'laila', '2026-08-06 23:59:23', 'record', 'barangay personnel'),
-(5, 1, 2, 4, 'Updated user role status', '1', '0', '2026-08-07 00:14:57', 'status', 'user role');
+(5, 1, 2, 4, 'Updated user role status', '1', '0', '2026-08-07 00:14:57', 'status', 'user role'),
+(6, 3, 2, 1, 'Reset user password', NULL, 'ellen', '2026-08-14 09:21:35', 'password', 'user'),
+(7, 1, 2, 2, 'Reset user password', NULL, 'laila', '2026-08-14 09:28:31', 'password', 'user'),
+(8, 1, 1, 9, 'Assign role to user', NULL, '4', '2026-08-17 10:10:22', 'assignment', 'user role'),
+(9, 1, 1, 4, 'Create user account', NULL, 'paulene', '2026-08-17 10:10:22', 'account', 'user'),
+(10, 1, 2, 6, 'Updated user role status', '0', '1', '2026-08-17 10:11:55', 'status', 'user role'),
+(11, 1, 2, 2, 'Update barangay personnel', 'Adawi, Laila', 'Adawi, Laila', '2026-08-17 10:13:11', 'record', 'barangay_personnel'),
+(12, 1, 2, 2, 'Update barangay personnel', 'Adawi, Laila', 'Adawi, Laila', '2026-08-17 10:13:24', 'record', 'barangay_personnel'),
+(13, 1, 1, 10, 'Assign role to user', NULL, '2', '2026-08-17 10:17:17', 'assignment', 'user role'),
+(14, 1, 1, 4, 'Create personnel position', NULL, 'Barangay Treasurer', '2026-08-17 10:22:21', 'position_name', 'personnel_position');
 
 -- --------------------------------------------------------
 
@@ -161,7 +170,7 @@ CREATE TABLE IF NOT EXISTS `permission` (
   `permission` varchar(45) NOT NULL,
   PRIMARY KEY (`permission_id`),
   UNIQUE KEY `uq_permission` (`permission_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `permission`
@@ -198,7 +207,7 @@ CREATE TABLE IF NOT EXISTS `personnel_position` (
   `position_name` varchar(45) NOT NULL,
   PRIMARY KEY (`position_id`),
   UNIQUE KEY `uq_position` (`position_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `personnel_position`
@@ -206,6 +215,7 @@ CREATE TABLE IF NOT EXISTS `personnel_position` (
 
 INSERT INTO `personnel_position` (`position_id`, `position_name`) VALUES
 (1, 'Barangay Secretary'),
+(4, 'Barangay Treasurer'),
 (2, 'SK Chairperson');
 
 -- --------------------------------------------------------
@@ -353,15 +363,17 @@ CREATE TABLE IF NOT EXISTS `user` (
   UNIQUE KEY `uq_username` (`username`),
   UNIQUE KEY `uq_personnel` (`personnel_id`),
   KEY `user_status` (`user_status_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `user`
 --
 
 INSERT INTO `user` (`user_id`, `username`, `password_hash`, `created_at`, `user_status_id`, `personnel_id`, `must_change_password`) VALUES
-(1, 'ellen', '$2y$12$e0MdxreOIsUZ1LByL0pSSeI8eTte7Gub9E6H8hG99aY73ZBy6u1I6', '2026-08-06 22:47:52', 1, 1, 1),
-(2, 'laila', '$2y$12$e0MdxreOIsUZ1LByL0pSSeI8eTte7Gub9E6H8hG99aY73ZBy6u1I6', '2026-08-06 22:48:05', 1, 2, 1);
+(1, 'ellen', '$2y$12$u3zD2jX/B4be7SrQI6q2C.22iS5c6zvqlBiGccL3e0e9ylN9nuumW', '2026-08-06 22:47:52', 1, 1, 0),
+(2, 'laila', '$2y$12$GsvVr.zfB06NZ3qvsOTNOOFhuIL7tIhneSyD39ol2NoZMw7gbS71O', '2026-08-06 22:48:05', 1, 2, 0),
+(3, 'daniel', '$2y$12$QsRrTUyqymdeuZgl8sRJ5.lQFPK///dKIGYFf.dIzbEooCG8a0uyC', '2026-08-14 17:16:54', 1, NULL, 0),
+(4, 'paulene', '$2y$12$4FMlC1iB456Wag0UdexEVuAokhOQsSD7JVU4KVtqJX3UHeqLs9UUK', '2026-08-17 10:10:22', 1, NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -372,16 +384,67 @@ INSERT INTO `user` (`user_id`, `username`, `password_hash`, `created_at`, `user_
 DROP TABLE IF EXISTS `user_log`;
 CREATE TABLE IF NOT EXISTS `user_log` (
   `user_log_id` int NOT NULL AUTO_INCREMENT,
-  `user_id` int NOT NULL,
+  `user_id` int DEFAULT NULL,
   `login_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `logout_time` datetime NOT NULL,
+  `logout_time` datetime DEFAULT NULL,
   `login_status_id` int NOT NULL,
   `ip_address` varchar(45) NOT NULL,
   `device` varchar(45) NOT NULL,
   PRIMARY KEY (`user_log_id`),
   KEY `user_log` (`user_id`),
   KEY `login_status` (`login_status_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `user_log`
+--
+
+INSERT INTO `user_log` (`user_log_id`, `user_id`, `login_time`, `logout_time`, `login_status_id`, `ip_address`, `device`) VALUES
+(1, 3, '2026-08-14 09:17:43', '2026-08-14 09:17:43', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(2, 3, '2026-08-14 09:18:53', '2026-08-14 09:18:53', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(3, 3, '2026-08-14 09:20:24', '2026-08-14 09:21:45', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(4, 1, '2026-08-14 09:21:51', '2026-08-14 09:23:25', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(5, 1, '2026-08-14 09:23:29', '2026-08-14 09:23:29', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(6, 3, '2026-08-14 09:23:39', '2026-08-14 09:23:39', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(7, 1, '2026-08-14 09:23:48', '2026-08-14 09:24:02', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(8, 3, '2026-08-14 09:24:06', '2026-08-14 09:24:20', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(9, 1, '2026-08-14 09:24:24', '2026-08-14 09:26:04', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(10, 3, '2026-08-14 09:26:10', '2026-08-14 09:27:44', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(11, 3, '2026-08-14 09:27:53', '2026-08-14 09:28:08', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(12, 1, '2026-08-14 09:28:12', '2026-08-14 09:30:05', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(13, 2, '2026-08-14 09:30:13', '2026-08-14 19:36:36', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(14, 1, '2026-08-14 09:38:54', '2026-08-14 09:38:54', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(15, 1, '2026-08-14 09:38:56', '2026-08-14 09:38:56', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(16, 1, '2026-08-14 09:39:04', '2026-08-14 09:39:04', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(17, 1, '2026-08-14 09:39:34', '2026-08-14 09:39:34', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(18, 3, '2026-08-14 19:30:13', '2026-08-14 19:30:30', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(19, 1, '2026-08-14 19:30:34', '2026-08-14 19:30:47', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(20, 2, '2026-08-14 19:30:54', '2026-08-14 19:31:02', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(21, 3, '2026-08-14 19:31:07', '2026-08-14 19:31:11', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(22, 1, '2026-08-14 19:31:16', '2026-08-14 19:31:16', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(23, 3, '2026-08-14 19:36:49', '2026-08-14 19:37:04', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(24, 3, '2026-08-14 19:37:20', '2026-08-14 19:38:39', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(25, 1, '2026-08-14 19:49:32', '2026-08-14 19:50:15', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(26, 3, '2026-08-16 17:23:48', '2026-08-16 17:31:10', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(27, 3, '2026-08-16 17:31:24', '2026-08-16 17:32:20', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(28, 1, '2026-08-16 17:32:31', '2026-08-16 17:58:30', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(29, 3, '2026-08-16 17:45:15', '2026-08-16 17:50:16', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(30, 3, '2026-08-16 17:56:51', '2026-08-16 17:57:01', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(31, 3, '2026-08-16 17:58:24', '2026-08-16 18:24:06', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(32, 1, '2026-08-16 17:58:35', '2026-08-16 18:03:43', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(33, 1, '2026-08-16 18:06:03', '2026-08-16 18:06:03', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(34, 1, '2026-08-16 18:06:12', '2026-08-16 18:28:44', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(35, 1, '2026-08-16 18:24:12', '2026-08-16 18:30:34', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(36, 1, '2026-08-16 18:29:04', '2026-08-16 18:37:08', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(37, 3, '2026-08-16 18:30:39', '2026-08-16 18:43:22', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(38, 1, '2026-08-17 10:07:55', '2026-08-17 10:15:58', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(39, 2, '2026-08-17 10:16:04', '2026-08-17 10:16:04', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(40, 2, '2026-08-17 10:16:14', '2026-08-17 10:16:16', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(41, 1, '2026-08-17 10:16:21', '2026-08-17 10:16:21', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(42, 1, '2026-08-17 10:16:26', '2026-08-17 10:17:21', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(43, 2, '2026-08-17 10:17:29', '2026-08-17 10:17:34', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(44, 1, '2026-08-17 10:17:40', '2026-08-17 10:17:40', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(45, 1, '2026-08-17 10:17:44', '2026-08-17 10:24:14', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
 
 -- --------------------------------------------------------
 
@@ -401,7 +464,7 @@ CREATE TABLE IF NOT EXISTS `user_role` (
   UNIQUE KEY `uq_role_assignment` (`user_id`,`role_id`),
   KEY `user_role` (`role_id`),
   KEY `role_assignor` (`assigned_by`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `user_role`
@@ -411,7 +474,10 @@ INSERT INTO `user_role` (`user_role_id`, `user_id`, `role_id`, `assigned_at`, `a
 (1, 1, 2, '2026-08-06 22:49:17', 1, 1),
 (2, 2, 1, '2026-08-06 22:49:17', 1, 1),
 (3, 1, 3, '2026-08-06 22:57:33', 1, 1),
-(4, 1, 1, '2026-08-06 23:13:42', 1, 0);
+(4, 1, 1, '2026-08-06 23:13:42', 1, 0),
+(6, 3, 4, '2026-08-14 17:16:54', 3, 1),
+(9, 4, 4, '2026-08-17 10:10:22', 1, 1),
+(10, 2, 2, '2026-08-17 10:17:17', 1, 1);
 
 -- --------------------------------------------------------
 
