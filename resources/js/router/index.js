@@ -90,7 +90,7 @@ const routes = [
         component: () => import('@/pages/logs/LogsPage.vue'),
         meta: {
             requiresAuth: true,
-            requiresPermissions: ['auditlog.view'],
+            requiresSystemAdministrator: true,
             logType: 'audit',
         },
     },
