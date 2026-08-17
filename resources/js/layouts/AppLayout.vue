@@ -156,7 +156,7 @@ defineProps({
 
 const route = useRoute();
 const router = useRouter();
-const { user, roles, loading, logout, hasPermission, isSuperAdmin } = useAuth();
+const { user, roles, loading, logout, hasPermission, isSuperAdmin, isSystemAdministrator } = useAuth();
 
 const sidebarOpen = ref(false);
 const settingsOpen = ref(true);
@@ -179,7 +179,7 @@ const canViewSystemSettings = computed(() => (
     hasPermission('setting.view') || hasPermission('setting.update')
 ));
 
-const canViewAuditLogs = computed(() => hasPermission('auditlog.view'));
+const canViewAuditLogs = computed(() => isSystemAdministrator.value);
 const canViewUserLogs = computed(() => hasPermission('userlog.view'));
 const canViewLogs = computed(() => canViewAuditLogs.value || canViewUserLogs.value);
 const canViewLookups = computed(() => isSuperAdmin.value);

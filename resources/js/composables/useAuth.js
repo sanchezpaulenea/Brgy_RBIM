@@ -103,12 +103,12 @@ export function useAuth() {
             return false;
         }
 
-        if (Array.isArray(meta.requiresPermissions) && meta.requiresPermissions.length > 0) {
-            return hasAnyPermission(meta.requiresPermissions);
-        }
-
         if (meta.requiresSystemAdministrator && !isSystemAdministrator.value) {
             return false;
+        }
+
+        if (Array.isArray(meta.requiresPermissions) && meta.requiresPermissions.length > 0) {
+            return hasAnyPermission(meta.requiresPermissions);
         }
 
         return true;
