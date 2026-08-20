@@ -132,6 +132,7 @@ import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as lookupService from '@/services/lookupService';
 import * as personnelService from '@/services/personnelService';
 import { todayDate } from '@/utils/format';
+import { positionNameValidationError } from '@/utils/validation';
 
 const emptyForm = () => ({
     personnel_last_name: '',
@@ -326,6 +327,14 @@ async function handleSave() {
     ));
 
     if (!editingId.value && !matched && typedName && canCreatePosition.value) {
+        const validationError = positionNameValidationError(typedName);
+
+        if (validationError) {
+            clearFormErrors();
+            formErrors.position_name = validationError;
+            return;
+        }
+
         const allowed = await askConfirm({
             title: 'Add new position',
             message: `“${typedName}” is not in the list. Add it as a new personnel position?`,

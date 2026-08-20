@@ -28,7 +28,16 @@
                     <form class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end" @submit.prevent="handleCreatePosition">
                         <div class="flex-1">
                             <label for="position-name" class="rbim-label">Position name</label>
-                            <input id="position-name" v-model="newPositionName" type="text" maxlength="45" required class="rbim-input">
+                            <input
+                                id="position-name"
+                                v-model="newPositionName"
+                                type="text"
+                                maxlength="45"
+                                required
+                                class="rbim-input"
+                                :class="{ 'rbim-input-error': createError }"
+                                @input="createError = ''"
+                            >
                             <p v-if="createError" class="rbim-error">{{ createError }}</p>
                         </div>
                         <button type="submit" class="rbim-btn" :disabled="creating">
@@ -178,6 +187,7 @@ import { useAuth } from '@/composables/useAuth';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as lookupService from '@/services/lookupService';
 import * as userService from '@/services/userService';
+import { positionNameValidationError } from '@/utils/validation';
 
 const route = useRoute();
 const { hasPermission, isSuperAdmin } = useAuth();
@@ -280,9 +290,18 @@ async function handleCreatePosition() {
     createError.value = '';
     successMessage.value = '';
 
+    const positionName = newPositionName.value.trim();
+    const validationError = positionNameValidationError(positionName);
+
+    if (validationError) {
+        createError.value = validationError;
+        creating.value = false;
+        return;
+    }
+
     try {
         const item = await lookupService.createPersonnelPosition({
-            position_name: newPositionName.value.trim(),
+            position_name: positionName,
         });
         positions.value = [...positions.value, item].sort((a, b) => a.label.localeCompare(b.label));
         newPositionName.value = '';

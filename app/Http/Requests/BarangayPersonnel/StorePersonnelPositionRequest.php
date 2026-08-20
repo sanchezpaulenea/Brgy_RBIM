@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\BarangayPersonnel;
 
+use App\Rules\ValidPositionName;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class StorePersonnelPositionRequest extends FormRequest
@@ -10,6 +12,17 @@ class StorePersonnelPositionRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if (! is_string($this->input('position_name'))) {
+            return;
+        }
+
+        $this->merge([
+            'position_name' => Str::of($this->input('position_name'))->squish()->toString(),
+        ]);
     }
 
     /**
@@ -22,6 +35,7 @@ class StorePersonnelPositionRequest extends FormRequest
                 'required',
                 'string',
                 'max:45',
+                new ValidPositionName,
                 Rule::unique('personnel_position', 'position_name'),
             ],
         ];
