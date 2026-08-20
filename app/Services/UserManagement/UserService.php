@@ -256,12 +256,13 @@ class UserService
             ] : null,
             'must_change_password' => $user->must_change_password,
             'created_at' => $user->created_at,
-            'roles' => $user->roles->pluck('role_name'),
+            'roles' => $user->roles->pluck('role_name')->filter()->values()->all(),
             'role_assignments' => $user->userRoles
+                ->filter(fn ($assignment) => $assignment->role !== null)
                 ->map(fn ($assignment) => [
                     'user_role_id' => $assignment->user_role_id,
                     'role_id' => $assignment->role_id,
-                    'role_name' => $assignment->role?->role_name,
+                    'role_name' => $assignment->role->role_name,
                     'enable' => (bool) $assignment->enable,
                 ])
                 ->values()

@@ -15,4 +15,11 @@ class RoleRepository implements RoleInterface
     {
         return Role::query()->orderBy('role_name')->get();
     }
+
+    public function findById(int $roleId): ?Role
+    {
+        return Role::query()
+            ->where('role_id', $roleId)
+            ->first();
+    }
 }

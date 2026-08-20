@@ -53,6 +53,7 @@
                                 <tr>
                                     <th class="px-4 py-3 text-left font-semibold text-slate-600">ID</th>
                                     <th class="px-4 py-3 text-left font-semibold text-slate-600">Position</th>
+                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
                                     <th v-if="canDeletePosition" class="px-4 py-3 text-right font-semibold text-slate-600">Action</th>
                                 </tr>
                             </thead>
@@ -60,19 +61,28 @@
                                 <tr v-for="item in positions" :key="item.id">
                                     <td class="px-4 py-3 font-mono text-xs text-slate-700">{{ item.id }}</td>
                                     <td class="px-4 py-3 font-medium text-slate-900">{{ item.label }}</td>
+                                    <td class="px-4 py-3">
+                                        <span
+                                            class="rounded-full px-2 py-0.5 text-xs"
+                                            :class="isPositionAssigned(item) ? 'bg-amber-50 text-amber-800' : 'bg-slate-100 text-slate-500'"
+                                        >
+                                            {{ isPositionAssigned(item) ? 'Assigned' : 'Available' }}
+                                        </span>
+                                    </td>
                                     <td v-if="canDeletePosition" class="px-4 py-3 text-right">
                                         <button
                                             type="button"
                                             class="rbim-btn-danger"
-                                            :disabled="deletingId === item.id"
-                                            @click="handleDeletePosition(item.id)"
+                                            :disabled="deletingId === item.id || isPositionAssigned(item)"
+                                            :title="isPositionAssigned(item) ? assignedPositionMessage : 'Delete this personnel position'"
+                                            @click="handleDeletePosition(item)"
                                         >
                                             {{ deletingId === item.id ? 'Deleting...' : 'Delete' }}
                                         </button>
                                     </td>
                                 </tr>
                                 <tr v-if="!positions.length">
-                                    <td :colspan="canDeletePosition ? 3 : 2" class="px-4 py-8 text-center text-slate-500">
+                                    <td :colspan="canDeletePosition ? 4 : 3" class="px-4 py-8 text-center text-slate-500">
                                         No personnel positions found.
                                     </td>
                                 </tr>
@@ -244,6 +254,11 @@ const confirm = reactive({
 const canCreatePosition = computed(() => hasPermission('pposition.create'));
 const canDeletePosition = computed(() => hasPermission('pposition.delete'));
 const canUpdateRoleStatus = computed(() => hasPermission('userrole.updatestatus'));
+const assignedPositionMessage = 'This personnel position is assigned to one or more personnel records and cannot be deleted.';
+
+function isPositionAssigned(item) {
+    return Boolean(item?.in_use || item?.occupied);
+}
 
 function handleConfirmCancel() {
     confirm.open = false;
@@ -315,10 +330,16 @@ async function handleCreatePosition() {
     }
 }
 
-async function handleDeletePosition(id) {
+async function handleDeletePosition(item) {
+    if (isPositionAssigned(item)) {
+        error.value = assignedPositionMessage;
+        successMessage.value = '';
+        return;
+    }
+
     const allowed = await askConfirm({
         title: 'Delete position',
-        message: 'Delete this personnel position? This cannot be undone.',
+        message: 'Delete this personnel position? This cannot be undone. Assigned positions cannot be deleted.',
         confirmLabel: 'Delete',
         variant: 'danger',
     });
@@ -327,16 +348,16 @@ async function handleDeletePosition(id) {
         return;
     }
 
-    deletingId.value = id;
+    deletingId.value = item.id;
     error.value = '';
     successMessage.value = '';
 
     try {
-        await lookupService.deletePersonnelPosition(id);
-        positions.value = positions.value.filter((item) => item.id !== id);
+        await lookupService.deletePersonnelPosition(item.id);
+        positions.value = positions.value.filter((row) => row.id !== item.id);
         successMessage.value = 'Position deleted successfully.';
     } catch (err) {
-        error.value = extractErrorMessage(err, 'Unable to delete position.');
+        error.value = extractErrorMessage(err, assignedPositionMessage);
     } finally {
         deletingId.value = null;
     }

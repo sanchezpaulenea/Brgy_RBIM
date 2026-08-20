@@ -17,6 +17,11 @@ class PersonnelPosition extends Model
         'position_name',
     ];
 
+    public function getRouteKeyName(): string
+    {
+        return 'position_id';
+    }
+
     /**
      * @return HasMany<BarangayPersonnel, $this>
      */

@@ -11,4 +11,6 @@ interface RoleInterface
      * @return Collection<int, Role>
      */
     public function all(): Collection;
+
+    public function findById(int $roleId): ?Role;
 }
