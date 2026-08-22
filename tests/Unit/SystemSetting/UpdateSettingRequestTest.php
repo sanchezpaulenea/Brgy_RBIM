@@ -51,8 +51,8 @@ class UpdateSettingRequestTest extends TestCase
     {
         return [
             'numeric address' => ['barangay_address', '00110101', ValidBarangayAddress::MESSAGE],
-            'short psgc' => ['barangay_code', '143030000', 'Barangay code must be a valid 10-digit PSGC code.'],
-            'alpha psgc' => ['barangay_code', '143030000A', 'Barangay code must be a valid 10-digit PSGC code.'],
+            'short psgc' => ['barangay_code', '143030000', 'Barangay code must be exactly 10 digits, following the Philippine Standard Geographic Code (PSGC) format.'],
+            'alpha psgc' => ['barangay_code', '143030000A', 'Barangay code must be exactly 10 digits, following the Philippine Standard Geographic Code (PSGC) format.'],
             'short contact' => ['barangay_contact_no', '123456', ValidBarangayContactNumber::MESSAGE],
             'numeric email' => ['barangay_email', '12345', 'Please enter a valid email address.'],
         ];

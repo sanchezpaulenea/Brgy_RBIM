@@ -16,7 +16,15 @@ class UpdateSettingRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        if (! $this->exists('setting_value')) {
+            return;
+        }
+
         $value = $this->input('setting_value');
+
+        if (is_int($value) || is_float($value)) {
+            $value = (string) $value;
+        }
 
         if (is_string($value)) {
             $this->merge([
@@ -30,11 +38,8 @@ class UpdateSettingRequest extends FormRequest
      */
     public function rules(): array
     {
-        /** @var Setting $setting */
-        $setting = $this->route('setting');
-
         return [
-            'setting_value' => $this->rulesForSetting($setting),
+            'setting_value' => $this->rulesForSetting($this->resolveSetting()),
         ];
     }
 
@@ -50,7 +55,7 @@ class UpdateSettingRequest extends FormRequest
             'setting_value.string' => 'Setting value must be text.',
             'setting_value.max' => 'Setting value must not exceed 45 characters.',
             'setting_value.boolean' => 'Setting value must be true or false.',
-            'setting_value.regex' => 'Barangay code must be a valid 10-digit PSGC code.',
+            'setting_value.regex' => 'Barangay code must be exactly 10 digits, following the Philippine Standard Geographic Code (PSGC) format.',
             'setting_value.email' => 'Please enter a valid email address.',
         ];
     }
@@ -60,8 +65,7 @@ class UpdateSettingRequest extends FormRequest
      */
     public function normalizedValue(): string
     {
-        /** @var Setting $setting */
-        $setting = $this->route('setting');
+        $setting = $this->resolveSetting();
         $value = $this->validated('setting_value');
 
         return match ($setting->data_type) {
@@ -72,29 +76,32 @@ class UpdateSettingRequest extends FormRequest
     }
 
     /**
+     * FormRequest::rules() can run while `{setting}` is still the raw ID string.
+     * Load the row ourselves so key-specific rules always apply.
+     */
+    private function resolveSetting(): Setting
+    {
+        $parameter = $this->route('setting');
+
+        if ($parameter instanceof Setting) {
+            return $parameter;
+        }
+
+        return Setting::query()
+            ->where('setting_id', $parameter)
+            ->firstOrFail();
+    }
+
+    /**
      * @return array<int, mixed>
      */
     private function rulesForSetting(Setting $setting): array
     {
         return match ($setting->setting_key) {
             'barangay_address' => ['required', 'string', 'max:45', new ValidBarangayAddress],
-            'barangay_code' => [
-                'required',
-                'string',
-                // PSGC is a 10-digit numeric code (e.g. seed value 1430300006).
-                // Future: cross-check against a local PSA PSGC reference list
-                // shipped with the app — no external API call required.
-                'regex:/^\d{10}$/',
-            ],
+            'barangay_code' => ['required', 'string', 'regex:/^\d{10}$/'],
             'barangay_contact_no' => ['required', 'string', 'max:45', new ValidBarangayContactNumber],
-            'barangay_email' => [
-                'required',
-                'string',
-                'max:45',
-                // RFC only: `email:rfc,dns` is not used because this environment
-                // may run offline and MX lookups can reject valid local addresses.
-                'email:rfc',
-            ],
+            'barangay_email' => ['required', 'string', 'max:45', 'email'],
             default => match ($setting->data_type) {
                 'int' => ['required', 'integer', 'min:1'],
                 'bool' => ['required', 'boolean'],

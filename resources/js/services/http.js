@@ -54,15 +54,16 @@ http.interceptors.response.use(
 
         if (error.response?.status === 401 && !handlingUnauthorized) {
             const requestUrl = String(error.config?.url ?? '');
+            const message = String(error.response?.data?.message ?? '');
+            const isLoginOrLogout = requestUrl.includes('/auth/login')
+                || requestUrl.includes('/auth/logout');
+            const isAnonymousSessionCheck = requestUrl.includes('/auth/me')
+                && (message === '' || message === 'Unauthenticated.');
 
-            if (
-                !requestUrl.includes('/auth/login')
-                && !requestUrl.includes('/auth/me')
-                && !requestUrl.includes('/auth/logout')
-            ) {
+            if (!isLoginOrLogout && !isAnonymousSessionCheck) {
                 handlingUnauthorized = true;
                 window.dispatchEvent(new CustomEvent('rbim:unauthorized', {
-                    detail: { message: error.response?.data?.message ?? '' },
+                    detail: { message },
                 }));
             }
         }

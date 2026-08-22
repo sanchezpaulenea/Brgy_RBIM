@@ -84,7 +84,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { useAuth } from '@/composables/useAuth';
-import { extractErrorMessage } from '@/services/http';
+import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as settingService from '@/services/settingService';
 import { formatSettingLabel } from '@/utils/format';
 
@@ -138,7 +138,8 @@ async function saveSetting(setting) {
         editingId.value = null;
         successMessage.value = `Updated "${formatSettingLabel(setting.setting_key)}" successfully.`;
     } catch (err) {
-        error.value = extractErrorMessage(err, 'Unable to update setting.');
+        error.value = extractValidationErrors(err).setting_value
+            ?? extractErrorMessage(err, 'Unable to update setting.');
     } finally {
         savingId.value = null;
     }

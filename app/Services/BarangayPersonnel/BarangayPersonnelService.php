@@ -80,7 +80,7 @@ class BarangayPersonnelService
     {
         $this->assertNoUnconfirmedDuplicate($data, $personnel->personnel_id);
 
-        $previous = $this->personnelAuditValues($personnel);
+        $previous = $this->personnelAuditSnapshot($personnel);
 
         return DB::transaction(function () use ($performedBy, $personnel, $data, $previous) {
             if (! empty($data['position_id'])) {
@@ -195,56 +195,43 @@ class BarangayPersonnelService
     }
 
     /**
-     * @return array<string, string>
+     * @return array{name: string, birth date: string, status: string, position: string}
      */
-    private function personnelAuditValues(BarangayPersonnel $personnel): array
+    private function personnelAuditSnapshot(BarangayPersonnel $personnel): array
     {
+        $personnel->loadMissing(['position', 'status']);
+
         return [
-            'personnel_last_name' => (string) ($personnel->personnel_last_name ?? ''),
-            'personnel_first_name' => (string) ($personnel->personnel_first_name ?? ''),
-            'personnel_middle_name' => (string) ($personnel->personnel_middle_name ?? ''),
-            'personnel_suffix' => (string) ($personnel->personnel_suffix ?? ''),
-            'personnel_date_of_birth' => $personnel->personnel_date_of_birth?->format('Y-m-d') ?? '',
-            'personnel_status_id' => (string) $personnel->personnel_status_id,
-            'position_id' => (string) $personnel->position_id,
+            'name' => $this->fullName($personnel),
+            'birth date' => $personnel->personnel_date_of_birth?->format('Y-m-d') ?? '',
+            'status' => (string) ($personnel->status?->personnel_status ?? $personnel->personnel_status_id),
+            'position' => (string) ($personnel->position?->position_name ?? $personnel->position_id),
         ];
     }
 
     /**
-     * @param  array<string, string>  $previous
+     * @param  array{name: string, birth date: string, status: string, position: string}  $previous
      */
     private function logPersonnelFieldChanges(User $performedBy, BarangayPersonnel $updated, array $previous): void
     {
-        $current = $this->personnelAuditValues($updated);
+        $current = $this->personnelAuditSnapshot($updated);
 
-        $labels = [
-            'personnel_last_name' => 'last name',
-            'personnel_first_name' => 'first name',
-            'personnel_middle_name' => 'middle name',
-            'personnel_suffix' => 'suffix',
-            'personnel_date_of_birth' => 'birth date',
-            'personnel_status_id' => 'status',
-            'position_id' => 'position',
-        ];
-
-        foreach ($current as $column => $newValue) {
-            $oldValue = $previous[$column] ?? '';
+        foreach ($current as $target => $newValue) {
+            $oldValue = $previous[$target] ?? '';
 
             if ($oldValue === $newValue) {
                 continue;
             }
 
-            $label = $labels[$column];
-
             $this->auditLogRepository->log(
                 performedByUserId: $performedBy->user_id,
                 actionId: Action::UPDATE,
                 recordId: $updated->personnel_id,
-                description: 'Updated '.$label.' from "'.$oldValue.'" to "'.$newValue.'"',
+                description: 'Updated barangay personnel '.$target,
                 oldValue: $oldValue,
                 newValue: $newValue,
-                target: $column,
-                entity: $column,
+                target: $target,
+                entity: 'barangay_personnel',
             );
         }
     }
