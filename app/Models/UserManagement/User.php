@@ -40,6 +40,40 @@ class User extends Authenticatable
         'must_change_password',
     ];
 
+    /**
+     * Persist usernames in lowercase so lookups stay case-insensitive.
+     */
+    public static function standardizeUsername(string $username): string
+    {
+        return mb_strtolower(trim($username), 'UTF-8');
+    }
+
+    /**
+     * Present a stored username without forcing the whole value to lowercase.
+     */
+    public static function formatForDisplay(string $username): string
+    {
+        $trimmed = trim($username);
+
+        if ($trimmed === '') {
+            return $trimmed;
+        }
+
+        return preg_replace_callback('/\S+/u', function (array $matches): string {
+            $word = $matches[0];
+
+            return mb_strtoupper(mb_substr($word, 0, 1, 'UTF-8'), 'UTF-8')
+                .mb_substr($word, 1, null, 'UTF-8');
+        }, $trimmed) ?? $trimmed;
+    }
+
+    public function setUsernameAttribute(mixed $value): void
+    {
+        $this->attributes['username'] = is_string($value)
+            ? self::standardizeUsername($value)
+            : $value;
+    }
+
     protected $hidden = [
         'password_hash',
     ];

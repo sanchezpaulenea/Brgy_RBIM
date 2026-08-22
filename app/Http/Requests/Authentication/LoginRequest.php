@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Authentication;
 
+use App\Models\UserManagement\User;
 use Illuminate\Foundation\Http\FormRequest;
 
 class LoginRequest extends FormRequest
@@ -12,6 +13,17 @@ class LoginRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $username = $this->input('username');
+
+        if (is_string($username)) {
+            $this->merge([
+                'username' => User::standardizeUsername($username),
+            ]);
+        }
     }
 
     /**

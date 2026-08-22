@@ -156,7 +156,7 @@ async function handleSubmit() {
 
     try {
         await login({
-            username: form.username,
+            username: form.username.trim(),
             password: form.password,
         });
 

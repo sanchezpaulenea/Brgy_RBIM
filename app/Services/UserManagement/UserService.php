@@ -64,7 +64,7 @@ class UserService
             $personnelId = $this->resolvePersonnelId($data);
 
             $user = $this->userRepository->create([
-                'username' => $data['username'],
+                'username' => User::standardizeUsername($data['username']),
                 'password_hash' => Hash::make($defaultPassword),
                 'user_status_id' => self::ACTIVE_STATUS_ID,
                 'personnel_id' => $personnelId,
@@ -245,7 +245,7 @@ class UserService
 
         return [
             'user_id' => $user->user_id,
-            'username' => $user->username,
+            'username' => User::formatForDisplay($user->username),
             'user_status_id' => $user->user_status_id,
             'user_status' => $user->userStatus?->user_status,
             'personnel_id' => $user->personnel_id,
