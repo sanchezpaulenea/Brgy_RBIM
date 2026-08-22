@@ -1,7 +1,7 @@
 <template>
     <div class="min-h-screen bg-[#f4f6f5] text-slate-900">
-        <header class="bg-brand text-white">
-            <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
+        <header class="fixed inset-x-0 top-0 z-40 h-20 bg-brand text-white shadow-md">
+            <div class="flex h-full items-center justify-between gap-4 px-4 sm:px-6">
                 <div class="flex min-w-0 items-center gap-3">
                     <button
                         type="button"
@@ -13,7 +13,7 @@
                             <path fill-rule="evenodd" d="M3 5h14a1 1 0 010 2H3a1 1 0 010-2zm0 4h14a1 1 0 010 2H3a1 1 0 010-2zm0 4h14a1 1 0 010 2H3a1 1 0 010-2z" clip-rule="evenodd" />
                         </svg>
                     </button>
-                    <BrandLogos size-class="h-10 w-10 sm:h-12 sm:w-12" />
+                    <BrandLogos size-class="h-11 w-11 sm:h-14 sm:w-14" />
                     <div class="min-w-0">
                         <p class="truncate text-sm font-semibold sm:text-base">
                             Registry of Barangay Inhabitants and Migrants
@@ -31,7 +31,7 @@
                     </div>
                     <button
                         type="button"
-                        class="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/20 disabled:opacity-60"
+                        class="inline-flex cursor-pointer items-center justify-center rounded-lg border border-white bg-white px-4 py-2 text-sm font-semibold text-brand shadow-sm transition hover:bg-brand-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60"
                         :disabled="loading"
                         @click="handleLogout"
                     >
@@ -41,60 +41,69 @@
             </div>
         </header>
 
-        <div class="flex">
+        <div class="pt-20 lg:pl-72">
             <aside
-                class="bg-brand-dark text-white lg:sticky lg:top-0 lg:flex lg:h-[calc(100vh-4.5rem)] lg:w-64 lg:shrink-0 lg:flex-col"
-                :class="sidebarOpen ? 'block' : 'hidden lg:flex'"
+                class="fixed inset-x-0 top-20 bottom-0 z-30 overflow-y-auto bg-brand text-white shadow-lg lg:right-auto lg:w-72"
+                :class="sidebarOpen ? 'block' : 'hidden lg:block'"
             >
                 <nav class="flex flex-col gap-1 p-3">
                     <RouterLink
                         :to="{ name: 'dashboard' }"
-                        class="flex items-center justify-center rounded-lg px-3 py-2 transition"
+                        class="flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-medium transition"
                         :class="route.name === 'dashboard' ? 'bg-white text-brand' : 'text-white/90 hover:bg-white/10'"
-                        aria-label="Home"
                         @click="sidebarOpen = false"
                     >
-                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7A1 1 0 003 11h1v6a1 1 0 001 1h4v-4h2v4h4a1 1 0 001-1v-6h1a1 1 0 00.707-1.707l-7-7z" />
                         </svg>
+                        <span>Dashboard</span>
                     </RouterLink>
 
                     <RouterLink
                         v-if="canManagePersonnel"
                         :to="{ name: 'personnel' }"
-                        class="rounded-lg px-3 py-2 text-sm font-medium transition"
+                        class="flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-medium transition"
                         :class="isPersonnelRoute ? 'bg-white text-brand' : 'text-white/90 hover:bg-white/10'"
                         @click="sidebarOpen = false"
                     >
-                        Barangay Personnel Management
+                        <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18h4v-3a3 3 0 00-4.56-2.56A5.99 5.99 0 0116 15v3zM4.56 12.44A3 3 0 000 15v3h4v-3c0-.91.2-1.78.56-2.56z" />
+                        </svg>
+                        <span>Barangay Personnel Management</span>
                     </RouterLink>
 
                     <RouterLink
                         v-if="canManageUsers"
                         :to="{ name: 'users' }"
-                        class="rounded-lg px-3 py-2 text-sm font-medium transition"
+                        class="flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-medium transition"
                         :class="isUsersRoute ? 'bg-white text-brand' : 'text-white/90 hover:bg-white/10'"
                         @click="sidebarOpen = false"
                     >
-                        User Account Management
+                        <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                        </svg>
+                        <span>User Account Management</span>
                     </RouterLink>
 
                     <div v-if="canViewSettingsMenu">
                         <button
                             type="button"
-                            class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition"
+                            class="flex w-full items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-left text-[13px] font-medium transition"
                             :class="isSettingsRoute ? 'bg-white/15 text-white' : 'text-white/90 hover:bg-white/10'"
                             @click="settingsOpen = !settingsOpen"
                         >
-                            <span>Settings</span>
+                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.53 1.53 0 01-2.29.95c-1.37-.84-2.94.73-2.1 2.1.54.88.1 2.03-.95 2.28-1.56.38-1.56 2.6 0 2.98a1.53 1.53 0 01.95 2.29c-.84 1.37.73 2.94 2.1 2.1a1.53 1.53 0 012.28.95c.38 1.56 2.6 1.56 2.98 0a1.53 1.53 0 012.29-.95c1.37.84 2.94-.73 2.1-2.1a1.53 1.53 0 01.95-2.28c1.56-.38 1.56-2.6 0-2.98a1.53 1.53 0 01-.95-2.29c.84-1.37-.73-2.94-2.1-2.1a1.53 1.53 0 01-2.28-.95zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="flex-1">Settings</span>
                             <span class="text-xs">{{ settingsOpen ? '▾' : '▸' }}</span>
                         </button>
 
-                        <div v-show="settingsOpen || isSettingsRoute" class="ml-3 mt-1 space-y-1 border-l border-white/20 pl-3">
+                        <div v-show="settingsOpen || isSettingsRoute" class="ml-6 mt-1 space-y-1 border-l border-white/20 pl-3">
                             <RouterLink
                                 v-if="canViewAuditLogs"
                                 :to="{ name: 'audit-logs' }"
-                                class="block rounded-lg px-2 py-1.5 text-sm transition"
+                                class="block rounded-lg px-2 py-1.5 text-[13px] transition"
                                 :class="route.name === 'audit-logs' ? 'bg-white text-brand' : 'text-white/85 hover:bg-white/10'"
                                 @click="sidebarOpen = false"
                             >
@@ -103,7 +112,7 @@
                             <RouterLink
                                 v-if="canViewUserLogs"
                                 :to="{ name: 'user-logs' }"
-                                class="block rounded-lg px-2 py-1.5 text-sm transition"
+                                class="block rounded-lg px-2 py-1.5 text-[13px] transition"
                                 :class="route.name === 'user-logs' ? 'bg-white text-brand' : 'text-white/85 hover:bg-white/10'"
                                 @click="sidebarOpen = false"
                             >
@@ -112,7 +121,7 @@
                             <RouterLink
                                 v-if="canViewSystemSettings"
                                 :to="{ name: 'settings' }"
-                                class="block rounded-lg px-2 py-1.5 text-sm transition"
+                                class="block rounded-lg px-2 py-1.5 text-[13px] transition"
                                 :class="route.name === 'settings' ? 'bg-white text-brand' : 'text-white/85 hover:bg-white/10'"
                                 @click="sidebarOpen = false"
                             >
@@ -123,7 +132,7 @@
                 </nav>
             </aside>
 
-            <main class="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
+            <main class="min-w-0 px-4 py-6 sm:px-6 lg:px-8">
                 <slot />
             </main>
         </div>

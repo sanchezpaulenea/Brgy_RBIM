@@ -5,6 +5,8 @@ namespace App\Http\Requests\SystemSetting;
 use App\Models\Setting\Setting;
 use App\Rules\ValidBarangayAddress;
 use App\Rules\ValidBarangayContactNumber;
+use App\Rules\ValidDefaultPassword;
+use App\Rules\ValidPlaceName;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateSettingRequest extends FormRequest
@@ -52,6 +54,7 @@ class UpdateSettingRequest extends FormRequest
             'setting_value.required' => 'Setting value is required.',
             'setting_value.integer' => 'Setting value must be a whole number.',
             'setting_value.min' => 'Setting value must be at least 1.',
+            'setting_value.between' => 'Setting value must be between :min and :max.',
             'setting_value.string' => 'Setting value must be text.',
             'setting_value.max' => 'Setting value must not exceed 45 characters.',
             'setting_value.boolean' => 'Setting value must be true or false.',
@@ -98,10 +101,18 @@ class UpdateSettingRequest extends FormRequest
     private function rulesForSetting(Setting $setting): array
     {
         return match ($setting->setting_key) {
+            'barangay_name' => ['required', 'string', 'max:45', new ValidPlaceName('Barangay name')],
+            'city_name' => ['required', 'string', 'max:45', new ValidPlaceName('City name')],
             'barangay_address' => ['required', 'string', 'max:45', new ValidBarangayAddress],
             'barangay_code' => ['required', 'string', 'regex:/^\d{10}$/'],
             'barangay_contact_no' => ['required', 'string', 'max:45', new ValidBarangayContactNumber],
             'barangay_email' => ['required', 'string', 'max:45', 'email'],
+            'default_password' => ['required', 'string', 'max:45', new ValidDefaultPassword],
+            'password_min_length' => ['required', 'integer', 'between:8,32'],
+            'max_login_attempts' => ['required', 'integer', 'between:3,10'],
+            'account_lockout_minutes' => ['required', 'integer', 'between:1,1440'],
+            'session_timeout_minutes' => ['required', 'integer', 'between:5,480'],
+            'audit_log_retention_days' => ['required', 'integer', 'between:30,3650'],
             default => match ($setting->data_type) {
                 'int' => ['required', 'integer', 'min:1'],
                 'bool' => ['required', 'boolean'],

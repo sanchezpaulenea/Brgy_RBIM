@@ -2,7 +2,7 @@
     <AppLayout title="System settings">
         <div class="space-y-6">
             <p class="text-sm text-slate-600">
-                Values stored in the system settings table, including barangay profile, password rules, session timeout, and audit retention.
+                Values stored in the system settings table, grouped into barangay information, account and security settings, and session and audit settings.
             </p>
 
             <div v-if="error" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -15,10 +15,17 @@
             <div v-if="loading" class="rbim-card p-8 text-center text-sm text-slate-500">
                 Loading settings...
             </div>
-            <div v-else class="rbim-card overflow-hidden">
+            <div v-else-if="!settings.length" class="rbim-card p-8 text-center text-sm text-slate-500">
+                No settings found.
+            </div>
+            <section v-for="group in settingGroups" :key="group.title" class="rbim-card overflow-hidden">
+                <header class="border-b border-slate-200 bg-slate-50 px-4 py-3">
+                    <h2 class="text-sm font-semibold text-slate-900">{{ group.title }}</h2>
+                    <p class="mt-0.5 text-xs text-slate-500">{{ group.description }}</p>
+                </header>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50">
+                        <thead class="bg-white">
                             <tr>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Setting</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Value</th>
@@ -27,7 +34,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            <tr v-for="setting in settings" :key="setting.setting_id" class="align-top">
+                            <tr v-for="setting in group.settings" :key="setting.setting_id" class="align-top">
                                 <td class="px-4 py-3 font-medium text-slate-900">
                                     {{ formatSettingLabel(setting.setting_key) }}
                                 </td>
@@ -38,6 +45,8 @@
                                             :type="setting.data_type === 'int' ? 'number' : 'text'"
                                             :inputmode="inputModeFor(setting)"
                                             :placeholder="placeholderFor(setting)"
+                                            :min="rangeFor(setting)?.min"
+                                            :max="rangeFor(setting)?.max"
                                             maxlength="45"
                                             class="rbim-input min-w-56 py-1.5"
                                             :class="{ 'rbim-input-error': editError }"
@@ -78,15 +87,15 @@
                                     </button>
                                 </td>
                             </tr>
-                            <tr v-if="!settings.length">
+                            <tr v-if="!group.settings.length">
                                 <td :colspan="canUpdateSettings ? 4 : 3" class="px-4 py-8 text-center text-slate-500">
-                                    No settings found.
+                                    No settings in this category.
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </section>
         </div>
     </AppLayout>
 </template>
@@ -98,13 +107,31 @@ import { useAuth } from '@/composables/useAuth';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as settingService from '@/services/settingService';
 import { formatSettingLabel } from '@/utils/format';
-import { settingValueValidationError } from '@/utils/validation';
+import { SETTING_INT_RANGES, settingValueValidationError } from '@/utils/validation';
 
 const SETTING_HINTS = {
+    barangay_name: 'The official barangay name, for example “Barangay Happy Hallow”.',
     barangay_address: 'Include the barangay, city, and province, for example “Barangay Happy Hallow, Baguio City, Benguet”.',
+    city_name: 'The city or municipality the barangay belongs to, for example “Baguio City”.',
     barangay_code: 'Philippine Standard Geographic Code (PSGC): exactly 10 digits, for example 1430300006.',
     barangay_contact_no: 'Mobile 09XXXXXXXXX or +639XXXXXXXXX, or landline with area code such as 074-123-4567.',
     barangay_email: 'A complete email address such as brgyhappyhallow@gmail.com.',
+    default_password: 'At least 8 characters with one uppercase letter, one lowercase letter, and one number, and no spaces.',
+    password_min_length: 'Whole number between 8 and 32 characters.',
+    max_login_attempts: 'Whole number between 3 and 10 failed attempts before lockout.',
+    account_lockout_minutes: 'Whole number between 1 and 1440 minutes (24 hours).',
+    session_timeout_minutes: 'Whole number between 5 and 480 minutes (8 hours).',
+    audit_log_retention_days: 'Whole number between 30 and 3650 days (10 years).',
+};
+
+const SETTING_PLACEHOLDERS = {
+    barangay_name: 'Barangay Happy Hallow',
+    barangay_address: 'Barangay Happy Hallow, Baguio City, Benguet',
+    city_name: 'Baguio City',
+    barangay_code: '1430300006',
+    barangay_contact_no: '09123456789',
+    barangay_email: 'brgyhappyhallow@gmail.com',
+    default_password: 'Temp12345',
 };
 
 const NUMERIC_INPUT_MODES = {
@@ -112,6 +139,44 @@ const NUMERIC_INPUT_MODES = {
     barangay_contact_no: 'tel',
     barangay_email: 'email',
 };
+
+/**
+ * The settings table stores every key in one flat list; the page presents them
+ * as three categories so barangay profile, security, and audit values are not
+ * mixed together.
+ */
+const SETTING_GROUPS = [
+    {
+        title: 'Barangay Information',
+        description: 'Official identity and contact details of the barangay.',
+        keys: [
+            'barangay_name',
+            'barangay_address',
+            'city_name',
+            'barangay_code',
+            'barangay_contact_no',
+            'barangay_email',
+        ],
+    },
+    {
+        title: 'Account and Security Settings',
+        description: 'Password rules and sign-in protection for user accounts.',
+        keys: [
+            'password_min_length',
+            'max_login_attempts',
+            'account_lockout_minutes',
+            'default_password',
+        ],
+    },
+    {
+        title: 'Session and Audit Settings',
+        description: 'Idle session handling and how long activity records are kept.',
+        keys: [
+            'session_timeout_minutes',
+            'audit_log_retention_days',
+        ],
+    },
+];
 
 const { hasPermission } = useAuth();
 
@@ -126,12 +191,43 @@ const successMessage = ref('');
 
 const canUpdateSettings = computed(() => hasPermission('setting.update'));
 
+const settingGroups = computed(() => {
+    if (loading.value || !settings.value.length) {
+        return [];
+    }
+
+    const grouped = SETTING_GROUPS.map((group) => ({
+        title: group.title,
+        description: group.description,
+        settings: group.keys
+            .map((key) => settings.value.find((setting) => setting.setting_key === key))
+            .filter(Boolean),
+    }));
+
+    const categorized = new Set(SETTING_GROUPS.flatMap((group) => group.keys));
+    const others = settings.value.filter((setting) => !categorized.has(setting.setting_key));
+
+    if (others.length) {
+        grouped.push({
+            title: 'Other Settings',
+            description: 'Values that do not belong to the categories above.',
+            settings: others,
+        });
+    }
+
+    return grouped.filter((group) => group.settings.length);
+});
+
+function rangeFor(setting) {
+    return SETTING_INT_RANGES[setting.setting_key] ?? null;
+}
+
 function hintFor(setting) {
     return SETTING_HINTS[setting.setting_key] ?? '';
 }
 
 function placeholderFor(setting) {
-    return setting.setting_key === 'barangay_code' ? '1430300006' : '';
+    return SETTING_PLACEHOLDERS[setting.setting_key] ?? '';
 }
 
 function inputModeFor(setting) {

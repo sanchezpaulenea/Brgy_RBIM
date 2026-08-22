@@ -48,11 +48,66 @@ export const BARANGAY_CODE_PATTERN = /^\d{10}$/;
 
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
 
+export const PLACE_NAME_PATTERN = /^\p{L}[\p{L}\d .,'\-]*$/u;
+
+export const PLACE_NAME_MIN_LENGTH = 3;
+
+/**
+ * Each numeric setting drives real behaviour (lockouts, sessions, retention),
+ * so the accepted range is bounded per key instead of "any number above zero".
+ */
+export const SETTING_INT_RANGES = {
+    password_min_length: { min: 8, max: 32 },
+    max_login_attempts: { min: 3, max: 10 },
+    account_lockout_minutes: { min: 1, max: 1440 },
+    session_timeout_minutes: { min: 5, max: 480 },
+    audit_log_retention_days: { min: 30, max: 3650 },
+};
+
+function placeNameValidationError(value, label) {
+    const name = value.trim();
+
+    if (name.length < PLACE_NAME_MIN_LENGTH) {
+        return `${label} must be at least ${PLACE_NAME_MIN_LENGTH} characters long.`;
+    }
+
+    if (!PLACE_NAME_PATTERN.test(name)) {
+        return `${label} must start with a letter and may only contain letters, numbers, spaces, periods, commas, hyphens, and apostrophes.`;
+    }
+
+    if ((name.match(/\p{L}/gu) ?? []).length < PLACE_NAME_MIN_LENGTH) {
+        return `${label} must contain at least ${PLACE_NAME_MIN_LENGTH} letters.`;
+    }
+
+    return '';
+}
+
 /**
  * Mirrors the server rules in App\Rules so an invalid barangay profile value is
  * rejected before it is saved, with the same wording the API would return.
  */
 const SETTING_VALIDATORS = {
+    barangay_name(value) {
+        return placeNameValidationError(value, 'Barangay name');
+    },
+    city_name(value) {
+        return placeNameValidationError(value, 'City name');
+    },
+    default_password(value) {
+        if (/\s/.test(value)) {
+            return 'Default password must not contain spaces.';
+        }
+
+        if (value.length < LOGIN_PASSWORD_MIN_LENGTH) {
+            return `Default password must be at least ${LOGIN_PASSWORD_MIN_LENGTH} characters long.`;
+        }
+
+        if (!/[A-Z]/.test(value) || !/[a-z]/.test(value) || !/\d/.test(value)) {
+            return 'Default password must include at least one uppercase letter, one lowercase letter, and one number.';
+        }
+
+        return '';
+    },
     barangay_address(value) {
         const address = value.trim();
 
@@ -111,9 +166,19 @@ export function settingValueValidationError(setting, value) {
     }
 
     if (setting?.data_type === 'int') {
-        return /^\d+$/.test(text.trim()) && Number(text) >= 1
-            ? ''
-            : 'Please enter a whole number of 1 or greater.';
+        const number = text.trim();
+
+        if (!/^\d+$/.test(number)) {
+            return 'Please enter a whole number, digits only.';
+        }
+
+        const range = SETTING_INT_RANGES[setting?.setting_key];
+
+        if (range && (Number(number) < range.min || Number(number) > range.max)) {
+            return `Please enter a whole number between ${range.min} and ${range.max}.`;
+        }
+
+        return range || Number(number) >= 1 ? '' : 'Please enter a whole number of 1 or greater.';
     }
 
     return '';

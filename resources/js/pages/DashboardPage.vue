@@ -3,7 +3,7 @@
         <section class="grid gap-6 lg:grid-cols-3">
             <article class="rbim-card p-6 lg:col-span-2">
                 <h2 class="text-lg font-semibold text-slate-900">
-                    Welcome back, {{ user?.username }}
+                    Welcome back, {{ displayName }}!
                 </h2>
                 <p class="mt-2 text-sm text-slate-600">
                     You are signed in to the Registry of Barangay Inhabitants and Migrants.
@@ -36,8 +36,11 @@
 import { computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { useAuth } from '@/composables/useAuth';
+import { formatDisplayName } from '@/utils/format';
 
 const { user, roles } = useAuth();
+
+const displayName = computed(() => formatDisplayName(user.value?.username) || 'User');
 
 const rolesLabel = computed(() => (
     roles.value.length ? roles.value.join(', ') : 'No role assigned'
