@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\BarangayPersonnel;
 
+use App\Models\BarangayPersonnel\PersonnelPosition;
+use App\Rules\ValidPersonnelName;
 use App\Rules\ValidPositionName;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -31,10 +33,10 @@ class StorePersonnelRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'personnel_last_name' => ['required', 'string', 'max:45'],
-            'personnel_first_name' => ['required', 'string', 'max:45'],
-            'personnel_middle_name' => ['nullable', 'string', 'max:45'],
-            'personnel_suffix' => ['nullable', 'string', 'max:10'],
+            'personnel_last_name' => ['required', 'string', 'max:45', new ValidPersonnelName],
+            'personnel_first_name' => ['required', 'string', 'max:45', new ValidPersonnelName],
+            'personnel_middle_name' => ['nullable', 'string', 'max:45', new ValidPersonnelName],
+            'personnel_suffix' => ['nullable', 'string', 'max:10', new ValidPersonnelName],
             'personnel_date_of_birth' => ['required', 'date', 'before_or_equal:today'],
             'personnel_status_id' => ['sometimes', 'integer', Rule::exists('personnel_status', 'personnel_status_id')],
             'confirm_duplicate' => ['sometimes', 'boolean'],
@@ -91,7 +93,7 @@ class StorePersonnelRequest extends FormRequest
             return $value;
         }
 
-        $formatted = Str::of($value)->squish()->toString();
+        $formatted = PersonnelPosition::standardizeName($value);
 
         return $formatted === '' ? null : $formatted;
     }

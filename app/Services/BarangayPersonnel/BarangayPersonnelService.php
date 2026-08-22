@@ -3,6 +3,7 @@
 namespace App\Services\BarangayPersonnel;
 
 use App\Models\BarangayPersonnel\BarangayPersonnel;
+use App\Models\BarangayPersonnel\PersonnelPosition;
 use App\Models\Logs\Action;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\BarangayPersonnel\BarangayPersonnelRepositoryInterface;
@@ -79,9 +80,9 @@ class BarangayPersonnelService
     {
         $this->assertNoUnconfirmedDuplicate($data, $personnel->personnel_id);
 
-        $oldName = $this->fullName($personnel);
+        $previous = $this->personnelAuditValues($personnel);
 
-        return DB::transaction(function () use ($performedBy, $personnel, $data, $oldName) {
+        return DB::transaction(function () use ($performedBy, $personnel, $data, $previous) {
             if (! empty($data['position_id'])) {
                 $this->assertPositionAvailable((int) $data['position_id'], $personnel->personnel_id);
             }
@@ -90,16 +91,7 @@ class BarangayPersonnelService
 
             $updated = $this->personnelRepository->update($personnel, $data);
 
-            $this->auditLogRepository->log(
-                performedByUserId: $performedBy->user_id,
-                actionId: Action::UPDATE,
-                recordId: $updated->personnel_id,
-                description: 'Update barangay personnel',
-                oldValue: $oldName,
-                newValue: $this->fullName($updated),
-                target: 'record',
-                entity: 'barangay_personnel',
-            );
+            $this->logPersonnelFieldChanges($performedBy, $updated, $previous);
 
             return $this->formatRecord($updated);
         });
@@ -185,7 +177,7 @@ class BarangayPersonnelService
         }
 
         $position = $this->personnelPositionRepository->create([
-            'position_name' => $data['position_name'],
+            'position_name' => PersonnelPosition::standardizeName($data['position_name']),
         ]);
 
         $this->auditLogRepository->log(
@@ -200,6 +192,61 @@ class BarangayPersonnelService
         );
 
         return $position->position_id;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function personnelAuditValues(BarangayPersonnel $personnel): array
+    {
+        return [
+            'personnel_last_name' => (string) ($personnel->personnel_last_name ?? ''),
+            'personnel_first_name' => (string) ($personnel->personnel_first_name ?? ''),
+            'personnel_middle_name' => (string) ($personnel->personnel_middle_name ?? ''),
+            'personnel_suffix' => (string) ($personnel->personnel_suffix ?? ''),
+            'personnel_date_of_birth' => $personnel->personnel_date_of_birth?->format('Y-m-d') ?? '',
+            'personnel_status_id' => (string) $personnel->personnel_status_id,
+            'position_id' => (string) $personnel->position_id,
+        ];
+    }
+
+    /**
+     * @param  array<string, string>  $previous
+     */
+    private function logPersonnelFieldChanges(User $performedBy, BarangayPersonnel $updated, array $previous): void
+    {
+        $current = $this->personnelAuditValues($updated);
+
+        $labels = [
+            'personnel_last_name' => 'last name',
+            'personnel_first_name' => 'first name',
+            'personnel_middle_name' => 'middle name',
+            'personnel_suffix' => 'suffix',
+            'personnel_date_of_birth' => 'birth date',
+            'personnel_status_id' => 'status',
+            'position_id' => 'position',
+        ];
+
+        foreach ($current as $column => $newValue) {
+            $oldValue = $previous[$column] ?? '';
+
+            if ($oldValue === $newValue) {
+                continue;
+            }
+
+            $label = $labels[$column];
+
+            $this->auditLogRepository->log(
+                performedByUserId: $performedBy->user_id,
+                actionId: Action::UPDATE,
+                recordId: $updated->personnel_id,
+                description: 'Updated '.$label.' from "'.$oldValue.'" to "'.$newValue.'"',
+                oldValue: $oldValue,
+                newValue: $newValue,
+                target: $column,
+                entity: $column,
+            );
+        }
     }
 
     private function fullName(BarangayPersonnel $personnel): string

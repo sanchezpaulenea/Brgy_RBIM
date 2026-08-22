@@ -25,11 +25,13 @@
                     </div>
                     <div>
                         <label for="personnel_middle_name" class="rbim-label">Middle name</label>
-                        <input id="personnel_middle_name" v-model="form.personnel_middle_name" type="text" maxlength="45" class="rbim-input">
+                        <input id="personnel_middle_name" v-model="form.personnel_middle_name" type="text" maxlength="45" class="rbim-input" :class="{ 'rbim-input-error': formErrors.personnel_middle_name }">
+                        <p v-if="formErrors.personnel_middle_name" class="rbim-error">{{ formErrors.personnel_middle_name }}</p>
                     </div>
                     <div>
                         <label for="personnel_suffix" class="rbim-label">Suffix</label>
-                        <input id="personnel_suffix" v-model="form.personnel_suffix" type="text" maxlength="10" class="rbim-input">
+                        <input id="personnel_suffix" v-model="form.personnel_suffix" type="text" maxlength="10" class="rbim-input" :class="{ 'rbim-input-error': formErrors.personnel_suffix }">
+                        <p v-if="formErrors.personnel_suffix" class="rbim-error">{{ formErrors.personnel_suffix }}</p>
                     </div>
                     <div>
                         <label for="personnel_date_of_birth" class="rbim-label">Date of birth</label>
@@ -132,7 +134,7 @@ import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as lookupService from '@/services/lookupService';
 import * as personnelService from '@/services/personnelService';
 import { todayDate } from '@/utils/format';
-import { positionNameValidationError } from '@/utils/validation';
+import { personnelNameValidationError, positionNameValidationError } from '@/utils/validation';
 
 const emptyForm = () => ({
     personnel_last_name: '',
@@ -320,6 +322,25 @@ async function savePersonnel(confirmDuplicate = false) {
 }
 
 async function handleSave() {
+    clearFormErrors();
+
+    const nameErrors = {
+        personnel_last_name: personnelNameValidationError(form.personnel_last_name, 'Last name', true),
+        personnel_first_name: personnelNameValidationError(form.personnel_first_name, 'First name', true),
+        personnel_middle_name: personnelNameValidationError(form.personnel_middle_name, 'Middle name'),
+        personnel_suffix: personnelNameValidationError(form.personnel_suffix, 'Suffix'),
+    };
+
+    Object.entries(nameErrors).forEach(([field, message]) => {
+        if (message) {
+            formErrors[field] = message;
+        }
+    });
+
+    if (Object.values(nameErrors).some(Boolean)) {
+        return;
+    }
+
     const typedName = form.position_name.trim();
     const matched = positions.value.find((position) => (
         Number(position.id) === Number(form.position_id)

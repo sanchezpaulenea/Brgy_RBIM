@@ -39,9 +39,8 @@ class ValidPositionNameTest extends TestCase
     {
         return [
             'letters and spaces' => ['Barangay Secretary'],
-            'hyphenated title' => ['Vice-Chairperson'],
-            'letters and numbers' => ['Kagawad 1'],
             'abbreviation' => ['SK Chairperson'],
+            'single word' => ['Treasurer'],
         ];
     }
 
@@ -59,11 +58,13 @@ class ValidPositionNameTest extends TestCase
             'slash' => ['Tanod/Guard', ValidPositionName::MESSAGE],
             'period' => ['Secretary.', ValidPositionName::MESSAGE],
             'parentheses' => ['Kagawad (1)', ValidPositionName::MESSAGE],
+            'hyphenated title' => ['Vice-Chairperson', ValidPositionName::MESSAGE],
+            'letters and numbers' => ['Kagawad 1', ValidPositionName::MESSAGE],
             'only symbols' => ['@@@', ValidPositionName::MESSAGE],
-            'only digits' => ['123', ValidPositionName::NUMBERS_ONLY_MESSAGE],
-            'single digit' => ['1', ValidPositionName::NUMBERS_ONLY_MESSAGE],
-            'digits with spaces' => ['12 34', ValidPositionName::NUMBERS_ONLY_MESSAGE],
-            'digits with hyphen' => ['1-2', ValidPositionName::NUMBERS_ONLY_MESSAGE],
+            'only digits' => ['123', ValidPositionName::MESSAGE],
+            'single digit' => ['1', ValidPositionName::MESSAGE],
+            'digits with spaces' => ['12 34', ValidPositionName::MESSAGE],
+            'digits with hyphen' => ['1-2', ValidPositionName::MESSAGE],
         ];
     }
 }

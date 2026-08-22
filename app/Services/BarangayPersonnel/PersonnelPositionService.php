@@ -37,6 +37,7 @@ class PersonnelPositionService
     public function createPosition(User $performedBy, array $data): array
     {
         return DB::transaction(function () use ($performedBy, $data) {
+            $data['position_name'] = PersonnelPosition::standardizeName($data['position_name']);
             $position = $this->personnelPositionRepository->create($data);
 
             $this->auditLogRepository->log(

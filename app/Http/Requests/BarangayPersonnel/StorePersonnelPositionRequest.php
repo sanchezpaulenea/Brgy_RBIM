@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\BarangayPersonnel;
 
+use App\Models\BarangayPersonnel\PersonnelPosition;
 use App\Rules\ValidPositionName;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class StorePersonnelPositionRequest extends FormRequest
@@ -21,7 +21,7 @@ class StorePersonnelPositionRequest extends FormRequest
         }
 
         $this->merge([
-            'position_name' => Str::of($this->input('position_name'))->squish()->toString(),
+            'position_name' => PersonnelPosition::standardizeName($this->input('position_name')),
         ]);
     }
 
