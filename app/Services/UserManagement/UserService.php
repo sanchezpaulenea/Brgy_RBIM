@@ -162,7 +162,8 @@ class UserService
             ->map(fn ($record) => [
                 'personnel_id' => $record->personnel_id,
                 'position_id' => $record->position_id,
-                'label' => $this->formatPersonnelPositionLabel($record),
+                'position_name' => $this->formatPersonnelPositionLabel($record),
+                'label' => $this->formatPersonnelName($record),
             ])
             ->all();
 
@@ -253,6 +254,7 @@ class UserService
                 'personnel_id' => $user->personnel->personnel_id,
                 'position_id' => $user->personnel->position_id,
                 'position_name' => $user->personnel->position?->position_name,
+                'full_name' => $this->formatPersonnelName($user->personnel),
             ] : null,
             'must_change_password' => $user->must_change_password,
             'created_at' => $user->created_at,
@@ -273,6 +275,21 @@ class UserService
     private function formatPersonnelPositionLabel(BarangayPersonnel $personnel): string
     {
         return $personnel->position?->position_name ?? 'Unassigned position';
+    }
+
+    private function formatPersonnelName(BarangayPersonnel $personnel): string
+    {
+        $givenNames = collect([
+            $personnel->personnel_first_name,
+            $personnel->personnel_middle_name,
+            $personnel->personnel_suffix,
+        ])->filter()->implode(' ');
+
+        if ($givenNames === '') {
+            return (string) $personnel->personnel_last_name;
+        }
+
+        return $personnel->personnel_last_name.', '.$givenNames;
     }
 
     /**

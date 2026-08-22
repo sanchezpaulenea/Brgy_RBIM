@@ -16,6 +16,17 @@ class RoleRepository implements RoleInterface
         return Role::query()->orderBy('role_name')->get();
     }
 
+    /**
+     * @return Collection<int, Role>
+     */
+    public function allWithPermissions(): Collection
+    {
+        return Role::query()
+            ->with(['permissions' => fn ($query) => $query->orderBy('permission')])
+            ->orderBy('role_id')
+            ->get();
+    }
+
     public function findById(int $roleId): ?Role
     {
         return Role::query()

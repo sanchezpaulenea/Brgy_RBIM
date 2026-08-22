@@ -86,6 +86,7 @@ export async function createPersonnel(payload) {
         personnel_suffix: payload.personnel_suffix || null,
         personnel_date_of_birth: payload.personnel_date_of_birth,
         personnel_status_id: Number(payload.personnel_status_id || 1),
+        confirm_duplicate: Boolean(payload.confirm_duplicate),
     };
 
     try {

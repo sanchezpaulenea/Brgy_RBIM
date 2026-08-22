@@ -1,6 +1,6 @@
 <template>
     <GuestLayout>
-        <form class="rbim-card px-6 py-7 sm:px-8" @submit.prevent="handleSubmit">
+        <form class="rbim-card px-6 py-7 sm:px-8" novalidate @submit.prevent="handleSubmit">
             <p class="mb-6 text-center text-sm text-slate-500">
                 Enter your credentials to continue.
             </p>
@@ -26,26 +26,20 @@
                         v-model="form.username"
                         type="text"
                         autocomplete="username"
-                        required
                         class="rbim-input"
                         :class="{ 'rbim-input-error': errors.username }"
                     >
                     <p v-if="errors.username" class="rbim-error text-left">{{ errors.username }}</p>
                 </div>
 
-                <div class="text-center">
-                    <label for="password" class="rbim-label text-center">Password</label>
-                    <input
-                        id="password"
-                        v-model="form.password"
-                        type="password"
-                        autocomplete="current-password"
-                        required
-                        class="rbim-input"
-                        :class="{ 'rbim-input-error': errors.password }"
-                    >
-                    <p v-if="errors.password" class="rbim-error text-left">{{ errors.password }}</p>
-                </div>
+                <PasswordField
+                    v-model="form.password"
+                    input-id="password"
+                    label="Password"
+                    autocomplete="current-password"
+                    center-label
+                    :error="errors.password"
+                />
             </div>
 
             <button type="submit" class="rbim-btn mt-6 w-full" :disabled="loading || lockoutSeconds > 0">
@@ -59,8 +53,16 @@
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import GuestLayout from '@/layouts/GuestLayout.vue';
+import PasswordField from '@/components/PasswordField.vue';
 import { useAuth } from '@/composables/useAuth';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
+import {
+    INVALID_CREDENTIALS_MESSAGE,
+    INVALID_PASSWORD_MESSAGE,
+    INVALID_USERNAME_MESSAGE,
+    isWellFormedPassword,
+    isWellFormedUsername,
+} from '@/utils/validation';
 
 const route = useRoute();
 const router = useRouter();
@@ -147,12 +149,45 @@ function clearErrors() {
     lockoutMessage.value = '';
 }
 
+/**
+ * Reports which credential the user needs to correct: one message per field, or
+ * the combined message when neither entry is usable.
+ */
+function hasCredentialFormatErrors() {
+    const usernameInvalid = !isWellFormedUsername(form.username);
+    const passwordInvalid = !isWellFormedPassword(form.password);
+
+    if (usernameInvalid && passwordInvalid) {
+        generalError.value = INVALID_CREDENTIALS_MESSAGE;
+
+        return true;
+    }
+
+    if (usernameInvalid) {
+        errors.username = INVALID_USERNAME_MESSAGE;
+
+        return true;
+    }
+
+    if (passwordInvalid) {
+        errors.password = INVALID_PASSWORD_MESSAGE;
+
+        return true;
+    }
+
+    return false;
+}
+
 async function handleSubmit() {
     if (lockoutSeconds.value > 0) {
         return;
     }
 
     clearErrors();
+
+    if (hasCredentialFormatErrors()) {
+        return;
+    }
 
     try {
         await login({
@@ -190,7 +225,7 @@ async function handleSubmit() {
         }
 
         if (!errors.username && !errors.password) {
-            generalError.value = extractErrorMessage(error, 'Unable to sign in. Please check your credentials.');
+            generalError.value = extractErrorMessage(error, INVALID_CREDENTIALS_MESSAGE);
         }
     }
 }

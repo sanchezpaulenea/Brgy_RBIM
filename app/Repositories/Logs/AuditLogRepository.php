@@ -33,7 +33,7 @@ class AuditLogRepository implements AuditLogRepositoryInterface
     }
 
     /**
-     * @param  array{user_id?: int, entity?: string, target?: string, date_from?: string, date_to?: string}  $filters
+     * @param  array{user_id?: int, username?: string, entity?: string, target?: string, date_from?: string, date_to?: string}  $filters
      * @return Collection<int, AuditLog>
      */
     public function list(array $filters = []): Collection
@@ -44,6 +44,14 @@ class AuditLogRepository implements AuditLogRepositoryInterface
 
         if (! empty($filters['user_id'])) {
             $query->where('user_id', $filters['user_id']);
+        }
+
+        if (! empty($filters['username'])) {
+            $term = mb_strtolower(trim($filters['username']));
+
+            $query->whereHas('user', function ($userQuery) use ($term) {
+                $userQuery->whereRaw('LOWER(username) LIKE ?', ['%'.$term.'%']);
+            });
         }
 
         if (! empty($filters['entity'])) {

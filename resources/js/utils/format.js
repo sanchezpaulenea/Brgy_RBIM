@@ -56,6 +56,24 @@ export function formatSettingLabel(key) {
     return String(key).replaceAll('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+/**
+ * Presents audit log entity and target values the way they read in the app
+ * rather than the way they are stored, e.g. `barangay_personnel` becomes
+ * "Barangay Personnel".
+ */
+export function formatRecordLabel(value) {
+    const text = String(value ?? '').trim();
+
+    if (!text) {
+        return '—';
+    }
+
+    return text
+        .replaceAll('_', ' ')
+        .replace(/\s+/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 export function todayDate() {
     const now = new Date();
     const offset = now.getTimezoneOffset();

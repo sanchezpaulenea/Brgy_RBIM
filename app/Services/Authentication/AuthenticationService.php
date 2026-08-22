@@ -55,7 +55,7 @@ class AuthenticationService
             );
 
             throw ValidationException::withMessages([
-                'username' => ['Invalid credentials.'],
+                'username' => ['Invalid username.'],
             ]);
         }
 
@@ -109,7 +109,7 @@ class AuthenticationService
             }
 
             throw ValidationException::withMessages([
-                'username' => ['Invalid credentials.'],
+                'password' => ['Invalid password, please try again.'],
             ]);
         }
 

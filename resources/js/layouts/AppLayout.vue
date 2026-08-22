@@ -63,7 +63,7 @@
                         v-if="canManagePersonnel"
                         :to="{ name: 'personnel' }"
                         class="rounded-lg px-3 py-2 text-sm font-medium transition"
-                        :class="route.name === 'personnel' ? 'bg-white text-brand' : 'text-white/90 hover:bg-white/10'"
+                        :class="isPersonnelRoute ? 'bg-white text-brand' : 'text-white/90 hover:bg-white/10'"
                         @click="sidebarOpen = false"
                     >
                         Barangay Personnel Management
@@ -73,7 +73,7 @@
                         v-if="canManageUsers"
                         :to="{ name: 'users' }"
                         class="rounded-lg px-3 py-2 text-sm font-medium transition"
-                        :class="route.name === 'users' ? 'bg-white text-brand' : 'text-white/90 hover:bg-white/10'"
+                        :class="isUsersRoute ? 'bg-white text-brand' : 'text-white/90 hover:bg-white/10'"
                         @click="sidebarOpen = false"
                     >
                         User Account Management
@@ -91,17 +91,6 @@
                         </button>
 
                         <div v-show="settingsOpen || isSettingsRoute" class="ml-3 mt-1 space-y-1 border-l border-white/20 pl-3">
-                            <RouterLink
-                                v-for="item in lookupItems"
-                                v-show="canViewLookups"
-                                :key="item.name"
-                                :to="{ name: item.name }"
-                                class="block rounded-lg px-2 py-1.5 text-sm transition"
-                                :class="route.name === item.name ? 'bg-white text-brand' : 'text-white/85 hover:bg-white/10'"
-                                @click="sidebarOpen = false"
-                            >
-                                {{ item.label }}
-                            </RouterLink>
                             <RouterLink
                                 v-if="canViewAuditLogs"
                                 :to="{ name: 'audit-logs' }"
@@ -156,16 +145,10 @@ defineProps({
 
 const route = useRoute();
 const router = useRouter();
-const { user, roles, loading, logout, hasPermission, isSuperAdmin, isSystemAdministrator } = useAuth();
+const { user, roles, loading, logout, hasPermission, isSystemAdministrator } = useAuth();
 
 const sidebarOpen = ref(false);
 const settingsOpen = ref(true);
-
-const lookupItems = [
-    { name: 'lookup-personnel-positions', label: 'Personnel Position' },
-    { name: 'lookup-user-roles', label: 'User Role' },
-    { name: 'lookup-role-permissions', label: 'Role Permission' },
-];
 
 const canManagePersonnel = computed(() => (
     hasPermission('personnel.view')
@@ -182,13 +165,14 @@ const canViewSystemSettings = computed(() => (
 const canViewAuditLogs = computed(() => isSystemAdministrator.value);
 const canViewUserLogs = computed(() => hasPermission('userlog.view'));
 const canViewLogs = computed(() => canViewAuditLogs.value || canViewUserLogs.value);
-const canViewLookups = computed(() => isSuperAdmin.value);
 
 const canViewSettingsMenu = computed(() => (
-    canViewSystemSettings.value || canViewLogs.value || canViewLookups.value
+    canViewSystemSettings.value || canViewLogs.value
 ));
 
 const isSettingsRoute = computed(() => String(route.path).startsWith('/settings'));
+const isPersonnelRoute = computed(() => String(route.path).startsWith('/personnel'));
+const isUsersRoute = computed(() => String(route.path).startsWith('/users'));
 
 const rolesLabel = computed(() => {
     if (!roles.value.length) {

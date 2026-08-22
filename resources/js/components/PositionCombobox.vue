@@ -1,20 +1,28 @@
 <template>
-    <div class="relative">
-        <label v-if="label" :for="inputId" class="rbim-label">{{ label }}</label>
+    <div ref="root" class="relative">
+        <label v-if="label" :for="inputId" class="rbim-label">
+            {{ label }}
+            <span v-if="required" class="rbim-required" aria-hidden="true">*</span>
+        </label>
         <input
             :id="inputId"
             v-model="query"
             type="text"
             autocomplete="off"
+            role="combobox"
+            aria-autocomplete="list"
+            :aria-expanded="open"
             :placeholder="placeholder"
             :disabled="disabled"
             class="rbim-input"
             :class="{ 'rbim-input-error': error }"
             @focus="open = true"
             @input="onInput"
-            @keydown.down.prevent="move(1)"
+            @blur="onBlur"
+            @keydown.down.prevent="onArrowDown"
             @keydown.up.prevent="move(-1)"
-            @keydown.enter.prevent="selectHighlighted"
+            @keydown.enter.prevent="onEnter"
+            @keydown.tab="open = false"
             @keydown.escape="open = false"
         >
         <ul
@@ -34,15 +42,22 @@
                 <span v-if="optionDisabled(option)" class="ml-2 text-xs">Held by active personnel</span>
             </li>
         </ul>
-        <p v-else-if="open && query.trim() && !filtered.length && canCreate" class="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 shadow-lg">
-            Press Enter to add “{{ query.trim() }}” as a new position.
+        <p
+            v-else-if="open && canCreate && newPositionName"
+            class="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 shadow-lg"
+        >
+            Press Enter to add “{{ newPositionName }}” as a new position.
         </p>
         <p v-if="error" class="rbim-error">{{ error }}</p>
+        <p v-else-if="acceptedNewName" class="mt-1.5 text-xs font-medium text-brand">
+            “{{ acceptedNewName }}” will be added as a new position when you save.
+        </p>
+        <p v-else-if="hint" class="rbim-hint">{{ hint }}</p>
     </div>
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
     modelValue: {
@@ -73,6 +88,14 @@ const props = defineProps({
         type: String,
         default: '',
     },
+    hint: {
+        type: String,
+        default: '',
+    },
+    required: {
+        type: Boolean,
+        default: false,
+    },
     disabled: {
         type: Boolean,
         default: false,
@@ -83,11 +106,13 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['update:modelValue', 'update:query']);
+const emit = defineEmits(['update:modelValue', 'update:query', 'create']);
 
 const query = ref('');
 const open = ref(false);
 const highlightedIndex = ref(0);
+const acceptedNewName = ref('');
+const root = ref(null);
 
 const selected = computed(() => (
     props.options.find((option) => Number(option.id) === Number(props.modelValue)) ?? null
@@ -100,6 +125,22 @@ const filtered = computed(() => {
         : props.options;
 
     return list.slice(0, 12);
+});
+
+/**
+ * The typed name when it does not already exist, which is what pressing Enter
+ * would add. An exact match is treated as a selection instead.
+ */
+const newPositionName = computed(() => {
+    const term = query.value.trim();
+
+    if (!term) {
+        return '';
+    }
+
+    const exists = props.options.some((option) => option.label.toLowerCase() === term.toLowerCase());
+
+    return exists ? '' : term;
 });
 
 watch(selected, (option) => {
@@ -118,9 +159,33 @@ function optionDisabled(option) {
 
 function onInput() {
     open.value = true;
+    acceptedNewName.value = '';
     emit('update:query', query.value);
     emit('update:modelValue', null);
     highlightedIndex.value = 0;
+}
+
+function onBlur() {
+    open.value = false;
+}
+
+function closeOnOutsidePointer(event) {
+    if (open.value && root.value && !root.value.contains(event.target)) {
+        open.value = false;
+    }
+}
+
+onMounted(() => document.addEventListener('pointerdown', closeOnOutsidePointer, true));
+onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutsidePointer, true));
+
+function onArrowDown() {
+    if (!open.value) {
+        open.value = true;
+
+        return;
+    }
+
+    move(1);
 }
 
 function select(option) {
@@ -128,9 +193,11 @@ function select(option) {
         return;
     }
 
+    acceptedNewName.value = '';
     emit('update:modelValue', option.id);
     emit('update:query', option.label);
     query.value = option.label;
+    highlightedIndex.value = 0;
     open.value = false;
 }
 
@@ -143,11 +210,25 @@ function move(step) {
     highlightedIndex.value = (next + filtered.value.length) % filtered.value.length;
 }
 
-function selectHighlighted() {
+/**
+ * Enter either takes the highlighted suggestion or, when nothing matches the
+ * typed name, keeps it as a new position for the parent form to create.
+ */
+function onEnter() {
     const option = filtered.value[highlightedIndex.value];
 
-    if (option && !optionDisabled(option)) {
+    if (open.value && option && !optionDisabled(option)) {
         select(option);
+
+        return;
+    }
+
+    if (props.canCreate && newPositionName.value) {
+        acceptedNewName.value = newPositionName.value;
+        emit('update:modelValue', null);
+        emit('update:query', newPositionName.value);
+        emit('create', newPositionName.value);
+        open.value = false;
     }
 }
 </script>

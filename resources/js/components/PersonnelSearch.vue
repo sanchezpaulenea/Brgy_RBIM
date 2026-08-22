@@ -1,5 +1,5 @@
 <template>
-    <div class="relative">
+    <div ref="root" class="relative">
         <label v-if="label" :for="inputId" class="rbim-label">
             {{ label }}
         </label>
@@ -14,9 +14,11 @@
             :class="{ 'rbim-input-error': error }"
             @focus="open = true"
             @input="open = true"
+            @blur="open = false"
             @keydown.down.prevent="move(1)"
             @keydown.up.prevent="move(-1)"
             @keydown.enter.prevent="selectHighlighted"
+            @keydown.tab="open = false"
             @keydown.escape="open = false"
         >
         <p v-if="selectedLabel && !query" class="mt-1 text-xs text-slate-500">
@@ -45,7 +47,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
     modelValue: {
@@ -87,6 +89,7 @@ const emit = defineEmits(['update:modelValue']);
 const query = ref('');
 const open = ref(false);
 const highlightedIndex = ref(0);
+const root = ref(null);
 
 const selected = computed(() => (
     props.options.find((option) => Number(option.personnel_id) === Number(props.modelValue)) ?? null
@@ -127,6 +130,15 @@ function select(option) {
     query.value = option.label;
     open.value = false;
 }
+
+function closeOnOutsidePointer(event) {
+    if (open.value && root.value && !root.value.contains(event.target)) {
+        open.value = false;
+    }
+}
+
+onMounted(() => document.addEventListener('pointerdown', closeOnOutsidePointer, true));
+onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutsidePointer, true));
 
 function move(step) {
     if (!filtered.value.length) {
