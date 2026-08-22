@@ -128,6 +128,10 @@ function startLockoutTimer(seconds) {
 onMounted(() => {
     if (route.query.reason === 'inactive') {
         generalError.value = 'You have been logged out due to inactivity.';
+    } else if (route.query.reason === 'unauthorized') {
+        generalError.value = typeof route.query.message === 'string' && route.query.message !== ''
+            ? route.query.message
+            : 'Your session is no longer valid. Please log in again.';
     } else if (route.query.reason === 'password_changed') {
         successMessage.value = 'Password updated successfully. Please log in with your new password.';
     }

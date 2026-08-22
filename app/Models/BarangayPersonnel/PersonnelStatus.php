@@ -17,6 +17,9 @@ class PersonnelStatus extends Model
         'personnel_status',
     ];
 
+    /** Seeded personnel_status_id constants for use throughout the application. */
+    public const ACTIVE = 1;
+
     /**
      * @return HasMany<BarangayPersonnel, $this>
      */

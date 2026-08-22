@@ -36,14 +36,35 @@ http.interceptors.request.use(async (config) => {
     return config;
 });
 
+let handlingUnauthorized = false;
+
 http.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        handlingUnauthorized = false;
+
+        return response;
+    },
     async (error) => {
         if (error.response?.status === 419) {
             csrfInitialized = false;
             await ensureCsrfCookie();
 
             return http.request(error.config);
+        }
+
+        if (error.response?.status === 401 && !handlingUnauthorized) {
+            const requestUrl = String(error.config?.url ?? '');
+
+            if (
+                !requestUrl.includes('/auth/login')
+                && !requestUrl.includes('/auth/me')
+                && !requestUrl.includes('/auth/logout')
+            ) {
+                handlingUnauthorized = true;
+                window.dispatchEvent(new CustomEvent('rbim:unauthorized', {
+                    detail: { message: error.response?.data?.message ?? '' },
+                }));
+            }
         }
 
         return Promise.reject(error);
