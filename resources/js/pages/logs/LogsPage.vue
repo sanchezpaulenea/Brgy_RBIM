@@ -7,17 +7,17 @@
 
             <form v-if="isAudit" class="rbim-card grid gap-3 p-4 sm:grid-cols-5" @submit.prevent="loadAuditLogs">
                 <div>
-                    <label for="audit-user" class="rbim-label">User</label>
+                    <label for="audit-entity" class="rbim-label">Affected Record</label>
                     <input
-                        id="audit-user"
-                        v-model="filters.username"
+                        id="audit-entity"
+                        v-model="filters.entity"
                         type="search"
                         name="audit-log-search"
                         autocomplete="off"
                         autocapitalize="off"
                         spellcheck="false"
                         class="rbim-input py-2"
-                        placeholder="Search user"
+                        placeholder="Search affected record"
                     >
                 </div>
                 <div>
@@ -155,7 +155,7 @@ const error = ref('');
 const auditLogs = ref([]);
 const loginLogs = ref([]);
 const filters = reactive({
-    username: '',
+    entity: '',
     date_from: '',
     date_to: '',
 });
@@ -204,8 +204,8 @@ async function loadAuditLogs() {
     try {
         const params = {};
 
-        if (filters.username) {
-            params.username = filters.username.trim();
+        if (filters.entity) {
+            params.entity = filters.entity.trim();
         }
 
         if (filters.date_from) {
@@ -238,7 +238,7 @@ async function loadLoginLogs() {
 }
 
 function clearFilters() {
-    filters.username = '';
+    filters.entity = '';
     filters.date_from = '';
     filters.date_to = '';
     loadAuditLogs();

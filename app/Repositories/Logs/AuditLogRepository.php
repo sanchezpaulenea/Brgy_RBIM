@@ -55,7 +55,13 @@ class AuditLogRepository implements AuditLogRepositoryInterface
         }
 
         if (! empty($filters['entity'])) {
-            $query->where('entity', $filters['entity']);
+            $normalized = preg_replace('/[\s_]+/u', '_', mb_strtolower(trim($filters['entity']))) ?? '';
+            $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $normalized);
+
+            $query->whereRaw(
+                "REPLACE(REPLACE(LOWER(entity), ' ', '_'), '-', '_') LIKE ? ESCAPE '\\\\'",
+                ['%'.$escaped.'%'],
+            );
         }
 
         if (! empty($filters['target'])) {

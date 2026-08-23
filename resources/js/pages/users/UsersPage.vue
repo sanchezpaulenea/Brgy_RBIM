@@ -74,15 +74,26 @@
                 Loading user accounts...
             </div>
             <div v-else class="rbim-card overflow-hidden">
-                <div class="border-b border-slate-200 p-4 sm:w-80">
-                    <label for="user-filter-personnel" class="rbim-label">Search personnel name</label>
-                    <input
-                        id="user-filter-personnel"
-                        v-model="search"
-                        type="search"
-                        class="rbim-input py-2"
-                        placeholder="Search personnel name"
-                    >
+                <div class="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-end sm:justify-between">
+                    <div class="sm:w-72">
+                        <label for="user-filter-user" class="rbim-label">Search user</label>
+                        <input
+                            id="user-filter-user"
+                            v-model="filters.username"
+                            type="search"
+                            class="rbim-input py-2"
+                            placeholder="Search user"
+                        >
+                    </div>
+                    <div class="sm:w-48">
+                        <label for="user-filter-status" class="rbim-label">User status</label>
+                        <select id="user-filter-status" v-model="filters.statusId" class="rbim-input py-2">
+                            <option value="all">All statuses</option>
+                            <option v-for="status in userStatuses" :key="status.id" :value="status.id">
+                                {{ status.label }}
+                            </option>
+                        </select>
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
@@ -132,7 +143,7 @@
                             </tr>
                             <tr v-if="!filteredUsers.length">
                                 <td :colspan="canResetPassword ? 5 : 4" class="px-4 py-8 text-center text-slate-500">
-                                    {{ users.length ? 'No accounts match the search.' : 'No user accounts found.' }}
+                                    {{ users.length ? 'No accounts match the current filters.' : 'No user accounts found.' }}
                                 </td>
                             </tr>
                         </tbody>
@@ -178,9 +189,12 @@ const loadingUsers = ref(false);
 const creatingUser = ref(false);
 const resettingId = ref(null);
 const updatingStatusId = ref(null);
-const search = ref('');
 const error = ref('');
 const successMessage = ref('');
+const filters = reactive({
+    username: '',
+    statusId: 'all',
+});
 
 const createForm = reactive({
     username: '',
@@ -217,16 +231,17 @@ const createRoleOptions = computed(() => {
 });
 
 const filteredUsers = computed(() => {
-    const term = search.value.trim().toLowerCase();
+    const term = filters.username.trim().toLowerCase();
+    const statusId = filters.statusId;
 
-    if (!term) {
-        return users.value;
-    }
+    return users.value.filter((account) => {
+        const matchesUser = !term
+            || String(account.username ?? '').toLowerCase().includes(term);
+        const matchesStatus = statusId === 'all'
+            || Number(account.user_status_id) === Number(statusId);
 
-    return users.value.filter((account) => (
-        personnelName(account).toLowerCase().includes(term)
-        || String(account.username ?? '').toLowerCase().includes(term)
-    ));
+        return matchesUser && matchesStatus;
+    });
 });
 
 function personnelName(account) {
