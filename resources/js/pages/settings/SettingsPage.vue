@@ -1,9 +1,6 @@
 <template>
     <AppLayout title="System settings">
         <div class="space-y-6">
-            <p class="text-sm text-slate-600">
-                Values stored in the system settings table, grouped into barangay information, account and security settings, and session and audit settings.
-            </p>
 
             <div v-if="error" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {{ error }}

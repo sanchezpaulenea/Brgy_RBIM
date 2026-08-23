@@ -3,15 +3,16 @@
  * the Role Permission view reads as a list of capabilities rather than raw keys.
  */
 const PERMISSION_LABELS = {
+    'auditlog.view': { group: 'System logs', label: 'View the audit log' },
     'user.create': { group: 'User accounts', label: 'Create user accounts' },
     'user.view': { group: 'User accounts', label: 'View user accounts' },
     'user.delete': { group: 'User accounts', label: 'Delete user accounts' },
     'user.resetpassword': { group: 'User accounts', label: 'Reset account passwords' },
     'user.updatestatus': { group: 'User accounts', label: 'Enable or disable accounts' },
     'user.changepassword': { group: 'Own account', label: 'Change own password' },
-    'userrole.create': { group: 'Roles', label: 'Assign roles to accounts' },
-    'userrole.view': { group: 'Roles', label: 'View role assignments and permissions' },
-    'userrole.updatestatus': { group: 'Roles', label: 'Enable or disable role assignments' },
+    'userrole.create': { group: 'User roles', label: 'Assign roles to accounts' },
+    'userrole.view': { group: 'User roles', label: 'View role assignments and permissions' },
+    'userrole.updatestatus': { group: 'User roles', label: 'Enable or disable role assignments' },
     'personnel.create': { group: 'Barangay personnel', label: 'Create personnel records' },
     'personnel.view': { group: 'Barangay personnel', label: 'View personnel records' },
     'personnel.update': { group: 'Barangay personnel', label: 'Update personnel records' },

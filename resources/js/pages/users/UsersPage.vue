@@ -88,10 +88,10 @@
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
                         <thead class="bg-slate-50">
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Username</th>
+                                <th class="px-4 py-3 text-left font-semibold text-slate-600">User</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Barangay personnel name</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Roles</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
+                                <th class="px-4 py-3 text-left font-semibold text-slate-600">User Status</th>
                                 <th v-if="canResetPassword" class="px-4 py-3 text-right font-semibold text-slate-600">Reset password</th>
                             </tr>
                         </thead>

@@ -125,7 +125,7 @@
                         >
                     </div>
                     <div class="sm:w-48">
-                        <label for="personnel-filter-status" class="rbim-label">Status</label>
+                        <label for="personnel-filter-status" class="rbim-label">Personnel Status</label>
                         <select id="personnel-filter-status" v-model="filters.statusId" class="rbim-input py-2">
                             <option value="all">All statuses</option>
                             <option v-for="status in PERSONNEL_STATUSES" :key="status.id" :value="status.id">
@@ -140,7 +140,7 @@
                             <tr>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Name</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Position</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
+                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Personnel Status</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Account</th>
                                 <th v-if="canUpdate" class="px-4 py-3 text-right font-semibold text-slate-600">Action</th>
                             </tr>

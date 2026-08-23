@@ -40,7 +40,7 @@
 
             <form v-else class="rbim-card grid gap-3 p-4 sm:grid-cols-5" @submit.prevent="applyLoginFilters">
                 <div>
-                    <label for="user-name" class="rbim-label">User name</label>
+                    <label for="user-name" class="rbim-label">User</label>
                     <input
                         id="user-name"
                         v-model="loginFilters.username"
