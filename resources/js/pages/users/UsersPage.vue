@@ -1,6 +1,8 @@
 <template>
     <AppLayout title="User Account Management">
         <div class="space-y-6">
+            <PageTabs :tabs="userTabs" />
+
             <div v-if="error" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {{ error }}
             </div>
@@ -12,9 +14,11 @@
                 <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">
                     Create user account
                 </h2>
-                <form class="mt-4 grid gap-4 sm:grid-cols-2" @submit.prevent="handleCreateUser">
+                <form class="mt-4 grid gap-4 sm:grid-cols-2" novalidate @submit.prevent="handleCreateUser">
                     <div>
-                        <label for="username" class="rbim-label">Username</label>
+                        <label for="username" class="rbim-label">
+                            Username<span class="rbim-required" aria-hidden="true">*</span>
+                        </label>
                         <input
                             id="username"
                             v-model="createForm.username"
@@ -33,7 +37,9 @@
                         :error="createErrors.personnel_id"
                     />
                     <div>
-                        <label for="role_id" class="rbim-label">Role</label>
+                        <label for="role_id" class="rbim-label">
+                            Role<span class="rbim-required" aria-hidden="true">*</span>
+                        </label>
                         <select
                             id="role_id"
                             v-model="createForm.role_id"
@@ -58,6 +64,7 @@
                         </button>
                         <p class="mt-2 text-xs text-slate-500">
                             New accounts receive the default password and must change it on first login.
+                            Additional roles are assigned in the User Role tab.
                         </p>
                     </div>
                 </form>
@@ -67,23 +74,42 @@
                 Loading user accounts...
             </div>
             <div v-else class="rbim-card overflow-hidden">
+                <div class="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-end sm:justify-between">
+                    <div class="sm:w-72">
+                        <label for="user-filter-user" class="rbim-label">Search user</label>
+                        <input
+                            id="user-filter-user"
+                            v-model="filters.username"
+                            type="search"
+                            class="rbim-input py-2"
+                            placeholder="Search user"
+                        >
+                    </div>
+                    <div class="sm:w-48">
+                        <label for="user-filter-status" class="rbim-label">User status</label>
+                        <select id="user-filter-status" v-model="filters.statusId" class="rbim-input py-2">
+                            <option value="all">All statuses</option>
+                            <option v-for="status in userStatuses" :key="status.id" :value="status.id">
+                                {{ status.label }}
+                            </option>
+                        </select>
+                    </div>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
                         <thead class="bg-slate-50">
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Username</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Personnel</th>
+                                <th class="px-4 py-3 text-left font-semibold text-slate-600">User</th>
+                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Barangay personnel name</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Roles</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
-                                <th v-if="canManageAccountActions" class="px-4 py-3 text-right font-semibold text-slate-600">Actions</th>
+                                <th class="px-4 py-3 text-left font-semibold text-slate-600">User Status</th>
+                                <th v-if="canResetPassword" class="px-4 py-3 text-right font-semibold text-slate-600">Reset password</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            <tr v-for="account in users" :key="account.user_id" class="align-top">
+                            <tr v-for="account in filteredUsers" :key="account.user_id">
                                 <td class="px-4 py-3 font-medium text-slate-900">{{ account.username }}</td>
-                                <td class="px-4 py-3 text-slate-600">
-                                    {{ account.personnel ? (account.personnel.position_name || 'Linked personnel') : 'None' }}
-                                </td>
+                                <td class="px-4 py-3 text-slate-600">{{ personnelName(account) }}</td>
                                 <td class="px-4 py-3 text-slate-600">
                                     {{ account.roles?.join(', ') || 'None' }}
                                 </td>
@@ -101,85 +127,23 @@
                                     </select>
                                     <span v-else>{{ account.user_status }}</span>
                                 </td>
-                                <td v-if="canManageAccountActions" class="px-4 py-3">
-                                    <div class="flex flex-wrap justify-end gap-2">
-                                        <button
-                                            v-if="canAssignRoles"
-                                            type="button"
-                                            class="rbim-btn-outline px-3 py-1.5 text-xs"
-                                            @click="toggleRolesPanel(account)"
-                                        >
-                                            {{ rolePanelUserId === account.user_id ? 'Close roles' : 'Assign roles' }}
-                                        </button>
-                                        <button
-                                            v-if="canResetPassword"
-                                            type="button"
-                                            class="rbim-btn-outline px-3 py-1.5 text-xs"
-                                            :disabled="resettingId === account.user_id"
-                                            @click="handleResetPassword(account.user_id)"
-                                        >
-                                            {{ resettingId === account.user_id ? 'Resetting...' : 'Reset password' }}
-                                        </button>
-                                    </div>
-                                    <div
-                                        v-if="rolePanelUserId === account.user_id"
-                                        class="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-left"
+                                <td v-if="canResetPassword" class="px-4 py-3 text-right">
+                                    <button
+                                        type="button"
+                                        class="rbim-btn-action"
+                                        :disabled="resettingId === account.user_id"
+                                        @click="handleResetPassword(account.user_id)"
                                     >
-                                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                            Role assignments
-                                        </p>
-                                        <ul class="mt-2 space-y-2">
-                                            <li
-                                                v-for="assignment in roleAssignments"
-                                                :key="assignment.user_role_id"
-                                                class="flex items-center justify-between gap-2 text-xs"
-                                            >
-                                                <span>{{ assignment.role_name }}</span>
-                                                <button
-                                                    v-if="canUpdateRoleStatus"
-                                                    type="button"
-                                                    class="rounded border px-2 py-1"
-                                                    :class="assignment.enable ? 'border-brand text-brand' : 'border-slate-300 text-slate-500'"
-                                                    @click="handleRoleStatus(assignment)"
-                                                >
-                                                    {{ assignment.enable ? 'Enabled' : 'Disabled' }}
-                                                </button>
-                                            </li>
-                                            <li v-if="!roleAssignments.length" class="text-xs text-slate-500">
-                                                No roles assigned.
-                                            </li>
-                                        </ul>
-                                        <div v-if="assignableRoles.length" class="mt-3 flex gap-2">
-                                            <select v-model="selectedRoleId" class="rbim-input py-1.5 text-xs">
-                                                <option value="">Select role</option>
-                                                <option
-                                                    v-for="role in assignableRoles"
-                                                    :key="role.role_id"
-                                                    :value="role.role_id"
-                                                >
-                                                    {{ role.role_name }}
-                                                </option>
-                                            </select>
-                                            <button
-                                                type="button"
-                                                class="rbim-btn px-3 py-1.5 text-xs"
-                                                :disabled="!selectedRoleId || assigningRole"
-                                                @click="handleAssignRole(account)"
-                                            >
-                                                Assign
-                                            </button>
-                                        </div>
-                                        <p v-else class="mt-2 text-xs text-slate-500">
-                                            {{ account.personnel_id
-                                                ? 'Guest is not offered for personnel-linked accounts.'
-                                                : 'Staff roles require a linked personnel record.' }}
-                                        </p>
-                                    </div>
+                                        <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                            <path d="M10 3a7 7 0 016.9 5.8.75.75 0 11-1.48.25A5.5 5.5 0 105.6 13.9l1.1-1.1H3.75a.75.75 0 010-1.5h4a.75.75 0 01.75.75v4a.75.75 0 01-1.5 0v-2.1l-1.36 1.36A7 7 0 1110 3z" />
+                                        </svg>
+                                        {{ resettingId === account.user_id ? 'Resetting...' : 'Reset password' }}
+                                    </button>
                                 </td>
                             </tr>
-                            <tr v-if="!users.length">
-                                <td :colspan="canManageAccountActions ? 5 : 4" class="px-4 py-8 text-center text-slate-500">
-                                    No user accounts found.
+                            <tr v-if="!filteredUsers.length">
+                                <td :colspan="canResetPassword ? 5 : 4" class="px-4 py-8 text-center text-slate-500">
+                                    {{ users.length ? 'No accounts match the current filters.' : 'No user accounts found.' }}
                                 </td>
                             </tr>
                         </tbody>
@@ -204,15 +168,18 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import PageTabs from '@/components/PageTabs.vue';
 import PersonnelSearch from '@/components/PersonnelSearch.vue';
 import { ROLES } from '@/constants/roles';
 import { useAuth } from '@/composables/useAuth';
+import { useSectionTabs } from '@/composables/useSectionTabs';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as lookupService from '@/services/lookupService';
 import * as personnelService from '@/services/personnelService';
 import * as userService from '@/services/userService';
 
 const { hasPermission } = useAuth();
+const { userTabs } = useSectionTabs();
 
 const users = ref([]);
 const userStatuses = ref([]);
@@ -222,12 +189,12 @@ const loadingUsers = ref(false);
 const creatingUser = ref(false);
 const resettingId = ref(null);
 const updatingStatusId = ref(null);
-const assigningRole = ref(false);
-const rolePanelUserId = ref(null);
-const roleAssignments = ref([]);
-const selectedRoleId = ref('');
 const error = ref('');
 const successMessage = ref('');
+const filters = reactive({
+    username: '',
+    statusId: 'all',
+});
 
 const createForm = reactive({
     username: '',
@@ -254,30 +221,6 @@ const confirm = reactive({
 const canCreateUser = computed(() => hasPermission('user.create'));
 const canUpdateStatus = computed(() => hasPermission('user.updatestatus'));
 const canResetPassword = computed(() => hasPermission('user.resetpassword'));
-const canAssignRoles = computed(() => hasPermission('userrole.create'));
-const canUpdateRoleStatus = computed(() => hasPermission('userrole.updatestatus'));
-const canManageAccountActions = computed(() => canAssignRoles.value || canResetPassword.value);
-
-const activeAccount = computed(() => (
-    users.value.find((account) => account.user_id === rolePanelUserId.value) ?? null
-));
-
-const assignableRoles = computed(() => {
-    const assignedIds = new Set(roleAssignments.value.map((item) => Number(item.role_id)));
-    const hasPersonnel = Boolean(activeAccount.value?.personnel_id);
-
-    return createOptions.roles.filter((role) => {
-        if (assignedIds.has(Number(role.role_id))) {
-            return false;
-        }
-
-        if (!hasPersonnel) {
-            return role.role_name === ROLES.GUEST;
-        }
-
-        return role.role_name !== ROLES.GUEST;
-    });
-});
 
 const createRoleOptions = computed(() => {
     const hasPersonnel = Boolean(createForm.personnel_id);
@@ -286,6 +229,26 @@ const createRoleOptions = computed(() => {
         hasPersonnel ? role.role_name !== ROLES.GUEST : role.role_name === ROLES.GUEST
     ));
 });
+
+const filteredUsers = computed(() => {
+    const term = filters.username.trim().toLowerCase();
+    const statusId = filters.statusId;
+
+    return users.value.filter((account) => {
+        const matchesUser = !term
+            || String(account.username ?? '').toLowerCase().includes(term);
+        const matchesStatus = statusId === 'all'
+            || Number(account.user_status_id) === Number(statusId);
+
+        return matchesUser && matchesStatus;
+    });
+});
+
+function personnelName(account) {
+    return account.personnel?.full_name
+        || account.personnel?.position_name
+        || 'None';
+}
 
 function handleConfirmCancel() {
     confirm.open = false;
@@ -460,74 +423,6 @@ async function handleResetPassword(userId) {
         error.value = extractErrorMessage(err, 'Unable to reset password.');
     } finally {
         resettingId.value = null;
-    }
-}
-
-async function toggleRolesPanel(account) {
-    if (rolePanelUserId.value === account.user_id) {
-        rolePanelUserId.value = null;
-        roleAssignments.value = [];
-        selectedRoleId.value = '';
-
-        return;
-    }
-
-    rolePanelUserId.value = account.user_id;
-    selectedRoleId.value = '';
-    error.value = '';
-
-    try {
-        roleAssignments.value = await userService.fetchUserRoles(account.user_id);
-    } catch (err) {
-        roleAssignments.value = [];
-        error.value = extractErrorMessage(err, 'Unable to load role assignments.');
-    }
-}
-
-async function handleAssignRole(account) {
-    assigningRole.value = true;
-    error.value = '';
-    successMessage.value = '';
-
-    try {
-        await userService.assignUserRole(account.user_id, Number(selectedRoleId.value));
-        roleAssignments.value = await userService.fetchUserRoles(account.user_id);
-        selectedRoleId.value = '';
-        const updated = await userService.fetchUser(account.user_id);
-        users.value = users.value.map((row) => (row.user_id === updated.user_id ? updated : row));
-        successMessage.value = `Role assigned to "${account.username}".`;
-    } catch (err) {
-        error.value = extractErrorMessage(err, 'Unable to assign role.');
-    } finally {
-        assigningRole.value = false;
-    }
-}
-
-async function handleRoleStatus(assignment) {
-    const allowed = await askConfirm({
-        title: assignment.enable ? 'Disable role' : 'Enable role',
-        message: `${assignment.enable ? 'Disable' : 'Enable'} the ${assignment.role_name} role for this user?`,
-        confirmLabel: assignment.enable ? 'Disable' : 'Enable',
-        variant: assignment.enable ? 'danger' : 'primary',
-    });
-
-    if (!allowed) {
-        return;
-    }
-
-    error.value = '';
-
-    try {
-        const updated = await userService.updateUserRoleStatus(assignment.user_role_id, !assignment.enable);
-        roleAssignments.value = roleAssignments.value.map((row) => (
-            row.user_role_id === updated.user_role_id ? updated : row
-        ));
-        if (rolePanelUserId.value) {
-            const user = await userService.fetchUser(rolePanelUserId.value);
-            users.value = users.value.map((row) => (row.user_id === user.user_id ? user : row));
-        }
-    } catch (err) {
-        error.value = extractErrorMessage(err, 'Unable to update role status.');
     }
 }
 

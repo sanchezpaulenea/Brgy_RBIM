@@ -14,6 +14,8 @@ interface PersonnelPositionRepositoryInterface
 
     public function findById(int $positionId): ?PersonnelPosition;
 
+    public function lockById(int $positionId): ?PersonnelPosition;
+
     /**
      * @param  array<string, mixed>  $attributes
      */

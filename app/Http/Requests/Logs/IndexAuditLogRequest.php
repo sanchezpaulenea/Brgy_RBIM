@@ -18,6 +18,7 @@ class IndexAuditLogRequest extends FormRequest
     {
         return [
             'user_id' => ['sometimes', 'integer', 'min:1'],
+            'username' => ['sometimes', 'string', 'max:45'],
             'entity' => ['sometimes', 'string', 'max:45'],
             'target' => ['sometimes', 'string', 'max:45'],
             'date_from' => ['sometimes', 'date'],

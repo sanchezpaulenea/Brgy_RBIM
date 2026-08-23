@@ -18,6 +18,8 @@ interface UserRepositoryInterface
 
     public function findByUsername(string $username): ?User;
 
+    public function findWithAccessState(int $userId): ?User;
+
     public function lockUserAccount(int $userId): void;
 
     public function unlockUserAccount(int $userId): void;

@@ -64,7 +64,7 @@ class UserService
             $personnelId = $this->resolvePersonnelId($data);
 
             $user = $this->userRepository->create([
-                'username' => $data['username'],
+                'username' => User::standardizeUsername($data['username']),
                 'password_hash' => Hash::make($defaultPassword),
                 'user_status_id' => self::ACTIVE_STATUS_ID,
                 'personnel_id' => $personnelId,
@@ -162,7 +162,8 @@ class UserService
             ->map(fn ($record) => [
                 'personnel_id' => $record->personnel_id,
                 'position_id' => $record->position_id,
-                'label' => $this->formatPersonnelPositionLabel($record),
+                'position_name' => $this->formatPersonnelPositionLabel($record),
+                'label' => $this->formatPersonnelName($record),
             ])
             ->all();
 
@@ -245,7 +246,7 @@ class UserService
 
         return [
             'user_id' => $user->user_id,
-            'username' => $user->username,
+            'username' => User::formatForDisplay($user->username),
             'user_status_id' => $user->user_status_id,
             'user_status' => $user->userStatus?->user_status,
             'personnel_id' => $user->personnel_id,
@@ -253,15 +254,17 @@ class UserService
                 'personnel_id' => $user->personnel->personnel_id,
                 'position_id' => $user->personnel->position_id,
                 'position_name' => $user->personnel->position?->position_name,
+                'full_name' => $this->formatPersonnelName($user->personnel),
             ] : null,
             'must_change_password' => $user->must_change_password,
             'created_at' => $user->created_at,
-            'roles' => $user->roles->pluck('role_name'),
+            'roles' => $user->roles->pluck('role_name')->filter()->values()->all(),
             'role_assignments' => $user->userRoles
+                ->filter(fn ($assignment) => $assignment->role !== null)
                 ->map(fn ($assignment) => [
                     'user_role_id' => $assignment->user_role_id,
                     'role_id' => $assignment->role_id,
-                    'role_name' => $assignment->role?->role_name,
+                    'role_name' => $assignment->role->role_name,
                     'enable' => (bool) $assignment->enable,
                 ])
                 ->values()
@@ -272,6 +275,21 @@ class UserService
     private function formatPersonnelPositionLabel(BarangayPersonnel $personnel): string
     {
         return $personnel->position?->position_name ?? 'Unassigned position';
+    }
+
+    private function formatPersonnelName(BarangayPersonnel $personnel): string
+    {
+        $givenNames = collect([
+            $personnel->personnel_first_name,
+            $personnel->personnel_middle_name,
+            $personnel->personnel_suffix,
+        ])->filter()->implode(' ');
+
+        if ($givenNames === '') {
+            return (string) $personnel->personnel_last_name;
+        }
+
+        return $personnel->personnel_last_name.', '.$givenNames;
     }
 
     /**

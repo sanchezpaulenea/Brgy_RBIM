@@ -3,6 +3,7 @@
 namespace App\Services\BarangayPersonnel;
 
 use App\Models\BarangayPersonnel\BarangayPersonnel;
+use App\Models\BarangayPersonnel\PersonnelPosition;
 use App\Models\Logs\Action;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\BarangayPersonnel\BarangayPersonnelRepositoryInterface;
@@ -79,9 +80,9 @@ class BarangayPersonnelService
     {
         $this->assertNoUnconfirmedDuplicate($data, $personnel->personnel_id);
 
-        $oldName = $this->fullName($personnel);
+        $previous = $this->personnelAuditSnapshot($personnel);
 
-        return DB::transaction(function () use ($performedBy, $personnel, $data, $oldName) {
+        return DB::transaction(function () use ($performedBy, $personnel, $data, $previous) {
             if (! empty($data['position_id'])) {
                 $this->assertPositionAvailable((int) $data['position_id'], $personnel->personnel_id);
             }
@@ -90,16 +91,7 @@ class BarangayPersonnelService
 
             $updated = $this->personnelRepository->update($personnel, $data);
 
-            $this->auditLogRepository->log(
-                performedByUserId: $performedBy->user_id,
-                actionId: Action::UPDATE,
-                recordId: $updated->personnel_id,
-                description: 'Update barangay personnel',
-                oldValue: $oldName,
-                newValue: $this->fullName($updated),
-                target: 'record',
-                entity: 'barangay_personnel',
-            );
+            $this->logPersonnelFieldChanges($performedBy, $updated, $previous);
 
             return $this->formatRecord($updated);
         });
@@ -185,7 +177,7 @@ class BarangayPersonnelService
         }
 
         $position = $this->personnelPositionRepository->create([
-            'position_name' => $data['position_name'],
+            'position_name' => PersonnelPosition::standardizeName($data['position_name']),
         ]);
 
         $this->auditLogRepository->log(
@@ -200,6 +192,48 @@ class BarangayPersonnelService
         );
 
         return $position->position_id;
+    }
+
+    /**
+     * @return array{name: string, birth date: string, status: string, position: string}
+     */
+    private function personnelAuditSnapshot(BarangayPersonnel $personnel): array
+    {
+        $personnel->loadMissing(['position', 'status']);
+
+        return [
+            'name' => $this->fullName($personnel),
+            'birth date' => $personnel->personnel_date_of_birth?->format('Y-m-d') ?? '',
+            'status' => (string) ($personnel->status?->personnel_status ?? $personnel->personnel_status_id),
+            'position' => (string) ($personnel->position?->position_name ?? $personnel->position_id),
+        ];
+    }
+
+    /**
+     * @param  array{name: string, birth date: string, status: string, position: string}  $previous
+     */
+    private function logPersonnelFieldChanges(User $performedBy, BarangayPersonnel $updated, array $previous): void
+    {
+        $current = $this->personnelAuditSnapshot($updated);
+
+        foreach ($current as $target => $newValue) {
+            $oldValue = $previous[$target] ?? '';
+
+            if ($oldValue === $newValue) {
+                continue;
+            }
+
+            $this->auditLogRepository->log(
+                performedByUserId: $performedBy->user_id,
+                actionId: Action::UPDATE,
+                recordId: $updated->personnel_id,
+                description: 'Updated barangay personnel '.$target,
+                oldValue: $oldValue,
+                newValue: $newValue,
+                target: $target,
+                entity: 'barangay_personnel',
+            );
+        }
     }
 
     private function fullName(BarangayPersonnel $personnel): string

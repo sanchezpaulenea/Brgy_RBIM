@@ -20,7 +20,7 @@ interface AuditLogRepositoryInterface
     ): AuditLog;
 
     /**
-     * @param  array{user_id?: int, entity?: string, target?: string, date_from?: string, date_to?: string}  $filters
+     * @param  array{user_id?: int, username?: string, entity?: string, target?: string, date_from?: string, date_to?: string}  $filters
      * @return Collection<int, AuditLog>
      */
     public function list(array $filters = []): Collection;

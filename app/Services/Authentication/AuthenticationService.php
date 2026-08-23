@@ -3,6 +3,8 @@
 namespace App\Services\Authentication;
 
 use App\Models\Authentication\LoginStatus;
+use App\Models\BarangayPersonnel\PersonnelStatus;
+use App\Models\Logs\Action;
 use App\Models\UserManagement\User;
 use App\Models\UserManagement\UserStatus;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
@@ -13,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -32,6 +35,7 @@ class AuthenticationService
      *   - username not found → Invalid Username (3), stored with a null user_id
      *   - wrong password → Invalid Password (2), or Account Locked (5) at threshold
      *   - user_status.can_login = false → Invalid Credentials (4)
+     *   - linked personnel_status is not Active → Invalid Credentials (4)
      *   - success → Success (1)
      *
      * @return array{user: User, must_change_password: bool, roles: Collection, permissions: Collection}
@@ -51,7 +55,7 @@ class AuthenticationService
             );
 
             throw ValidationException::withMessages([
-                'username' => ['Invalid credentials.'],
+                'username' => ['Invalid username.'],
             ]);
         }
 
@@ -83,6 +87,19 @@ class AuthenticationService
             ]);
         }
 
+        if ($this->personnelAccessIsDenied($user)) {
+            $this->userLogRepository->createLog(
+                $user->user_id,
+                LoginStatus::INVALID_CREDENTIALS,
+                $request->ip(),
+                $this->resolveDevice($request)
+            );
+
+            throw ValidationException::withMessages([
+                'username' => ['Your personnel record is not active. Please contact an administrator.'],
+            ]);
+        }
+
         if (! Hash::check($password, $user->password_hash)) {
             if ($this->handleFailedPasswordAttempt($user, $request)) {
                 throw ValidationException::withMessages([
@@ -92,7 +109,7 @@ class AuthenticationService
             }
 
             throw ValidationException::withMessages([
-                'username' => ['Invalid credentials.'],
+                'password' => ['Invalid password, please try again.'],
             ]);
         }
 
@@ -156,9 +173,45 @@ class AuthenticationService
             ]);
         }
 
-        $user->password_hash = Hash::make($newPassword);
-        $user->must_change_password = false;
-        $user->save();
+        DB::transaction(function () use ($user, $newPassword) {
+            $user->password_hash = Hash::make($newPassword);
+            $user->must_change_password = false;
+            $user->save();
+
+            $this->auditLogRepository->log(
+                performedByUserId: $user->user_id,
+                actionId: Action::UPDATE,
+                recordId: $user->user_id,
+                description: 'User changed password',
+                oldValue: '[REDACTED]',
+                newValue: '[REDACTED]',
+                target: 'password',
+                entity: 'user',
+            );
+        });
+    }
+
+    /**
+     * Re-read user_status and linked personnel_status from the database.
+     * When either no longer allows access, the session is ended immediately.
+     */
+    public function enforceAccountAccess(User $user, Request $request): ?string
+    {
+        $fresh = $this->userRepository->findWithAccessState($user->user_id);
+
+        if ($fresh === null || ! $fresh->userStatus?->can_login) {
+            $this->logout($user, $request);
+
+            return 'Your account is locked or disabled. Please contact an administrator.';
+        }
+
+        if ($this->personnelAccessIsDenied($fresh)) {
+            $this->logout($user, $request);
+
+            return 'Your personnel record is not active. Please contact an administrator.';
+        }
+
+        return null;
     }
 
     /**
@@ -303,5 +356,19 @@ class AuthenticationService
     private function resolveDevice(Request $request): string
     {
         return mb_substr($request->userAgent() ?? 'Unknown', 0, 45);
+    }
+
+    private function personnelAccessIsDenied(User $user): bool
+    {
+        if ($user->personnel_id === null) {
+            return false;
+        }
+
+        $personnel = $user->relationLoaded('personnel')
+            ? $user->personnel
+            : $user->personnel()->first();
+
+        return $personnel === null
+            || (int) $personnel->personnel_status_id !== PersonnelStatus::ACTIVE;
     }
 }

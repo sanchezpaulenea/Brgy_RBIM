@@ -118,7 +118,7 @@ class AccountLockoutTest extends TestCase
         $errors = $this->attemptLogin($lockedUser->username, 'wrong-password');
 
         $this->assertArrayNotHasKey('lockout_remaining_seconds', $errors);
-        $this->assertSame('Invalid credentials.', $errors['username'][0]);
+        $this->assertSame('Invalid password, please try again.', $errors['password'][0]);
     }
 
     public function test_lockout_without_a_recorded_time_stays_locked_and_has_no_countdown(): void
@@ -170,7 +170,7 @@ class AccountLockoutTest extends TestCase
         $errors = $this->attemptLogin($user->username, 'wrong-password');
 
         $this->assertArrayNotHasKey('lockout_remaining_seconds', $errors);
-        $this->assertSame('Invalid credentials.', $errors['username'][0]);
+        $this->assertSame('Invalid password, please try again.', $errors['password'][0]);
     }
 
     public function test_disabled_account_is_not_given_a_countdown(): void

@@ -35,8 +35,18 @@ class UserRepository implements UserRepositoryInterface
 
     public function findByUsername(string $username): ?User
     {
-        return User::with(['userStatus', 'roles.permissions'])
-            ->where('username', $username)
+        $normalized = User::standardizeUsername($username);
+
+        return User::with(['userStatus', 'roles.permissions', 'personnel'])
+            ->whereRaw('LOWER(username) = ?', [$normalized])
+            ->first();
+    }
+
+    public function findWithAccessState(int $userId): ?User
+    {
+        return User::query()
+            ->with(['userStatus', 'personnel'])
+            ->where('user_id', $userId)
             ->first();
     }
 

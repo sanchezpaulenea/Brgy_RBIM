@@ -3,6 +3,7 @@
 namespace App\Http\Requests\UserManagement;
 
 use App\Models\UserManagement\Role;
+use App\Models\UserManagement\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -12,6 +13,17 @@ class StoreUserRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $username = $this->input('username');
+
+        if (is_string($username)) {
+            $this->merge([
+                'username' => User::standardizeUsername($username),
+            ]);
+        }
     }
 
     /**

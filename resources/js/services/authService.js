@@ -20,6 +20,12 @@ export async function fetchMe() {
     return data;
 }
 
+export async function fetchPasswordPolicy() {
+    const { data } = await http.get('/auth/password/policy');
+
+    return data;
+}
+
 export async function changePassword(payload) {
     const { data } = await http.post('/auth/password/change', payload);
 

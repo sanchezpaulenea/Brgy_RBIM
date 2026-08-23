@@ -1,6 +1,6 @@
 <template>
     <GuestLayout>
-        <form class="rbim-card px-6 py-7 sm:px-8" @submit.prevent="handleSubmit">
+        <form class="rbim-card px-6 py-7 sm:px-8" novalidate @submit.prevent="handleSubmit">
             <p class="mb-6 text-center text-sm text-slate-500">
                 Set a new password before continuing.
             </p>
@@ -14,54 +14,40 @@
             </div>
 
             <div class="space-y-5">
-                <div>
-                    <label for="current_password" class="rbim-label">Current password</label>
-                    <input
-                        id="current_password"
-                        v-model="form.current_password"
-                        type="password"
-                        autocomplete="current-password"
-                        required
-                        class="rbim-input"
-                        :class="{ 'rbim-input-error': errors.current_password }"
-                        @blur="validateCurrent"
-                    >
-                    <p v-if="errors.current_password" class="rbim-error">{{ errors.current_password }}</p>
-                </div>
+                <PasswordField
+                    v-model="form.current_password"
+                    input-id="current_password"
+                    label="Current password"
+                    autocomplete="current-password"
+                    required
+                    :error="errors.current_password"
+                    @blur="validateCurrent"
+                />
 
-                <div>
-                    <label for="new_password" class="rbim-label">New password</label>
-                    <input
-                        id="new_password"
-                        v-model="form.new_password"
-                        type="password"
-                        autocomplete="new-password"
-                        required
-                        class="rbim-input"
-                        :class="{ 'rbim-input-error': errors.new_password }"
-                        :disabled="!canEditNewPassword"
-                        @blur="validateNew"
-                        @input="validateNew"
-                    >
-                    <p v-if="errors.new_password" class="rbim-error">{{ errors.new_password }}</p>
-                </div>
+                <PasswordField
+                    v-model="form.new_password"
+                    input-id="new_password"
+                    label="New password"
+                    autocomplete="new-password"
+                    required
+                    :disabled="!canEditNewPassword"
+                    :error="errors.new_password"
+                    :hint="`Use at least ${minLength} characters.`"
+                    @update:model-value="validateNew"
+                    @blur="validateNew"
+                />
 
-                <div>
-                    <label for="new_password_confirmation" class="rbim-label">Confirm new password</label>
-                    <input
-                        id="new_password_confirmation"
-                        v-model="form.new_password_confirmation"
-                        type="password"
-                        autocomplete="new-password"
-                        required
-                        class="rbim-input"
-                        :class="{ 'rbim-input-error': errors.new_password_confirmation }"
-                        :disabled="!canEditConfirmation"
-                        @blur="validateConfirmation"
-                        @input="validateConfirmation"
-                    >
-                    <p v-if="errors.new_password_confirmation" class="rbim-error">{{ errors.new_password_confirmation }}</p>
-                </div>
+                <PasswordField
+                    v-model="form.new_password_confirmation"
+                    input-id="new_password_confirmation"
+                    label="Confirm new password"
+                    autocomplete="new-password"
+                    required
+                    :disabled="!canEditConfirmation"
+                    :error="errors.new_password_confirmation"
+                    @update:model-value="validateConfirmation"
+                    @blur="validateConfirmation"
+                />
             </div>
 
             <button type="submit" class="rbim-btn mt-6 w-full" :disabled="loading || !canSubmit">
@@ -72,16 +58,24 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import GuestLayout from '@/layouts/GuestLayout.vue';
+import PasswordField from '@/components/PasswordField.vue';
 import { useAuth } from '@/composables/useAuth';
+import * as authService from '@/services/authService';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
-
-const PASSWORD_MIN_LENGTH = 8;
+import { LOGIN_PASSWORD_MIN_LENGTH } from '@/utils/validation';
 
 const router = useRouter();
 const { changePassword, loading } = useAuth();
+
+/**
+ * Read from the system settings on every visit: the minimum length is
+ * configurable, so a cached copy would keep reporting the previous value after
+ * an administrator changes the password setting.
+ */
+const minLength = ref(LOGIN_PASSWORD_MIN_LENGTH);
 
 const form = reactive({
     current_password: '',
@@ -100,7 +94,7 @@ const successMessage = ref('');
 
 const canEditNewPassword = computed(() => form.current_password.trim().length > 0);
 const canEditConfirmation = computed(() => (
-    canEditNewPassword.value && form.new_password.length >= PASSWORD_MIN_LENGTH
+    canEditNewPassword.value && form.new_password.length >= minLength.value
 ));
 const canSubmit = computed(() => (
     canEditConfirmation.value
@@ -109,6 +103,23 @@ const canSubmit = computed(() => (
     && !errors.new_password
     && !errors.new_password_confirmation
 ));
+
+onMounted(async () => {
+    try {
+        const policy = await authService.fetchPasswordPolicy();
+        const configured = Number(policy?.password_min_length);
+
+        if (Number.isFinite(configured) && configured > 0) {
+            minLength.value = configured;
+        }
+    } catch {
+        // Keep the default minimum; the server still enforces the stored rule.
+    }
+
+    if (form.new_password) {
+        validateNew();
+    }
+});
 
 function validateCurrent() {
     errors.current_password = form.current_password.trim()
@@ -127,8 +138,8 @@ function validateNew() {
         return;
     }
 
-    if (form.new_password.length < PASSWORD_MIN_LENGTH) {
-        errors.new_password = `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`;
+    if (form.new_password.length < minLength.value) {
+        errors.new_password = `Password must be at least ${minLength.value} characters.`;
 
         return;
     }

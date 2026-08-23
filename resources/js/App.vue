@@ -6,7 +6,7 @@
 import { RouterView } from 'vue-router';
 import router from '@/router';
 import { useAuth } from '@/composables/useAuth';
-import { onUnmounted, watch } from 'vue';
+import { onMounted, onUnmounted, watch } from 'vue';
 
 const { isAuthenticated, logout } = useAuth();
 
@@ -45,6 +45,20 @@ function stopTracking() {
     });
 }
 
+function handleUnauthorized(event) {
+    if (router.currentRoute.value.name === 'login') {
+        return;
+    }
+
+    const message = typeof event.detail?.message === 'string' && event.detail.message !== ''
+        ? event.detail.message
+        : 'Your session is no longer valid. Please log in again.';
+
+    logout().then(() => {
+        router.push({ name: 'login', query: { reason: 'unauthorized', message } });
+    });
+}
+
 watch(isAuthenticated, (authenticated) => {
     if (authenticated) {
         startTracking();
@@ -53,7 +67,12 @@ watch(isAuthenticated, (authenticated) => {
     }
 }, { immediate: true });
 
+onMounted(() => {
+    window.addEventListener('rbim:unauthorized', handleUnauthorized);
+});
+
 onUnmounted(() => {
+    window.removeEventListener('rbim:unauthorized', handleUnauthorized);
     stopTracking();
 });
 </script>

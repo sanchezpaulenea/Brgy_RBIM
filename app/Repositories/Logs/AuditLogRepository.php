@@ -33,7 +33,7 @@ class AuditLogRepository implements AuditLogRepositoryInterface
     }
 
     /**
-     * @param  array{user_id?: int, entity?: string, target?: string, date_from?: string, date_to?: string}  $filters
+     * @param  array{user_id?: int, username?: string, entity?: string, target?: string, date_from?: string, date_to?: string}  $filters
      * @return Collection<int, AuditLog>
      */
     public function list(array $filters = []): Collection
@@ -46,8 +46,22 @@ class AuditLogRepository implements AuditLogRepositoryInterface
             $query->where('user_id', $filters['user_id']);
         }
 
+        if (! empty($filters['username'])) {
+            $term = mb_strtolower(trim($filters['username']));
+
+            $query->whereHas('user', function ($userQuery) use ($term) {
+                $userQuery->whereRaw('LOWER(username) LIKE ?', ['%'.$term.'%']);
+            });
+        }
+
         if (! empty($filters['entity'])) {
-            $query->where('entity', $filters['entity']);
+            $normalized = preg_replace('/[\s_]+/u', '_', mb_strtolower(trim($filters['entity']))) ?? '';
+            $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $normalized);
+
+            $query->whereRaw(
+                "REPLACE(REPLACE(LOWER(entity), ' ', '_'), '-', '_') LIKE ? ESCAPE '\\\\'",
+                ['%'.$escaped.'%'],
+            );
         }
 
         if (! empty($filters['target'])) {

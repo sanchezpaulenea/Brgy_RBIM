@@ -22,7 +22,19 @@ class EnforceSessionTimeout
         /** @var User|null $user */
         $user = $request->user();
 
-        if ($user !== null && ! $this->authenticationService->enforceSessionTimeout($user, $request)) {
+        if ($user === null) {
+            return $next($request);
+        }
+
+        $accessMessage = $this->authenticationService->enforceAccountAccess($user, $request);
+
+        if ($accessMessage !== null) {
+            return response()->json([
+                'message' => $accessMessage,
+            ], 401);
+        }
+
+        if (! $this->authenticationService->enforceSessionTimeout($user, $request)) {
             return response()->json([
                 'message' => 'Session expired due to inactivity. Please log in again.',
             ], 401);

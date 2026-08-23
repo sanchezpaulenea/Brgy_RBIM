@@ -52,8 +52,60 @@ export function formatDateTime(value) {
     + [pad(parsed.getHours()), pad(parsed.getMinutes()), pad(parsed.getSeconds())].join(':');
 }
 
+/**
+ * Usernames are stored lowercase, so greetings capitalize the first letter of
+ * each word without touching the rest of the spelling.
+ */
+export function formatDisplayName(value) {
+    const name = String(value ?? '').trim();
+
+    if (!name) {
+        return '';
+    }
+
+    return name.replace(/(^|[\s.'-])(\p{L})/gu, (match, separator, letter) => separator + letter.toUpperCase());
+}
+
+/**
+ * Stored keys use shorthand such as `no`, `max`, and `min`; the interface always
+ * spells the words out in full.
+ */
+const SETTING_LABELS = {
+    barangay_name: 'Barangay Name',
+    barangay_address: 'Barangay Address',
+    city_name: 'City Name',
+    barangay_code: 'Barangay Code',
+    barangay_contact_no: 'Barangay Contact Number',
+    barangay_email: 'Barangay Email',
+    password_min_length: 'Password Minimum Length',
+    max_login_attempts: 'Maximum Login Attempts',
+    account_lockout_minutes: 'Account Lockout Minutes',
+    default_password: 'Default Password',
+    session_timeout_minutes: 'Session Timeout Minutes',
+    audit_log_retention_days: 'Audit Log Retention Days',
+};
+
 export function formatSettingLabel(key) {
-    return String(key).replaceAll('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+    return SETTING_LABELS[key]
+        ?? String(key).replaceAll('_', ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+/**
+ * Presents audit log entity and target values the way they read in the app
+ * rather than the way they are stored, e.g. `barangay_personnel` becomes
+ * "Barangay Personnel".
+ */
+export function formatRecordLabel(value) {
+    const text = String(value ?? '').trim();
+
+    if (!text) {
+        return '—';
+    }
+
+    return text
+        .replaceAll('_', ' ')
+        .replace(/\s+/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 export function todayDate() {

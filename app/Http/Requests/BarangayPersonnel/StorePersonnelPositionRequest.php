@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\BarangayPersonnel;
 
+use App\Models\BarangayPersonnel\PersonnelPosition;
+use App\Rules\ValidPositionName;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,6 +12,17 @@ class StorePersonnelPositionRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if (! is_string($this->input('position_name'))) {
+            return;
+        }
+
+        $this->merge([
+            'position_name' => PersonnelPosition::standardizeName($this->input('position_name')),
+        ]);
     }
 
     /**
@@ -22,6 +35,7 @@ class StorePersonnelPositionRequest extends FormRequest
                 'required',
                 'string',
                 'max:45',
+                new ValidPositionName,
                 Rule::unique('personnel_position', 'position_name'),
             ],
         ];

@@ -34,12 +34,42 @@ const routes = [
         },
     },
     {
+        path: '/personnel/positions',
+        name: 'personnel-positions',
+        component: () => import('@/pages/personnel/PersonnelPositionsPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresSuperAdmin: true,
+            requiresPermissions: ['pposition.view'],
+        },
+    },
+    {
         path: '/users',
         name: 'users',
         component: () => import('@/pages/users/UsersPage.vue'),
         meta: {
             requiresAuth: true,
             requiresPermissions: ['user.view'],
+        },
+    },
+    {
+        path: '/users/roles',
+        name: 'user-roles',
+        component: () => import('@/pages/users/UserRolesPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresSuperAdmin: true,
+            requiresPermissions: ['userrole.view'],
+        },
+    },
+    {
+        path: '/users/role-permissions',
+        name: 'role-permissions',
+        component: () => import('@/pages/users/RolePermissionsPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresSuperAdmin: true,
+            requiresPermissions: ['userrole.view'],
         },
     },
     {
@@ -53,36 +83,15 @@ const routes = [
     },
     {
         path: '/settings/lookups/personnel-positions',
-        name: 'lookup-personnel-positions',
-        component: () => import('@/pages/settings/LookupsPage.vue'),
-        meta: {
-            requiresAuth: true,
-            requiresSuperAdmin: true,
-            requiresPermissions: ['pposition.view'],
-            lookup: 'personnel-positions',
-        },
+        redirect: { name: 'personnel-positions' },
     },
     {
         path: '/settings/lookups/user-roles',
-        name: 'lookup-user-roles',
-        component: () => import('@/pages/settings/LookupsPage.vue'),
-        meta: {
-            requiresAuth: true,
-            requiresSuperAdmin: true,
-            requiresPermissions: ['userrole.view'],
-            lookup: 'user-roles',
-        },
+        redirect: { name: 'user-roles' },
     },
     {
         path: '/settings/lookups/role-permissions',
-        name: 'lookup-role-permissions',
-        component: () => import('@/pages/settings/LookupsPage.vue'),
-        meta: {
-            requiresAuth: true,
-            requiresSuperAdmin: true,
-            requiresPermissions: ['userrole.view'],
-            lookup: 'role-permissions',
-        },
+        redirect: { name: 'role-permissions' },
     },
     {
         path: '/settings/audit-logs',
@@ -110,7 +119,7 @@ const routes = [
     },
     {
         path: '/lookups',
-        redirect: { name: 'lookup-personnel-positions' },
+        redirect: { name: 'personnel-positions' },
     },
     {
         path: '/forbidden',

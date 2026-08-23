@@ -6,6 +6,7 @@ use App\Models\Logs\Action;
 use App\Models\UserManagement\User;
 use App\Models\UserManagement\UserRole;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
+use App\Repositories\Interfaces\UserManagement\RoleInterface;
 use App\Repositories\Interfaces\UserManagement\UserRoleRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -15,6 +16,7 @@ class UserRoleService
     public function __construct(
         protected UserRoleRepositoryInterface $userRoleRepository,
         protected AuditLogRepositoryInterface $auditLogRepository,
+        protected RoleInterface $roleRepository,
     ) {}
 
     /**
@@ -22,6 +24,12 @@ class UserRoleService
      */
     public function assignRole(User $assignedBy, User $user, int $roleId): UserRole
     {
+        if ($this->roleRepository->findById($roleId) === null) {
+            throw ValidationException::withMessages([
+                'role_id' => ['The selected role does not exist.'],
+            ]);
+        }
+
         if ($this->userRoleRepository->existsForUserAndRole($user->user_id, $roleId)) {
             throw ValidationException::withMessages([
                 'role_id' => ['This role is already assigned to the user.'],
@@ -61,7 +69,9 @@ class UserRoleService
     {
         return $this->userRoleRepository
             ->getByUserId($user->user_id)
+            ->filter(fn (UserRole $userRole) => $userRole->role !== null)
             ->map(fn (UserRole $userRole) => $this->formatUserRole($userRole))
+            ->values()
             ->all();
     }
 
@@ -98,7 +108,7 @@ class UserRoleService
             'user_role_id' => $userRole->user_role_id,
             'user_id' => $userRole->user_id,
             'role_id' => $userRole->role_id,
-            'role_name' => $userRole->role->role_name,
+            'role_name' => $userRole->role?->role_name,
             'assigned_at' => $userRole->assigned_at,
             'assigned_by' => $userRole->assigned_by,
             'assigned_by_username' => $userRole->assignedBy?->username,
