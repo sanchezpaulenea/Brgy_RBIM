@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\BarangayPersonnel\BarangayPersonnel;
 use App\Models\BarangayPersonnel\PersonnelPosition;
+use App\Models\HouseholdManagement\Household;
 use App\Models\Logs\AuditLog;
 use App\Models\Logs\UserLog;
 use App\Models\Setting\Setting;
@@ -11,6 +12,7 @@ use App\Models\UserManagement\User;
 use App\Models\UserManagement\UserRole;
 use App\Policies\BarangayPersonnel\BarangayPersonnelPolicy;
 use App\Policies\BarangayPersonnel\PersonnelPolicy;
+use App\Policies\HouseholdManagement\HouseholdPolicy;
 use App\Policies\Logs\AuditLogPolicy;
 use App\Policies\Logs\UserLogPolicy;
 use App\Policies\SystemSetting\SystemSettingPolicy;
@@ -36,6 +38,7 @@ class AuthServiceProvider extends ServiceProvider
         PersonnelPosition::class => BarangayPersonnelPolicy::class,
         BarangayPersonnel::class => PersonnelPolicy::class,
         Setting::class => SystemSettingPolicy::class,
+        Household::class => HouseholdPolicy::class,
     ];
 
     public function register(): void {}

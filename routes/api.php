@@ -4,6 +4,7 @@ use App\Http\Controllers\Authentication\AuthController;
 use App\Http\Controllers\Authentication\PasswordController;
 use App\Http\Controllers\BarangayPersonnel\BarangayPersonnelController;
 use App\Http\Controllers\BarangayPersonnel\PersonnelController;
+use App\Http\Controllers\HouseholdManagament\HouseholdController;
 use App\Http\Controllers\Logs\AuditLogController;
 use App\Http\Controllers\Logs\UserLogController;
 use App\Http\Controllers\SystemSetting\SystemSettingController;
@@ -26,6 +27,7 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware(['auth:sanctum', 'session.timeout'])->group(function () {
         Route::get('personnel-positions', [BarangayPersonnelController::class, 'index'])->name('personnel-positions.index');
+        Route::post('households', [HouseholdController::class, 'store'])->name('households.store');
 
         Route::middleware('system.admin')->group(function () {
             Route::get('users/create-options', [UserController::class, 'createOptions'])->name('users.create-options');

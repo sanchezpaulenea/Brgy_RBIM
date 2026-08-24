@@ -4,10 +4,13 @@ namespace App\Providers;
 
 use App\Repositories\BarangayPersonnel\BarangayPersonnelRepository;
 use App\Repositories\BarangayPersonnel\PersonnelPositionRepository;
+use App\Repositories\HouseholdManagement\HouseholdRepository;
 use App\Repositories\Interfaces\BarangayPersonnel\BarangayPersonnelRepositoryInterface;
 use App\Repositories\Interfaces\BarangayPersonnel\PersonnelPositionRepositoryInterface;
+use App\Repositories\Interfaces\HouseholdManagement\HouseholdRepositoryInterface;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\Logs\UserLogRepositoryInterface;
+use App\Repositories\Interfaces\ResidentManagement\Demographic\ResidentRepositoryInterface;
 use App\Repositories\Interfaces\Setting\SettingRepositoryInterface;
 use App\Repositories\Interfaces\UserManagement\RoleInterface;
 use App\Repositories\Interfaces\UserManagement\UserRepositoryInterface;
@@ -15,6 +18,7 @@ use App\Repositories\Interfaces\UserManagement\UserRoleRepositoryInterface;
 use App\Repositories\Interfaces\UserManagement\UserStatusInterface;
 use App\Repositories\Logs\AuditLogRepository;
 use App\Repositories\Logs\UserLogRepository;
+use App\Repositories\ResidentManagement\Demographic\ResidentRepository;
 use App\Repositories\Setting\SettingRepository;
 use App\Repositories\UserManagement\RoleRepository;
 use App\Repositories\UserManagement\UserRepository;
@@ -39,5 +43,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(BarangayPersonnelRepositoryInterface::class, BarangayPersonnelRepository::class);
         $this->app->bind(RoleInterface::class, RoleRepository::class);
         $this->app->bind(UserStatusInterface::class, UserStatusRepository::class);
+        $this->app->bind(HouseholdRepositoryInterface::class, HouseholdRepository::class);
+        $this->app->bind(ResidentRepositoryInterface::class, ResidentRepository::class);
     }
 }
