@@ -24,19 +24,34 @@
                     </div>
                 </div>
 
-                <div class="flex shrink-0 items-center gap-3">
-                    <div class="hidden text-right sm:block">
-                        <p class="text-sm font-medium">{{ user?.username }}</p>
-                        <p class="text-xs text-white/75">{{ rolesLabel }}</p>
-                    </div>
-                    <button
-                        type="button"
-                        class="inline-flex cursor-pointer items-center justify-center rounded-lg border border-white bg-white px-4 py-2 text-sm font-semibold text-brand shadow-sm transition hover:bg-brand-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60"
-                        :disabled="loading"
-                        @click="handleLogout"
+                <div class="flex shrink-0 items-center gap-2.5">
+                    <div
+                        class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white"
+                        aria-hidden="true"
                     >
-                        Log out
-                    </button>
+                        <svg class="h-9 w-9" viewBox="0 0 40 40" fill="none">
+                            <path fill="#e07a3d" d="M4 40c2.2-11 9.4-16.5 16-16.5S33.8 29 36 40H4Z" />
+                            <path fill="#fff" d="M16.5 24.2 20 29.5l3.5-5.3H16.5Z" />
+                            <circle cx="20" cy="14.5" r="8.2" fill="#e8c39e" />
+                            <path fill="#6b4423" d="M12.2 14.8c.4-6.4 4-10.3 7.8-10.3 3.9 0 7.4 3.9 7.8 10.3-.8-4.6-3.4-7.4-7.8-7.4s-7 2.8-7.8 7.4Z" />
+                            <circle cx="17.2" cy="15.2" r="1.1" fill="#3a2a1a" />
+                            <circle cx="22.8" cy="15.2" r="1.1" fill="#3a2a1a" />
+                            <path stroke="#3a2a1a" stroke-linecap="round" stroke-width="1" d="M17.6 18.8c1.4 1.6 3.4 1.6 4.8 0" />
+                        </svg>
+                    </div>
+                    <div class="min-w-0 leading-tight">
+                        <p class="truncate text-sm font-semibold uppercase tracking-wide text-[#f0c14b]">
+                            {{ user?.username }}
+                        </p>
+                        <button
+                            type="button"
+                            class="cursor-pointer text-sm text-[#7ec8e3] transition hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60"
+                            :disabled="loading"
+                            @click="handleLogout"
+                        >
+                            Logout
+                        </button>
+                    </div>
                 </div>
             </div>
         </header>
@@ -154,7 +169,7 @@ defineProps({
 
 const route = useRoute();
 const router = useRouter();
-const { user, roles, loading, logout, hasPermission, isSystemAdministrator } = useAuth();
+const { user, loading, logout, hasPermission, isSystemAdministrator } = useAuth();
 
 const sidebarOpen = ref(false);
 const settingsOpen = ref(true);
@@ -182,14 +197,6 @@ const canViewSettingsMenu = computed(() => (
 const isSettingsRoute = computed(() => String(route.path).startsWith('/settings'));
 const isPersonnelRoute = computed(() => String(route.path).startsWith('/personnel'));
 const isUsersRoute = computed(() => String(route.path).startsWith('/users'));
-
-const rolesLabel = computed(() => {
-    if (!roles.value.length) {
-        return 'No role assigned';
-    }
-
-    return roles.value.join(', ');
-});
 
 async function handleLogout() {
     await logout();
