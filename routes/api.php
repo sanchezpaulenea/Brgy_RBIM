@@ -27,7 +27,10 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware(['auth:sanctum', 'session.timeout'])->group(function () {
         Route::get('personnel-positions', [BarangayPersonnelController::class, 'index'])->name('personnel-positions.index');
+        Route::get('households', [HouseholdController::class, 'index'])->name('households.index');
         Route::post('households', [HouseholdController::class, 'store'])->name('households.store');
+        Route::get('households/{household}', [HouseholdController::class, 'show'])->name('households.show');
+        Route::patch('households/{household}', [HouseholdController::class, 'update'])->name('households.update');
 
         Route::middleware('system.admin')->group(function () {
             Route::get('users/create-options', [UserController::class, 'createOptions'])->name('users.create-options');

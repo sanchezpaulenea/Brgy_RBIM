@@ -99,9 +99,75 @@ class HouseholdServices
     }
 
     /**
+     * @param  array{street_id?: int, household_status_id?: int}  $filters
+     * @return array<int, array<string, mixed>>
+     */
+    public function listHouseholds(array $filters = []): array
+    {
+        return $this->householdRepository
+            ->list($filters)
+            ->map(fn (Household $household) => $this->formatListRecord($household))
+            ->all();
+    }
+
+    /**
      * @return array<string, mixed>
      */
-    public function formatRecord(Household $household): array
+    public function getHousehold(Household $household): array
+    {
+        $fresh = $this->householdRepository->findById($household->household_id, true);
+
+        return $this->formatRecord($fresh ?? $household, includeResidents: true);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public function updateHousehold(User $performedBy, Household $household, array $data): array
+    {
+        unset($data['head_resident_id'], $data['head']);
+
+        $previous = $this->householdAuditSnapshot($household);
+
+        return DB::transaction(function () use ($performedBy, $household, $data, $previous) {
+            $updated = $this->householdRepository->update($household, $data);
+
+            $this->logHouseholdFieldChanges($performedBy, $updated, $previous);
+
+            return $this->formatRecord($updated);
+        });
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function formatListRecord(Household $household): array
+    {
+        $household->loadMissing(['clan', 'street', 'status', 'head']);
+
+        return [
+            'household_id' => $household->household_id,
+            'clan_id' => $household->clan_id,
+            'clan_name' => $household->clan?->clan_name,
+            'street_id' => $household->street_id,
+            'street_name' => $household->street?->street_name,
+            'house_lot' => $household->house_lot,
+            'block_num' => $household->block_num,
+            'building_name' => $household->building_name,
+            'unit_num' => $household->unit_num,
+            'registration_date' => $household->registration_date?->toDateTimeString(),
+            'household_status_id' => $household->household_status_id,
+            'household_status' => $household->status?->household_status,
+            'head_resident_id' => $household->head_resident_id,
+            'head_name' => $household->head !== null ? $this->fullName($household->head) : null,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function formatRecord(Household $household, bool $includeResidents = false): array
     {
         $household->loadMissing([
             'clan',
@@ -118,7 +184,7 @@ class HouseholdServices
             'head.relationshipToHouseholdHead',
         ]);
 
-        return [
+        $payload = [
             'household_id' => $household->household_id,
             'clan_id' => $household->clan_id,
             'clan_name' => $household->clan?->clan_name,
@@ -132,14 +198,35 @@ class HouseholdServices
             'household_status_id' => $household->household_status_id,
             'household_status' => $household->status?->household_status,
             'head_resident_id' => $household->head_resident_id,
-            'head' => $household->head !== null ? $this->formatHead($household->head) : null,
+            'head' => $household->head !== null ? $this->formatResident($household->head) : null,
         ];
+
+        if ($includeResidents) {
+            $household->loadMissing([
+                'residents.sex',
+                'residents.nationality',
+                'residents.religion',
+                'residents.ethnicity',
+                'residents.maritalStatus',
+                'residents.residentType',
+                'residents.status',
+                'residents.clan',
+                'residents.relationshipToHouseholdHead',
+            ]);
+
+            $payload['residents'] = $household->residents
+                ->map(fn (Resident $resident) => $this->formatResident($resident))
+                ->values()
+                ->all();
+        }
+
+        return $payload;
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function formatHead(Resident $resident): array
+    private function formatResident(Resident $resident): array
     {
         return [
             'resident_id' => $resident->resident_id,
@@ -196,6 +283,67 @@ class HouseholdServices
         }
 
         return $resident->last_name.', '.$givenNames;
+    }
+
+    /**
+     * @return array{
+     *     clan: string,
+     *     street: string,
+     *     house lot: string,
+     *     block num: string,
+     *     building name: string,
+     *     unit num: string,
+     *     status: string
+     * }
+     */
+    private function householdAuditSnapshot(Household $household): array
+    {
+        $household->loadMissing(['clan', 'street', 'status']);
+
+        return [
+            'clan' => (string) ($household->clan?->clan_name ?? $household->clan_id),
+            'street' => (string) ($household->street?->street_name ?? $household->street_id),
+            'house lot' => (string) ($household->house_lot ?? ''),
+            'block num' => (string) ($household->block_num ?? ''),
+            'building name' => (string) ($household->building_name ?? ''),
+            'unit num' => (string) ($household->unit_num ?? ''),
+            'status' => (string) ($household->status?->household_status ?? $household->household_status_id),
+        ];
+    }
+
+    /**
+     * @param  array{
+     *     clan: string,
+     *     street: string,
+     *     house lot: string,
+     *     block num: string,
+     *     building name: string,
+     *     unit num: string,
+     *     status: string
+     * }  $previous
+     */
+    private function logHouseholdFieldChanges(User $performedBy, Household $updated, array $previous): void
+    {
+        $current = $this->householdAuditSnapshot($updated);
+
+        foreach ($current as $target => $newValue) {
+            $oldValue = $previous[$target] ?? '';
+
+            if ($oldValue === $newValue) {
+                continue;
+            }
+
+            $this->auditLogRepository->log(
+                performedByUserId: $performedBy->user_id,
+                actionId: Action::UPDATE,
+                recordId: $updated->household_id,
+                description: 'Updated household '.$target,
+                oldValue: $oldValue,
+                newValue: $newValue,
+                target: $target,
+                entity: 'household',
+            );
+        }
     }
 
     private function disableForeignKeyChecks(): void

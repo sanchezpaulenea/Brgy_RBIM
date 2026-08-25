@@ -30,22 +30,72 @@ class HouseholdRepository implements HouseholdRepositoryInterface
     }
 
     /**
+     * @return list<string>
+     */
+    private function listRelations(): array
+    {
+        return [
+            'clan',
+            'street',
+            'status',
+            'head',
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function residentRelations(): array
+    {
+        return [
+            'sex',
+            'nationality',
+            'religion',
+            'ethnicity',
+            'maritalStatus',
+            'residentType',
+            'status',
+            'clan',
+            'relationshipToHouseholdHead',
+        ];
+    }
+
+    /**
+     * @param  array{street_id?: int, household_status_id?: int}  $filters
      * @return Collection<int, Household>
      */
-    public function all(): Collection
+    public function list(array $filters = []): Collection
     {
         return Household::query()
-            ->with($this->defaultRelations())
+            ->with($this->listRelations())
+            ->when(
+                ! empty($filters['street_id']),
+                fn ($query) => $query->where('street_id', $filters['street_id']),
+            )
+            ->when(
+                ! empty($filters['household_status_id']),
+                fn ($query) => $query->where('household_status_id', $filters['household_status_id']),
+            )
             ->orderByDesc('household_id')
             ->get();
     }
 
-    public function findById(int $householdId): ?Household
+    public function findById(int $householdId, bool $withResidents = false): ?Household
     {
-        return Household::query()
+        $query = Household::query()
             ->with($this->defaultRelations())
-            ->where('household_id', $householdId)
-            ->first();
+            ->where('household_id', $householdId);
+
+        if ($withResidents) {
+            $query->with([
+                'residents' => fn ($residents) => $residents
+                    ->with($this->residentRelations())
+                    ->orderBy('last_name')
+                    ->orderBy('first_name'),
+            ]);
+        }
+
+        return $query->first();
     }
 
     /**
@@ -54,6 +104,19 @@ class HouseholdRepository implements HouseholdRepositoryInterface
     public function create(array $attributes): Household
     {
         return Household::create($attributes);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    public function update(Household $household, array $attributes): Household
+    {
+        unset($attributes['head_resident_id'], $attributes['head']);
+
+        $household->fill($attributes);
+        $household->save();
+
+        return $household->fresh($this->defaultRelations()) ?? $household;
     }
 
     public function updateHeadResident(Household $household, int $residentId): Household
