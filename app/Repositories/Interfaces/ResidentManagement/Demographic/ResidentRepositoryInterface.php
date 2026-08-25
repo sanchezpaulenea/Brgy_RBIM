@@ -8,9 +8,10 @@ use Illuminate\Database\Eloquent\Collection;
 interface ResidentRepositoryInterface
 {
     /**
+     * @param  array{household_id?: int, resident_status_id?: int}  $filters
      * @return Collection<int, Resident>
      */
-    public function all(): Collection;
+    public function list(array $filters = []): Collection;
 
     public function findById(int $residentId): ?Resident;
 
@@ -18,4 +19,9 @@ interface ResidentRepositoryInterface
      * @param  array<string, mixed>  $attributes
      */
     public function create(array $attributes): Resident;
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    public function update(Resident $resident, array $attributes): Resident;
 }

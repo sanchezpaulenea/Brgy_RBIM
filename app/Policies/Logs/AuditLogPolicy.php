@@ -7,11 +7,10 @@ use App\Models\UserManagement\User;
 class AuditLogPolicy
 {
     /**
-     * The `permission` table has no `auditlog.view` row, so access is granted by
-     * role: Admin and Super Admin only.
+     * View audit history. Separate from session/login history (`userlog.view`).
      */
     public function viewAny(User $user): bool
     {
-        return $user->isSystemAdministrator();
+        return $user->isSystemAdministrator() && $user->hasPermission('auditlog.view');
     }
 }

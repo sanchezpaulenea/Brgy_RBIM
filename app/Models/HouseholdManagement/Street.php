@@ -22,6 +22,17 @@ class Street extends Model
         return 'street_id';
     }
 
+    public static function standardizeName(string $name): string
+    {
+        $normalized = trim(preg_replace('/\s+/u', ' ', $name) ?? $name);
+
+        if ($normalized === '') {
+            return $normalized;
+        }
+
+        return mb_convert_case($normalized, MB_CASE_TITLE, 'UTF-8');
+    }
+
     /**
      * @return HasMany<Household, $this>
      */

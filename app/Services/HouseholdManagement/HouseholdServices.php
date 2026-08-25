@@ -39,6 +39,9 @@ class HouseholdServices
         $headData = $data['head'];
 
         return DB::transaction(function () use ($performedBy, $data, $headData) {
+            $household = null;
+            $resident = null;
+
             try {
                 $this->disableForeignKeyChecks();
 
@@ -83,6 +86,10 @@ class HouseholdServices
                 $this->enableForeignKeyChecks();
             }
 
+            if ($household === null || $resident === null) {
+                throw new \RuntimeException('Household registration did not produce both records.');
+            }
+
             $this->auditLogRepository->log(
                 performedByUserId: $performedBy->user_id,
                 actionId: Action::CREATE,
@@ -92,6 +99,17 @@ class HouseholdServices
                 newValue: $this->householdAuditLabel($household),
                 target: 'household',
                 entity: 'household',
+            );
+
+            $this->auditLogRepository->log(
+                performedByUserId: $performedBy->user_id,
+                actionId: Action::CREATE,
+                recordId: $resident->resident_id,
+                description: 'Create resident',
+                oldValue: null,
+                newValue: $this->fullName($resident),
+                target: 'record',
+                entity: 'resident',
             );
 
             return $this->formatRecord($household);
