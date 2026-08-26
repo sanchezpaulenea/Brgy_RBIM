@@ -1,11 +1,11 @@
 <template>
-    <div class="min-h-screen bg-[#f4f6f5] text-slate-900">
+    <div class="rbim-shell min-h-screen bg-[#f4f6f5] text-slate-900">
         <header class="fixed inset-x-0 top-0 z-40 h-20 bg-brand text-white shadow-md">
             <div class="flex h-full items-center justify-between gap-4 px-4 sm:px-6">
                 <div class="flex min-w-0 items-center gap-3">
                     <button
                         type="button"
-                        class="rounded-lg p-2 text-white/90 hover:bg-white/10 lg:hidden"
+                        class="rounded-lg p-2 text-white/90 hover:bg-white/10 md:hidden"
                         aria-label="Toggle menu"
                         @click="sidebarOpen = !sidebarOpen"
                     >
@@ -56,15 +56,22 @@
             </div>
         </header>
 
-        <div class="pt-20 lg:pl-72">
+        <div class="pt-20 md:pl-[var(--rbim-sidebar)]">
+            <button
+                v-if="sidebarOpen"
+                type="button"
+                class="fixed inset-0 z-20 bg-black/40 md:hidden"
+                aria-label="Close menu"
+                @click="sidebarOpen = false"
+            />
             <aside
-                class="fixed inset-x-0 top-20 bottom-0 z-30 overflow-y-auto bg-brand text-white shadow-lg lg:right-auto lg:w-72"
-                :class="sidebarOpen ? 'block' : 'hidden lg:block'"
+                class="fixed bottom-0 left-0 top-20 z-30 w-[var(--rbim-sidebar)] max-w-[15.5rem] overflow-x-hidden overflow-y-auto bg-brand text-white shadow-lg transition-transform duration-200 md:translate-x-0"
+                :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
             >
                 <nav class="flex flex-col gap-1 p-3">
                     <RouterLink
                         :to="{ name: 'dashboard' }"
-                        class="flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-medium transition"
+                        class="flex items-center gap-2.5 min-w-0 rounded-lg px-3 py-2 text-[13px] font-medium transition"
                         :class="route.name === 'dashboard' ? 'bg-white text-brand' : 'text-white/90 hover:bg-white/10'"
                         @click="sidebarOpen = false"
                     >
@@ -77,18 +84,18 @@
                     <div v-if="canViewHouseholdMenu">
                         <button
                             type="button"
-                            class="flex w-full items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-left text-[13px] font-medium transition"
+                            class="flex w-full items-center gap-2.5 min-w-0 rounded-lg px-3 py-2 text-left text-[13px] font-medium transition"
                             :class="isHouseholdRoute ? 'bg-white/15 text-white' : 'text-white/90 hover:bg-white/10'"
-                            @click="householdOpen = !householdOpen"
+                            @click="toggleMenu('household')"
                         >
                             <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd" />
                             </svg>
                             <span class="flex-1">Household Management</span>
-                            <span class="text-xs">{{ householdOpen ? '▾' : '▸' }}</span>
+                            <span class="text-xs">{{ openMenu === 'household' ? '▾' : '▸' }}</span>
                         </button>
 
-                        <div v-show="householdOpen || isHouseholdRoute" class="ml-6 mt-1 space-y-1 border-l border-white/20 pl-3">
+                        <div v-show="openMenu === 'household'" class="ml-6 mt-1 space-y-1 border-l border-white/20 pl-3">
                             <RouterLink
                                 v-if="canRegisterHousehold"
                                 :to="{ name: 'household-register' }"
@@ -113,18 +120,18 @@
                     <div v-if="canViewResidentMenu">
                         <button
                             type="button"
-                            class="flex w-full items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-left text-[13px] font-medium transition"
+                            class="flex w-full items-center gap-2.5 min-w-0 rounded-lg px-3 py-2 text-left text-[13px] font-medium transition"
                             :class="isResidentRoute ? 'bg-white/15 text-white' : 'text-white/90 hover:bg-white/10'"
-                            @click="residentOpen = !residentOpen"
+                            @click="toggleMenu('resident')"
                         >
                             <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                             </svg>
                             <span class="flex-1">Resident Management</span>
-                            <span class="text-xs">{{ residentOpen ? '▾' : '▸' }}</span>
+                            <span class="text-xs">{{ openMenu === 'resident' ? '▾' : '▸' }}</span>
                         </button>
 
-                        <div v-show="residentOpen || isResidentRoute" class="ml-6 mt-1 space-y-1 border-l border-white/20 pl-3">
+                        <div v-show="openMenu === 'resident'" class="ml-6 mt-1 space-y-1 border-l border-white/20 pl-3">
                             <RouterLink
                                 v-if="canRegisterResident"
                                 :to="{ name: 'resident-register' }"
@@ -149,7 +156,7 @@
                     <RouterLink
                         v-if="canManagePersonnel"
                         :to="{ name: 'personnel' }"
-                        class="flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-medium transition"
+                        class="flex items-center gap-2.5 min-w-0 rounded-lg px-3 py-2 text-[13px] font-medium transition"
                         :class="isPersonnelRoute ? 'bg-white text-brand' : 'text-white/90 hover:bg-white/10'"
                         @click="sidebarOpen = false"
                     >
@@ -162,7 +169,7 @@
                     <RouterLink
                         v-if="canManageUsers"
                         :to="{ name: 'users' }"
-                        class="flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-medium transition"
+                        class="flex items-center gap-2.5 min-w-0 rounded-lg px-3 py-2 text-[13px] font-medium transition"
                         :class="isUsersRoute ? 'bg-white text-brand' : 'text-white/90 hover:bg-white/10'"
                         @click="sidebarOpen = false"
                     >
@@ -175,18 +182,18 @@
                     <div v-if="canViewSettingsMenu">
                         <button
                             type="button"
-                            class="flex w-full items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-left text-[13px] font-medium transition"
+                            class="flex w-full items-center gap-2.5 min-w-0 rounded-lg px-3 py-2 text-left text-[13px] font-medium transition"
                             :class="isSettingsRoute ? 'bg-white/15 text-white' : 'text-white/90 hover:bg-white/10'"
-                            @click="settingsOpen = !settingsOpen"
+                            @click="toggleMenu('settings')"
                         >
                             <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.53 1.53 0 01-2.29.95c-1.37-.84-2.94.73-2.1 2.1.54.88.1 2.03-.95 2.28-1.56.38-1.56 2.6 0 2.98a1.53 1.53 0 01.95 2.29c-.84 1.37.73 2.94 2.1 2.1a1.53 1.53 0 012.28.95c.38 1.56 2.6 1.56 2.98 0a1.53 1.53 0 012.29-.95c1.37.84 2.94-.73 2.1-2.1a1.53 1.53 0 01.95-2.28c1.56-.38 1.56-2.6 0-2.98a1.53 1.53 0 01-.95-2.29c.84-1.37-.73-2.94-2.1-2.1a1.53 1.53 0 01-2.28-.95zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
                             </svg>
                             <span class="flex-1">Settings</span>
-                            <span class="text-xs">{{ settingsOpen ? '▾' : '▸' }}</span>
+                            <span class="text-xs">{{ openMenu === 'settings' ? '▾' : '▸' }}</span>
                         </button>
 
-                        <div v-show="settingsOpen || isSettingsRoute" class="ml-6 mt-1 space-y-1 border-l border-white/20 pl-3">
+                        <div v-show="openMenu === 'settings'" class="ml-6 mt-1 space-y-1 border-l border-white/20 pl-3">
                             <RouterLink
                                 v-if="canViewAuditLogs"
                                 :to="{ name: 'audit-logs' }"
@@ -227,7 +234,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import BrandLogos from '@/components/BrandLogos.vue';
 import { useAuth } from '@/composables/useAuth';
@@ -244,9 +251,7 @@ const router = useRouter();
 const { user, loading, logout, hasPermission, isEncoder } = useAuth();
 
 const sidebarOpen = ref(false);
-const settingsOpen = ref(true);
-const householdOpen = ref(true);
-const residentOpen = ref(true);
+const openMenu = ref(null);
 
 const canViewHouseholds = computed(() => hasPermission('household.view'));
 const canRegisterHousehold = computed(() => isEncoder.value && hasPermission('household.create'));
@@ -294,6 +299,30 @@ const isResidentRoute = computed(() => String(route.path).startsWith('/residents
 const isSettingsRoute = computed(() => String(route.path).startsWith('/settings'));
 const isPersonnelRoute = computed(() => String(route.path).startsWith('/personnel'));
 const isUsersRoute = computed(() => String(route.path).startsWith('/users'));
+
+function menuForRoute() {
+    if (isHouseholdRoute.value) {
+        return 'household';
+    }
+
+    if (isResidentRoute.value) {
+        return 'resident';
+    }
+
+    if (isSettingsRoute.value) {
+        return 'settings';
+    }
+
+    return null;
+}
+
+function toggleMenu(name) {
+    openMenu.value = openMenu.value === name ? null : name;
+}
+
+watch(() => route.path, () => {
+    openMenu.value = menuForRoute();
+}, { immediate: true });
 
 async function handleLogout() {
     await logout();

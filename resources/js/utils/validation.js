@@ -32,6 +32,14 @@ export const INVALID_USERNAME_MESSAGE = 'Invalid username.';
 
 export const INVALID_PASSWORD_MESSAGE = 'Invalid password, please try again.';
 
+export const INVALID_USERNAME_OR_PASSWORD_MESSAGE = 'Invalid username or password.';
+
+export const EMPTY_USERNAME_MESSAGE = 'Please enter your username.';
+
+export const EMPTY_PASSWORD_MESSAGE = 'Please enter your password.';
+
+export const EMPTY_CREDENTIALS_MESSAGE = 'Please enter your username and password.';
+
 export function isWellFormedUsername(value) {
     return USERNAME_PATTERN.test(typeof value === 'string' ? value.trim() : '');
 }

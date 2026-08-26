@@ -52,7 +52,7 @@
                             <th class="px-4 py-3 text-left font-semibold text-slate-600">ID</th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-600">{{ fieldLabel }}</th>
                             <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
-                            <th v-if="canDelete" class="px-4 py-3 text-right font-semibold text-slate-600">Action</th>
+                            <th v-if="canDelete" class="px-4 py-3 text-left font-semibold text-slate-600">Action</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -67,7 +67,7 @@
                                     {{ isAssigned(item) ? 'Assigned' : 'Available' }}
                                 </span>
                             </td>
-                            <td v-if="canDelete" class="px-4 py-3 text-right">
+                            <td v-if="canDelete" class="px-4 py-3">
                                 <button
                                     type="button"
                                     class="rbim-btn-danger"

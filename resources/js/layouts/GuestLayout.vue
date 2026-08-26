@@ -1,6 +1,6 @@
 <template>
-    <div class="min-h-screen bg-brand text-white">
-        <div class="mx-auto flex min-h-screen max-w-lg flex-col px-4 py-10 sm:px-6">
+    <div class="flex min-h-dvh min-h-screen items-center justify-center bg-brand px-4 py-10 text-white sm:px-6">
+        <div class="w-full max-w-lg">
             <header class="mb-8 text-center">
                 <BrandLogos />
                 <h1 class="mt-5 text-xl font-semibold tracking-wide sm:text-2xl">
@@ -8,10 +8,8 @@
                 </h1>
             </header>
 
-            <main class="flex flex-1 items-start justify-center">
-                <div class="w-full">
-                    <slot />
-                </div>
+            <main>
+                <slot />
             </main>
         </div>
     </div>

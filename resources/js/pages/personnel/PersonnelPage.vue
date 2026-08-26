@@ -142,7 +142,7 @@
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Position</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Personnel Status</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Account</th>
-                                <th v-if="canUpdate" class="px-4 py-3 text-right font-semibold text-slate-600">Action</th>
+                                <th v-if="canUpdate" class="px-4 py-3 text-left font-semibold text-slate-600">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -164,7 +164,7 @@
                                     <span v-else class="text-slate-600">{{ statusLabel(person.personnel_status_id) }}</span>
                                 </td>
                                 <td class="px-4 py-3 text-slate-600">{{ person.username || 'No account' }}</td>
-                                <td v-if="canUpdate" class="px-4 py-3 text-right">
+                                <td v-if="canUpdate" class="px-4 py-3">
                                     <button type="button" class="rbim-btn-action" @click="startEdit(person)">
                                         <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                             <path d="M13.586 2.586a2 2 0 112.828 2.828l-8.5 8.5a1 1 0 01-.44.253l-3 .857a.5.5 0 01-.618-.618l.857-3a1 1 0 01.253-.44l8.62-8.38z" />

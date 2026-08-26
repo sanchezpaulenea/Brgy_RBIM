@@ -57,9 +57,13 @@ import PasswordField from '@/components/PasswordField.vue';
 import { useAuth } from '@/composables/useAuth';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import {
+    EMPTY_CREDENTIALS_MESSAGE,
+    EMPTY_PASSWORD_MESSAGE,
+    EMPTY_USERNAME_MESSAGE,
     INVALID_CREDENTIALS_MESSAGE,
     INVALID_PASSWORD_MESSAGE,
     INVALID_USERNAME_MESSAGE,
+    INVALID_USERNAME_OR_PASSWORD_MESSAGE,
     isWellFormedPassword,
     isWellFormedUsername,
 } from '@/utils/validation';
@@ -150,15 +154,38 @@ function clearErrors() {
 }
 
 /**
- * Reports which credential the user needs to correct: one message per field, or
- * the combined message when neither entry is usable.
+ * Empty fields are reported before format checks so a blank login attempt is
+ * not treated as an invalid username or password.
  */
 function hasCredentialFormatErrors() {
+    const username = form.username.trim();
+    const password = typeof form.password === 'string' ? form.password : '';
+    const usernameEmpty = username === '';
+    const passwordEmpty = password === '';
+
+    if (usernameEmpty && passwordEmpty) {
+        generalError.value = EMPTY_CREDENTIALS_MESSAGE;
+
+        return true;
+    }
+
+    if (usernameEmpty) {
+        errors.username = EMPTY_USERNAME_MESSAGE;
+
+        return true;
+    }
+
+    if (passwordEmpty) {
+        errors.password = EMPTY_PASSWORD_MESSAGE;
+
+        return true;
+    }
+
     const usernameInvalid = !isWellFormedUsername(form.username);
     const passwordInvalid = !isWellFormedPassword(form.password);
 
     if (usernameInvalid && passwordInvalid) {
-        generalError.value = INVALID_CREDENTIALS_MESSAGE;
+        generalError.value = INVALID_USERNAME_OR_PASSWORD_MESSAGE;
 
         return true;
     }
@@ -212,6 +239,10 @@ async function handleSubmit() {
         errors.username = validationErrors.username ?? '';
         errors.password = validationErrors.password ?? '';
 
+        if (validationErrors.credentials) {
+            generalError.value = validationErrors.credentials;
+        }
+
         if (validationErrors.lockout_remaining_seconds) {
             startLockoutTimer(validationErrors.lockout_remaining_seconds);
         }
@@ -224,7 +255,7 @@ async function handleSubmit() {
             return;
         }
 
-        if (!errors.username && !errors.password) {
+        if (!errors.username && !errors.password && !generalError.value) {
             generalError.value = extractErrorMessage(error, INVALID_CREDENTIALS_MESSAGE);
         }
     }

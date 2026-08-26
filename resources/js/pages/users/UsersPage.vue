@@ -103,7 +103,7 @@
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Barangay personnel name</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Roles</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">User Status</th>
-                                <th v-if="canResetPassword" class="px-4 py-3 text-right font-semibold text-slate-600">Reset password</th>
+                                <th v-if="canResetPassword" class="px-4 py-3 text-left font-semibold text-slate-600">Reset password</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -127,15 +127,20 @@
                                     </select>
                                     <span v-else>{{ account.user_status }}</span>
                                 </td>
-                                <td v-if="canResetPassword" class="px-4 py-3 text-right">
+                                <td v-if="canResetPassword" class="px-4 py-3">
                                     <button
                                         type="button"
                                         class="rbim-btn-action"
                                         :disabled="resettingId === account.user_id"
                                         @click="handleResetPassword(account.user_id)"
                                     >
-                                        <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                            <path d="M10 3a7 7 0 016.9 5.8.75.75 0 11-1.48.25A5.5 5.5 0 105.6 13.9l1.1-1.1H3.75a.75.75 0 010-1.5h4a.75.75 0 01.75.75v4a.75.75 0 01-1.5 0v-2.1l-1.36 1.36A7 7 0 1110 3z" />
+                                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M9.1 3.85a8.4 8.4 0 11-5.05 7.55" />
+                                            <path d="M9.1 3.85 6.85 6.95" />
+                                            <circle cx="12" cy="9.35" r="2.05" />
+                                            <path d="M12 11.4v7.15" />
+                                            <path d="M12 15.35h2.2" />
+                                            <path d="M12 17.55h2.85" />
                                         </svg>
                                         {{ resettingId === account.user_id ? 'Resetting...' : 'Reset password' }}
                                     </button>

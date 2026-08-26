@@ -15,7 +15,7 @@
             <div v-if="loading" class="rbim-card p-8 text-center text-sm text-slate-500">
                 Loading role permissions...
             </div>
-            <div v-else class="space-y-4">
+            <div v-else class="space-y-6">
                 <article v-for="role in roles" :key="role.role_id" class="rbim-card p-6">
                     <header class="flex flex-wrap items-center justify-between gap-2">
                         <h2 class="text-base font-semibold text-slate-900">{{ role.role_name }}</h2>
@@ -25,7 +25,7 @@
                         </span>
                     </header>
 
-                    <div v-if="role.permissions.length" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div v-if="role.permissions.length" class="mt-4 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
                         <section v-for="group in groupPermissions(role.permissions)" :key="`${role.role_id}-${group.group}`">
                             <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
                                 {{ group.group }}
@@ -61,6 +61,7 @@
 import { onMounted, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageTabs from '@/components/PageTabs.vue';
+import { ROLE_PRIVILEGE_ORDER } from '@/constants/roles';
 import { useSectionTabs } from '@/composables/useSectionTabs';
 import { extractErrorMessage } from '@/services/http';
 import * as rolePermissionService from '@/services/rolePermissionService';
@@ -72,12 +73,22 @@ const roles = ref([]);
 const loading = ref(false);
 const error = ref('');
 
+function sortRolesByPrivilege(items) {
+    return [...items].sort((left, right) => {
+        const leftIndex = ROLE_PRIVILEGE_ORDER.indexOf(left.role_name);
+        const rightIndex = ROLE_PRIVILEGE_ORDER.indexOf(right.role_name);
+
+        return (leftIndex === -1 ? ROLE_PRIVILEGE_ORDER.length : leftIndex)
+            - (rightIndex === -1 ? ROLE_PRIVILEGE_ORDER.length : rightIndex);
+    });
+}
+
 async function load() {
     loading.value = true;
     error.value = '';
 
     try {
-        roles.value = await rolePermissionService.fetchRolePermissions();
+        roles.value = sortRolesByPrivilege(await rolePermissionService.fetchRolePermissions());
     } catch (err) {
         error.value = extractErrorMessage(err, 'Unable to load role permissions.');
     } finally {

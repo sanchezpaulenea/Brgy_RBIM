@@ -29,89 +29,132 @@
                     >
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <table class="w-full table-fixed divide-y divide-slate-200 text-sm">
+                        <colgroup>
+                            <col>
+                            <col class="w-44">
+                            <col class="w-32">
+                            <col class="w-32">
+                        </colgroup>
                         <thead class="bg-slate-50">
                             <tr>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">User</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Roles</th>
-                                <th class="px-4 py-3 text-right font-semibold text-slate-600">Action</th>
+                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Role</th>
+                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
+                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            <tr v-for="account in filteredUsers" :key="account.user_id" class="align-top">
-                                <td class="px-4 py-3 font-medium text-slate-900">{{ account.username }}</td>
-                                <td class="px-4 py-3 text-slate-600">
-                                    <div
-                                        v-for="assignment in assignmentsOf(account)"
-                                        :key="assignment.user_role_id"
-                                        class="flex h-9 items-center gap-2"
+                            <template v-for="account in filteredUsers" :key="account.user_id">
+                                <tr
+                                    v-for="(assignment, index) in assignmentsOf(account)"
+                                    :key="assignment.user_role_id"
+                                >
+                                    <td
+                                        v-if="index === 0"
+                                        :rowspan="userRowSpan(account)"
+                                        class="px-4 py-3.5 align-top font-medium text-slate-900"
                                     >
-                                        <span>{{ assignment.role_name }}</span>
+                                        {{ account.username }}
+                                    </td>
+                                    <td class="px-4 py-3.5 text-slate-600">{{ assignment.role_name }}</td>
+                                    <td class="px-4 py-3.5">
                                         <span
                                             class="rounded-full px-2 py-0.5 text-xs"
                                             :class="assignment.enable ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'"
                                         >
                                             {{ assignment.enable ? 'Enabled' : 'Disabled' }}
                                         </span>
-                                    </div>
-                                    <p v-if="!assignmentsOf(account).length" class="flex h-9 items-center text-slate-500">
-                                        No roles assigned.
-                                    </p>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <div class="flex flex-col items-end">
-                                        <div
-                                            v-for="assignment in assignmentsOf(account)"
-                                            :key="`toggle-${assignment.user_role_id}`"
-                                            class="flex h-9 items-center"
+                                    </td>
+                                    <td class="px-4 py-3.5 text-left">
+                                        <button
+                                            v-if="canUpdateRoleStatus"
+                                            type="button"
+                                            class="rbim-btn-action w-24"
+                                            :disabled="updatingRoleId === assignment.user_role_id"
+                                            @click="handleRoleStatus(account, assignment)"
                                         >
-                                            <button
-                                                v-if="canUpdateRoleStatus"
-                                                type="button"
-                                                class="rbim-btn-action"
-                                                :disabled="updatingRoleId === assignment.user_role_id"
-                                                @click="handleRoleStatus(account, assignment)"
+                                            {{ assignment.enable ? 'Disable' : 'Enable' }}
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr v-if="!assignmentsOf(account).length">
+                                    <td class="px-4 py-3.5 align-top font-medium text-slate-900">
+                                        {{ account.username }}
+                                    </td>
+                                    <td class="px-4 py-3.5 text-slate-500" colspan="3">
+                                        <p>No roles assigned.</p>
+                                        <div v-if="canAssignRoles" class="mt-3 flex flex-wrap items-center gap-2">
+                                            <select
+                                                v-model="selectedRoleByUser[account.user_id]"
+                                                class="rbim-input w-40 py-1.5 text-xs"
+                                                :disabled="!assignableRoles(account).length"
                                             >
-                                                {{ assignment.enable ? 'Disable' : 'Enable' }}
+                                                <option value="">
+                                                    {{ assignableRoles(account).length ? 'Select role' : 'No role available' }}
+                                                </option>
+                                                <option
+                                                    v-for="role in assignableRoles(account)"
+                                                    :key="role.role_id"
+                                                    :value="role.role_id"
+                                                >
+                                                    {{ role.role_name }}
+                                                </option>
+                                            </select>
+                                            <button
+                                                type="button"
+                                                class="rbim-btn px-3 py-1.5 text-xs"
+                                                :disabled="!selectedRoleByUser[account.user_id] || assigningUserId === account.user_id"
+                                                @click="handleAssignRole(account)"
+                                            >
+                                                Assign
                                             </button>
                                         </div>
-                                        <div v-if="!assignmentsOf(account).length" class="h-9" />
-                                    </div>
-                                    <div v-if="canAssignRoles" class="mt-2 flex justify-end gap-2">
-                                        <select
-                                            v-model="selectedRoleByUser[account.user_id]"
-                                            class="rbim-input w-40 py-1.5 text-xs"
-                                            :disabled="!assignableRoles(account).length"
-                                        >
-                                            <option value="">
-                                                {{ assignableRoles(account).length ? 'Select role' : 'No role available' }}
-                                            </option>
-                                            <option
-                                                v-for="role in assignableRoles(account)"
-                                                :key="role.role_id"
-                                                :value="role.role_id"
+                                        <p v-if="canAssignRoles && !assignableRoles(account).length" class="mt-1 text-xs text-slate-500">
+                                            {{ account.personnel_id
+                                                ? 'Guest is not offered for personnel-linked accounts.'
+                                                : 'Staff roles require a linked personnel record.' }}
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr v-else-if="canAssignRoles">
+                                    <td class="px-4 py-3.5" colspan="3">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <select
+                                                v-model="selectedRoleByUser[account.user_id]"
+                                                class="rbim-input w-40 py-1.5 text-xs"
+                                                :disabled="!assignableRoles(account).length"
                                             >
-                                                {{ role.role_name }}
-                                            </option>
-                                        </select>
-                                        <button
-                                            type="button"
-                                            class="rbim-btn px-3 py-1.5 text-xs"
-                                            :disabled="!selectedRoleByUser[account.user_id] || assigningUserId === account.user_id"
-                                            @click="handleAssignRole(account)"
-                                        >
-                                            Assign
-                                        </button>
-                                    </div>
-                                    <p v-if="canAssignRoles && !assignableRoles(account).length" class="mt-1 text-right text-xs text-slate-500">
-                                        {{ account.personnel_id
-                                            ? 'Guest is not offered for personnel-linked accounts.'
-                                            : 'Staff roles require a linked personnel record.' }}
-                                    </p>
-                                </td>
-                            </tr>
+                                                <option value="">
+                                                    {{ assignableRoles(account).length ? 'Select role' : 'No role available' }}
+                                                </option>
+                                                <option
+                                                    v-for="role in assignableRoles(account)"
+                                                    :key="role.role_id"
+                                                    :value="role.role_id"
+                                                >
+                                                    {{ role.role_name }}
+                                                </option>
+                                            </select>
+                                            <button
+                                                type="button"
+                                                class="rbim-btn px-3 py-1.5 text-xs"
+                                                :disabled="!selectedRoleByUser[account.user_id] || assigningUserId === account.user_id"
+                                                @click="handleAssignRole(account)"
+                                            >
+                                                Assign
+                                            </button>
+                                        </div>
+                                        <p v-if="!assignableRoles(account).length" class="mt-1 text-xs text-slate-500">
+                                            {{ account.personnel_id
+                                                ? 'Guest is not offered for personnel-linked accounts.'
+                                                : 'Staff roles require a linked personnel record.' }}
+                                        </p>
+                                    </td>
+                                </tr>
+                            </template>
                             <tr v-if="!filteredUsers.length">
-                                <td colspan="3" class="px-4 py-8 text-center text-slate-500">
+                                <td colspan="4" class="px-4 py-8 text-center text-slate-500">
                                     {{ users.length ? 'No users match the search.' : 'No user accounts found.' }}
                                 </td>
                             </tr>
@@ -181,6 +224,16 @@ const filteredUsers = computed(() => {
 
 function assignmentsOf(account) {
     return account.role_assignments ?? [];
+}
+
+function userRowSpan(account) {
+    const count = assignmentsOf(account).length;
+
+    if (!count) {
+        return 1;
+    }
+
+    return count + (canAssignRoles.value ? 1 : 0);
 }
 
 function assignableRoles(account) {

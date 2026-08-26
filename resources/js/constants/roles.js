@@ -16,6 +16,13 @@ export const STAFF_ROLES = [
     ROLES.ENCODER,
 ];
 
+export const ROLE_PRIVILEGE_ORDER = [
+    ROLES.SUPER_ADMIN,
+    ROLES.ADMIN,
+    ROLES.ENCODER,
+    ROLES.GUEST,
+];
+
 export const PERSONNEL_STATUSES = [
     { id: 1, label: 'Active' },
     { id: 2, label: 'Inactive' },

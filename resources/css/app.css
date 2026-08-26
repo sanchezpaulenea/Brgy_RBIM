@@ -82,4 +82,18 @@
     .rbim-hint {
         @apply mt-1.5 text-xs text-slate-500;
     }
+
+    /*
+     * Keep the nav rail a compact column so 3/4-width and split windows
+     * still leave most of the viewport for page content.
+     */
+    .rbim-shell {
+        --rbim-sidebar: min(15.5rem, 85vw);
+    }
+
+    @media (min-width: 768px) {
+        .rbim-shell {
+            --rbim-sidebar: min(15.5rem, 22vw);
+        }
+    }
 }

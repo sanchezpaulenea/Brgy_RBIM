@@ -67,7 +67,7 @@
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Head Resident Name</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Registration Date</th>
-                                <th class="px-4 py-3 text-right font-semibold text-slate-600">Action</th>
+                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -83,8 +83,8 @@
                                 <td class="px-4 py-3 font-medium text-slate-900">{{ household.head_name || '—' }}</td>
                                 <td class="px-4 py-3 text-slate-600">{{ household.household_status || '—' }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap text-slate-600">{{ formatDate(household.registration_date) }}</td>
-                                <td class="px-4 py-3 text-right" @click.stop>
-                                    <div class="flex justify-end gap-2">
+                                <td class="px-4 py-3" @click.stop>
+                                    <div class="flex gap-2">
                                         <button type="button" class="rbim-btn-action" @click="openDetail(household.household_id)">
                                             View
                                         </button>

@@ -46,6 +46,27 @@ const PERMISSION_LABELS = {
 
 const OTHER_GROUP = 'Other';
 
+/**
+ * Shared group order for every role so missing groups are skipped without
+ * reshuffling the ones that remain.
+ */
+const PERMISSION_GROUP_ORDER = [
+    'Own account',
+    'System logs',
+    'System settings',
+    'User accounts',
+    'User roles',
+    'Barangay personnel',
+    'Personnel positions',
+    'Households',
+    'Household assessments',
+    'Residents',
+    'Streets',
+    'Nationalities',
+    'Ethnicities',
+    'Religions',
+];
+
 export function permissionLabel(permission) {
     const known = PERMISSION_LABELS[permission];
 
@@ -80,15 +101,15 @@ export function groupPermissions(permissions) {
 
     return [...groups.entries()]
         .map(([group, items]) => ({ group, items: items.sort((a, b) => a.localeCompare(b)) }))
-        .sort((a, b) => {
-            if (a.group === OTHER_GROUP) {
-                return 1;
-            }
+        .sort((a, b) => groupOrderIndex(a.group) - groupOrderIndex(b.group));
+}
 
-            if (b.group === OTHER_GROUP) {
-                return -1;
-            }
+function groupOrderIndex(group) {
+    if (group === OTHER_GROUP) {
+        return Number.MAX_SAFE_INTEGER;
+    }
 
-            return a.group.localeCompare(b.group);
-        });
+    const index = PERMISSION_GROUP_ORDER.indexOf(group);
+
+    return index === -1 ? PERMISSION_GROUP_ORDER.length : index;
 }

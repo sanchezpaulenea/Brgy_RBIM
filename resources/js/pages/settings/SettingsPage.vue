@@ -21,21 +21,27 @@
                     <p class="mt-0.5 text-xs text-slate-500">{{ group.description }}</p>
                 </header>
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <table class="w-full table-fixed divide-y divide-slate-200 text-sm">
+                        <colgroup>
+                            <col class="w-[22%]">
+                            <col class="w-[26%]">
+                            <col>
+                            <col v-if="canUpdateSettings" class="w-40">
+                        </colgroup>
                         <thead class="bg-white">
                             <tr>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Setting</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Value</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Description</th>
-                                <th v-if="canUpdateSettings" class="px-4 py-3 text-right font-semibold text-slate-600">Action</th>
+                                <th v-if="canUpdateSettings" class="px-4 py-3 text-left font-semibold text-slate-600">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             <tr v-for="setting in group.settings" :key="setting.setting_id" class="align-top">
-                                <td class="px-4 py-3 font-medium text-slate-900">
+                                <td class="px-4 py-3 font-medium break-words text-slate-900">
                                     {{ formatSettingLabel(setting.setting_key) }}
                                 </td>
-                                <td class="px-4 py-3">
+                                <td class="px-4 py-3 break-words">
                                     <template v-if="canUpdateSettings && editingId === setting.setting_id">
                                         <input
                                             v-model="editValues[setting.setting_id]"
@@ -45,7 +51,7 @@
                                             :min="rangeFor(setting)?.min"
                                             :max="rangeFor(setting)?.max"
                                             maxlength="45"
-                                            class="rbim-input min-w-56 py-1.5"
+                                            class="rbim-input py-1.5"
                                             :class="{ 'rbim-input-error': editError }"
                                             @input="editError = ''"
                                         >
@@ -56,9 +62,9 @@
                                         {{ setting.typed_value ?? setting.setting_value }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 text-slate-600">{{ setting.description }}</td>
-                                <td v-if="canUpdateSettings" class="px-4 py-3 text-right">
-                                    <div v-if="editingId === setting.setting_id" class="flex justify-end gap-2">
+                                <td class="px-4 py-3 break-words text-slate-600">{{ setting.description }}</td>
+                                <td v-if="canUpdateSettings" class="px-4 py-3">
+                                    <div v-if="editingId === setting.setting_id" class="flex flex-wrap gap-2">
                                         <button
                                             type="button"
                                             class="rbim-btn px-3 py-1.5 text-xs"

@@ -43,8 +43,27 @@ class LoginRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'username.required' => 'Username is required.',
-            'password.required' => 'Password is required.',
+            'username.required' => 'Please enter your username.',
+            'password.required' => 'Please enter your password.',
         ];
+    }
+
+    /**
+     * A blank username and password share one message instead of two field errors.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $username = $this->input('username');
+            $password = $this->input('password');
+            $usernameEmpty = ! is_string($username) || trim($username) === '';
+            $passwordEmpty = ! is_string($password) || $password === '';
+
+            if ($usernameEmpty && $passwordEmpty) {
+                $validator->errors()->forget('username');
+                $validator->errors()->forget('password');
+                $validator->errors()->add('credentials', 'Please enter your username and password.');
+            }
+        });
     }
 }
