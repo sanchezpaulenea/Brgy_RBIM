@@ -6,8 +6,36 @@ export async function fetchLocationProfile() {
     return data.location;
 }
 
+export async function fetchHouseholds(filters = {}) {
+    const params = {};
+
+    if (filters.street_id) {
+        params.street_id = filters.street_id;
+    }
+
+    if (filters.household_status_id) {
+        params.household_status_id = filters.household_status_id;
+    }
+
+    const { data } = await http.get('/households', { params });
+
+    return data.items;
+}
+
+export async function fetchHousehold(id) {
+    const { data } = await http.get(`/households/${id}`);
+
+    return data.item;
+}
+
 export async function createHousehold(payload) {
     const { data } = await http.post('/households', payload);
+
+    return data.item;
+}
+
+export async function updateHousehold(id, payload) {
+    const { data } = await http.patch(`/households/${id}`, payload);
 
     return data.item;
 }

@@ -74,18 +74,77 @@
                         <span>Dashboard</span>
                     </RouterLink>
 
-                    <RouterLink
-                        v-if="canEncodeHouseholds"
-                        :to="{ name: 'household-encoding' }"
-                        class="flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-[13px] font-medium transition"
-                        :class="isHouseholdRoute ? 'bg-white text-brand' : 'text-white/90 hover:bg-white/10'"
-                        @click="sidebarOpen = false"
-                    >
-                        <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm4 1.414L14.586 8H11a1 1 0 01-1-1V3.414zM7 11a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm1 3a1 1 0 100 2h4a1 1 0 100-2H8z" clip-rule="evenodd" />
-                        </svg>
-                        <span>Household Encoding</span>
-                    </RouterLink>
+                    <div v-if="canViewHouseholdMenu">
+                        <button
+                            type="button"
+                            class="flex w-full items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-left text-[13px] font-medium transition"
+                            :class="isHouseholdRoute ? 'bg-white/15 text-white' : 'text-white/90 hover:bg-white/10'"
+                            @click="householdOpen = !householdOpen"
+                        >
+                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="flex-1">Household Management</span>
+                            <span class="text-xs">{{ householdOpen ? '▾' : '▸' }}</span>
+                        </button>
+
+                        <div v-show="householdOpen || isHouseholdRoute" class="ml-6 mt-1 space-y-1 border-l border-white/20 pl-3">
+                            <RouterLink
+                                v-if="canRegisterHousehold"
+                                :to="{ name: 'household-register' }"
+                                class="block rounded-lg px-2 py-1.5 text-[13px] transition"
+                                :class="route.name === 'household-register' ? 'bg-white text-brand' : 'text-white/85 hover:bg-white/10'"
+                                @click="sidebarOpen = false"
+                            >
+                                Register household
+                            </RouterLink>
+                            <RouterLink
+                                v-if="canViewHouseholds"
+                                :to="{ name: 'households' }"
+                                class="block rounded-lg px-2 py-1.5 text-[13px] transition"
+                                :class="isHouseholdViewRoute ? 'bg-white text-brand' : 'text-white/85 hover:bg-white/10'"
+                                @click="sidebarOpen = false"
+                            >
+                                View households
+                            </RouterLink>
+                        </div>
+                    </div>
+
+                    <div v-if="canViewResidentMenu">
+                        <button
+                            type="button"
+                            class="flex w-full items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-left text-[13px] font-medium transition"
+                            :class="isResidentRoute ? 'bg-white/15 text-white' : 'text-white/90 hover:bg-white/10'"
+                            @click="residentOpen = !residentOpen"
+                        >
+                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                            </svg>
+                            <span class="flex-1">Resident Management</span>
+                            <span class="text-xs">{{ residentOpen ? '▾' : '▸' }}</span>
+                        </button>
+
+                        <div v-show="residentOpen || isResidentRoute" class="ml-6 mt-1 space-y-1 border-l border-white/20 pl-3">
+                            <RouterLink
+                                v-if="canRegisterResident"
+                                :to="{ name: 'resident-register' }"
+                                class="block rounded-lg px-2 py-1.5 text-[13px] transition"
+                                :class="route.name === 'resident-register' ? 'bg-white text-brand' : 'text-white/85 hover:bg-white/10'"
+                                @click="sidebarOpen = false"
+                            >
+                                Register resident
+                            </RouterLink>
+                            <RouterLink
+                                v-if="canViewResidents"
+                                :to="{ name: 'residents' }"
+                                class="block rounded-lg px-2 py-1.5 text-[13px] transition"
+                                :class="route.name === 'residents' ? 'bg-white text-brand' : 'text-white/85 hover:bg-white/10'"
+                                @click="sidebarOpen = false"
+                            >
+                                View residents
+                            </RouterLink>
+                        </div>
+                    </div>
 
                     <RouterLink
                         v-if="canManagePersonnel"
@@ -182,12 +241,30 @@ defineProps({
 
 const route = useRoute();
 const router = useRouter();
-const { user, loading, logout, hasPermission, isSystemAdministrator, isEncoder } = useAuth();
+const { user, loading, logout, hasPermission, isEncoder } = useAuth();
 
 const sidebarOpen = ref(false);
 const settingsOpen = ref(true);
+const householdOpen = ref(true);
+const residentOpen = ref(true);
 
-const canEncodeHouseholds = computed(() => isEncoder.value);
+const canViewHouseholds = computed(() => hasPermission('household.view'));
+const canRegisterHousehold = computed(() => isEncoder.value && hasPermission('household.create'));
+const canViewStreets = computed(() => hasPermission('street.view'));
+const canViewHouseholdMenu = computed(() => (
+    canViewHouseholds.value || canRegisterHousehold.value || canViewStreets.value
+));
+
+const canViewResidents = computed(() => hasPermission('resident.view'));
+const canRegisterResident = computed(() => isEncoder.value && hasPermission('resident.create'));
+const canViewResidentLookups = computed(() => (
+    hasPermission('nationality.view')
+    || hasPermission('ethnicity.view')
+    || hasPermission('religion.view')
+));
+const canViewResidentMenu = computed(() => (
+    canViewResidents.value || canRegisterResident.value || canViewResidentLookups.value
+));
 
 const canManagePersonnel = computed(() => (
     hasPermission('personnel.view')
@@ -201,7 +278,7 @@ const canViewSystemSettings = computed(() => (
     hasPermission('setting.view') || hasPermission('setting.update')
 ));
 
-const canViewAuditLogs = computed(() => isSystemAdministrator.value);
+const canViewAuditLogs = computed(() => hasPermission('auditlog.view'));
 const canViewUserLogs = computed(() => hasPermission('userlog.view'));
 const canViewLogs = computed(() => canViewAuditLogs.value || canViewUserLogs.value);
 
@@ -210,6 +287,10 @@ const canViewSettingsMenu = computed(() => (
 ));
 
 const isHouseholdRoute = computed(() => String(route.path).startsWith('/households'));
+const isHouseholdViewRoute = computed(() => (
+    route.name === 'households' || route.name === 'household-detail'
+));
+const isResidentRoute = computed(() => String(route.path).startsWith('/residents'));
 const isSettingsRoute = computed(() => String(route.path).startsWith('/settings'));
 const isPersonnelRoute = computed(() => String(route.path).startsWith('/personnel'));
 const isUsersRoute = computed(() => String(route.path).startsWith('/users'));

@@ -34,10 +34,24 @@ export async function createStreet(payload) {
     return data.item;
 }
 
+export async function deleteStreet(id) {
+    await http.delete(`/streets/${id}`);
+}
+
 export async function fetchNationalities() {
     const { data } = await http.get('/nationalities');
 
     return data.items;
+}
+
+export async function createNationality(payload) {
+    const { data } = await http.post('/nationalities', payload);
+
+    return data.item;
+}
+
+export async function deleteNationality(id) {
+    await http.delete(`/nationalities/${id}`);
 }
 
 export async function fetchEthnicities() {
@@ -46,10 +60,30 @@ export async function fetchEthnicities() {
     return data.items;
 }
 
+export async function createEthnicity(payload) {
+    const { data } = await http.post('/ethnicities', payload);
+
+    return data.item;
+}
+
+export async function deleteEthnicity(id) {
+    await http.delete(`/ethnicities/${id}`);
+}
+
 export async function fetchReligions() {
     const { data } = await http.get('/religions');
 
     return data.items;
+}
+
+export async function createReligion(payload) {
+    const { data } = await http.post('/religions', payload);
+
+    return data.item;
+}
+
+export async function deleteReligion(id) {
+    await http.delete(`/religions/${id}`);
 }
 
 export async function fetchUserStatuses() {

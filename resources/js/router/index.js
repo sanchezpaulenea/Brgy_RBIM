@@ -82,13 +82,95 @@ const routes = [
         },
     },
     {
-        path: '/households/encode',
-        name: 'household-encoding',
-        component: () => import('@/pages/households/HouseholdEncodingPage.vue'),
+        path: '/households',
+        name: 'households',
+        component: () => import('@/pages/households/HouseholdsPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresPermissions: ['household.view'],
+        },
+    },
+    {
+        path: '/households/register',
+        name: 'household-register',
+        component: () => import('@/pages/households/HouseholdRegisterPage.vue'),
         meta: {
             requiresAuth: true,
             requiresEncoder: true,
             requiresPermissions: ['household.create'],
+        },
+    },
+    {
+        path: '/households/encode',
+        name: 'household-encoding',
+        redirect: { name: 'household-register' },
+    },
+    {
+        path: '/households/streets',
+        name: 'streets',
+        component: () => import('@/pages/lookups/LookupManagementPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresPermissions: ['street.view'],
+            lookupKey: 'street',
+        },
+    },
+    {
+        path: '/households/:id',
+        name: 'household-detail',
+        component: () => import('@/pages/households/HouseholdDetailPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresPermissions: ['household.view'],
+        },
+    },
+    {
+        path: '/residents',
+        name: 'residents',
+        component: () => import('@/pages/residents/ResidentsPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresPermissions: ['resident.view'],
+        },
+    },
+    {
+        path: '/residents/register',
+        name: 'resident-register',
+        component: () => import('@/pages/residents/ResidentRegisterPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresEncoder: true,
+            requiresPermissions: ['resident.create'],
+        },
+    },
+    {
+        path: '/residents/nationalities',
+        name: 'nationalities',
+        component: () => import('@/pages/lookups/LookupManagementPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresPermissions: ['nationality.view'],
+            lookupKey: 'nationality',
+        },
+    },
+    {
+        path: '/residents/ethnicities',
+        name: 'ethnicities',
+        component: () => import('@/pages/lookups/LookupManagementPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresPermissions: ['ethnicity.view'],
+            lookupKey: 'ethnicity',
+        },
+    },
+    {
+        path: '/residents/religions',
+        name: 'religions',
+        component: () => import('@/pages/lookups/LookupManagementPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresPermissions: ['religion.view'],
+            lookupKey: 'religion',
         },
     },
     {
@@ -110,6 +192,7 @@ const routes = [
         meta: {
             requiresAuth: true,
             requiresSystemAdministrator: true,
+            requiresPermissions: ['auditlog.view'],
             logType: 'audit',
         },
     },

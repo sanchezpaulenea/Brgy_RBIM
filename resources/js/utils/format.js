@@ -143,6 +143,38 @@ export function ageFromDateOfBirth(value) {
     return age < 0 ? null : age;
 }
 
+export function formatDate(value) {
+    if (!value) {
+        return '—';
+    }
+
+    return String(value).slice(0, 10);
+}
+
+export function householdDisplayLabel(household) {
+    if (!household) {
+        return '—';
+    }
+
+    const address = [household.street_name, household.house_lot].filter(Boolean).join(', ');
+    const head = household.head_name || household.head?.full_name || personDisplayName(household.head);
+    const id = household.household_id;
+
+    if (address && head) {
+        return `${id} — ${address} (${head})`;
+    }
+
+    if (address) {
+        return id ? `${id} — ${address}` : address;
+    }
+
+    if (head) {
+        return id ? `${id} — ${head}` : head;
+    }
+
+    return id ? `Household ${id}` : '—';
+}
+
 export function personDisplayName(person) {
     if (!person) {
         return '';

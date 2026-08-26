@@ -64,8 +64,12 @@ export const SETTING_INT_RANGES = {
     audit_log_retention_days: { min: 30, max: 3650 },
 };
 
-function placeNameValidationError(value, label) {
-    const name = value.trim();
+export function placeNameValidationError(value, label, required = true) {
+    const name = typeof value === 'string' ? value.trim() : '';
+
+    if (!name) {
+        return required ? `${label} is required.` : '';
+    }
 
     if (name.length < PLACE_NAME_MIN_LENGTH) {
         return `${label} must be at least ${PLACE_NAME_MIN_LENGTH} characters long.`;

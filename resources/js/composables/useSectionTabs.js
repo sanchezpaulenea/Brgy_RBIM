@@ -2,9 +2,9 @@ import { computed } from 'vue';
 import { useAuth } from '@/composables/useAuth';
 
 /**
- * Tab sets for the two management sections. Personnel Position, User Role, and
- * Role Permission are reached from the module they belong to instead of the
- * Settings menu.
+ * Tab sets for management sections. Lookup tables (Personnel Position, Street,
+ * Nationality, Ethnicity, Religion, User Role, and Role Permission) are reached
+ * from the module they belong to instead of the Settings menu.
  */
 export function useSectionTabs() {
     const { hasPermission, hasAnyPermission, isSuperAdmin } = useAuth();
@@ -30,5 +30,35 @@ export function useSectionTabs() {
             : null,
     ].filter(Boolean));
 
-    return { personnelTabs, userTabs };
+    const householdTabs = computed(() => [
+        hasPermission('household.view')
+            ? { name: 'households', label: 'View Households' }
+            : null,
+        hasPermission('household.create')
+            ? { name: 'household-register', label: 'Register Household' }
+            : null,
+        hasPermission('street.view')
+            ? { name: 'streets', label: 'Street' }
+            : null,
+    ].filter(Boolean));
+
+    const residentTabs = computed(() => [
+        hasPermission('resident.view')
+            ? { name: 'residents', label: 'View Residents' }
+            : null,
+        hasPermission('resident.create')
+            ? { name: 'resident-register', label: 'Register Resident' }
+            : null,
+        hasPermission('nationality.view')
+            ? { name: 'nationalities', label: 'Nationality' }
+            : null,
+        hasPermission('ethnicity.view')
+            ? { name: 'ethnicities', label: 'Ethnicity' }
+            : null,
+        hasPermission('religion.view')
+            ? { name: 'religions', label: 'Religion' }
+            : null,
+    ].filter(Boolean));
+
+    return { personnelTabs, userTabs, householdTabs, residentTabs };
 }
