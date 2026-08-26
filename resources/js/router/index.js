@@ -82,6 +82,16 @@ const routes = [
         },
     },
     {
+        path: '/households/encode',
+        name: 'household-encoding',
+        component: () => import('@/pages/households/HouseholdEncodingPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresEncoder: true,
+            requiresPermissions: ['household.create'],
+        },
+    },
+    {
         path: '/settings/lookups/personnel-positions',
         redirect: { name: 'personnel-positions' },
     },

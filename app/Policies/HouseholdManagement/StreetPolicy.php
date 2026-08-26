@@ -9,7 +9,9 @@ class StreetPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isSuperAdmin() || $user->hasPermission('street.view');
+        return $user->isSuperAdmin()
+            || $user->hasPermission('street.view')
+            || $user->canListResidentReferenceData();
     }
 
     public function create(User $user): bool

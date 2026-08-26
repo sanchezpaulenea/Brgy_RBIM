@@ -52,6 +52,7 @@ Route::prefix('v1')->group(function () {
         Route::get('religions', [ReligionController::class, 'index'])->name('religions.index');
         Route::post('religions', [ReligionController::class, 'store'])->name('religions.store');
 
+        Route::get('location-profile', [SystemSettingController::class, 'locationProfile'])->name('location-profile.show');
         Route::get('lookups/{lookup}', [LookupController::class, 'index'])->name('lookups.index');
         Route::get('clans', [LookupController::class, 'index'])->defaults('lookup', 'clan')->name('clans.index');
         Route::get('household-statuses', [LookupController::class, 'index'])->defaults('lookup', 'household-status')->name('household-statuses.index');

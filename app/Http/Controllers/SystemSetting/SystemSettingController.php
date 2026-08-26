@@ -16,6 +16,18 @@ class SystemSettingController extends Controller
     ) {}
 
     /**
+     * GET /api/v1/location-profile
+     */
+    public function locationProfile(): JsonResponse
+    {
+        $this->authorize('viewLocationProfile', Setting::class);
+
+        return response()->json([
+            'location' => $this->settingService->locationProfile(),
+        ]);
+    }
+
+    /**
      * GET /api/v1/settings
      */
     public function index(): JsonResponse

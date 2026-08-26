@@ -9,7 +9,9 @@ class ReligionPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isSuperAdmin() || $user->hasPermission('religion.view');
+        return $user->isSuperAdmin()
+            || $user->hasPermission('religion.view')
+            || $user->canListResidentReferenceData();
     }
 
     public function create(User $user): bool

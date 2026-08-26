@@ -114,3 +114,49 @@ export function todayDate() {
 
     return new Date(now.getTime() - (offset * 60_000)).toISOString().slice(0, 10);
 }
+
+/**
+ * Completed years of age from an ISO date of birth (`YYYY-MM-DD`).
+ */
+export function ageFromDateOfBirth(value) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value ?? '').trim());
+
+    if (!match) {
+        return null;
+    }
+
+    const birth = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+
+    if (Number.isNaN(birth.getTime())) {
+        return null;
+    }
+
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const beforeBirthday = today.getMonth() < birth.getMonth()
+        || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate());
+
+    if (beforeBirthday) {
+        age -= 1;
+    }
+
+    return age < 0 ? null : age;
+}
+
+export function personDisplayName(person) {
+    if (!person) {
+        return '';
+    }
+
+    const last = String(person.last_name ?? '').trim();
+    const given = [person.first_name, person.middle_name, person.suffix]
+        .filter(Boolean)
+        .join(' ')
+        .trim();
+
+    if (last && given) {
+        return `${last}, ${given}`;
+    }
+
+    return last || given;
+}

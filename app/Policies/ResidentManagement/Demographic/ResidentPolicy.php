@@ -19,7 +19,7 @@ class ResidentPolicy
 
     public function create(User $user): bool
     {
-        return $user->isSuperAdmin() || $user->hasPermission('resident.create');
+        return $user->isEncoder() && $user->hasPermission('resident.create');
     }
 
     public function update(User $user, Resident $resident): bool

@@ -9,7 +9,9 @@ class NationalityPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isSuperAdmin() || $user->hasPermission('nationality.view');
+        return $user->isSuperAdmin()
+            || $user->hasPermission('nationality.view')
+            || $user->canListResidentReferenceData();
     }
 
     public function create(User $user): bool

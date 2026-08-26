@@ -215,6 +215,22 @@ class User extends Authenticatable
         return $this->hasRole(Role::SUPER_ADMIN);
     }
 
+    public function isEncoder(): bool
+    {
+        return $this->hasRole(Role::ENCODER);
+    }
+
+    /**
+     * Encoders need reference lists (streets, sex, nationality, and so on)
+     * while registering a household, even when they cannot manage those tables.
+     */
+    public function canListResidentReferenceData(): bool
+    {
+        return $this->isEncoder()
+            || $this->hasPermission('household.view')
+            || $this->hasPermission('resident.view');
+    }
+
     /**
      * Guest-only accounts are restricted from system administrator modules.
      * Users who also hold Admin or Super Admin are not treated as guests.

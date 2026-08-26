@@ -31,6 +31,51 @@ class SystemSettingService
     }
 
     /**
+     * Read-only barangay location used on household encoding forms.
+     *
+     * @return array{province: string, city: string, barangay: string, address: string}
+     */
+    public function locationProfile(): array
+    {
+        $city = trim((string) $this->get('city_name'));
+        $barangay = trim((string) $this->get('barangay_name'));
+        $address = trim((string) $this->get('barangay_address'));
+
+        return [
+            'province' => self::provinceFromAddress($address, $city, $barangay),
+            'city' => $city,
+            'barangay' => $barangay,
+            'address' => $address,
+        ];
+    }
+
+    /**
+     * Province is the last address segment that is not the city or barangay name.
+     */
+    public static function provinceFromAddress(string $address, string $city = '', string $barangay = ''): string
+    {
+        $parts = collect(preg_split('/,+/', $address) ?: [])
+            ->map(fn (string $part) => trim($part, " \t\n\r\0\x0B,"))
+            ->filter()
+            ->values();
+
+        if ($parts->isEmpty()) {
+            return '';
+        }
+
+        $skip = collect([$city, $barangay])
+            ->map(fn (string $value) => mb_strtolower(trim($value)))
+            ->filter()
+            ->all();
+
+        $province = $parts->reverse()->first(
+            fn (string $part) => ! in_array(mb_strtolower($part), $skip, true)
+        );
+
+        return is_string($province) ? $province : '';
+    }
+
+    /**
      * @return array<int, array<string, mixed>>
      */
     public function listSettings(): array

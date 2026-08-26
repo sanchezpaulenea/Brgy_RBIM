@@ -94,6 +94,8 @@ export function useAuth() {
         roles.value.includes(ROLES.GUEST) && !isSystemAdministrator.value
     ));
 
+    const isEncoder = computed(() => roles.value.includes(ROLES.ENCODER));
+
     function hasAnyPermission(requiredPermissions) {
         return requiredPermissions.some((permission) => permissions.value.includes(permission));
     }
@@ -104,6 +106,10 @@ export function useAuth() {
         }
 
         if (meta.requiresSystemAdministrator && !isSystemAdministrator.value) {
+            return false;
+        }
+
+        if (meta.requiresEncoder && !isEncoder.value) {
             return false;
         }
 
@@ -123,6 +129,7 @@ export function useAuth() {
         isAuthenticated,
         mustChangePassword,
         isGuest,
+        isEncoder,
         isSuperAdmin,
         isSystemAdministrator,
         initialize,

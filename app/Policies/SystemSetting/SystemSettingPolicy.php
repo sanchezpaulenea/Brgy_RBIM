@@ -7,6 +7,14 @@ use App\Models\UserManagement\User;
 
 class SystemSettingPolicy
 {
+    /**
+     * Province, city, and barangay names are needed on encoding forms.
+     */
+    public function viewLocationProfile(User $user): bool
+    {
+        return true;
+    }
+
     public function viewAny(User $user): bool
     {
         return $user->isSystemAdministrator() && $user->hasPermission('setting.view');

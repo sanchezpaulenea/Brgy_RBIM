@@ -12,6 +12,7 @@ class RolePermissionSeeder extends Seeder
         /*
          * Maps each role to its permission set as defined in brgy_rbim.sql,
          * plus Super Admin coverage of Increment 2 modules and user.delete.
+         * Household and resident registration (create) stay on Encoder only.
          *
          * role_id 1 = Encoder
          * role_id 2 = Admin
@@ -44,7 +45,6 @@ class RolePermissionSeeder extends Seeder
             ['role_permission_id' => 25, 'role_id' => 2, 'permission_id' => 20],
             ['role_permission_id' => 26, 'role_id' => 2, 'permission_id' => 21],
             ['role_permission_id' => 27, 'role_id' => 2, 'permission_id' => 22],
-            ['role_permission_id' => 28, 'role_id' => 2, 'permission_id' => 23],
             ['role_permission_id' => 29, 'role_id' => 2, 'permission_id' => 24],
             ['role_permission_id' => 30, 'role_id' => 2, 'permission_id' => 25],
             ['role_permission_id' => 31, 'role_id' => 2, 'permission_id' => 26],
@@ -55,7 +55,6 @@ class RolePermissionSeeder extends Seeder
             ['role_permission_id' => 36, 'role_id' => 2, 'permission_id' => 31],
             ['role_permission_id' => 37, 'role_id' => 2, 'permission_id' => 32],
             ['role_permission_id' => 38, 'role_id' => 2, 'permission_id' => 33],
-            ['role_permission_id' => 39, 'role_id' => 2, 'permission_id' => 34],
             ['role_permission_id' => 40, 'role_id' => 2, 'permission_id' => 35],
             ['role_permission_id' => 41, 'role_id' => 2, 'permission_id' => 36],
             ['role_permission_id' => 42, 'role_id' => 2, 'permission_id' => 37],
@@ -81,7 +80,6 @@ class RolePermissionSeeder extends Seeder
             ['role_permission_id' => 59, 'role_id' => 3, 'permission_id' => 20],
             ['role_permission_id' => 60, 'role_id' => 3, 'permission_id' => 21],
             ['role_permission_id' => 61, 'role_id' => 3, 'permission_id' => 22],
-            ['role_permission_id' => 62, 'role_id' => 3, 'permission_id' => 23],
             ['role_permission_id' => 63, 'role_id' => 3, 'permission_id' => 24],
             ['role_permission_id' => 64, 'role_id' => 3, 'permission_id' => 25],
             ['role_permission_id' => 65, 'role_id' => 3, 'permission_id' => 26],
@@ -92,7 +90,6 @@ class RolePermissionSeeder extends Seeder
             ['role_permission_id' => 70, 'role_id' => 3, 'permission_id' => 31],
             ['role_permission_id' => 71, 'role_id' => 3, 'permission_id' => 32],
             ['role_permission_id' => 72, 'role_id' => 3, 'permission_id' => 33],
-            ['role_permission_id' => 73, 'role_id' => 3, 'permission_id' => 34],
             ['role_permission_id' => 74, 'role_id' => 3, 'permission_id' => 35],
             ['role_permission_id' => 75, 'role_id' => 3, 'permission_id' => 36],
             ['role_permission_id' => 76, 'role_id' => 3, 'permission_id' => 37],
