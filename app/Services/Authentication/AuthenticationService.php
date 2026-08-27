@@ -13,11 +13,15 @@ use App\Repositories\Interfaces\UserManagement\UserRepositoryInterface;
 use App\Services\SystemSetting\SystemSettingService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class AuthenticationService
 {
@@ -370,5 +374,94 @@ class AuthenticationService
 
         return $personnel === null
             || (int) $personnel->personnel_status_id !== PersonnelStatus::ACTIVE;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function sessionUser(User $user): array
+    {
+        $user->loadMissing(['personnel.position']);
+
+        return [
+            'user_id' => $user->user_id,
+            'username' => $user->username,
+            'full_name' => $user->profileDisplayName(),
+            'first_name' => $user->profileGivenName() ?: null,
+            'last_name' => $user->profileFamilyName() ?: null,
+            'position_name' => $user->profilePositionName(),
+            'avatar_preset' => $user->avatar_preset,
+            'avatar_url' => $user->avatarUrl(),
+            'must_change_password' => (bool) $user->must_change_password,
+        ];
+    }
+
+    /**
+     * @return array{user: array<string, mixed>, roles: Collection<int, mixed>, permissions: Collection<int, mixed>}
+     */
+    public function sessionPayload(User $user, bool $includeStatus = false): array
+    {
+        $user->loadMissing(['userStatus', 'roles.permissions', 'personnel.position']);
+
+        $payload = $this->sessionUser($user);
+
+        if ($includeStatus) {
+            $payload['user_status'] = $user->userStatus?->user_status;
+            $payload['created_at'] = $user->created_at;
+        }
+
+        return [
+            'user' => $payload,
+            'roles' => $user->roles->pluck('role_name'),
+            'permissions' => $user->permissions()->pluck('permission'),
+        ];
+    }
+
+    public function updateAvatar(User $user, ?UploadedFile $photo, ?string $preset): User
+    {
+        if ($photo !== null) {
+            $this->storeProfilePhoto($user, $photo);
+
+            return $user->fresh(['personnel.position', 'userStatus', 'roles.permissions']) ?? $user;
+        }
+
+        $this->deleteProfilePhoto($user);
+        $user->avatar_preset = $preset;
+        $user->save();
+
+        return $user->fresh(['personnel.position', 'userStatus', 'roles.permissions']) ?? $user;
+    }
+
+    public function avatarResponse(User $user): StreamedResponse
+    {
+        if (! is_string($user->avatar_path) || $user->avatar_path === '') {
+            throw new NotFoundHttpException;
+        }
+
+        if (! Storage::disk('local')->exists($user->avatar_path)) {
+            throw new NotFoundHttpException;
+        }
+
+        return Storage::disk('local')->response($user->avatar_path);
+    }
+
+    private function storeProfilePhoto(User $user, UploadedFile $photo): void
+    {
+        $this->deleteProfilePhoto($user);
+
+        $extension = $photo->guessExtension() ?: $photo->getClientOriginalExtension() ?: 'jpg';
+        $path = $photo->storeAs('avatars', $user->user_id.'.'.$extension, 'local');
+
+        $user->avatar_path = $path;
+        $user->save();
+    }
+
+    private function deleteProfilePhoto(User $user): void
+    {
+        if (is_string($user->avatar_path) && $user->avatar_path !== '') {
+            Storage::disk('local')->delete($user->avatar_path);
+        }
+
+        $user->avatar_path = null;
     }
 }

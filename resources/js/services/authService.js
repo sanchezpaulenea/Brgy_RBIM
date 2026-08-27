@@ -31,3 +31,33 @@ export async function changePassword(payload) {
 
     return data;
 }
+
+export async function updateAvatar({ photo, avatarPreset } = {}) {
+    const formData = new FormData();
+
+    if (photo) {
+        formData.append('photo', photo);
+    }
+
+    if (avatarPreset) {
+        formData.append('avatar_preset', avatarPreset);
+    }
+
+    const { data } = await http.post('/auth/profile/avatar', formData, {
+        transformRequest: [
+            (value, headers) => {
+                if (value instanceof FormData && headers) {
+                    if (typeof headers.delete === 'function') {
+                        headers.delete('Content-Type');
+                    } else {
+                        delete headers['Content-Type'];
+                    }
+                }
+
+                return value;
+            },
+        ],
+    });
+
+    return data;
+}

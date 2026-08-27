@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -32,12 +33,18 @@ class User extends Authenticatable
      */
     public $rememberTokenName = false;
 
+    public const AVATAR_MALE = 'male';
+
+    public const AVATAR_FEMALE = 'female';
+
     protected $fillable = [
         'username',
         'password_hash',
         'user_status_id',
         'personnel_id',
         'must_change_password',
+        'avatar_path',
+        'avatar_preset',
     ];
 
     /**
@@ -76,6 +83,7 @@ class User extends Authenticatable
 
     protected $hidden = [
         'password_hash',
+        'avatar_path',
     ];
 
     /**
@@ -105,6 +113,66 @@ class User extends Authenticatable
     public function getRouteKeyName(): string
     {
         return 'user_id';
+    }
+
+    /**
+     * Given name then family name, matching how the profile header is read.
+     * Falls back to the display username when no personnel record is linked.
+     */
+    public function profileDisplayName(): string
+    {
+        $personnel = $this->personnel;
+
+        if ($personnel === null) {
+            return self::formatForDisplay((string) $this->username);
+        }
+
+        $parts = collect([
+            $personnel->personnel_first_name,
+            $personnel->personnel_middle_name,
+            $personnel->personnel_last_name,
+        ])
+            ->filter(fn (mixed $part) => is_string($part) && trim($part) !== '')
+            ->values();
+
+        if ($parts->isEmpty()) {
+            return self::formatForDisplay((string) $this->username);
+        }
+
+        return $parts->implode(' ');
+    }
+
+    public function profileGivenName(): string
+    {
+        $first = trim((string) ($this->personnel?->personnel_first_name ?? ''));
+        $middle = trim((string) ($this->personnel?->personnel_middle_name ?? ''));
+
+        return trim($first.' '.$middle);
+    }
+
+    public function profileFamilyName(): string
+    {
+        return trim((string) ($this->personnel?->personnel_last_name ?? ''));
+    }
+
+    public function profilePositionName(): ?string
+    {
+        $position = $this->personnel?->position?->position_name;
+
+        return is_string($position) && $position !== '' ? $position : null;
+    }
+
+    public function avatarUrl(): ?string
+    {
+        if (! is_string($this->avatar_path) || $this->avatar_path === '') {
+            return null;
+        }
+
+        $version = Storage::disk('local')->exists($this->avatar_path)
+            ? (string) Storage::disk('local')->lastModified($this->avatar_path)
+            : substr(md5($this->avatar_path), 0, 8);
+
+        return '/api/v1/auth/profile/avatar?v='.$version;
     }
 
     /**

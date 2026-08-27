@@ -73,4 +73,12 @@ class UserPolicy
     {
         return true;
     }
+
+    /**
+     * Update the authenticated user's own profile photo or avatar preset.
+     */
+    public function updateAvatar(User $user): bool
+    {
+        return true;
+    }
 }

@@ -95,25 +95,26 @@
                         </select>
                     </div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">User</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Barangay personnel name</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Roles</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">User Status</th>
-                                <th v-if="canResetPassword" class="px-4 py-3 text-left font-semibold text-slate-600">Reset password</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            <tr v-for="account in filteredUsers" :key="account.user_id">
-                                <td class="px-4 py-3 font-medium text-slate-900">{{ account.username }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ personnelName(account) }}</td>
-                                <td class="px-4 py-3 text-slate-600">
+                <div class="w-full overflow-x-auto" role="table">
+                    <div class="relative min-w-[44rem]">
+                        <div class="pointer-events-none absolute inset-x-0 top-0 h-11 bg-slate-50"></div>
+                        <div
+                            class="relative grid w-full items-center justify-between px-4 text-sm"
+                            :style="{ gridTemplateColumns: usersColumnTemplate }"
+                        >
+                            <div class="py-3 font-semibold text-slate-600" role="columnheader">User</div>
+                            <div class="py-3 font-semibold text-slate-600" role="columnheader">Barangay personnel name</div>
+                            <div class="py-3 font-semibold text-slate-600" role="columnheader">Roles</div>
+                            <div class="py-3 font-semibold text-slate-600" role="columnheader">User Status</div>
+                            <div v-if="canResetPassword" class="py-3 font-semibold text-slate-600" role="columnheader">Reset password</div>
+
+                            <template v-for="account in filteredUsers" :key="account.user_id">
+                                <div class="border-t border-slate-100 py-3 font-medium text-slate-900" role="cell">{{ account.username }}</div>
+                                <div class="border-t border-slate-100 py-3 text-slate-600" role="cell">{{ personnelName(account) }}</div>
+                                <div class="border-t border-slate-100 py-3 text-slate-600" role="cell">
                                     {{ account.roles?.join(', ') || 'None' }}
-                                </td>
-                                <td class="px-4 py-3">
+                                </div>
+                                <div class="border-t border-slate-100 py-3" role="cell">
                                     <select
                                         v-if="canUpdateStatus"
                                         :value="account.user_status_id"
@@ -126,8 +127,8 @@
                                         </option>
                                     </select>
                                     <span v-else>{{ account.user_status }}</span>
-                                </td>
-                                <td v-if="canResetPassword" class="px-4 py-3">
+                                </div>
+                                <div v-if="canResetPassword" class="border-t border-slate-100 py-3" role="cell">
                                     <button
                                         type="button"
                                         class="rbim-btn-action"
@@ -144,15 +145,13 @@
                                         </svg>
                                         {{ resettingId === account.user_id ? 'Resetting...' : 'Reset password' }}
                                     </button>
-                                </td>
-                            </tr>
-                            <tr v-if="!filteredUsers.length">
-                                <td :colspan="canResetPassword ? 5 : 4" class="px-4 py-8 text-center text-slate-500">
-                                    {{ users.length ? 'No accounts match the current filters.' : 'No user accounts found.' }}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <div v-if="!filteredUsers.length" class="border-t border-slate-100 px-4 py-8 text-center text-sm text-slate-500">
+                        {{ users.length ? 'No accounts match the current filters.' : 'No user accounts found.' }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -227,6 +226,9 @@ const confirm = reactive({
 const canCreateUser = computed(() => hasPermission('user.create'));
 const canUpdateStatus = computed(() => hasPermission('user.updatestatus'));
 const canResetPassword = computed(() => hasPermission('user.resetpassword'));
+const usersColumnTemplate = computed(() => (
+    canResetPassword.value ? 'repeat(5, max-content)' : 'repeat(4, max-content)'
+));
 
 const createRoleOptions = computed(() => {
     const hasPersonnel = Boolean(createForm.personnel_id);

@@ -48,47 +48,49 @@
                         placeholder="Search position name"
                     >
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">ID</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Position</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
-                                <th v-if="canDeletePosition" class="px-4 py-3 text-left font-semibold text-slate-600">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            <tr v-for="item in filteredPositions" :key="item.id">
-                                <td class="px-4 py-3 font-mono text-xs text-slate-700">{{ item.id }}</td>
-                                <td class="px-4 py-3 font-medium text-slate-900">{{ item.label }}</td>
-                                <td class="px-4 py-3">
-                                    <span
-                                        class="rounded-full px-2 py-0.5 text-xs"
-                                        :class="isPositionAssigned(item) ? 'bg-amber-50 text-amber-800' : 'bg-slate-100 text-slate-500'"
-                                    >
-                                        {{ isPositionAssigned(item) ? 'Assigned' : 'Available' }}
-                                    </span>
-                                </td>
-                                <td v-if="canDeletePosition" class="px-4 py-3">
-                                    <button
-                                        type="button"
-                                        class="rbim-btn-danger"
-                                        :disabled="deletingId === item.id || isPositionAssigned(item)"
-                                        :title="isPositionAssigned(item) ? assignedPositionMessage : 'Delete this personnel position'"
-                                        @click="handleDeletePosition(item)"
-                                    >
-                                        {{ deletingId === item.id ? 'Deleting...' : 'Delete' }}
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr v-if="!filteredPositions.length">
-                                <td :colspan="canDeletePosition ? 4 : 3" class="px-4 py-8 text-center text-slate-500">
-                                    {{ positions.length ? 'No positions match the search.' : 'No personnel positions found.' }}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="w-full overflow-x-auto" role="table">
+                    <div
+                        class="grid w-full min-w-[36rem] items-center gap-x-[7.5rem] bg-slate-50 px-4 text-sm font-semibold text-slate-600"
+                        :style="{ gridTemplateColumns: positionColumnTemplate }"
+                        role="row"
+                    >
+                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">ID</div>
+                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Position</div>
+                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Status</div>
+                        <div v-if="canDeletePosition" class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Action</div>
+                    </div>
+                    <div
+                        v-for="item in filteredPositions"
+                        :key="item.id"
+                        class="grid w-full min-w-[36rem] items-center gap-x-[7.5rem] border-t border-slate-100 px-4 text-sm"
+                        :style="{ gridTemplateColumns: positionColumnTemplate }"
+                        role="row"
+                    >
+                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left font-mono text-xs text-slate-700" role="cell">{{ item.id }}</div>
+                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left font-medium break-words text-slate-900" role="cell">{{ item.label }}</div>
+                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="cell">
+                            <span
+                                class="rounded-full px-2 py-0.5 text-xs"
+                                :class="isPositionAssigned(item) ? 'bg-amber-50 text-amber-800' : 'bg-slate-100 text-slate-500'"
+                            >
+                                {{ isPositionAssigned(item) ? 'Assigned' : 'Available' }}
+                            </span>
+                        </div>
+                        <div v-if="canDeletePosition" class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="cell">
+                            <button
+                                type="button"
+                                class="rbim-btn-danger"
+                                :disabled="deletingId === item.id || isPositionAssigned(item)"
+                                :title="isPositionAssigned(item) ? assignedPositionMessage : 'Delete this personnel position'"
+                                @click="handleDeletePosition(item)"
+                            >
+                                {{ deletingId === item.id ? 'Deleting...' : 'Delete' }}
+                            </button>
+                        </div>
+                    </div>
+                    <div v-if="!filteredPositions.length" class="border-t border-slate-100 px-4 py-8 text-center text-sm text-slate-500">
+                        {{ positions.length ? 'No positions match the search.' : 'No personnel positions found.' }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -140,6 +142,9 @@ const confirm = reactive({
 
 const canCreatePosition = computed(() => hasPermission('pposition.create'));
 const canDeletePosition = computed(() => hasPermission('pposition.delete'));
+const positionColumnTemplate = computed(() => (
+    canDeletePosition.value ? 'repeat(4, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))'
+));
 const assignedPositionMessage = 'This personnel position is assigned to one or more personnel records and cannot be deleted.';
 
 const filteredPositions = computed(() => (

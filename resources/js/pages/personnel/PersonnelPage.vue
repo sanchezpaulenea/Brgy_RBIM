@@ -134,22 +134,23 @@
                         </select>
                     </div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 text-sm">
-                        <thead class="bg-slate-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Name</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Position</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Personnel Status</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Account</th>
-                                <th v-if="canUpdate" class="px-4 py-3 text-left font-semibold text-slate-600">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            <tr v-for="person in filteredItems" :key="person.personnel_id">
-                                <td class="px-4 py-3 font-medium text-slate-900">{{ person.label }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ person.position_name }}</td>
-                                <td class="px-4 py-3">
+                <div class="w-full overflow-x-auto" role="table">
+                    <div class="relative min-w-[44rem]">
+                        <div class="pointer-events-none absolute inset-x-0 top-0 h-11 bg-slate-50"></div>
+                        <div
+                            class="relative grid w-full items-center justify-between px-4 text-sm"
+                            :style="{ gridTemplateColumns: personnelColumnTemplate }"
+                        >
+                            <div class="py-3 font-semibold text-slate-600" role="columnheader">Name</div>
+                            <div class="py-3 font-semibold text-slate-600" role="columnheader">Position</div>
+                            <div class="py-3 font-semibold text-slate-600" role="columnheader">Personnel Status</div>
+                            <div class="py-3 font-semibold text-slate-600" role="columnheader">Account</div>
+                            <div v-if="canUpdate" class="py-3 font-semibold text-slate-600" role="columnheader">Action</div>
+
+                            <template v-for="person in filteredItems" :key="person.personnel_id">
+                                <div class="border-t border-slate-100 py-3 font-medium text-slate-900" role="cell">{{ person.label }}</div>
+                                <div class="border-t border-slate-100 py-3 text-slate-600" role="cell">{{ person.position_name }}</div>
+                                <div class="border-t border-slate-100 py-3" role="cell">
                                     <select
                                         v-if="canUpdate"
                                         :value="person.personnel_status_id"
@@ -162,24 +163,22 @@
                                         </option>
                                     </select>
                                     <span v-else class="text-slate-600">{{ statusLabel(person.personnel_status_id) }}</span>
-                                </td>
-                                <td class="px-4 py-3 text-slate-600">{{ person.username || 'No account' }}</td>
-                                <td v-if="canUpdate" class="px-4 py-3">
+                                </div>
+                                <div class="border-t border-slate-100 py-3 text-slate-600" role="cell">{{ person.username || 'No account' }}</div>
+                                <div v-if="canUpdate" class="border-t border-slate-100 py-3" role="cell">
                                     <button type="button" class="rbim-btn-action" @click="startEdit(person)">
                                         <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                             <path d="M13.586 2.586a2 2 0 112.828 2.828l-8.5 8.5a1 1 0 01-.44.253l-3 .857a.5.5 0 01-.618-.618l.857-3a1 1 0 01.253-.44l8.62-8.38z" />
                                         </svg>
                                         Update
                                     </button>
-                                </td>
-                            </tr>
-                            <tr v-if="!filteredItems.length">
-                                <td :colspan="canUpdate ? 5 : 4" class="px-4 py-8 text-center text-slate-500">
-                                    {{ items.length ? 'No personnel match the current filters.' : 'No personnel records found.' }}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <div v-if="!filteredItems.length" class="border-t border-slate-100 px-4 py-8 text-center text-sm text-slate-500">
+                        {{ items.length ? 'No personnel match the current filters.' : 'No personnel records found.' }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -250,6 +249,9 @@ const confirm = reactive({
 const canCreate = computed(() => hasPermission('personnel.create'));
 const canUpdate = computed(() => hasPermission('personnel.update'));
 const canCreatePosition = computed(() => hasPermission('pposition.create'));
+const personnelColumnTemplate = computed(() => (
+    canUpdate.value ? 'repeat(5, max-content)' : 'repeat(4, max-content)'
+));
 
 const positionHint = computed(() => (
     canCreatePosition.value && !editingId.value

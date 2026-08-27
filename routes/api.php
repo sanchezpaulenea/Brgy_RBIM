@@ -26,6 +26,8 @@ Route::prefix('v1')->group(function () {
         Route::middleware(['auth:sanctum', 'session.timeout'])->group(function () {
             Route::post('logout', [AuthController::class, 'logout'])->name('auth.logout');
             Route::get('me', [AuthController::class, 'me'])->name('auth.me');
+            Route::post('profile/avatar', [AuthController::class, 'updateAvatar'])->name('auth.profile.avatar.update');
+            Route::get('profile/avatar', [AuthController::class, 'avatar'])->name('auth.profile.avatar.show');
             Route::get('password/policy', [PasswordController::class, 'policy'])->name('auth.password.policy');
             Route::post('password/change', [PasswordController::class, 'change'])->name('auth.password.change');
         });

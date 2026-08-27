@@ -20,83 +20,81 @@
                     <h2 class="text-sm font-semibold text-slate-900">{{ group.title }}</h2>
                     <p class="mt-0.5 text-xs text-slate-500">{{ group.description }}</p>
                 </header>
-                <div class="overflow-x-auto">
-                    <table class="w-full table-fixed divide-y divide-slate-200 text-sm">
-                        <colgroup>
-                            <col class="w-[22%]">
-                            <col class="w-[26%]">
-                            <col>
-                            <col v-if="canUpdateSettings" class="w-40">
-                        </colgroup>
-                        <thead class="bg-white">
-                            <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Setting</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Value</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Description</th>
-                                <th v-if="canUpdateSettings" class="px-4 py-3 text-left font-semibold text-slate-600">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            <tr v-for="setting in group.settings" :key="setting.setting_id" class="align-top">
-                                <td class="px-4 py-3 font-medium break-words text-slate-900">
-                                    {{ formatSettingLabel(setting.setting_key) }}
-                                </td>
-                                <td class="px-4 py-3 break-words">
-                                    <template v-if="canUpdateSettings && editingId === setting.setting_id">
-                                        <input
-                                            v-model="editValues[setting.setting_id]"
-                                            :type="setting.data_type === 'int' ? 'number' : 'text'"
-                                            :inputmode="inputModeFor(setting)"
-                                            :placeholder="placeholderFor(setting)"
-                                            :min="rangeFor(setting)?.min"
-                                            :max="rangeFor(setting)?.max"
-                                            maxlength="45"
-                                            class="rbim-input py-1.5"
-                                            :class="{ 'rbim-input-error': editError }"
-                                            @input="editError = ''"
-                                        >
-                                        <p v-if="editError" class="rbim-error">{{ editError }}</p>
-                                        <p v-else-if="hintFor(setting)" class="rbim-hint">{{ hintFor(setting) }}</p>
-                                    </template>
-                                    <span v-else class="font-medium text-slate-900">
-                                        {{ setting.typed_value ?? setting.setting_value }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 break-words text-slate-600">{{ setting.description }}</td>
-                                <td v-if="canUpdateSettings" class="px-4 py-3">
-                                    <div v-if="editingId === setting.setting_id" class="flex flex-wrap gap-2">
-                                        <button
-                                            type="button"
-                                            class="rbim-btn px-3 py-1.5 text-xs"
-                                            :disabled="savingId === setting.setting_id"
-                                            @click="saveSetting(setting)"
-                                        >
-                                            Save
-                                        </button>
-                                        <button type="button" class="rbim-btn-outline px-3 py-1.5 text-xs" @click="cancelEdit">
-                                            Cancel
-                                        </button>
-                                    </div>
-                                    <button
-                                        v-else
-                                        type="button"
-                                        class="rbim-btn-action"
-                                        @click="startEdit(setting)"
-                                    >
-                                        <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                            <path d="M13.586 2.586a2 2 0 112.828 2.828l-8.5 8.5a1 1 0 01-.44.253l-3 .857a.5.5 0 01-.618-.618l.857-3a1 1 0 01.253-.44l8.62-8.38z" />
-                                        </svg>
-                                        Edit
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr v-if="!group.settings.length">
-                                <td :colspan="canUpdateSettings ? 4 : 3" class="px-4 py-8 text-center text-slate-500">
-                                    No settings in this category.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="w-full overflow-x-auto" role="table">
+                    <div
+                        class="grid w-full min-w-[44rem] items-center gap-x-[7.5rem] bg-slate-50 px-4 text-sm font-semibold text-slate-600"
+                        :style="{ gridTemplateColumns: settingsColumnTemplate }"
+                        role="row"
+                    >
+                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Setting</div>
+                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Value</div>
+                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Description</div>
+                        <div v-if="canUpdateSettings" class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Action</div>
+                    </div>
+                    <div
+                        v-for="setting in group.settings"
+                        :key="setting.setting_id"
+                        class="grid w-full min-w-[44rem] items-start gap-x-[7.5rem] border-t border-slate-100 px-4 text-sm"
+                        :style="{ gridTemplateColumns: settingsColumnTemplate }"
+                        role="row"
+                    >
+                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left font-medium break-words text-slate-900" role="cell">
+                            {{ formatSettingLabel(setting.setting_key) }}
+                        </div>
+                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left break-words" role="cell">
+                            <template v-if="canUpdateSettings && editingId === setting.setting_id">
+                                <input
+                                    v-model="editValues[setting.setting_id]"
+                                    :type="setting.data_type === 'int' ? 'number' : 'text'"
+                                    :inputmode="inputModeFor(setting)"
+                                    :placeholder="placeholderFor(setting)"
+                                    :min="rangeFor(setting)?.min"
+                                    :max="rangeFor(setting)?.max"
+                                    maxlength="45"
+                                    class="rbim-input py-1.5"
+                                    :class="{ 'rbim-input-error': editError }"
+                                    @input="editError = ''"
+                                >
+                                <p v-if="editError" class="rbim-error">{{ editError }}</p>
+                                <p v-else-if="hintFor(setting)" class="rbim-hint">{{ hintFor(setting) }}</p>
+                            </template>
+                            <span v-else class="font-medium text-slate-900">
+                                {{ setting.typed_value ?? setting.setting_value }}
+                            </span>
+                        </div>
+                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left break-words text-slate-600" role="cell">
+                            {{ setting.description }}
+                        </div>
+                        <div v-if="canUpdateSettings" class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="cell">
+                            <div v-if="editingId === setting.setting_id" class="flex flex-wrap gap-2">
+                                <button
+                                    type="button"
+                                    class="rbim-btn px-3 py-1.5 text-xs"
+                                    :disabled="savingId === setting.setting_id"
+                                    @click="saveSetting(setting)"
+                                >
+                                    Save
+                                </button>
+                                <button type="button" class="rbim-btn-outline px-3 py-1.5 text-xs" @click="cancelEdit">
+                                    Cancel
+                                </button>
+                            </div>
+                            <button
+                                v-else
+                                type="button"
+                                class="rbim-btn-action"
+                                @click="startEdit(setting)"
+                            >
+                                <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path d="M13.586 2.586a2 2 0 112.828 2.828l-8.5 8.5a1 1 0 01-.44.253l-3 .857a.5.5 0 01-.618-.618l.857-3a1 1 0 01.253-.44l8.62-8.38z" />
+                                </svg>
+                                Edit
+                            </button>
+                        </div>
+                    </div>
+                    <div v-if="!group.settings.length" class="border-t border-slate-100 px-4 py-8 text-center text-sm text-slate-500">
+                        No settings in this category.
+                    </div>
                 </div>
             </section>
         </div>
@@ -193,6 +191,9 @@ const error = ref('');
 const successMessage = ref('');
 
 const canUpdateSettings = computed(() => hasPermission('setting.update'));
+const settingsColumnTemplate = computed(() => (
+    canUpdateSettings.value ? 'repeat(4, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))'
+));
 
 const settingGroups = computed(() => {
     if (loading.value || !settings.value.length) {

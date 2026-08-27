@@ -25,33 +25,7 @@
                 </div>
 
                 <div class="flex shrink-0 items-center gap-2.5">
-                    <div
-                        class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white"
-                        aria-hidden="true"
-                    >
-                        <svg class="h-9 w-9" viewBox="0 0 40 40" fill="none">
-                            <path fill="#e07a3d" d="M4 40c2.2-11 9.4-16.5 16-16.5S33.8 29 36 40H4Z" />
-                            <path fill="#fff" d="M16.5 24.2 20 29.5l3.5-5.3H16.5Z" />
-                            <circle cx="20" cy="14.5" r="8.2" fill="#e8c39e" />
-                            <path fill="#6b4423" d="M12.2 14.8c.4-6.4 4-10.3 7.8-10.3 3.9 0 7.4 3.9 7.8 10.3-.8-4.6-3.4-7.4-7.8-7.4s-7 2.8-7.8 7.4Z" />
-                            <circle cx="17.2" cy="15.2" r="1.1" fill="#3a2a1a" />
-                            <circle cx="22.8" cy="15.2" r="1.1" fill="#3a2a1a" />
-                            <path stroke="#3a2a1a" stroke-linecap="round" stroke-width="1" d="M17.6 18.8c1.4 1.6 3.4 1.6 4.8 0" />
-                        </svg>
-                    </div>
-                    <div class="min-w-0 leading-tight">
-                        <p class="truncate text-sm font-semibold uppercase tracking-wide text-[#f0c14b]">
-                            {{ user?.username }}
-                        </p>
-                        <button
-                            type="button"
-                            class="cursor-pointer text-sm text-[#7ec8e3] transition hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60"
-                            :disabled="loading"
-                            @click="handleLogout"
-                        >
-                            Logout
-                        </button>
-                    </div>
+                    <UserProfileMenu />
                 </div>
             </div>
         </header>
@@ -65,7 +39,7 @@
                 @click="sidebarOpen = false"
             />
             <aside
-                class="fixed bottom-0 left-0 top-20 z-30 w-[var(--rbim-sidebar)] max-w-[15.5rem] overflow-x-hidden overflow-y-auto bg-brand text-white shadow-lg transition-transform duration-200 md:translate-x-0"
+                class="fixed bottom-0 left-0 top-20 z-30 w-[var(--rbim-sidebar)] max-w-[18.5rem] overflow-x-hidden overflow-y-auto bg-brand text-white shadow-lg transition-transform duration-200 md:translate-x-0"
                 :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
             >
                 <nav class="flex flex-col gap-1 p-3">
@@ -147,7 +121,7 @@
                         <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18h4v-3a3 3 0 00-4.56-2.56A5.99 5.99 0 0116 15v3zM4.56 12.44A3 3 0 000 15v3h4v-3c0-.91.2-1.78.56-2.56z" />
                         </svg>
-                        <span>Barangay Personnel Management</span>
+                        <span class="whitespace-nowrap">Barangay Personnel Management</span>
                     </RouterLink>
                     <div v-else-if="personnelTabs.length > 1">
                         <button
@@ -159,7 +133,7 @@
                             <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18h4v-3a3 3 0 00-4.56-2.56A5.99 5.99 0 0116 15v3zM4.56 12.44A3 3 0 000 15v3h4v-3c0-.91.2-1.78.56-2.56z" />
                             </svg>
-                            <span class="flex-1">Barangay Personnel Management</span>
+                            <span class="flex-1 whitespace-nowrap">Barangay Personnel Management</span>
                             <span class="text-xs">{{ openMenu === 'personnel' ? '▾' : '▸' }}</span>
                         </button>
                         <div v-show="openMenu === 'personnel'" class="ml-6 mt-1 space-y-1 border-l border-white/20 pl-3">
@@ -273,6 +247,7 @@
 import { computed, ref, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import BrandLogos from '@/components/BrandLogos.vue';
+import UserProfileMenu from '@/components/UserProfileMenu.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useSectionTabs } from '@/composables/useSectionTabs';
 
@@ -285,7 +260,7 @@ defineProps({
 
 const route = useRoute();
 const router = useRouter();
-const { user, loading, logout, hasPermission } = useAuth();
+const { hasPermission } = useAuth();
 const { householdTabs, residentTabs, personnelTabs, userTabs } = useSectionTabs();
 
 const sidebarOpen = ref(false);
@@ -388,9 +363,4 @@ function openSection(name) {
 watch(() => route.path, () => {
     openMenu.value = menuForRoute();
 }, { immediate: true });
-
-async function handleLogout() {
-    await logout();
-    await router.push({ name: 'login' });
-}
 </script>

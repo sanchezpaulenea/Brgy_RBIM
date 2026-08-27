@@ -104,6 +104,13 @@ export function useAuth() {
         }
     }
 
+    async function updateAvatar(payload) {
+        const data = await authService.updateAvatar(payload);
+        setSession(data);
+
+        return data;
+    }
+
     function hasPermission(permission) {
         if (roles.value.includes(ROLES.SUPER_ADMIN)) {
             return true;
@@ -168,6 +175,7 @@ export function useAuth() {
         login,
         logout,
         changePassword,
+        updateAvatar,
         hasPermission,
         hasAnyPermission,
         hasRole,

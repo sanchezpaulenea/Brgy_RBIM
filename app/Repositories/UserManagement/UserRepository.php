@@ -37,7 +37,7 @@ class UserRepository implements UserRepositoryInterface
     {
         $normalized = User::standardizeUsername($username);
 
-        return User::with(['userStatus', 'roles.permissions', 'personnel'])
+        return User::with(['userStatus', 'roles.permissions', 'personnel.position'])
             ->whereRaw('LOWER(username) = ?', [$normalized])
             ->first();
     }

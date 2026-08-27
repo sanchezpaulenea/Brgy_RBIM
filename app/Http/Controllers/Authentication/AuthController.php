@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Authentication;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Authentication\LoginRequest;
+use App\Http\Requests\Authentication\UpdateProfileAvatarRequest;
 use App\Models\UserManagement\User;
 use App\Services\Authentication\AuthenticationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AuthController extends Controller
 {
@@ -30,11 +32,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Login successful.',
-            'user' => [
-                'user_id' => $result['user']->user_id,
-                'username' => $result['user']->username,
-                'must_change_password' => $result['must_change_password'],
-            ],
+            'user' => $this->authenticationService->sessionUser($result['user']),
             'roles' => $result['roles'],
             'permissions' => $result['permissions'],
         ]);
@@ -61,18 +59,43 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         /** @var User $user */
-        $user = $request->user()->load(['userStatus', 'roles.permissions']);
+        $user = $request->user()->load(['userStatus', 'roles.permissions', 'personnel.position']);
+
+        return response()->json($this->authenticationService->sessionPayload($user, includeStatus: true));
+    }
+
+    /**
+     * POST /api/v1/auth/profile/avatar
+     */
+    public function updateAvatar(UpdateProfileAvatarRequest $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $this->authorize('updateAvatar', $user);
+
+        $updated = $this->authenticationService->updateAvatar(
+            $user,
+            $request->file('photo'),
+            $request->validated('avatar_preset')
+        );
+
+        $updated->load(['userStatus', 'roles.permissions', 'personnel.position']);
 
         return response()->json([
-            'user' => [
-                'user_id' => $user->user_id,
-                'username' => $user->username,
-                'must_change_password' => $user->must_change_password,
-                'user_status' => $user->userStatus->user_status,
-                'created_at' => $user->created_at,
-            ],
-            'roles' => $user->roles->pluck('role_name'),
-            'permissions' => $user->permissions()->pluck('permission'),
+            'message' => 'Profile photo updated.',
+            ...$this->authenticationService->sessionPayload($updated, includeStatus: true),
         ]);
+    }
+
+    /**
+     * GET /api/v1/auth/profile/avatar
+     */
+    public function avatar(Request $request): StreamedResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        return $this->authenticationService->avatarResponse($user);
     }
 }

@@ -40,7 +40,9 @@ import { formatDisplayName } from '@/utils/format';
 
 const { user, roles } = useAuth();
 
-const displayName = computed(() => formatDisplayName(user.value?.username) || 'User');
+const displayName = computed(() => (
+    user.value?.full_name || formatDisplayName(user.value?.username) || 'User'
+));
 
 const rolesLabel = computed(() => (
     roles.value.length ? roles.value.join(', ') : 'No role assigned'
