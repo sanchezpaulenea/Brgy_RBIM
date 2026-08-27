@@ -192,3 +192,17 @@ export function personDisplayName(person) {
 
     return last || given;
 }
+
+export function normalizeSearch(value) {
+    return String(value ?? '').trim().toLocaleLowerCase();
+}
+
+export function matchesSearch(haystack, needle) {
+    const term = normalizeSearch(needle);
+
+    if (!term) {
+        return true;
+    }
+
+    return normalizeSearch(haystack).includes(term);
+}

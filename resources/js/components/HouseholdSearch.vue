@@ -52,7 +52,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { householdDisplayLabel } from '@/utils/format';
+import { householdDisplayLabel, matchesSearch } from '@/utils/format';
 
 const props = defineProps({
     modelValue: {
@@ -107,10 +107,7 @@ const selected = computed(() => (
 const selectedLabel = computed(() => (selected.value ? householdDisplayLabel(selected.value) : ''));
 
 const filtered = computed(() => {
-    const term = query.value.trim().toLowerCase();
-    const list = term
-        ? props.options.filter((option) => optionLabel(option).toLowerCase().includes(term))
-        : props.options;
+    const list = props.options.filter((option) => matchesSearch(optionLabel(option), query.value));
 
     return list.slice(0, 8);
 });

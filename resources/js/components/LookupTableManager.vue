@@ -105,6 +105,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
+import { matchesSearch } from '@/utils/format';
 import { placeNameValidationError } from '@/utils/validation';
 
 const props = defineProps({
@@ -176,15 +177,9 @@ const inputId = computed(() => `${props.fieldName}-input`);
 const addButtonLabel = computed(() => `Add ${props.itemLabel}`);
 const pluralLabel = computed(() => props.itemLabelPlural || `${props.itemLabel}s`);
 
-const filteredItems = computed(() => {
-    const term = search.value.trim().toLowerCase();
-
-    if (!term) {
-        return items.value;
-    }
-
-    return items.value.filter((item) => String(item.label ?? '').toLowerCase().includes(term));
-});
+const filteredItems = computed(() => (
+    items.value.filter((item) => matchesSearch(item.label, search.value))
+));
 
 function isAssigned(item) {
     return Boolean(item?.in_use || item?.occupied);

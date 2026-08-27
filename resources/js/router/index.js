@@ -96,7 +96,6 @@ const routes = [
         component: () => import('@/pages/households/HouseholdRegisterPage.vue'),
         meta: {
             requiresAuth: true,
-            requiresEncoder: true,
             requiresPermissions: ['household.create'],
         },
     },
@@ -116,7 +115,7 @@ const routes = [
         },
     },
     {
-        path: '/households/:id',
+        path: '/households/:id(\\d+)',
         name: 'household-detail',
         component: () => import('@/pages/households/HouseholdDetailPage.vue'),
         meta: {
@@ -139,7 +138,6 @@ const routes = [
         component: () => import('@/pages/residents/ResidentRegisterPage.vue'),
         meta: {
             requiresAuth: true,
-            requiresEncoder: true,
             requiresPermissions: ['resident.create'],
         },
     },

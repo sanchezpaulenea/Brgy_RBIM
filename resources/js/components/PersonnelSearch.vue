@@ -48,6 +48,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { matchesSearch } from '@/utils/format';
 
 const props = defineProps({
     modelValue: {
@@ -98,15 +99,9 @@ const selected = computed(() => (
 const selectedLabel = computed(() => selected.value?.label ?? '');
 
 const filtered = computed(() => {
-    const term = query.value.trim().toLowerCase();
+    const list = props.options.filter((option) => matchesSearch(option.label, query.value));
 
-    if (!term) {
-        return props.options.slice(0, 8);
-    }
-
-    return props.options
-        .filter((option) => option.label.toLowerCase().includes(term))
-        .slice(0, 8);
+    return list.slice(0, 8);
 });
 
 watch(selected, (person) => {

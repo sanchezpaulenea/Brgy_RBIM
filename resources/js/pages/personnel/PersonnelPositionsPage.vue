@@ -114,6 +114,7 @@ import { useAuth } from '@/composables/useAuth';
 import { useSectionTabs } from '@/composables/useSectionTabs';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as lookupService from '@/services/lookupService';
+import { matchesSearch } from '@/utils/format';
 import { positionNameValidationError } from '@/utils/validation';
 
 const { hasPermission } = useAuth();
@@ -141,15 +142,9 @@ const canCreatePosition = computed(() => hasPermission('pposition.create'));
 const canDeletePosition = computed(() => hasPermission('pposition.delete'));
 const assignedPositionMessage = 'This personnel position is assigned to one or more personnel records and cannot be deleted.';
 
-const filteredPositions = computed(() => {
-    const term = search.value.trim().toLowerCase();
-
-    if (!term) {
-        return positions.value;
-    }
-
-    return positions.value.filter((item) => item.label.toLowerCase().includes(term));
-});
+const filteredPositions = computed(() => (
+    positions.value.filter((item) => matchesSearch(item.label, search.value))
+));
 
 function isPositionAssigned(item) {
     return Boolean(item?.in_use || item?.occupied);

@@ -1,5 +1,5 @@
 <template>
-    <nav v-if="tabs.length > 1" class="flex flex-wrap gap-2">
+    <nav v-if="tabs.length" class="flex flex-wrap gap-2">
         <RouterLink
             v-for="tab in tabs"
             :key="tab.name"

@@ -7,7 +7,7 @@
                 {{ error }}
             </div>
 
-            <form class="rbim-card grid gap-3 p-4 sm:grid-cols-5" @submit.prevent="applyFilters">
+            <form class="rbim-card grid gap-3 p-4 sm:grid-cols-5">
                 <div>
                     <label for="resident-search" class="rbim-label">Search</label>
                     <input
@@ -41,10 +41,7 @@
                     </select>
                 </div>
                 <div class="flex items-end gap-2 sm:col-span-2">
-                    <button type="submit" class="rbim-btn flex-1" :disabled="loading">
-                        Filter
-                    </button>
-                    <button type="button" class="rbim-btn-outline flex-1" :disabled="loading" @click="clearFilters">
+                    <button type="button" class="rbim-btn-outline" :disabled="loading" @click="clearFilters">
                         Refresh
                     </button>
                 </div>
@@ -89,7 +86,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageTabs from '@/components/PageTabs.vue';
 import { useSectionTabs } from '@/composables/useSectionTabs';
@@ -97,7 +94,7 @@ import { extractErrorMessage } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
 import * as residentService from '@/services/residentService';
-import { ageFromDateOfBirth, householdDisplayLabel, personDisplayName } from '@/utils/format';
+import { ageFromDateOfBirth, householdDisplayLabel, matchesSearch, personDisplayName } from '@/utils/format';
 import { toId } from '@/utils/residentForm';
 
 const { residentTabs } = useSectionTabs();
@@ -112,7 +109,6 @@ const filters = reactive({
     household_id: '',
     resident_status_id: '',
 });
-const appliedSearch = ref('');
 
 const householdById = computed(() => {
     const map = new Map();
@@ -124,19 +120,12 @@ const householdById = computed(() => {
     return map;
 });
 
-const filteredItems = computed(() => {
-    const term = appliedSearch.value.trim().toLowerCase();
-
-    if (!term) {
-        return items.value;
-    }
-
-    return items.value.filter((resident) => {
-        const name = String(resident.full_name || personDisplayName(resident) || '').toLowerCase();
-
-        return name.includes(term);
-    });
-});
+const filteredItems = computed(() => (
+    items.value.filter((resident) => (
+        matchesSearch(resident.full_name || personDisplayName(resident), filters.search)
+        || matchesSearch(householdLabelFor(resident), filters.search)
+    ))
+));
 
 function ageLabel(dateOfBirth) {
     const age = ageFromDateOfBirth(dateOfBirth);
@@ -173,7 +162,6 @@ async function loadResidents() {
             household_id: toId(filters.household_id) ?? undefined,
             resident_status_id: toId(filters.resident_status_id) ?? undefined,
         });
-        appliedSearch.value = filters.search;
     } catch (err) {
         error.value = extractErrorMessage(err, 'Unable to load residents.');
     } finally {
@@ -181,17 +169,19 @@ async function loadResidents() {
     }
 }
 
-function applyFilters() {
-    loadResidents();
-}
-
 function clearFilters() {
     filters.search = '';
     filters.household_id = '';
     filters.resident_status_id = '';
-    appliedSearch.value = '';
     loadResidents();
 }
+
+watch(
+    () => [filters.household_id, filters.resident_status_id],
+    () => {
+        loadResidents();
+    },
+);
 
 onMounted(async () => {
     try {

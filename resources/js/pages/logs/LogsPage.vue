@@ -5,7 +5,7 @@
                 {{ error }}
             </div>
 
-            <form v-if="isAudit" class="rbim-card grid gap-3 p-4 sm:grid-cols-5" @submit.prevent="loadAuditLogs">
+            <form v-if="isAudit" class="rbim-card grid gap-3 p-4 sm:grid-cols-5">
                 <div>
                     <label for="audit-entity" class="rbim-label">Affected Record</label>
                     <input
@@ -29,16 +29,13 @@
                     <input id="date_to" v-model="filters.date_to" type="date" class="rbim-input py-2">
                 </div>
                 <div class="flex items-end gap-2 sm:col-span-2">
-                    <button type="submit" class="rbim-btn flex-1" :disabled="loading">
-                        Filter
-                    </button>
-                    <button type="button" class="rbim-btn-outline flex-1" :disabled="loading" @click="clearFilters">
+                    <button type="button" class="rbim-btn-outline" :disabled="loading" @click="clearFilters">
                         Refresh
                     </button>
                 </div>
             </form>
 
-            <form v-else class="rbim-card grid gap-3 p-4 sm:grid-cols-5" @submit.prevent="applyLoginFilters">
+            <form v-else class="rbim-card grid gap-3 p-4 sm:grid-cols-5">
                 <div>
                     <label for="user-name" class="rbim-label">User</label>
                     <input
@@ -62,10 +59,7 @@
                     <input id="login_to" v-model="loginFilters.date_to" type="date" class="rbim-input py-2">
                 </div>
                 <div class="flex items-end gap-2 sm:col-span-2">
-                    <button type="submit" class="rbim-btn flex-1" :disabled="loading">
-                        Filter
-                    </button>
-                    <button type="button" class="rbim-btn-outline flex-1" :disabled="loading" @click="clearLoginFilters">
+                    <button type="button" class="rbim-btn-outline" :disabled="loading" @click="clearLoginFilters">
                         Refresh
                     </button>
                 </div>
@@ -144,7 +138,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { extractErrorMessage } from '@/services/http';
 import * as auditLogService from '@/services/auditLogService';
 import * as userLogService from '@/services/userLogService';
-import { formatDateTime, formatRecordLabel } from '@/utils/format';
+import { formatDateTime, formatRecordLabel, matchesSearch } from '@/utils/format';
 
 const route = useRoute();
 const isAudit = computed(() => route.meta.logType !== 'login');
@@ -169,33 +163,26 @@ const loginFilters = reactive({
     date_from: '',
     date_to: '',
 });
-const appliedLoginFilters = reactive({
-    username: '',
-    date_from: '',
-    date_to: '',
-});
 
-const filteredLoginLogs = computed(() => {
-    const term = appliedLoginFilters.username.trim().toLowerCase();
-
-    return loginLogs.value.filter((log) => {
-        if (term && !String(log.username ?? '').toLowerCase().includes(term)) {
+const filteredLoginLogs = computed(() => (
+    loginLogs.value.filter((log) => {
+        if (!matchesSearch(log.username, loginFilters.username)) {
             return false;
         }
 
         const loggedOn = String(log.login_time ?? '').slice(0, 10);
 
-        if (appliedLoginFilters.date_from && loggedOn && loggedOn < appliedLoginFilters.date_from) {
+        if (loginFilters.date_from && loggedOn && loggedOn < loginFilters.date_from) {
             return false;
         }
 
-        if (appliedLoginFilters.date_to && loggedOn && loggedOn > appliedLoginFilters.date_to) {
+        if (loginFilters.date_to && loggedOn && loggedOn > loginFilters.date_to) {
             return false;
         }
 
         return true;
-    });
-});
+    })
+));
 
 async function loadAuditLogs() {
     loading.value = true;
@@ -244,15 +231,26 @@ function clearFilters() {
     loadAuditLogs();
 }
 
-function applyLoginFilters() {
-    Object.assign(appliedLoginFilters, { ...loginFilters });
-}
-
 function clearLoginFilters() {
     Object.assign(loginFilters, { username: '', date_from: '', date_to: '' });
-    applyLoginFilters();
     loadLoginLogs();
 }
+
+let auditFilterTimer = null;
+
+watch(
+    () => [filters.entity, filters.date_from, filters.date_to],
+    () => {
+        if (!isAudit.value) {
+            return;
+        }
+
+        clearTimeout(auditFilterTimer);
+        auditFilterTimer = setTimeout(() => {
+            loadAuditLogs();
+        }, 250);
+    },
+);
 
 watch(() => route.meta.logType, () => {
     if (isAudit.value) {

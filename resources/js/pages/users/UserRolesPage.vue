@@ -186,6 +186,7 @@ import { useAuth } from '@/composables/useAuth';
 import { useSectionTabs } from '@/composables/useSectionTabs';
 import { extractErrorMessage } from '@/services/http';
 import * as userService from '@/services/userService';
+import { matchesSearch } from '@/utils/format';
 
 const { hasPermission } = useAuth();
 const { userTabs } = useSectionTabs();
@@ -212,15 +213,9 @@ const confirm = reactive({
 const canAssignRoles = computed(() => hasPermission('userrole.create'));
 const canUpdateRoleStatus = computed(() => hasPermission('userrole.updatestatus'));
 
-const filteredUsers = computed(() => {
-    const term = search.value.trim().toLowerCase();
-
-    if (!term) {
-        return users.value;
-    }
-
-    return users.value.filter((account) => String(account.username ?? '').toLowerCase().includes(term));
-});
+const filteredUsers = computed(() => (
+    users.value.filter((account) => matchesSearch(account.username, search.value))
+));
 
 function assignmentsOf(account) {
     return account.role_assignments ?? [];

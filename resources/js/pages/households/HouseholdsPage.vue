@@ -10,7 +10,7 @@
                 {{ successMessage }}
             </div>
 
-            <form class="rbim-card grid gap-3 p-4 sm:grid-cols-5" @submit.prevent="applyFilters">
+            <form class="rbim-card grid gap-3 p-4 sm:grid-cols-5">
                 <div>
                     <label for="household-search" class="rbim-label">Search</label>
                     <input
@@ -44,10 +44,7 @@
                     </select>
                 </div>
                 <div class="flex items-end gap-2 sm:col-span-2">
-                    <button type="submit" class="rbim-btn flex-1" :disabled="loading">
-                        Filter
-                    </button>
-                    <button type="button" class="rbim-btn-outline flex-1" :disabled="loading" @click="clearFilters">
+                    <button type="button" class="rbim-btn-outline" :disabled="loading" @click="clearFilters">
                         Refresh
                     </button>
                 </div>
@@ -236,7 +233,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
@@ -246,7 +243,7 @@ import { useSectionTabs } from '@/composables/useSectionTabs';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
-import { formatDate } from '@/utils/format';
+import { formatDate, matchesSearch } from '@/utils/format';
 import { applyValidationErrors, optionalText, toId } from '@/utils/residentForm';
 
 const router = useRouter();
@@ -267,7 +264,6 @@ const filters = reactive({
     street_id: '',
     household_status_id: '',
 });
-const appliedSearch = ref('');
 const editForm = reactive(emptyEditForm());
 const editErrors = reactive({});
 const confirm = reactive({
@@ -282,20 +278,13 @@ const confirm = reactive({
 
 const canUpdate = computed(() => hasPermission('household.update'));
 
-const filteredItems = computed(() => {
-    const term = appliedSearch.value.trim().toLowerCase();
-
-    if (!term) {
-        return items.value;
-    }
-
-    return items.value.filter((household) => {
-        const street = String(household.street_name ?? '').toLowerCase();
-        const head = String(household.head_name ?? '').toLowerCase();
-
-        return street.includes(term) || head.includes(term);
-    });
-});
+const filteredItems = computed(() => (
+    items.value.filter((household) => (
+        matchesSearch(household.street_name, filters.search)
+        || matchesSearch(household.head_name, filters.search)
+        || matchesSearch(household.household_id, filters.search)
+    ))
+));
 
 function emptyEditForm() {
     return {
@@ -378,7 +367,6 @@ async function loadHouseholds() {
             street_id: toId(filters.street_id) ?? undefined,
             household_status_id: toId(filters.household_status_id) ?? undefined,
         });
-        appliedSearch.value = filters.search;
     } catch (err) {
         error.value = extractErrorMessage(err, 'Unable to load households.');
     } finally {
@@ -386,17 +374,19 @@ async function loadHouseholds() {
     }
 }
 
-function applyFilters() {
-    loadHouseholds();
-}
-
 function clearFilters() {
     filters.search = '';
     filters.street_id = '';
     filters.household_status_id = '';
-    appliedSearch.value = '';
     loadHouseholds();
 }
+
+watch(
+    () => [filters.street_id, filters.household_status_id],
+    () => {
+        loadHouseholds();
+    },
+);
 
 async function handleUpdate() {
     clearEditErrors();

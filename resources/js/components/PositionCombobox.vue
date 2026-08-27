@@ -58,6 +58,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { matchesSearch } from '@/utils/format';
 
 const props = defineProps({
     modelValue: {
@@ -119,10 +120,7 @@ const selected = computed(() => (
 ));
 
 const filtered = computed(() => {
-    const term = query.value.trim().toLowerCase();
-    const list = term
-        ? props.options.filter((option) => option.label.toLowerCase().includes(term))
-        : props.options;
+    const list = props.options.filter((option) => matchesSearch(option.label, query.value));
 
     return list.slice(0, 12);
 });

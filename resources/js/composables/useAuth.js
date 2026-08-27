@@ -8,10 +8,38 @@ const permissions = ref([]);
 const initialized = ref(false);
 const loading = ref(false);
 
+function asStringList(value) {
+    if (!value) {
+        return [];
+    }
+
+    if (typeof value === 'string') {
+        return [value];
+    }
+
+    if (Array.isArray(value)) {
+        return value.flatMap((item) => asStringList(item)).filter(Boolean);
+    }
+
+    if (typeof value === 'object') {
+        if (typeof value.permission === 'string') {
+            return [value.permission];
+        }
+
+        if (typeof value.role_name === 'string') {
+            return [value.role_name];
+        }
+
+        return Object.values(value).flatMap((item) => asStringList(item)).filter(Boolean);
+    }
+
+    return [];
+}
+
 function setSession(data) {
     user.value = data.user;
-    roles.value = data.roles ?? [];
-    permissions.value = data.permissions ?? [];
+    roles.value = asStringList(data.roles);
+    permissions.value = asStringList(data.permissions);
 }
 
 function clearSession() {
@@ -77,6 +105,10 @@ export function useAuth() {
     }
 
     function hasPermission(permission) {
+        if (roles.value.includes(ROLES.SUPER_ADMIN)) {
+            return true;
+        }
+
         return permissions.value.includes(permission);
     }
 
@@ -97,19 +129,19 @@ export function useAuth() {
     const isEncoder = computed(() => roles.value.includes(ROLES.ENCODER));
 
     function hasAnyPermission(requiredPermissions) {
-        return requiredPermissions.some((permission) => permissions.value.includes(permission));
+        return requiredPermissions.some((permission) => hasPermission(permission));
     }
 
     function canAccessRoute(meta = {}) {
-        if (meta.requiresSuperAdmin && !isSuperAdmin.value) {
+        if (isSuperAdmin.value) {
+            return true;
+        }
+
+        if (meta.requiresSuperAdmin) {
             return false;
         }
 
         if (meta.requiresSystemAdministrator && !isSystemAdministrator.value) {
-            return false;
-        }
-
-        if (meta.requiresEncoder && !isEncoder.value) {
             return false;
         }
 

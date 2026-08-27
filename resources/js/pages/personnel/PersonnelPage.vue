@@ -209,7 +209,7 @@ import { useSectionTabs } from '@/composables/useSectionTabs';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as lookupService from '@/services/lookupService';
 import * as personnelService from '@/services/personnelService';
-import { todayDate } from '@/utils/format';
+import { todayDate, matchesSearch } from '@/utils/format';
 import { personnelNameValidationError, positionNameValidationError } from '@/utils/validation';
 
 const emptyForm = () => ({
@@ -257,17 +257,17 @@ const positionHint = computed(() => (
         : ''
 ));
 
-const filteredItems = computed(() => {
-    const term = filters.name.trim().toLowerCase();
-
-    return items.value.filter((person) => {
-        const matchesName = !term || String(person.label ?? '').toLowerCase().includes(term);
+const filteredItems = computed(() => (
+    items.value.filter((person) => {
+        const matchesName = matchesSearch(person.label, filters.name)
+            || matchesSearch(person.position_name, filters.name)
+            || matchesSearch(person.username, filters.name);
         const matchesStatus = filters.statusId === 'all'
             || Number(person.personnel_status_id) === Number(filters.statusId);
 
         return matchesName && matchesStatus;
-    });
-});
+    })
+));
 
 function statusLabel(statusId) {
     return PERSONNEL_STATUSES.find((status) => status.id === Number(statusId))?.label ?? '—';

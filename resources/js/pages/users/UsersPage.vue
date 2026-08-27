@@ -182,6 +182,7 @@ import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as lookupService from '@/services/lookupService';
 import * as personnelService from '@/services/personnelService';
 import * as userService from '@/services/userService';
+import { matchesSearch } from '@/utils/format';
 
 const { hasPermission } = useAuth();
 const { userTabs } = useSectionTabs();
@@ -235,19 +236,16 @@ const createRoleOptions = computed(() => {
     ));
 });
 
-const filteredUsers = computed(() => {
-    const term = filters.username.trim().toLowerCase();
-    const statusId = filters.statusId;
-
-    return users.value.filter((account) => {
-        const matchesUser = !term
-            || String(account.username ?? '').toLowerCase().includes(term);
-        const matchesStatus = statusId === 'all'
-            || Number(account.user_status_id) === Number(statusId);
+const filteredUsers = computed(() => (
+    users.value.filter((account) => {
+        const matchesUser = matchesSearch(account.username, filters.username)
+            || matchesSearch(personnelName(account), filters.username);
+        const matchesStatus = filters.statusId === 'all'
+            || Number(account.user_status_id) === Number(filters.statusId);
 
         return matchesUser && matchesStatus;
-    });
-});
+    })
+));
 
 function personnelName(account) {
     return account.personnel?.full_name
