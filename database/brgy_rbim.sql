@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Aug 24, 2026 at 02:31 PM
+-- Generation Time: Aug 27, 2026 at 12:28 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `v2_rbim`
+-- Database: `brgy_rbim`
 --
 
 -- --------------------------------------------------------
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS `audit_log` (
   PRIMARY KEY (`audit_id`),
   KEY `action` (`action_id`),
   KEY `audit_user` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `audit_log`
@@ -79,7 +79,15 @@ INSERT INTO `audit_log` (`audit_id`, `user_id`, `action_id`, `record_id`, `descr
 (2, 1, 1, 2, 'Create user account', NULL, 'laila', '2026-08-06 23:56:57', 'account', 'user'),
 (3, 1, 1, 1, 'Create barangay personnel record', NULL, 'ellen', '2026-08-06 23:59:23', 'record', 'barangay personnel'),
 (4, 1, 1, 2, 'Create barangay personnel record', NULL, 'laila', '2026-08-06 23:59:23', 'record', 'barangay personnel'),
-(5, 1, 2, 4, 'Updated user role status', '1', '0', '2026-08-07 00:14:57', 'status', 'user role');
+(5, 1, 2, 4, 'Updated user role status', '1', '0', '2026-08-07 00:14:57', 'status', 'user role'),
+(6, 1, 2, 1, 'Updated user role status', '1', '0', '2026-08-27 12:26:23', 'status', 'user role'),
+(7, 1, 1, 6, 'Assign role to user', NULL, '2', '2026-08-27 12:26:31', 'assignment', 'user role'),
+(8, 1, 2, 2, 'Updated user role status', '1', '0', '2026-08-27 12:26:34', 'status', 'user role'),
+(9, 1, 1, 4, 'Create personnel position', NULL, 'Kagawad On Health And Nutrition', '2026-08-27 12:27:31', 'position_name', 'personnel_position'),
+(10, 1, 1, 3, 'Create barangay personnel', NULL, 'Rullan, Deborah', '2026-08-27 12:27:31', 'record', 'barangay_personnel'),
+(11, 1, 1, 7, 'Assign role to user', NULL, '1', '2026-08-27 12:27:45', 'assignment', 'user role'),
+(12, 1, 1, 3, 'Create user account', NULL, 'deborah', '2026-08-27 12:27:45', 'account', 'user'),
+(13, 3, 2, 3, 'User changed password', '[REDACTED]', '[REDACTED]', '2026-08-27 12:28:18', 'password', 'user');
 
 -- --------------------------------------------------------
 
@@ -100,7 +108,7 @@ CREATE TABLE IF NOT EXISTS `barangay_personnel` (
   PRIMARY KEY (`personnel_id`),
   KEY `personnel_position` (`position_id`),
   KEY `personnel_status` (`personnel_status_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `barangay_personnel`
@@ -108,7 +116,8 @@ CREATE TABLE IF NOT EXISTS `barangay_personnel` (
 
 INSERT INTO `barangay_personnel` (`personnel_id`, `position_id`, `personnel_last_name`, `personnel_first_name`, `personnel_middle_name`, `personnel_suffix`, `personnel_status_id`, `personnel_date_of_birth`) VALUES
 (1, 1, 'Salibad', 'Ellen', NULL, NULL, 1, '1986-08-21'),
-(2, 2, 'Adawi', 'Laila', NULL, NULL, 1, '2000-08-04');
+(2, 2, 'Adawi', 'Laila', NULL, NULL, 1, '2000-08-04'),
+(3, 4, 'Rullan', 'Deborah', NULL, NULL, 1, '1985-01-01');
 
 --
 -- Triggers `barangay_personnel`
@@ -260,7 +269,7 @@ CREATE TABLE IF NOT EXISTS `household_assessment` (
   KEY `supervisor` (`supervisor_id`),
   KEY `encoder` (`encoder_id`),
   KEY `assessment_status` (`census_status_id`)
-) ;
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `household_assessment`
@@ -440,7 +449,7 @@ CREATE TABLE IF NOT EXISTS `personnel_position` (
   `position_name` varchar(45) NOT NULL,
   PRIMARY KEY (`position_id`),
   UNIQUE KEY `uq_position` (`position_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `personnel_position`
@@ -448,6 +457,7 @@ CREATE TABLE IF NOT EXISTS `personnel_position` (
 
 INSERT INTO `personnel_position` (`position_id`, `position_name`) VALUES
 (1, 'Barangay Secretary'),
+(4, 'Kagawad On Health And Nutrition'),
 (2, 'SK Chairperson');
 
 -- --------------------------------------------------------
@@ -727,6 +737,7 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (25, 2, 20),
 (26, 2, 21),
 (27, 2, 22),
+(28, 2, 23),
 (29, 2, 24),
 (30, 2, 25),
 (31, 2, 26),
@@ -737,6 +748,7 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (36, 2, 31),
 (37, 2, 32),
 (38, 2, 33),
+(39, 2, 34),
 (40, 2, 35),
 (41, 2, 36),
 (42, 2, 37),
@@ -859,7 +871,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   UNIQUE KEY `uq_username` (`username`),
   UNIQUE KEY `uq_personnel` (`personnel_id`),
   KEY `user_status` (`user_status_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `user`
@@ -867,7 +879,8 @@ CREATE TABLE IF NOT EXISTS `user` (
 
 INSERT INTO `user` (`user_id`, `username`, `password_hash`, `created_at`, `user_status_id`, `personnel_id`, `must_change_password`) VALUES
 (1, 'ellen', '$2y$12$u3zD2jX/B4be7SrQI6q2C.22iS5c6zvqlBiGccL3e0e9ylN9nuumW', '2026-08-06 22:47:52', 1, 1, 0),
-(2, 'laila', '$2y$12$GsvVr.zfB06NZ3qvsOTNOOFhuIL7tIhneSyD39ol2NoZMw7gbS71O', '2026-08-06 22:48:05', 1, 2, 0);
+(2, 'laila', '$2y$12$GsvVr.zfB06NZ3qvsOTNOOFhuIL7tIhneSyD39ol2NoZMw7gbS71O', '2026-08-06 22:48:05', 1, 2, 0),
+(3, 'deborah', '$2y$12$BtcAKl0pQJmIqoiGq2I3nOB5eQw7NkugP2TdRJ6DdkknbRogN.Y2.', '2026-08-27 12:27:45', 1, 3, 0);
 
 -- --------------------------------------------------------
 
@@ -887,7 +900,18 @@ CREATE TABLE IF NOT EXISTS `user_log` (
   PRIMARY KEY (`user_log_id`),
   KEY `user_log` (`user_id`),
   KEY `login_status` (`login_status_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `user_log`
+--
+
+INSERT INTO `user_log` (`user_log_id`, `user_id`, `login_time`, `logout_time`, `login_status_id`, `ip_address`, `device`) VALUES
+(1, 1, '2026-08-27 12:25:51', '2026-08-27 12:25:51', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(2, 1, '2026-08-27 12:25:57', '2026-08-27 12:25:57', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(3, 1, '2026-08-27 12:26:10', '2026-08-27 12:27:48', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(4, 3, '2026-08-27 12:28:00', '2026-08-27 12:28:18', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(5, 3, '2026-08-27 12:28:25', '2026-08-27 12:28:25', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
 
 -- --------------------------------------------------------
 
@@ -907,17 +931,19 @@ CREATE TABLE IF NOT EXISTS `user_role` (
   UNIQUE KEY `uq_role_assignment` (`user_id`,`role_id`),
   KEY `user_role` (`role_id`),
   KEY `role_assignor` (`assigned_by`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `user_role`
 --
 
 INSERT INTO `user_role` (`user_role_id`, `user_id`, `role_id`, `assigned_at`, `assigned_by`, `enable`) VALUES
-(1, 1, 2, '2026-08-06 22:49:17', 1, 1),
-(2, 2, 1, '2026-08-06 22:49:17', 1, 1),
+(1, 1, 2, '2026-08-06 22:49:17', 1, 0),
+(2, 2, 1, '2026-08-06 22:49:17', 1, 0),
 (3, 1, 3, '2026-08-06 22:57:33', 1, 1),
-(4, 1, 1, '2026-08-06 23:13:42', 1, 0);
+(4, 1, 1, '2026-08-06 23:13:42', 1, 0),
+(6, 2, 2, '2026-08-27 12:26:31', 1, 1),
+(7, 3, 1, '2026-08-27 12:27:45', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -971,17 +997,6 @@ ALTER TABLE `household`
   ADD CONSTRAINT `house_head` FOREIGN KEY (`head_resident_id`) REFERENCES `resident` (`resident_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `house_status` FOREIGN KEY (`household_status_id`) REFERENCES `household_status` (`household_status_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `house_street` FOREIGN KEY (`street_id`) REFERENCES `street` (`street_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
-
---
--- Constraints for table `household_assessment`
---
-ALTER TABLE `household_assessment`
-  ADD CONSTRAINT `assessment_status` FOREIGN KEY (`census_status_id`) REFERENCES `census_status` (`census_status_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  ADD CONSTRAINT `encoder` FOREIGN KEY (`encoder_id`) REFERENCES `barangay_personnel` (`personnel_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  ADD CONSTRAINT `household` FOREIGN KEY (`household_id`) REFERENCES `household` (`household_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  ADD CONSTRAINT `interviewer` FOREIGN KEY (`interviewer_id`) REFERENCES `barangay_personnel` (`personnel_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  ADD CONSTRAINT `previous_assessment` FOREIGN KEY (`previous_assessment_id`) REFERENCES `household_assessment` (`assessment_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  ADD CONSTRAINT `supervisor` FOREIGN KEY (`supervisor_id`) REFERENCES `barangay_personnel` (`personnel_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 --
 -- Constraints for table `resident`
