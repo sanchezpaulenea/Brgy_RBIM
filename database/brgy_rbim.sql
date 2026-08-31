@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Aug 27, 2026 at 12:28 PM
+-- Generation Time: Aug 31, 2026 at 07:34 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -80,14 +80,14 @@ INSERT INTO `audit_log` (`audit_id`, `user_id`, `action_id`, `record_id`, `descr
 (3, 1, 1, 1, 'Create barangay personnel record', NULL, 'ellen', '2026-08-06 23:59:23', 'record', 'barangay personnel'),
 (4, 1, 1, 2, 'Create barangay personnel record', NULL, 'laila', '2026-08-06 23:59:23', 'record', 'barangay personnel'),
 (5, 1, 2, 4, 'Updated user role status', '1', '0', '2026-08-07 00:14:57', 'status', 'user role'),
-(6, 1, 2, 1, 'Updated user role status', '1', '0', '2026-08-27 12:26:23', 'status', 'user role'),
-(7, 1, 1, 6, 'Assign role to user', NULL, '2', '2026-08-27 12:26:31', 'assignment', 'user role'),
-(8, 1, 2, 2, 'Updated user role status', '1', '0', '2026-08-27 12:26:34', 'status', 'user role'),
-(9, 1, 1, 4, 'Create personnel position', NULL, 'Kagawad On Health And Nutrition', '2026-08-27 12:27:31', 'position_name', 'personnel_position'),
-(10, 1, 1, 3, 'Create barangay personnel', NULL, 'Rullan, Deborah', '2026-08-27 12:27:31', 'record', 'barangay_personnel'),
-(11, 1, 1, 7, 'Assign role to user', NULL, '1', '2026-08-27 12:27:45', 'assignment', 'user role'),
-(12, 1, 1, 3, 'Create user account', NULL, 'deborah', '2026-08-27 12:27:45', 'account', 'user'),
-(13, 3, 2, 3, 'User changed password', '[REDACTED]', '[REDACTED]', '2026-08-27 12:28:18', 'password', 'user');
+(6, 1, 2, 1, 'Updated user role status', '1', '0', '2026-08-31 19:27:36', 'status', 'user role'),
+(7, 1, 1, 6, 'Assign role to user', NULL, '2', '2026-08-31 19:27:42', 'assignment', 'user role'),
+(8, 1, 2, 2, 'Updated user role status', '1', '0', '2026-08-31 19:27:46', 'status', 'user role'),
+(9, 1, 1, 4, 'Create personnel position', NULL, 'Kagawad On Health And Nutrition', '2026-08-31 19:29:32', 'position_name', 'personnel_position'),
+(10, 1, 1, 3, 'Create barangay personnel', NULL, 'Rullan, Deborah', '2026-08-31 19:29:32', 'record', 'barangay_personnel'),
+(11, 1, 1, 7, 'Assign role to user', NULL, '1', '2026-08-31 19:29:46', 'assignment', 'user role'),
+(12, 1, 1, 3, 'Create user account', NULL, 'deborah', '2026-08-31 19:29:46', 'account', 'user'),
+(13, 3, 2, 3, 'User changed password', '[REDACTED]', '[REDACTED]', '2026-08-31 19:30:16', 'password', 'user');
 
 -- --------------------------------------------------------
 
@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS `barangay_personnel` (
 INSERT INTO `barangay_personnel` (`personnel_id`, `position_id`, `personnel_last_name`, `personnel_first_name`, `personnel_middle_name`, `personnel_suffix`, `personnel_status_id`, `personnel_date_of_birth`) VALUES
 (1, 1, 'Salibad', 'Ellen', NULL, NULL, 1, '1986-08-21'),
 (2, 2, 'Adawi', 'Laila', NULL, NULL, 1, '2000-08-04'),
-(3, 4, 'Rullan', 'Deborah', NULL, NULL, 1, '1985-01-01');
+(3, 4, 'Rullan', 'Deborah', NULL, NULL, 1, '1987-01-02');
 
 --
 -- Triggers `barangay_personnel`
@@ -228,6 +228,7 @@ CREATE TABLE IF NOT EXISTS `household` (
   `registration_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `household_status_id` int NOT NULL DEFAULT '1',
   PRIMARY KEY (`household_id`),
+  UNIQUE KEY `uq_lot_blk` (`house_lot`,`block_num`),
   KEY `house_street` (`street_id`),
   KEY `house_clan` (`clan_id`),
   KEY `house_status` (`household_status_id`),
@@ -707,7 +708,7 @@ CREATE TABLE IF NOT EXISTS `role_permission` (
   PRIMARY KEY (`role_permission_id`),
   UNIQUE KEY `uq_permission_assignment` (`role_id`,`permission_id`),
   KEY `permission_role` (`permission_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `role_permission`
@@ -767,6 +768,8 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (4, 3, 12),
 (6, 3, 13),
 (5, 3, 14),
+(58, 3, 15),
+(59, 3, 16),
 (20, 3, 17),
 (22, 3, 18),
 (21, 4, 17);
@@ -880,7 +883,7 @@ CREATE TABLE IF NOT EXISTS `user` (
 INSERT INTO `user` (`user_id`, `username`, `password_hash`, `created_at`, `user_status_id`, `personnel_id`, `must_change_password`) VALUES
 (1, 'ellen', '$2y$12$u3zD2jX/B4be7SrQI6q2C.22iS5c6zvqlBiGccL3e0e9ylN9nuumW', '2026-08-06 22:47:52', 1, 1, 0),
 (2, 'laila', '$2y$12$GsvVr.zfB06NZ3qvsOTNOOFhuIL7tIhneSyD39ol2NoZMw7gbS71O', '2026-08-06 22:48:05', 1, 2, 0),
-(3, 'deborah', '$2y$12$BtcAKl0pQJmIqoiGq2I3nOB5eQw7NkugP2TdRJ6DdkknbRogN.Y2.', '2026-08-27 12:27:45', 1, 3, 0);
+(3, 'deborah', '$2y$12$yVCqPIuEZH8C2l7LUEFRseVb2OsDPJLp5iu9TGAqcc8zxl4YvHWs6', '2026-08-31 19:29:46', 1, 3, 0);
 
 -- --------------------------------------------------------
 
@@ -900,18 +903,19 @@ CREATE TABLE IF NOT EXISTS `user_log` (
   PRIMARY KEY (`user_log_id`),
   KEY `user_log` (`user_id`),
   KEY `login_status` (`login_status_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `user_log`
 --
 
 INSERT INTO `user_log` (`user_log_id`, `user_id`, `login_time`, `logout_time`, `login_status_id`, `ip_address`, `device`) VALUES
-(1, 1, '2026-08-27 12:25:51', '2026-08-27 12:25:51', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(2, 1, '2026-08-27 12:25:57', '2026-08-27 12:25:57', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(3, 1, '2026-08-27 12:26:10', '2026-08-27 12:27:48', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(4, 3, '2026-08-27 12:28:00', '2026-08-27 12:28:18', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(5, 3, '2026-08-27 12:28:25', '2026-08-27 12:28:25', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
+(1, 1, '2026-08-31 19:24:57', '2026-08-31 19:24:57', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(2, 1, '2026-08-31 19:25:07', '2026-08-31 19:29:50', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(3, 3, '2026-08-31 19:29:59', '2026-08-31 19:30:16', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(4, 3, '2026-08-31 19:30:26', '2026-08-31 19:30:38', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(5, 2, '2026-08-31 19:30:44', '2026-08-31 19:30:44', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(6, 2, '2026-08-31 19:30:47', '2026-08-31 19:30:47', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
 
 -- --------------------------------------------------------
 
@@ -942,8 +946,8 @@ INSERT INTO `user_role` (`user_role_id`, `user_id`, `role_id`, `assigned_at`, `a
 (2, 2, 1, '2026-08-06 22:49:17', 1, 0),
 (3, 1, 3, '2026-08-06 22:57:33', 1, 1),
 (4, 1, 1, '2026-08-06 23:13:42', 1, 0),
-(6, 2, 2, '2026-08-27 12:26:31', 1, 1),
-(7, 3, 1, '2026-08-27 12:27:45', 1, 1);
+(6, 2, 2, '2026-08-31 19:27:42', 1, 1),
+(7, 3, 1, '2026-08-31 19:29:46', 1, 1);
 
 -- --------------------------------------------------------
 
