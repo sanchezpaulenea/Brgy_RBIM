@@ -14,6 +14,21 @@
                 Loading registration form...
             </div>
 
+            <HouseholdContinueMembersFlow
+                v-else-if="createdHousehold"
+                :household="createdHousehold"
+                :sexes="sexes"
+                :relationships="relationships"
+                :nationalities="nationalities"
+                :religions="religions"
+                :ethnicities="ethnicities"
+                :marital-statuses="maritalStatuses"
+                :resident-types="residentTypes"
+                :existing-residents="existingResidents"
+                @member-added="refreshExistingResidents"
+                @finished="goToHouseholdList"
+            />
+
             <article v-else class="rbim-card p-6">
                 <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">
                     Register household
@@ -23,7 +38,7 @@
                     The household and head resident are saved together.
                 </p>
 
-                <form class="mt-6 space-y-8" novalidate @submit.prevent="handleSave">
+                <form class="mt-4 space-y-8" novalidate @submit.prevent="handleSave">
                     <section class="space-y-4">
                         <h3 class="text-sm font-semibold text-slate-900">Household</h3>
                         <div class="grid gap-4 sm:grid-cols-2">
@@ -130,7 +145,7 @@
                         />
                     </section>
 
-                    <div>
+                    <div class="flex flex-wrap items-center gap-2">
                         <button type="submit" class="rbim-btn" :disabled="saving">
                             {{ saving ? 'Saving...' : 'Register household' }}
                         </button>
@@ -153,8 +168,10 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import HouseholdContinueMembersFlow from '@/components/HouseholdContinueMembersFlow.vue';
 import PageTabs from '@/components/PageTabs.vue';
 import ResidentDemographicsFields from '@/components/ResidentDemographicsFields.vue';
 import { useSectionTabs } from '@/composables/useSectionTabs';
@@ -174,12 +191,14 @@ import {
     validateResidentForm,
 } from '@/utils/residentForm';
 
+const router = useRouter();
 const { householdTabs } = useSectionTabs();
 
 const loadingLookups = ref(true);
 const saving = ref(false);
 const error = ref('');
 const successMessage = ref('');
+const createdHousehold = ref(null);
 
 const clans = ref([]);
 const streets = ref([]);
@@ -313,12 +332,7 @@ async function loadLookups() {
         ethnicities.value = ethnicityItems;
         maritalStatuses.value = maritalItems;
         residentTypes.value = residentTypeItems;
-
-        try {
-            existingResidents.value = await residentService.fetchResidents();
-        } catch {
-            existingResidents.value = [];
-        }
+        await refreshExistingResidents();
     } catch (err) {
         error.value = extractErrorMessage(err, 'Unable to load the registration form.');
     } finally {
@@ -361,7 +375,7 @@ async function handleSave() {
             relationship_to_hh_id: HEAD_RELATIONSHIP_ID,
         });
 
-        await householdService.createHousehold({
+        createdHousehold.value = await householdService.createHousehold({
             clan_id: toId(household.clan_id),
             street_id: toId(household.street_id),
             house_lot: optionalText(household.house_lot),
@@ -371,17 +385,8 @@ async function handleSave() {
             head: headData,
         });
 
-        successMessage.value = 'Household registered successfully.';
-        Object.assign(household, emptyHousehold());
-        head.value = emptyHead();
-        clearHouseholdErrors();
-        clearHeadErrors();
-
-        try {
-            existingResidents.value = await residentService.fetchResidents();
-        } catch {
-            existingResidents.value = [];
-        }
+        successMessage.value = '';
+        await refreshExistingResidents();
     } catch (err) {
         const validationErrors = extractValidationErrors(err);
 
@@ -395,6 +400,23 @@ async function handleSave() {
     } finally {
         saving.value = false;
     }
+}
+
+async function refreshExistingResidents() {
+    try {
+        existingResidents.value = await residentService.fetchResidents();
+    } catch {
+        existingResidents.value = [];
+    }
+}
+
+function goToHouseholdList() {
+    const householdId = createdHousehold.value?.household_id;
+
+    router.push({
+        name: 'households',
+        query: householdId ? { created: String(householdId) } : {},
+    });
 }
 
 onMounted(loadLookups);

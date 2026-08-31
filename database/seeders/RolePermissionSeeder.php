@@ -12,6 +12,7 @@ class RolePermissionSeeder extends Seeder
         /*
          * Maps each role to its permission set as defined in brgy_rbim.sql,
          * plus Super Admin coverage of Increment 2 modules and user.delete.
+         * System settings (permission_id 15, 16) belong to Super Admin only.
          * Household and resident registration (create) stay on Encoder only.
          *
          * role_id 1 = Encoder
@@ -36,9 +37,7 @@ class RolePermissionSeeder extends Seeder
             ['role_permission_id' => 55, 'role_id' => 1, 'permission_id' => 34],
             ['role_permission_id' => 56, 'role_id' => 1, 'permission_id' => 36],
             ['role_permission_id' => 57, 'role_id' => 1, 'permission_id' => 37],
-            // Admin
-            ['role_permission_id' => 16, 'role_id' => 2, 'permission_id' => 15],
-            ['role_permission_id' => 17, 'role_id' => 2, 'permission_id' => 16],
+            // Admin — system settings (15, 16) are Super Admin only
             ['role_permission_id' => 18, 'role_id' => 2, 'permission_id' => 17],
             ['role_permission_id' => 23, 'role_id' => 2, 'permission_id' => 18],
             ['role_permission_id' => 24, 'role_id' => 2, 'permission_id' => 19],
@@ -74,6 +73,8 @@ class RolePermissionSeeder extends Seeder
             ['role_permission_id' => 4, 'role_id' => 3, 'permission_id' => 12],
             ['role_permission_id' => 6, 'role_id' => 3, 'permission_id' => 13],
             ['role_permission_id' => 5, 'role_id' => 3, 'permission_id' => 14],
+            ['role_permission_id' => 16, 'role_id' => 3, 'permission_id' => 15],
+            ['role_permission_id' => 17, 'role_id' => 3, 'permission_id' => 16],
             ['role_permission_id' => 20, 'role_id' => 3, 'permission_id' => 17],
             ['role_permission_id' => 22, 'role_id' => 3, 'permission_id' => 18],
             ['role_permission_id' => 58, 'role_id' => 3, 'permission_id' => 19],
@@ -98,5 +99,10 @@ class RolePermissionSeeder extends Seeder
             // Guest
             ['role_permission_id' => 21, 'role_id' => 4, 'permission_id' => 17],
         ], ['role_permission_id'], ['role_id', 'permission_id']);
+
+        DB::table('role_permission')
+            ->where('role_id', 2)
+            ->whereIn('permission_id', [15, 16])
+            ->delete();
     }
 }

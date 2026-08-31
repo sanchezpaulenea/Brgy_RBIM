@@ -121,6 +121,10 @@ watch(selected, (household) => {
 }, { immediate: true });
 
 watch(query, (value) => {
+    if (props.disabled) {
+        return;
+    }
+
     if (selected.value && value !== householdDisplayLabel(selected.value)) {
         emit('update:modelValue', null);
     }

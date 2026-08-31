@@ -6,6 +6,7 @@ use App\Models\ResidentManagement\Demographic\Resident;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Household extends Model
 {
@@ -85,5 +86,14 @@ class Household extends Model
     public function assessments(): HasMany
     {
         return $this->hasMany(HouseholdAssessment::class, 'household_id', 'household_id');
+    }
+
+    /**
+     * @return HasOne<HouseholdAssessment, $this>
+     */
+    public function latestAssessment(): HasOne
+    {
+        return $this->hasOne(HouseholdAssessment::class, 'household_id', 'household_id')
+            ->latestOfMany('assessment_id');
     }
 }

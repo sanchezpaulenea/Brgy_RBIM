@@ -78,7 +78,7 @@ const routes = [
         component: () => import('@/pages/settings/SettingsPage.vue'),
         meta: {
             requiresAuth: true,
-            requiresPermissions: ['setting.view', 'setting.update'],
+            requiresSuperAdmin: true,
         },
     },
     {

@@ -2,23 +2,29 @@
 
 namespace App\Services\HouseholdManagement;
 
+use App\Models\BarangayPersonnel\BarangayPersonnel;
+use App\Models\HouseholdManagement\CensusStatus;
 use App\Models\HouseholdManagement\Household;
+use App\Models\HouseholdManagement\HouseholdAssessment;
 use App\Models\HouseholdManagement\HouseholdStatus;
 use App\Models\Logs\Action;
 use App\Models\ResidentManagement\Demographic\RelationshipToHouseholdHead;
 use App\Models\ResidentManagement\Demographic\Resident;
 use App\Models\ResidentManagement\Demographic\ResidentStatus;
 use App\Models\UserManagement\User;
+use App\Repositories\Interfaces\HouseholdManagement\HouseholdAssessmentRepositoryInterface;
 use App\Repositories\Interfaces\HouseholdManagement\HouseholdRepositoryInterface;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Demographic\ResidentRepositoryInterface;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class HouseholdServices
 {
     public function __construct(
         protected HouseholdRepositoryInterface $householdRepository,
         protected ResidentRepositoryInterface $residentRepository,
+        protected HouseholdAssessmentRepositoryInterface $householdAssessmentRepository,
         protected AuditLogRepositoryInterface $auditLogRepository,
     ) {}
 
@@ -90,6 +96,8 @@ class HouseholdServices
                 throw new \RuntimeException('Household registration did not produce both records.');
             }
 
+            $assessment = $this->createInitialAssessment($performedBy, $household);
+
             $this->auditLogRepository->log(
                 performedByUserId: $performedBy->user_id,
                 actionId: Action::CREATE,
@@ -112,8 +120,60 @@ class HouseholdServices
                 entity: 'resident',
             );
 
+            $this->auditLogRepository->log(
+                performedByUserId: $performedBy->user_id,
+                actionId: Action::CREATE,
+                recordId: $assessment->assessment_id,
+                description: 'Create household assessment',
+                oldValue: null,
+                newValue: (string) ($assessment->censusStatus?->status_name ?? CensusStatus::COMPLETED),
+                target: 'household_assessment',
+                entity: 'household_assessment',
+            );
+
+            $household->setRelation('latestAssessment', $assessment);
+
             return $this->formatRecord($household);
         });
+    }
+
+    /**
+     * First census visit for a newly registered household.
+     *
+     * census_status has no pending/in-progress value (only Completed, Callback,
+     * Refused). Completed is the registration outcome; extra members added
+     * afterward are still the same visit, not a new assessment.
+     *
+     * visit_end is NOT NULL and defaults to CURRENT_TIMESTAMP, so it is stamped
+     * at registration. Leaving it open until "Finish" would require a schema
+     * change.
+     *
+     * interviewer_id and supervisor_id currently copy encoder_id as a
+     * placeholder until the registration form collects them separately.
+     */
+    private function createInitialAssessment(User $performedBy, Household $household): HouseholdAssessment
+    {
+        $personnelId = $performedBy->personnel_id;
+
+        if ($personnelId === null) {
+            throw new ConflictHttpException(
+                'Household registration requires a linked barangay personnel record so encoder, interviewer, and supervisor can be stored.',
+            );
+        }
+
+        $visitedAt = now();
+
+        return $this->householdAssessmentRepository->create([
+            'household_id' => $household->household_id,
+            'census_status_id' => CensusStatus::COMPLETED,
+            'visit_start' => $visitedAt,
+            'visit_end' => $visitedAt,
+            'next_visit_date' => null,
+            'interviewer_id' => $personnelId,
+            'supervisor_id' => $personnelId,
+            'encoder_id' => $personnelId,
+            'previous_assessment_id' => null,
+        ]);
     }
 
     /**
@@ -200,6 +260,10 @@ class HouseholdServices
             'head.status',
             'head.clan',
             'head.relationshipToHouseholdHead',
+            'latestAssessment.censusStatus',
+            'latestAssessment.encoder',
+            'latestAssessment.interviewer',
+            'latestAssessment.supervisor',
         ]);
 
         $payload = [
@@ -217,6 +281,7 @@ class HouseholdServices
             'household_status' => $household->status?->household_status,
             'head_resident_id' => $household->head_resident_id,
             'head' => $household->head !== null ? $this->formatResident($household->head) : null,
+            'latest_assessment' => $this->formatAssessment($household->latestAssessment),
         ];
 
         if ($includeResidents) {
@@ -239,6 +304,53 @@ class HouseholdServices
         }
 
         return $payload;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function formatAssessment(?HouseholdAssessment $assessment): ?array
+    {
+        if ($assessment === null) {
+            return null;
+        }
+
+        $assessment->loadMissing(['censusStatus', 'encoder', 'interviewer', 'supervisor']);
+
+        return [
+            'assessment_id' => $assessment->assessment_id,
+            'census_status_id' => $assessment->census_status_id,
+            'census_status' => $assessment->censusStatus?->status_name,
+            'visit_start' => $assessment->visit_start?->toDateTimeString(),
+            'visit_end' => $assessment->visit_end?->toDateTimeString(),
+            'next_visit_date' => $assessment->next_visit_date?->format('Y-m-d'),
+            'encoder_id' => $assessment->encoder_id,
+            'encoder_name' => $this->personnelName($assessment->encoder),
+            'interviewer_id' => $assessment->interviewer_id,
+            'interviewer_name' => $this->personnelName($assessment->interviewer),
+            'supervisor_id' => $assessment->supervisor_id,
+            'supervisor_name' => $this->personnelName($assessment->supervisor),
+            'previous_assessment_id' => $assessment->previous_assessment_id,
+        ];
+    }
+
+    private function personnelName(?BarangayPersonnel $personnel): ?string
+    {
+        if ($personnel === null) {
+            return null;
+        }
+
+        $givenNames = collect([
+            $personnel->personnel_first_name,
+            $personnel->personnel_middle_name,
+            $personnel->personnel_suffix,
+        ])->filter()->implode(' ');
+
+        if ($givenNames === '') {
+            return (string) $personnel->personnel_last_name;
+        }
+
+        return $personnel->personnel_last_name.', '.$givenNames;
     }
 
     /**

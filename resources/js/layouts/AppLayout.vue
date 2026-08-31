@@ -260,7 +260,7 @@ defineProps({
 
 const route = useRoute();
 const router = useRouter();
-const { hasPermission } = useAuth();
+const { hasPermission, isSuperAdmin } = useAuth();
 const { householdTabs, residentTabs, personnelTabs, userTabs } = useSectionTabs();
 
 const sidebarOpen = ref(false);
@@ -269,9 +269,7 @@ const openMenu = ref(null);
 const canViewHouseholdMenu = computed(() => householdTabs.value.length > 0);
 const canViewResidentMenu = computed(() => residentTabs.value.length > 0);
 
-const canViewSystemSettings = computed(() => (
-    hasPermission('setting.view') || hasPermission('setting.update')
-));
+const canViewSystemSettings = computed(() => isSuperAdmin.value);
 
 const canViewAuditLogs = computed(() => hasPermission('auditlog.view'));
 const canViewUserLogs = computed(() => hasPermission('userlog.view'));

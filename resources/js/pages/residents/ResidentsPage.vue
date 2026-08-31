@@ -6,6 +6,9 @@
             <div v-if="error" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {{ error }}
             </div>
+            <div v-if="successMessage" class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                {{ successMessage }}
+            </div>
 
             <form class="rbim-card grid gap-3 p-4 sm:grid-cols-5">
                 <div>
@@ -87,6 +90,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageTabs from '@/components/PageTabs.vue';
 import { useSectionTabs } from '@/composables/useSectionTabs';
@@ -97,6 +101,8 @@ import * as residentService from '@/services/residentService';
 import { ageFromDateOfBirth, householdDisplayLabel, matchesSearch, personDisplayName } from '@/utils/format';
 import { toId } from '@/utils/residentForm';
 
+const route = useRoute();
+const router = useRouter();
 const { residentTabs } = useSectionTabs();
 
 const items = ref([]);
@@ -104,6 +110,7 @@ const households = ref([]);
 const residentStatuses = ref([]);
 const loading = ref(false);
 const error = ref('');
+const successMessage = ref('');
 const filters = reactive({
     search: '',
     household_id: '',
@@ -190,6 +197,20 @@ onMounted(async () => {
         error.value = extractErrorMessage(err, 'Unable to load resident filters.');
     }
 
+    const registeredCount = Number.parseInt(String(route.query.registered ?? ''), 10);
+    const createdHouseholdId = route.query.household_id;
+
+    if (createdHouseholdId) {
+        filters.household_id = Number(createdHouseholdId) || createdHouseholdId;
+    }
+
     await loadResidents();
+
+    if (Number.isInteger(registeredCount) && registeredCount > 0) {
+        successMessage.value = registeredCount === 1
+            ? '1 resident registered successfully.'
+            : `${registeredCount} residents registered successfully.`;
+        router.replace({ name: 'residents' });
+    }
 });
 </script>

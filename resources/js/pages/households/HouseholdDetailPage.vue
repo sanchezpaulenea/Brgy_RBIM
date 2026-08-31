@@ -76,6 +76,41 @@
                     </dl>
                 </article>
 
+                <article class="rbim-card p-6">
+                    <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                        Latest assessment
+                    </h2>
+                    <dl v-if="household.latest_assessment" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Census Status</dt>
+                            <dd class="mt-1 text-sm text-slate-900">{{ household.latest_assessment.census_status || '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Visit Start</dt>
+                            <dd class="mt-1 text-sm text-slate-900">{{ formatDateTime(household.latest_assessment.visit_start) }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Visit End</dt>
+                            <dd class="mt-1 text-sm text-slate-900">{{ formatDateTime(household.latest_assessment.visit_end) }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Encoder</dt>
+                            <dd class="mt-1 text-sm text-slate-900">{{ household.latest_assessment.encoder_name || '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Interviewer</dt>
+                            <dd class="mt-1 text-sm text-slate-900">{{ household.latest_assessment.interviewer_name || '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Supervisor</dt>
+                            <dd class="mt-1 text-sm text-slate-900">{{ household.latest_assessment.supervisor_name || '—' }}</dd>
+                        </div>
+                    </dl>
+                    <p v-else class="mt-4 text-sm text-slate-500">
+                        No household assessment on file.
+                    </p>
+                </article>
+
                 <div class="rbim-card overflow-hidden">
                     <div class="border-b border-slate-200 px-4 py-3">
                         <h3 class="text-sm font-semibold text-slate-900">Household members</h3>
@@ -120,6 +155,7 @@
                 <div class="border-b border-slate-100 px-5 py-4">
                     <h2 class="text-base font-semibold text-slate-900">Update household</h2>
                     <p class="mt-1 text-sm text-slate-600">
+                        Fields marked with <span class="rbim-required">*</span> are required.
                         The household head cannot be changed here.
                     </p>
                 </div>
@@ -150,7 +186,9 @@
                                 type="text"
                                 maxlength="45"
                                 class="rbim-input"
+                                :class="{ 'rbim-input-error': editErrors.house_lot }"
                             >
+                            <p v-if="editErrors.house_lot" class="rbim-error">{{ editErrors.house_lot }}</p>
                         </div>
                         <div>
                             <label for="detail_block_num" class="rbim-label">Block Number</label>
@@ -160,7 +198,9 @@
                                 type="text"
                                 maxlength="45"
                                 class="rbim-input"
+                                :class="{ 'rbim-input-error': editErrors.block_num }"
                             >
+                            <p v-if="editErrors.block_num" class="rbim-error">{{ editErrors.block_num }}</p>
                         </div>
                         <div>
                             <label for="detail_building_name" class="rbim-label">Building Name</label>
@@ -170,7 +210,9 @@
                                 type="text"
                                 maxlength="45"
                                 class="rbim-input"
+                                :class="{ 'rbim-input-error': editErrors.building_name }"
                             >
+                            <p v-if="editErrors.building_name" class="rbim-error">{{ editErrors.building_name }}</p>
                         </div>
                         <div>
                             <label for="detail_unit_num" class="rbim-label">Unit Number</label>
@@ -180,7 +222,9 @@
                                 type="text"
                                 maxlength="45"
                                 class="rbim-input"
+                                :class="{ 'rbim-input-error': editErrors.unit_num }"
                             >
+                            <p v-if="editErrors.unit_num" class="rbim-error">{{ editErrors.unit_num }}</p>
                         </div>
                         <div>
                             <label for="detail_household_status_id" class="rbim-label">

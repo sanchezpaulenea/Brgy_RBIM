@@ -26,6 +26,10 @@ class HouseholdRepository implements HouseholdRepositoryInterface
             'head.status',
             'head.clan',
             'head.relationshipToHouseholdHead',
+            'latestAssessment.censusStatus',
+            'latestAssessment.encoder',
+            'latestAssessment.interviewer',
+            'latestAssessment.supervisor',
         ];
     }
 

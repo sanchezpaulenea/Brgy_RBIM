@@ -234,7 +234,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import PageTabs from '@/components/PageTabs.vue';
@@ -247,6 +247,7 @@ import { formatDate, matchesSearch } from '@/utils/format';
 import { applyValidationErrors, optionalText, toId } from '@/utils/residentForm';
 
 const router = useRouter();
+const route = useRoute();
 const { hasPermission } = useAuth();
 const { householdTabs } = useSectionTabs();
 
@@ -450,5 +451,13 @@ onMounted(async () => {
     }
 
     await loadHouseholds();
+
+    const createdId = route.query.created;
+
+    if (createdId) {
+        successMessage.value = `Household ${createdId} was registered successfully.`;
+        filters.search = String(createdId);
+        router.replace({ name: 'households' });
+    }
 });
 </script>

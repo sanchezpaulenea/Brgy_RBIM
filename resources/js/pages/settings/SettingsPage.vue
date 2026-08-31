@@ -179,7 +179,7 @@ const SETTING_GROUPS = [
     },
 ];
 
-const { hasPermission } = useAuth();
+const { isSuperAdmin } = useAuth();
 
 const settings = ref([]);
 const loading = ref(false);
@@ -190,7 +190,7 @@ const editError = ref('');
 const error = ref('');
 const successMessage = ref('');
 
-const canUpdateSettings = computed(() => hasPermission('setting.update'));
+const canUpdateSettings = computed(() => isSuperAdmin.value);
 const settingsColumnTemplate = computed(() => (
     canUpdateSettings.value ? 'repeat(4, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))'
 ));
