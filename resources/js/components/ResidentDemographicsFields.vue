@@ -6,7 +6,7 @@
             </label>
             <input
                 :id="`${idPrefix}-last_name`"
-                :value="modelValue.last_name"
+                :value="form.last_name"
                 type="text"
                 maxlength="45"
                 class="rbim-input"
@@ -22,7 +22,7 @@
             </label>
             <input
                 :id="`${idPrefix}-first_name`"
-                :value="modelValue.first_name"
+                :value="form.first_name"
                 type="text"
                 maxlength="45"
                 class="rbim-input"
@@ -36,7 +36,7 @@
             <label :for="`${idPrefix}-middle_name`" class="rbim-label">Middle Name</label>
             <input
                 :id="`${idPrefix}-middle_name`"
-                :value="modelValue.middle_name"
+                :value="form.middle_name"
                 type="text"
                 maxlength="45"
                 class="rbim-input"
@@ -50,7 +50,7 @@
             <label :for="`${idPrefix}-suffix`" class="rbim-label">Suffix</label>
             <input
                 :id="`${idPrefix}-suffix`"
-                :value="modelValue.suffix"
+                :value="form.suffix"
                 type="text"
                 maxlength="45"
                 class="rbim-input"
@@ -66,7 +66,7 @@
             </label>
             <select
                 :id="`${idPrefix}-relationship`"
-                :value="modelValue.relationship_to_hh_id"
+                :value="form.relationship_to_hh_id"
                 class="rbim-input"
                 :class="{ 'rbim-input-error': errors.relationship_to_hh_id }"
                 :disabled="relationshipLocked"
@@ -89,7 +89,7 @@
             </label>
             <select
                 :id="`${idPrefix}-sex`"
-                :value="modelValue.sex_id"
+                :value="form.sex_id"
                 class="rbim-input"
                 :class="{ 'rbim-input-error': errors.sex_id }"
                 @change="patch('sex_id', $event.target.value)"
@@ -102,7 +102,7 @@
             <p v-if="errors.sex_id" class="rbim-error">{{ errors.sex_id }}</p>
         </div>
         <BirthDateField
-            :model-value="modelValue.date_of_birth"
+            :model-value="form.date_of_birth"
             :input-id="`${idPrefix}-date_of_birth`"
             label="Date of Birth"
             :max="maxBirthDate"
@@ -116,7 +116,7 @@
             </label>
             <input
                 :id="`${idPrefix}-birth_city`"
-                :value="modelValue.birth_city_municipality"
+                :value="form.birth_city_municipality"
                 type="text"
                 maxlength="45"
                 class="rbim-input"
@@ -131,7 +131,7 @@
             </label>
             <input
                 :id="`${idPrefix}-birth_province`"
-                :value="modelValue.birth_province"
+                :value="form.birth_province"
                 type="text"
                 maxlength="45"
                 class="rbim-input"
@@ -146,7 +146,7 @@
             </label>
             <input
                 :id="`${idPrefix}-birth_country`"
-                :value="modelValue.birth_country"
+                :value="form.birth_country"
                 type="text"
                 maxlength="45"
                 class="rbim-input"
@@ -155,67 +155,52 @@
             >
             <p v-if="errors.birth_country" class="rbim-error">{{ errors.birth_country }}</p>
         </div>
-        <div>
-            <label :for="`${idPrefix}-nationality`" class="rbim-label">
-                Nationality<span class="rbim-required" aria-hidden="true">*</span>
-            </label>
-            <select
-                :id="`${idPrefix}-nationality`"
-                :value="modelValue.nationality_id"
-                class="rbim-input"
-                :class="{ 'rbim-input-error': errors.nationality_id }"
-                @change="patch('nationality_id', $event.target.value)"
-            >
-                <option value="">Select nationality</option>
-                <option v-for="option in nationalities" :key="option.id" :value="option.id">
-                    {{ option.label }}
-                </option>
-            </select>
-            <p v-if="errors.nationality_id" class="rbim-error">{{ errors.nationality_id }}</p>
-        </div>
-        <div>
-            <label :for="`${idPrefix}-religion`" class="rbim-label">
-                Religion<span class="rbim-required" aria-hidden="true">*</span>
-            </label>
-            <select
-                :id="`${idPrefix}-religion`"
-                :value="modelValue.religion_id"
-                class="rbim-input"
-                :class="{ 'rbim-input-error': errors.religion_id }"
-                @change="patch('religion_id', $event.target.value)"
-            >
-                <option value="">Select religion</option>
-                <option v-for="option in religions" :key="option.id" :value="option.id">
-                    {{ option.label }}
-                </option>
-            </select>
-            <p v-if="errors.religion_id" class="rbim-error">{{ errors.religion_id }}</p>
-        </div>
-        <div>
-            <label :for="`${idPrefix}-ethnicity`" class="rbim-label">
-                Ethnicity<span class="rbim-required" aria-hidden="true">*</span>
-            </label>
-            <select
-                :id="`${idPrefix}-ethnicity`"
-                :value="modelValue.ethnicity_id"
-                class="rbim-input"
-                :class="{ 'rbim-input-error': errors.ethnicity_id }"
-                @change="patch('ethnicity_id', $event.target.value)"
-            >
-                <option value="">Select ethnicity</option>
-                <option v-for="option in ethnicities" :key="option.id" :value="option.id">
-                    {{ option.label }}
-                </option>
-            </select>
-            <p v-if="errors.ethnicity_id" class="rbim-error">{{ errors.ethnicity_id }}</p>
-        </div>
+        <LookupCombobox
+            v-model="form.nationality_id"
+            v-model:query="form.nationality_name"
+            :options="nationalities"
+            :input-id="`${idPrefix}-nationality`"
+            label="Nationality"
+            placeholder="Search or type a nationality"
+            required
+            :can-create="canCreateNationality"
+            :error="errors.nationality_id"
+            :hint="canCreateNationality ? 'Choose from the list, or type a new name and press Enter to add it.' : ''"
+            @create="createNationality"
+        />
+        <LookupCombobox
+            v-model="form.religion_id"
+            v-model:query="form.religion_name"
+            :options="religions"
+            :input-id="`${idPrefix}-religion`"
+            label="Religion"
+            placeholder="Search or type a religion"
+            required
+            :can-create="canCreateReligion"
+            :error="errors.religion_id"
+            :hint="canCreateReligion ? 'Choose from the list, or type a new name and press Enter to add it.' : ''"
+            @create="createReligion"
+        />
+        <LookupCombobox
+            v-model="form.ethnicity_id"
+            v-model:query="form.ethnicity_name"
+            :options="ethnicities"
+            :input-id="`${idPrefix}-ethnicity`"
+            label="Ethnicity"
+            placeholder="Search or type an ethnicity"
+            required
+            :can-create="canCreateEthnicity"
+            :error="errors.ethnicity_id"
+            :hint="canCreateEthnicity ? 'Choose from the list, or type a new name and press Enter to add it.' : ''"
+            @create="createEthnicity"
+        />
         <div>
             <label :for="`${idPrefix}-marital_status`" class="rbim-label">
                 Marital Status<span class="rbim-required" aria-hidden="true">*</span>
             </label>
             <select
                 :id="`${idPrefix}-marital_status`"
-                :value="modelValue.marital_status_id"
+                :value="form.marital_status_id"
                 class="rbim-input"
                 :class="{ 'rbim-input-error': errors.marital_status_id }"
                 @change="patch('marital_status_id', $event.target.value)"
@@ -233,7 +218,7 @@
             </label>
             <select
                 :id="`${idPrefix}-resident_type`"
-                :value="modelValue.resident_type_id"
+                :value="form.resident_type_id"
                 class="rbim-input"
                 :class="{ 'rbim-input-error': errors.resident_type_id }"
                 @change="patch('resident_type_id', $event.target.value)"
@@ -249,14 +234,17 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import BirthDateField from '@/components/BirthDateField.vue';
+import LookupCombobox from '@/components/LookupCombobox.vue';
+import { useAuth } from '@/composables/useAuth';
+import { extractErrorMessage } from '@/services/http';
+import * as lookupService from '@/services/lookupService';
 import { todayDate } from '@/utils/format';
 
+const form = defineModel({ type: Object, required: true });
+
 const props = defineProps({
-    modelValue: {
-        type: Object,
-        required: true,
-    },
     errors: {
         type: Object,
         default: () => ({}),
@@ -303,15 +291,62 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['update:modelValue', 'validate-name']);
+const emit = defineEmits(['validate-name', 'lookup-created', 'lookup-error']);
 const maxBirthDate = todayDate();
+const { hasPermission } = useAuth();
+
+const canCreateNationality = computed(() => hasPermission('nationality.create'));
+const canCreateReligion = computed(() => hasPermission('religion.create'));
+const canCreateEthnicity = computed(() => hasPermission('ethnicity.create'));
 
 function patch(field, value) {
-    emit('update:modelValue', { ...props.modelValue, [field]: value });
+    form.value[field] = value;
 }
 
 function onNameInput(field, value, label, required) {
     patch(field, value);
     emit('validate-name', field, label, required);
+}
+
+async function createNationality(name) {
+    try {
+        const item = await lookupService.createNationality({ nationality: name });
+        emit('lookup-created', { kind: 'nationality', item });
+        form.value.nationality_id = item.id;
+        form.value.nationality_name = item.label;
+    } catch (err) {
+        emit('lookup-error', {
+            field: 'nationality_id',
+            message: extractErrorMessage(err, 'Unable to add this nationality.'),
+        });
+    }
+}
+
+async function createReligion(name) {
+    try {
+        const item = await lookupService.createReligion({ religion: name });
+        emit('lookup-created', { kind: 'religion', item });
+        form.value.religion_id = item.id;
+        form.value.religion_name = item.label;
+    } catch (err) {
+        emit('lookup-error', {
+            field: 'religion_id',
+            message: extractErrorMessage(err, 'Unable to add this religion.'),
+        });
+    }
+}
+
+async function createEthnicity(name) {
+    try {
+        const item = await lookupService.createEthnicity({ ethnicity: name });
+        emit('lookup-created', { kind: 'ethnicity', item });
+        form.value.ethnicity_id = item.id;
+        form.value.ethnicity_name = item.label;
+    } catch (err) {
+        emit('lookup-error', {
+            field: 'ethnicity_id',
+            message: extractErrorMessage(err, 'Unable to add this ethnicity.'),
+        });
+    }
 }
 </script>

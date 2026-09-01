@@ -15,7 +15,7 @@
             </div>
 
             <HouseholdContinueMembersFlow
-                v-else-if="createdHousehold"
+                v-else-if="createdHousehold && !membersComplete"
                 :household="createdHousehold"
                 :sexes="sexes"
                 :relationships="relationships"
@@ -25,8 +25,16 @@
                 :marital-statuses="maritalStatuses"
                 :resident-types="residentTypes"
                 :existing-residents="existingResidents"
+                :ensure-lookups="ensureLookups"
                 @member-added="refreshExistingResidents"
-                @finished="goToHouseholdList"
+                @members-complete="membersComplete = true"
+                @lookup-created="onLookupCreated"
+            />
+
+            <HouseholdAssessmentForm
+                v-else-if="createdHousehold"
+                :household="createdHousehold"
+                @saved="goToHouseholdDetail"
             />
 
             <article v-else class="rbim-card p-6">
@@ -142,6 +150,8 @@
                             relationship-locked
                             id-prefix="head"
                             @validate-name="validateHeadName"
+                            @lookup-created="onLookupCreated"
+                            @lookup-error="onLookupError"
                         />
                     </section>
 
@@ -171,21 +181,27 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import HouseholdAssessmentForm from '@/components/HouseholdAssessmentForm.vue';
 import HouseholdContinueMembersFlow from '@/components/HouseholdContinueMembersFlow.vue';
 import PageTabs from '@/components/PageTabs.vue';
 import ResidentDemographicsFields from '@/components/ResidentDemographicsFields.vue';
+import { useAuth } from '@/composables/useAuth';
 import { useSectionTabs } from '@/composables/useSectionTabs';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
 import * as residentService from '@/services/residentService';
 import {
+    applyLookupCreated,
+    ensureResidentDemographicLookups,
+} from '@/utils/demographicLookups';
+import {
     HEAD_RELATIONSHIP_ID,
     applyValidationErrors,
     assignResidentNameError,
     duplicateResidentMatch,
     emptyResidentForm,
-    optionalText,
+    optionalAddressText,
     residentPayload,
     toId,
     validateResidentForm,
@@ -193,12 +209,14 @@ import {
 
 const router = useRouter();
 const { householdTabs } = useSectionTabs();
+const { hasPermission } = useAuth();
 
 const loadingLookups = ref(true);
 const saving = ref(false);
 const error = ref('');
 const successMessage = ref('');
 const createdHousehold = ref(null);
+const membersComplete = ref(false);
 
 const clans = ref([]);
 const streets = ref([]);
@@ -278,6 +296,31 @@ function clearHeadErrors() {
     });
 }
 
+function onLookupCreated(payload) {
+    applyLookupCreated({
+        nationality: nationalities,
+        religion: religions,
+        ethnicity: ethnicities,
+    }, payload);
+}
+
+function onLookupError({ field, message }) {
+    if (field) {
+        headErrors[field] = message;
+    }
+}
+
+function ensureLookups(form) {
+    return ensureResidentDemographicLookups(form, {
+        nationalities,
+        religions,
+        ethnicities,
+        canCreateNationality: hasPermission('nationality.create'),
+        canCreateReligion: hasPermission('religion.create'),
+        canCreateEthnicity: hasPermission('ethnicity.create'),
+    });
+}
+
 function validateHeadName(field, label, required = false) {
     assignResidentNameError(head.value, headErrors, field, label, required);
 }
@@ -345,10 +388,20 @@ async function handleSave() {
     successMessage.value = '';
     clearHeadErrors();
 
+    const lookupErrors = await ensureResidentDemographicLookups(head.value, {
+        nationalities,
+        religions,
+        ethnicities,
+        canCreateNationality: hasPermission('nationality.create'),
+        canCreateReligion: hasPermission('religion.create'),
+        canCreateEthnicity: hasPermission('ethnicity.create'),
+    });
+
     const householdValid = validateHousehold();
     const headValid = validateResidentForm(head.value, headErrors, { requireRelationship: false });
+    Object.assign(headErrors, lookupErrors);
 
-    if (!householdValid || !headValid) {
+    if (!householdValid || !headValid || Object.keys(lookupErrors).length) {
         return;
     }
 
@@ -378,10 +431,10 @@ async function handleSave() {
         createdHousehold.value = await householdService.createHousehold({
             clan_id: toId(household.clan_id),
             street_id: toId(household.street_id),
-            house_lot: optionalText(household.house_lot),
-            block_num: optionalText(household.block_num),
-            building_name: optionalText(household.building_name),
-            unit_num: optionalText(household.unit_num),
+            house_lot: optionalAddressText(household.house_lot),
+            block_num: optionalAddressText(household.block_num),
+            building_name: optionalAddressText(household.building_name),
+            unit_num: optionalAddressText(household.unit_num),
             head: headData,
         });
 
@@ -410,12 +463,19 @@ async function refreshExistingResidents() {
     }
 }
 
-function goToHouseholdList() {
+function goToHouseholdDetail() {
     const householdId = createdHousehold.value?.household_id;
 
+    if (!householdId) {
+        router.push({ name: 'households' });
+
+        return;
+    }
+
     router.push({
-        name: 'households',
-        query: householdId ? { created: String(householdId) } : {},
+        name: 'household-assessment-detail',
+        params: { id: householdId },
+        query: { encoded: '1' },
     });
 }
 

@@ -22,8 +22,17 @@
                         autocapitalize="off"
                         spellcheck="false"
                         class="rbim-input py-2"
-                        placeholder="Search street or head resident name"
+                        placeholder="Search head resident name"
                     >
+                </div>
+                <div>
+                    <label for="household-filter-clan" class="rbim-label">Clan</label>
+                    <select id="household-filter-clan" v-model="filters.clan_id" class="rbim-input py-2">
+                        <option value="">All clans</option>
+                        <option v-for="clan in clans" :key="clan.id" :value="clan.id">
+                            {{ clan.label }}
+                        </option>
+                    </select>
                 </div>
                 <div>
                     <label for="household-filter-street" class="rbim-label">Street</label>
@@ -43,7 +52,7 @@
                         </option>
                     </select>
                 </div>
-                <div class="flex items-end gap-2 sm:col-span-2">
+                <div class="flex items-end">
                     <button type="button" class="rbim-btn-outline" :disabled="loading" @click="clearFilters">
                         Refresh
                     </button>
@@ -244,7 +253,7 @@ import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
 import { formatDate, matchesSearch } from '@/utils/format';
-import { applyValidationErrors, optionalText, toId } from '@/utils/residentForm';
+import { applyValidationErrors, optionalAddressText, toId } from '@/utils/residentForm';
 
 const router = useRouter();
 const route = useRoute();
@@ -252,6 +261,7 @@ const { hasPermission } = useAuth();
 const { householdTabs } = useSectionTabs();
 
 const items = ref([]);
+const clans = ref([]);
 const streets = ref([]);
 const householdStatuses = ref([]);
 const loading = ref(false);
@@ -262,6 +272,7 @@ const error = ref('');
 const successMessage = ref('');
 const filters = reactive({
     search: '',
+    clan_id: '',
     street_id: '',
     household_status_id: '',
 });
@@ -280,11 +291,7 @@ const confirm = reactive({
 const canUpdate = computed(() => hasPermission('household.update'));
 
 const filteredItems = computed(() => (
-    items.value.filter((household) => (
-        matchesSearch(household.street_name, filters.search)
-        || matchesSearch(household.head_name, filters.search)
-        || matchesSearch(household.household_id, filters.search)
-    ))
+    items.value.filter((household) => matchesSearch(household.head_name, filters.search))
 ));
 
 function emptyEditForm() {
@@ -350,11 +357,13 @@ function cancelEdit() {
 }
 
 async function loadLookups() {
-    const [streetItems, statusItems] = await Promise.all([
+    const [clanItems, streetItems, statusItems] = await Promise.all([
+        lookupService.fetchLookup('clan'),
         lookupService.fetchStreets(),
         lookupService.fetchLookup('household-status'),
     ]);
 
+    clans.value = clanItems;
     streets.value = streetItems;
     householdStatuses.value = statusItems;
 }
@@ -365,6 +374,7 @@ async function loadHouseholds() {
 
     try {
         items.value = await householdService.fetchHouseholds({
+            clan_id: toId(filters.clan_id) ?? undefined,
             street_id: toId(filters.street_id) ?? undefined,
             household_status_id: toId(filters.household_status_id) ?? undefined,
         });
@@ -377,13 +387,14 @@ async function loadHouseholds() {
 
 function clearFilters() {
     filters.search = '';
+    filters.clan_id = '';
     filters.street_id = '';
     filters.household_status_id = '';
     loadHouseholds();
 }
 
 watch(
-    () => [filters.street_id, filters.household_status_id],
+    () => [filters.clan_id, filters.street_id, filters.household_status_id],
     () => {
         loadHouseholds();
     },
@@ -421,10 +432,10 @@ async function handleUpdate() {
     try {
         await householdService.updateHousehold(editingId.value, {
             street_id: toId(editForm.street_id),
-            house_lot: optionalText(editForm.house_lot),
-            block_num: optionalText(editForm.block_num),
-            building_name: optionalText(editForm.building_name),
-            unit_num: optionalText(editForm.unit_num),
+            house_lot: optionalAddressText(editForm.house_lot),
+            block_num: optionalAddressText(editForm.block_num),
+            building_name: optionalAddressText(editForm.building_name),
+            unit_num: optionalAddressText(editForm.unit_num),
             household_status_id: toId(editForm.household_status_id),
         });
         successMessage.value = 'Household updated successfully.';
@@ -456,7 +467,6 @@ onMounted(async () => {
 
     if (createdId) {
         successMessage.value = `Household ${createdId} was registered successfully.`;
-        filters.search = String(createdId);
         router.replace({ name: 'households' });
     }
 });

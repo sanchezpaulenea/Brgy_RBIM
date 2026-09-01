@@ -18,6 +18,7 @@ class IndexHouseholdRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'clan_id' => ['sometimes', 'integer', Rule::exists('clan', 'clan_id')],
             'street_id' => ['sometimes', 'integer', Rule::exists('street', 'street_id')],
             'household_status_id' => [
                 'sometimes',
@@ -33,13 +34,14 @@ class IndexHouseholdRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'clan_id.exists' => 'The selected clan does not exist.',
             'street_id.exists' => 'The selected street does not exist.',
             'household_status_id.exists' => 'The selected household status does not exist.',
         ];
     }
 
     /**
-     * @return array{street_id?: int, household_status_id?: int}
+     * @return array{clan_id?: int, street_id?: int, household_status_id?: int}
      */
     public function filters(): array
     {

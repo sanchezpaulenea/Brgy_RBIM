@@ -29,4 +29,36 @@ class HouseholdEncodingTest extends TestCase
         $this->assertNotSame(405, $response->status());
         $response->assertUnauthorized();
     }
+
+    public function test_household_assessment_index_route_accepts_get(): void
+    {
+        $response = $this->getJson('/api/v1/households/1/assessments');
+
+        $this->assertNotSame(405, $response->status());
+        $response->assertUnauthorized();
+    }
+
+    public function test_household_assessment_store_route_accepts_post(): void
+    {
+        $response = $this->postJson('/api/v1/households/1/assessments', []);
+
+        $this->assertNotSame(405, $response->status());
+        $response->assertUnauthorized();
+    }
+
+    public function test_household_assessment_options_route_accepts_get(): void
+    {
+        $response = $this->getJson('/api/v1/household-assessment-options');
+
+        $this->assertNotSame(405, $response->status());
+        $response->assertUnauthorized();
+    }
+
+    public function test_household_assessment_list_route_accepts_get(): void
+    {
+        $response = $this->getJson('/api/v1/household-assessments');
+
+        $this->assertNotSame(405, $response->status());
+        $response->assertUnauthorized();
+    }
 }

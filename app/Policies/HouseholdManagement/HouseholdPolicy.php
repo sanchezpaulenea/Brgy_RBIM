@@ -9,21 +9,21 @@ class HouseholdPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isSuperAdmin() || $user->hasPermission('household.view');
+        return $user->isAdmin() || $user->hasPermission('household.view');
     }
 
     public function view(User $user, Household $household): bool
     {
-        return $user->isSuperAdmin() || $user->hasPermission('household.view');
+        return $user->isAdmin() || $user->hasPermission('household.view');
     }
 
     public function create(User $user): bool
     {
-        return $user->isEncoder() && $user->hasPermission('household.create');
+        return ($user->isEncoder() || $user->isAdmin()) && $user->hasPermission('household.create');
     }
 
     public function update(User $user, Household $household): bool
     {
-        return $user->isSuperAdmin() || $user->hasPermission('household.update');
+        return $user->isAdmin() || $user->hasPermission('household.update');
     }
 }

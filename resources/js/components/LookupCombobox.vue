@@ -27,7 +27,7 @@
             @keydown.escape="open = false"
         >
         <ul
-            v-if="open && filtered.length"
+            v-if="open && itemCount"
             class="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
         >
             <li
@@ -39,13 +39,15 @@
             >
                 {{ option.label }}
             </li>
+            <li
+                v-if="newName"
+                class="cursor-pointer px-3 py-2 text-sm"
+                :class="highlightedIndex === filtered.length ? 'bg-brand text-white' : 'text-slate-700 hover:bg-brand-muted'"
+                @mousedown.prevent="createFromQuery"
+            >
+                Add “{{ newName }}”
+            </li>
         </ul>
-        <p
-            v-else-if="open && canCreate && newName"
-            class="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 shadow-lg"
-        >
-            Press Enter to add “{{ newName }}”.
-        </p>
         <p v-if="error" class="rbim-error">{{ error }}</p>
         <p v-else-if="hint" class="rbim-hint">{{ hint }}</p>
     </div>
@@ -98,7 +100,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['update:modelValue', 'update:query']);
+const emit = defineEmits(['update:modelValue', 'update:query', 'create']);
 
 const query = ref('');
 const open = ref(false);
@@ -122,10 +124,14 @@ const newName = computed(() => {
         return '';
     }
 
-    const exists = props.options.some((option) => option.label.toLowerCase() === term.toLowerCase());
+    const exists = props.options.some((option) => (
+        String(option.label ?? '').toLowerCase() === term.toLowerCase()
+    ));
 
     return exists ? '' : term;
 });
+
+const itemCount = computed(() => filtered.value.length + (newName.value ? 1 : 0));
 
 watch(selected, (option) => {
     if (option) {
@@ -172,15 +178,31 @@ function select(option) {
 }
 
 function move(step) {
-    if (!filtered.value.length) {
+    if (!itemCount.value) {
         return;
     }
 
     const next = highlightedIndex.value + step;
-    highlightedIndex.value = (next + filtered.value.length) % filtered.value.length;
+    highlightedIndex.value = (next + itemCount.value) % itemCount.value;
+}
+
+function createFromQuery() {
+    if (!newName.value) {
+        return;
+    }
+
+    emit('create', newName.value);
+    emit('update:query', newName.value);
+    open.value = false;
 }
 
 function onEnter() {
+    if (newName.value && highlightedIndex.value >= filtered.value.length) {
+        createFromQuery();
+
+        return;
+    }
+
     const option = filtered.value[highlightedIndex.value];
 
     if (open.value && option) {
@@ -190,9 +212,7 @@ function onEnter() {
     }
 
     if (newName.value) {
-        emit('update:modelValue', null);
-        emit('update:query', newName.value);
-        open.value = false;
+        createFromQuery();
     }
 }
 </script>

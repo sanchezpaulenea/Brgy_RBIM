@@ -7,6 +7,10 @@ export async function fetchResidents(filters = {}) {
         params.household_id = filters.household_id;
     }
 
+    if (filters.resident_type_id) {
+        params.resident_type_id = filters.resident_type_id;
+    }
+
     if (filters.resident_status_id) {
         params.resident_status_id = filters.resident_status_id;
     }

@@ -49,6 +49,8 @@
                                 :errors="memberErrors[member.key] ?? {}"
                                 @update:model-value="updateMember(index, $event)"
                                 @remove="removeMember(index)"
+                                @lookup-created="onLookupCreated"
+                                @lookup-error="(payload) => onMemberLookupError(member.key, payload)"
                             />
                         </div>
                         <button type="button" class="rbim-btn-gold" @click="addMember">
@@ -85,6 +87,11 @@ import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
 import { ageFromDateOfBirth, personDisplayName } from '@/utils/format';
+import {
+    applyLookupCreated,
+    ensureResidentDemographicLookups,
+} from '@/utils/demographicLookups';
+import { optionalAddressText } from '@/utils/residentForm';
 import { personnelNameValidationError } from '@/utils/validation';
 
 const HEAD_RELATIONSHIP_ID = 1;
@@ -185,9 +192,12 @@ function createMember(isHead) {
         sex_id: '',
         date_of_birth: '',
         nationality_id: '',
+        nationality_name: '',
         marital_status_id: '',
         religion_id: '',
+        religion_name: '',
         ethnicity_id: '',
+        ethnicity_name: '',
         birth_city_municipality: '',
         birth_province: '',
         birth_country: DEFAULT_BIRTH_COUNTRY,
@@ -211,6 +221,28 @@ function memberTitle(member, index) {
 
 function updateMember(index, next) {
     members.value[index] = next;
+}
+
+function onLookupCreated(payload) {
+    applyLookupCreated({
+        nationality: nationalities,
+        religion: religions,
+        ethnicity: ethnicities,
+    }, payload);
+}
+
+function onMemberLookupError(memberKey, { field, message } = {}) {
+    if (!field) {
+        return;
+    }
+
+    memberErrors.value = {
+        ...memberErrors.value,
+        [memberKey]: {
+            ...(memberErrors.value[memberKey] ?? {}),
+            [field]: message,
+        },
+    };
 }
 
 function addMember() {
@@ -517,8 +549,45 @@ async function resolveStreetId() {
     return toId(identification.street_id);
 }
 
+function mergeMemberLookupErrors(lookupErrorMap) {
+    if (!Object.keys(lookupErrorMap).length) {
+        return;
+    }
+
+    memberErrors.value = {
+        ...memberErrors.value,
+        ...Object.fromEntries(Object.entries(lookupErrorMap).map(([key, errors]) => [
+            key,
+            { ...(memberErrors.value[key] ?? {}), ...errors },
+        ])),
+    };
+}
+
 async function saveHousehold() {
-    if (!validateIdentification() || !validateMembers() || !validateEducation()) {
+    const lookupErrorMap = {};
+
+    for (const member of members.value) {
+        const lookupErrors = await ensureResidentDemographicLookups(member, {
+            nationalities,
+            religions,
+            ethnicities,
+            canCreateNationality: hasPermission('nationality.create'),
+            canCreateReligion: hasPermission('religion.create'),
+            canCreateEthnicity: hasPermission('ethnicity.create'),
+        });
+
+        if (Object.keys(lookupErrors).length) {
+            lookupErrorMap[member.key] = lookupErrors;
+        }
+    }
+
+    const identificationValid = validateIdentification();
+    const membersValid = validateMembers();
+    const educationValid = validateEducation();
+
+    mergeMemberLookupErrors(lookupErrorMap);
+
+    if (!identificationValid || !membersValid || !educationValid || Object.keys(lookupErrorMap).length) {
         return;
     }
 
@@ -532,9 +601,9 @@ async function saveHousehold() {
         const household = await householdService.createHousehold({
             clan_id: toId(identification.clan_id),
             street_id: streetId,
-            house_lot: optionalText(identification.house_lot),
-            block_num: optionalText(identification.block_num),
-            unit_num: optionalText(identification.unit_num),
+            house_lot: optionalAddressText(identification.house_lot),
+            block_num: optionalAddressText(identification.block_num),
+            unit_num: optionalAddressText(identification.unit_num),
             head: residentPayload(head),
         });
 

@@ -28,7 +28,7 @@ class ResidentRepository implements ResidentRepositoryInterface
     }
 
     /**
-     * @param  array{household_id?: int, resident_status_id?: int}  $filters
+     * @param  array{household_id?: int, resident_type_id?: int, resident_status_id?: int}  $filters
      * @return Collection<int, Resident>
      */
     public function list(array $filters = []): Collection
@@ -38,6 +38,10 @@ class ResidentRepository implements ResidentRepositoryInterface
             ->when(
                 ! empty($filters['household_id']),
                 fn ($query) => $query->where('household_id', $filters['household_id']),
+            )
+            ->when(
+                ! empty($filters['resident_type_id']),
+                fn ($query) => $query->where('resident_type_id', $filters['resident_type_id']),
             )
             ->when(
                 ! empty($filters['resident_status_id']),

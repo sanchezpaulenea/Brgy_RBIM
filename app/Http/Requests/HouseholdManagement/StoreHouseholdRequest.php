@@ -2,14 +2,18 @@
 
 namespace App\Http\Requests\HouseholdManagement;
 
+use App\Http\Requests\HouseholdManagement\Concerns\NormalizesHouseholdAddress;
 use App\Rules\ValidPersonnelName;
 use App\Rules\ValidPlaceName;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreHouseholdRequest extends FormRequest
 {
+    use NormalizesHouseholdAddress;
+
     public function authorize(): bool
     {
         return true;
@@ -17,6 +21,13 @@ class StoreHouseholdRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $this->mergeNormalizedAddressFields([
+            'house_lot',
+            'block_num',
+            'building_name',
+            'unit_num',
+        ]);
+
         $head = $this->input('head');
 
         if (! is_array($head)) {
@@ -118,6 +129,13 @@ class StoreHouseholdRequest extends FormRequest
             'head.resident_status_id.exists' => 'The selected resident status does not exist.',
             'head.relationship_to_hh_id.exists' => 'The selected relationship does not exist.',
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $this->validateUniqueLotAndBlock($validator);
+        });
     }
 
     private function titleCaseName(mixed $value): mixed

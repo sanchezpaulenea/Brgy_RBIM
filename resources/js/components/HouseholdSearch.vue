@@ -69,7 +69,7 @@ const props = defineProps({
     },
     placeholder: {
         type: String,
-        default: 'Search street or head resident name',
+        default: 'Search head resident name',
     },
     hint: {
         type: String,
@@ -100,6 +100,8 @@ const open = ref(false);
 const highlightedIndex = ref(0);
 const root = ref(null);
 
+const HOUSEHOLD_SEARCH_LIMIT = 5;
+
 const selected = computed(() => (
     props.options.find((option) => Number(option.household_id) === Number(props.modelValue)) ?? null
 ));
@@ -107,9 +109,9 @@ const selected = computed(() => (
 const selectedLabel = computed(() => (selected.value ? householdDisplayLabel(selected.value) : ''));
 
 const filtered = computed(() => {
-    const list = props.options.filter((option) => matchesSearch(optionLabel(option), query.value));
+    const list = props.options.filter((option) => matchesSearch(headName(option), query.value));
 
-    return list.slice(0, 8);
+    return list.slice(0, HOUSEHOLD_SEARCH_LIMIT);
 });
 
 watch(selected, (household) => {
@@ -131,6 +133,10 @@ watch(query, (value) => {
 
     highlightedIndex.value = 0;
 });
+
+function headName(option) {
+    return option.head_name || option.head?.full_name || '';
+}
 
 function optionLabel(option) {
     return householdDisplayLabel(option);

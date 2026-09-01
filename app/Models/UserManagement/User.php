@@ -288,6 +288,11 @@ class User extends Authenticatable
         return $this->hasRole(Role::ENCODER);
     }
 
+    public function isAdmin(): bool
+    {
+        return $this->hasRole(Role::ADMIN);
+    }
+
     /**
      * Encoders need reference lists (streets, sex, nationality, and so on)
      * while registering a household, even when they cannot manage those tables.

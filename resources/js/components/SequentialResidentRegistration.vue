@@ -97,6 +97,8 @@
                         :resident-types="residentTypes"
                         :id-prefix="idPrefix"
                         @validate-name="validateMemberName"
+                        @lookup-created="emit('lookup-created', $event)"
+                        @lookup-error="onLookupError"
                     />
                 </section>
 
@@ -195,9 +197,13 @@ const props = defineProps({
         type: String,
         default: 'resident_count',
     },
+    ensureLookups: {
+        type: Function,
+        default: null,
+    },
 });
 
-const emit = defineEmits(['finished', 'member-added', 'back']);
+const emit = defineEmits(['finished', 'member-added', 'back', 'lookup-created']);
 
 const {
     step,
@@ -225,7 +231,14 @@ const {
     noun: props.noun,
     onMemberAdded: () => emit('member-added'),
     onFinished: (result) => emit('finished', result),
+    ensureLookups: (form) => props.ensureLookups?.(form),
 });
+
+function onLookupError({ field, message }) {
+    if (field) {
+        memberErrors[field] = message;
+    }
+}
 
 const householdLabel = computed(() => householdDisplayLabel(props.household));
 

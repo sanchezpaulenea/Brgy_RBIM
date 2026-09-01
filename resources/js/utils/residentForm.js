@@ -17,8 +17,11 @@ export function emptyResidentForm(overrides = {}) {
         birth_province: '',
         birth_country: DEFAULT_BIRTH_COUNTRY,
         nationality_id: '',
+        nationality_name: '',
         religion_id: '',
+        religion_name: '',
         ethnicity_id: '',
+        ethnicity_name: '',
         marital_status_id: '',
         resident_type_id: '',
         ...overrides,
@@ -29,6 +32,18 @@ export function optionalText(value) {
     const text = String(value ?? '').trim();
 
     return text === '' ? null : text;
+}
+
+const NOT_APPLICABLE_ADDRESS = /^(n\/?a|n\.a\.?|not applicable)$/i;
+
+export function optionalAddressText(value) {
+    const text = optionalText(value);
+
+    if (text === null || NOT_APPLICABLE_ADDRESS.test(text)) {
+        return null;
+    }
+
+    return text;
 }
 
 export function toId(value) {

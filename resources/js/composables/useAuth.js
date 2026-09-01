@@ -141,7 +141,7 @@ export function useAuth() {
 
     function canAccessRoute(meta = {}) {
         if (isSuperAdmin.value) {
-            return true;
+            return !meta.hideFromSuperAdmin;
         }
 
         if (meta.requiresSuperAdmin) {

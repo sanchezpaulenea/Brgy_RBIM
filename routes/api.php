@@ -4,6 +4,7 @@ use App\Http\Controllers\Authentication\AuthController;
 use App\Http\Controllers\Authentication\PasswordController;
 use App\Http\Controllers\BarangayPersonnel\BarangayPersonnelController;
 use App\Http\Controllers\BarangayPersonnel\PersonnelController;
+use App\Http\Controllers\HouseholdManagament\HouseholdAssessmentController;
 use App\Http\Controllers\HouseholdManagament\HouseholdController;
 use App\Http\Controllers\HouseholdManagament\StreetController;
 use App\Http\Controllers\Logs\AuditLogController;
@@ -37,6 +38,10 @@ Route::prefix('v1')->group(function () {
         Route::get('personnel-positions', [BarangayPersonnelController::class, 'index'])->name('personnel-positions.index');
         Route::get('households', [HouseholdController::class, 'index'])->name('households.index');
         Route::post('households', [HouseholdController::class, 'store'])->name('households.store');
+        Route::get('household-assessment-options', [HouseholdAssessmentController::class, 'options'])->name('household-assessments.options');
+        Route::get('household-assessments', [HouseholdAssessmentController::class, 'indexAll'])->name('household-assessments.index');
+        Route::get('households/{household}/assessments', [HouseholdAssessmentController::class, 'index'])->name('households.assessments.index');
+        Route::post('households/{household}/assessments', [HouseholdAssessmentController::class, 'store'])->name('households.assessments.store');
         Route::get('households/{household}', [HouseholdController::class, 'show'])->name('households.show');
         Route::patch('households/{household}', [HouseholdController::class, 'update'])->name('households.update');
 

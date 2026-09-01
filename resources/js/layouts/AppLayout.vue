@@ -260,7 +260,7 @@ defineProps({
 
 const route = useRoute();
 const router = useRouter();
-const { hasPermission, isSuperAdmin } = useAuth();
+const { hasPermission, isSystemAdministrator } = useAuth();
 const { householdTabs, residentTabs, personnelTabs, userTabs } = useSectionTabs();
 
 const sidebarOpen = ref(false);
@@ -269,7 +269,9 @@ const openMenu = ref(null);
 const canViewHouseholdMenu = computed(() => householdTabs.value.length > 0);
 const canViewResidentMenu = computed(() => residentTabs.value.length > 0);
 
-const canViewSystemSettings = computed(() => isSuperAdmin.value);
+const canViewSystemSettings = computed(() => (
+    isSystemAdministrator.value && hasPermission('setting.view')
+));
 
 const canViewAuditLogs = computed(() => hasPermission('auditlog.view'));
 const canViewUserLogs = computed(() => hasPermission('userlog.view'));
@@ -283,6 +285,9 @@ const isHouseholdRoute = computed(() => String(route.path).startsWith('/househol
 const isHouseholdViewRoute = computed(() => (
     route.name === 'households' || route.name === 'household-detail'
 ));
+const isHouseholdAssessmentRoute = computed(() => (
+    route.name === 'household-assessments' || route.name === 'household-assessment-detail'
+));
 const isResidentRoute = computed(() => String(route.path).startsWith('/residents'));
 const isSettingsRoute = computed(() => String(route.path).startsWith('/settings'));
 const isPersonnelRoute = computed(() => String(route.path).startsWith('/personnel'));
@@ -291,6 +296,10 @@ const isUsersRoute = computed(() => String(route.path).startsWith('/users'));
 function isSidebarTabActive(tab) {
     if (tab.name === 'households') {
         return isHouseholdViewRoute.value;
+    }
+
+    if (tab.name === 'household-assessments') {
+        return isHouseholdAssessmentRoute.value;
     }
 
     return route.name === tab.name;

@@ -35,6 +35,15 @@
                     </select>
                 </div>
                 <div>
+                    <label for="resident-filter-type" class="rbim-label">Resident Type</label>
+                    <select id="resident-filter-type" v-model="filters.resident_type_id" class="rbim-input py-2">
+                        <option value="">All types</option>
+                        <option v-for="type in residentTypes" :key="type.id" :value="type.id">
+                            {{ type.label }}
+                        </option>
+                    </select>
+                </div>
+                <div>
                     <label for="resident-filter-status" class="rbim-label">Resident Status</label>
                     <select id="resident-filter-status" v-model="filters.resident_status_id" class="rbim-input py-2">
                         <option value="">All statuses</option>
@@ -43,7 +52,7 @@
                         </option>
                     </select>
                 </div>
-                <div class="flex items-end gap-2 sm:col-span-2">
+                <div class="flex items-end">
                     <button type="button" class="rbim-btn-outline" :disabled="loading" @click="clearFilters">
                         Refresh
                     </button>
@@ -107,6 +116,7 @@ const { residentTabs } = useSectionTabs();
 
 const items = ref([]);
 const households = ref([]);
+const residentTypes = ref([]);
 const residentStatuses = ref([]);
 const loading = ref(false);
 const error = ref('');
@@ -114,6 +124,7 @@ const successMessage = ref('');
 const filters = reactive({
     search: '',
     household_id: '',
+    resident_type_id: '',
     resident_status_id: '',
 });
 
@@ -151,12 +162,14 @@ function householdLabelFor(resident) {
 }
 
 async function loadLookups() {
-    const [householdItems, statusItems] = await Promise.all([
+    const [householdItems, typeItems, statusItems] = await Promise.all([
         householdService.fetchHouseholds(),
+        lookupService.fetchLookup('resident-type'),
         lookupService.fetchLookup('resident-status'),
     ]);
 
     households.value = householdItems;
+    residentTypes.value = typeItems;
     residentStatuses.value = statusItems;
 }
 
@@ -167,6 +180,7 @@ async function loadResidents() {
     try {
         items.value = await residentService.fetchResidents({
             household_id: toId(filters.household_id) ?? undefined,
+            resident_type_id: toId(filters.resident_type_id) ?? undefined,
             resident_status_id: toId(filters.resident_status_id) ?? undefined,
         });
     } catch (err) {
@@ -179,12 +193,13 @@ async function loadResidents() {
 function clearFilters() {
     filters.search = '';
     filters.household_id = '';
+    filters.resident_type_id = '';
     filters.resident_status_id = '';
     loadResidents();
 }
 
 watch(
-    () => [filters.household_id, filters.resident_status_id],
+    () => [filters.household_id, filters.resident_type_id, filters.resident_status_id],
     () => {
         loadResidents();
     },

@@ -5,7 +5,7 @@
                 Household registered
             </h2>
             <p class="mt-1 text-xs text-slate-500">
-                The household and head resident are saved. You can add more members now, or finish and return to the household list.
+                The household and head resident are saved. You can add more members now, or finish and encode this visit's assessment.
             </p>
             <p class="mt-4 text-sm text-slate-900">
                 {{ householdLabel }}
@@ -14,7 +14,7 @@
                 <button type="button" class="rbim-btn" @click="step = 'register'">
                     Continue Registering Members
                 </button>
-                <button type="button" class="rbim-btn-outline" @click="emit('finished')">
+                <button type="button" class="rbim-btn-outline" @click="emit('members-complete')">
                     Finish
                 </button>
             </div>
@@ -31,6 +31,7 @@
             :marital-statuses="maritalStatuses"
             :resident-types="residentTypes"
             :existing-residents="existingResidents"
+            :ensure-lookups="ensureLookups"
             count-title="Additional household members"
             count-label="How many household members would you like to add?"
             count-hint="The household head is already registered. This is how many more members you will encode next."
@@ -40,7 +41,8 @@
             count-input-id="member_count"
             @back="step = 'choice'"
             @member-added="emit('member-added')"
-            @finished="emit('finished')"
+            @finished="emit('members-complete')"
+            @lookup-created="emit('lookup-created', $event)"
         />
     </div>
 </template>
@@ -87,9 +89,13 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    ensureLookups: {
+        type: Function,
+        default: null,
+    },
 });
 
-const emit = defineEmits(['finished', 'member-added']);
+const emit = defineEmits(['members-complete', 'member-added', 'lookup-created']);
 
 const step = ref('choice');
 const householdLabel = computed(() => householdDisplayLabel(props.household));

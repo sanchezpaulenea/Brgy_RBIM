@@ -30,6 +30,7 @@ class HouseholdRepository implements HouseholdRepositoryInterface
             'latestAssessment.encoder',
             'latestAssessment.interviewer',
             'latestAssessment.supervisor',
+            'latestAssessment.previousAssessment.censusStatus',
         ];
     }
 
@@ -65,13 +66,17 @@ class HouseholdRepository implements HouseholdRepositoryInterface
     }
 
     /**
-     * @param  array{street_id?: int, household_status_id?: int}  $filters
+     * @param  array{clan_id?: int, street_id?: int, household_status_id?: int}  $filters
      * @return Collection<int, Household>
      */
     public function list(array $filters = []): Collection
     {
         return Household::query()
             ->with($this->listRelations())
+            ->when(
+                ! empty($filters['clan_id']),
+                fn ($query) => $query->where('clan_id', $filters['clan_id']),
+            )
             ->when(
                 ! empty($filters['street_id']),
                 fn ($query) => $query->where('street_id', $filters['street_id']),

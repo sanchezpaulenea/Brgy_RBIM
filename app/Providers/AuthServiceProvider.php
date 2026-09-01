@@ -7,6 +7,7 @@ use App\Models\BarangayPersonnel\PersonnelPosition;
 use App\Models\HouseholdManagement\CensusStatus;
 use App\Models\HouseholdManagement\Clan;
 use App\Models\HouseholdManagement\Household;
+use App\Models\HouseholdManagement\HouseholdAssessment;
 use App\Models\HouseholdManagement\HouseholdStatus;
 use App\Models\HouseholdManagement\Street;
 use App\Models\Logs\AuditLog;
@@ -25,6 +26,7 @@ use App\Models\UserManagement\User;
 use App\Models\UserManagement\UserRole;
 use App\Policies\BarangayPersonnel\BarangayPersonnelPolicy;
 use App\Policies\BarangayPersonnel\PersonnelPolicy;
+use App\Policies\HouseholdManagement\HouseholdAssessmentPolicy;
 use App\Policies\HouseholdManagement\HouseholdPolicy;
 use App\Policies\HouseholdManagement\StreetPolicy;
 use App\Policies\Logs\AuditLogPolicy;
@@ -58,6 +60,7 @@ class AuthServiceProvider extends ServiceProvider
         BarangayPersonnel::class => PersonnelPolicy::class,
         Setting::class => SystemSettingPolicy::class,
         Household::class => HouseholdPolicy::class,
+        HouseholdAssessment::class => HouseholdAssessmentPolicy::class,
         Street::class => StreetPolicy::class,
         Resident::class => ResidentPolicy::class,
         Nationality::class => NationalityPolicy::class,

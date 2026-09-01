@@ -19,6 +19,11 @@ class IndexResidentRequest extends FormRequest
     {
         return [
             'household_id' => ['sometimes', 'integer', Rule::exists('household', 'household_id')],
+            'resident_type_id' => [
+                'sometimes',
+                'integer',
+                Rule::exists('resident_type', 'resident_type_id'),
+            ],
             'resident_status_id' => [
                 'sometimes',
                 'integer',
@@ -34,12 +39,13 @@ class IndexResidentRequest extends FormRequest
     {
         return [
             'household_id.exists' => 'The selected household does not exist.',
+            'resident_type_id.exists' => 'The selected resident type does not exist.',
             'resident_status_id.exists' => 'The selected resident status does not exist.',
         ];
     }
 
     /**
-     * @return array{household_id?: int, resident_status_id?: int}
+     * @return array{household_id?: int, resident_type_id?: int, resident_status_id?: int}
      */
     public function filters(): array
     {

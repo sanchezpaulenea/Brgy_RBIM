@@ -151,6 +151,42 @@ export function formatDate(value) {
     return String(value).slice(0, 10);
 }
 
+/**
+ * Census status labels always include the code, e.g. "CB (Callback)".
+ */
+export function censusStatusLabel(item) {
+    if (!item) {
+        return '—';
+    }
+
+    if (item.census_status_label) {
+        return item.census_status_label;
+    }
+
+    const code = item.census_status_code || item.status_code;
+    const name = item.census_status || item.status_name || item.label;
+
+    if (code && name) {
+        return `${code} (${name})`;
+    }
+
+    return name || '—';
+}
+
+export function isCallbackCensusStatus(item) {
+    if (!item) {
+        return false;
+    }
+
+    const code = String(item.census_status_code || item.status_code || '').toUpperCase();
+
+    if (code) {
+        return code === 'CB';
+    }
+
+    return Number(item.census_status_id ?? item.id) === 2;
+}
+
 export function householdDisplayLabel(household) {
     if (!household) {
         return '—';

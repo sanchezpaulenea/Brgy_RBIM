@@ -17,11 +17,11 @@ class SystemSettingPolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->isSuperAdmin();
+        return $user->isSystemAdministrator() && $user->hasPermission('setting.view');
     }
 
     public function update(User $user, Setting $setting): bool
     {
-        return $user->isSuperAdmin();
+        return $user->isSystemAdministrator() && $user->hasPermission('setting.update');
     }
 }

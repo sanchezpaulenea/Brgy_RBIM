@@ -12,7 +12,7 @@ import {
     validateResidentForm,
 } from '@/utils/residentForm';
 
-export const SEQUENTIAL_RESIDENT_MAX = 50;
+export const SEQUENTIAL_RESIDENT_MAX = 10;
 
 export function parseResidentCount(value, { min = 1, max = SEQUENTIAL_RESIDENT_MAX, noun = 'residents' } = {}) {
     const count = Number.parseInt(String(value), 10);
@@ -39,6 +39,7 @@ export function useSequentialResidentRegistration({
     noun = 'residents',
     onMemberAdded,
     onFinished,
+    ensureLookups,
 } = {}) {
     const step = ref('count');
     const saving = ref(false);
@@ -147,6 +148,18 @@ export function useSequentialResidentRegistration({
         if (!householdId) {
             error.value = 'Household is required.';
             return;
+        }
+
+        if (ensureLookups) {
+            const lookupErrors = await ensureLookups(member.value) ?? {};
+
+            Object.entries(lookupErrors).forEach(([field, message]) => {
+                memberErrors[field] = message;
+            });
+
+            if (Object.keys(lookupErrors).length) {
+                return;
+            }
         }
 
         const valid = validateResidentForm(member.value, memberErrors, { requireRelationship: true });

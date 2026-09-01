@@ -11,9 +11,9 @@ class RolePermissionSeeder extends Seeder
     {
         /*
          * Maps each role to its permission set as defined in brgy_rbim.sql,
-         * plus Super Admin coverage of Increment 2 modules and user.delete.
-         * System settings (permission_id 15, 16) belong to Super Admin only.
-         * Household and resident registration (create) stay on Encoder only.
+         * plus Super Admin coverage of Increment 2 lookup modules and user.delete.
+         * System settings (permission_id 15, 16) belong to Admin and Super Admin.
+         * Household and resident registration belong to Encoder and Admin.
          *
          * role_id 1 = Encoder
          * role_id 2 = Admin
@@ -37,13 +37,16 @@ class RolePermissionSeeder extends Seeder
             ['role_permission_id' => 55, 'role_id' => 1, 'permission_id' => 34],
             ['role_permission_id' => 56, 'role_id' => 1, 'permission_id' => 36],
             ['role_permission_id' => 57, 'role_id' => 1, 'permission_id' => 37],
-            // Admin — system settings (15, 16) are Super Admin only
+            // Admin
             ['role_permission_id' => 18, 'role_id' => 2, 'permission_id' => 17],
+            ['role_permission_id' => 79, 'role_id' => 2, 'permission_id' => 15],
+            ['role_permission_id' => 80, 'role_id' => 2, 'permission_id' => 16],
             ['role_permission_id' => 23, 'role_id' => 2, 'permission_id' => 18],
             ['role_permission_id' => 24, 'role_id' => 2, 'permission_id' => 19],
             ['role_permission_id' => 25, 'role_id' => 2, 'permission_id' => 20],
             ['role_permission_id' => 26, 'role_id' => 2, 'permission_id' => 21],
             ['role_permission_id' => 27, 'role_id' => 2, 'permission_id' => 22],
+            ['role_permission_id' => 28, 'role_id' => 2, 'permission_id' => 23],
             ['role_permission_id' => 29, 'role_id' => 2, 'permission_id' => 24],
             ['role_permission_id' => 30, 'role_id' => 2, 'permission_id' => 25],
             ['role_permission_id' => 31, 'role_id' => 2, 'permission_id' => 26],
@@ -54,6 +57,7 @@ class RolePermissionSeeder extends Seeder
             ['role_permission_id' => 36, 'role_id' => 2, 'permission_id' => 31],
             ['role_permission_id' => 37, 'role_id' => 2, 'permission_id' => 32],
             ['role_permission_id' => 38, 'role_id' => 2, 'permission_id' => 33],
+            ['role_permission_id' => 39, 'role_id' => 2, 'permission_id' => 34],
             ['role_permission_id' => 40, 'role_id' => 2, 'permission_id' => 35],
             ['role_permission_id' => 41, 'role_id' => 2, 'permission_id' => 36],
             ['role_permission_id' => 42, 'role_id' => 2, 'permission_id' => 37],
@@ -99,10 +103,5 @@ class RolePermissionSeeder extends Seeder
             // Guest
             ['role_permission_id' => 21, 'role_id' => 4, 'permission_id' => 17],
         ], ['role_permission_id'], ['role_id', 'permission_id']);
-
-        DB::table('role_permission')
-            ->where('role_id', 2)
-            ->whereIn('permission_id', [15, 16])
-            ->delete();
     }
 }

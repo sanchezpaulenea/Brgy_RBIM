@@ -78,7 +78,8 @@ const routes = [
         component: () => import('@/pages/settings/SettingsPage.vue'),
         meta: {
             requiresAuth: true,
-            requiresSuperAdmin: true,
+            requiresSystemAdministrator: true,
+            requiresPermissions: ['setting.view'],
         },
     },
     {
@@ -87,6 +88,7 @@ const routes = [
         component: () => import('@/pages/households/HouseholdsPage.vue'),
         meta: {
             requiresAuth: true,
+            hideFromSuperAdmin: true,
             requiresPermissions: ['household.view'],
         },
     },
@@ -96,6 +98,7 @@ const routes = [
         component: () => import('@/pages/households/HouseholdRegisterPage.vue'),
         meta: {
             requiresAuth: true,
+            hideFromSuperAdmin: true,
             requiresPermissions: ['household.create'],
         },
     },
@@ -103,6 +106,10 @@ const routes = [
         path: '/households/encode',
         name: 'household-encoding',
         redirect: { name: 'household-register' },
+        meta: {
+            requiresAuth: true,
+            hideFromSuperAdmin: true,
+        },
     },
     {
         path: '/households/streets',
@@ -110,8 +117,29 @@ const routes = [
         component: () => import('@/pages/lookups/LookupManagementPage.vue'),
         meta: {
             requiresAuth: true,
+            hideFromSuperAdmin: true,
             requiresPermissions: ['street.view'],
             lookupKey: 'street',
+        },
+    },
+    {
+        path: '/households/assessments',
+        name: 'household-assessments',
+        component: () => import('@/pages/households/HouseholdAssessmentsPage.vue'),
+        meta: {
+            requiresAuth: true,
+            hideFromSuperAdmin: true,
+            requiresPermissions: ['householdassessment.view'],
+        },
+    },
+    {
+        path: '/households/:id(\\d+)/assessments',
+        name: 'household-assessment-detail',
+        component: () => import('@/pages/households/HouseholdAssessmentDetailPage.vue'),
+        meta: {
+            requiresAuth: true,
+            hideFromSuperAdmin: true,
+            requiresPermissions: ['householdassessment.view'],
         },
     },
     {
@@ -120,6 +148,7 @@ const routes = [
         component: () => import('@/pages/households/HouseholdDetailPage.vue'),
         meta: {
             requiresAuth: true,
+            hideFromSuperAdmin: true,
             requiresPermissions: ['household.view'],
         },
     },
@@ -129,6 +158,7 @@ const routes = [
         component: () => import('@/pages/residents/ResidentsPage.vue'),
         meta: {
             requiresAuth: true,
+            hideFromSuperAdmin: true,
             requiresPermissions: ['resident.view'],
         },
     },
@@ -138,6 +168,7 @@ const routes = [
         component: () => import('@/pages/residents/ResidentRegisterPage.vue'),
         meta: {
             requiresAuth: true,
+            hideFromSuperAdmin: true,
             requiresPermissions: ['resident.create'],
         },
     },
@@ -147,6 +178,7 @@ const routes = [
         component: () => import('@/pages/lookups/LookupManagementPage.vue'),
         meta: {
             requiresAuth: true,
+            hideFromSuperAdmin: true,
             requiresPermissions: ['nationality.view'],
             lookupKey: 'nationality',
         },
@@ -157,6 +189,7 @@ const routes = [
         component: () => import('@/pages/lookups/LookupManagementPage.vue'),
         meta: {
             requiresAuth: true,
+            hideFromSuperAdmin: true,
             requiresPermissions: ['ethnicity.view'],
             lookupKey: 'ethnicity',
         },
@@ -167,6 +200,7 @@ const routes = [
         component: () => import('@/pages/lookups/LookupManagementPage.vue'),
         meta: {
             requiresAuth: true,
+            hideFromSuperAdmin: true,
             requiresPermissions: ['religion.view'],
             lookupKey: 'religion',
         },

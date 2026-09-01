@@ -9,21 +9,21 @@ class ResidentPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isSuperAdmin() || $user->hasPermission('resident.view');
+        return $user->isAdmin() || $user->hasPermission('resident.view');
     }
 
     public function view(User $user, Resident $resident): bool
     {
-        return $user->isSuperAdmin() || $user->hasPermission('resident.view');
+        return $user->isAdmin() || $user->hasPermission('resident.view');
     }
 
     public function create(User $user): bool
     {
-        return $user->isEncoder() && $user->hasPermission('resident.create');
+        return ($user->isEncoder() || $user->isAdmin()) && $user->hasPermission('resident.create');
     }
 
     public function update(User $user, Resident $resident): bool
     {
-        return $user->isSuperAdmin() || $user->hasPermission('resident.update');
+        return $user->isAdmin() || $user->hasPermission('resident.update');
     }
 }

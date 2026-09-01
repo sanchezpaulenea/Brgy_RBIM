@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Collection;
 interface HouseholdRepositoryInterface
 {
     /**
-     * @param  array{street_id?: int, household_status_id?: int}  $filters
+     * @param  array{clan_id?: int, street_id?: int, household_status_id?: int}  $filters
      * @return Collection<int, Household>
      */
     public function list(array $filters = []): Collection;

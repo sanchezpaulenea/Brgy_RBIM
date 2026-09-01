@@ -22,7 +22,7 @@ class ResidentServices
     ) {}
 
     /**
-     * @param  array{household_id?: int, resident_status_id?: int}  $filters
+     * @param  array{household_id?: int, resident_type_id?: int, resident_status_id?: int}  $filters
      * @return array<int, array<string, mixed>>
      */
     public function listResidents(array $filters = []): array

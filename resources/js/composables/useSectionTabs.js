@@ -30,35 +30,51 @@ export function useSectionTabs() {
             : null,
     ].filter(Boolean));
 
-    const householdTabs = computed(() => [
-        hasPermission('household.view')
-            ? { name: 'households', label: 'View Households' }
-            : null,
-        hasPermission('household.create')
-            ? { name: 'household-register', label: 'Register Household' }
-            : null,
-        hasPermission('street.view')
-            ? { name: 'streets', label: 'Street' }
-            : null,
-    ].filter(Boolean));
+    // Super Admin is not an operational role for these modules; keep the pages hidden.
+    const householdTabs = computed(() => {
+        if (isSuperAdmin.value) {
+            return [];
+        }
 
-    const residentTabs = computed(() => [
-        hasPermission('resident.view')
-            ? { name: 'residents', label: 'View Residents' }
-            : null,
-        hasPermission('resident.create')
-            ? { name: 'resident-register', label: 'Register Resident' }
-            : null,
-        hasPermission('nationality.view')
-            ? { name: 'nationalities', label: 'Nationality' }
-            : null,
-        hasPermission('ethnicity.view')
-            ? { name: 'ethnicities', label: 'Ethnicity' }
-            : null,
-        hasPermission('religion.view')
-            ? { name: 'religions', label: 'Religion' }
-            : null,
-    ].filter(Boolean));
+        return [
+            hasPermission('household.view')
+                ? { name: 'households', label: 'View Households' }
+                : null,
+            hasPermission('householdassessment.view')
+                ? { name: 'household-assessments', label: 'Assessment' }
+                : null,
+            hasPermission('household.create')
+                ? { name: 'household-register', label: 'Register Household' }
+                : null,
+            hasPermission('street.view')
+                ? { name: 'streets', label: 'Street' }
+                : null,
+        ].filter(Boolean);
+    });
+
+    const residentTabs = computed(() => {
+        if (isSuperAdmin.value) {
+            return [];
+        }
+
+        return [
+            hasPermission('resident.view')
+                ? { name: 'residents', label: 'View Residents' }
+                : null,
+            hasPermission('resident.create')
+                ? { name: 'resident-register', label: 'Register Resident' }
+                : null,
+            hasPermission('nationality.view')
+                ? { name: 'nationalities', label: 'Nationality' }
+                : null,
+            hasPermission('ethnicity.view')
+                ? { name: 'ethnicities', label: 'Ethnicity' }
+                : null,
+            hasPermission('religion.view')
+                ? { name: 'religions', label: 'Religion' }
+                : null,
+        ].filter(Boolean);
+    });
 
     return { personnelTabs, userTabs, householdTabs, residentTabs };
 }

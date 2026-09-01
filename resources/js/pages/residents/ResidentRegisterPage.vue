@@ -22,6 +22,7 @@
                 :marital-statuses="maritalStatuses"
                 :resident-types="residentTypes"
                 :existing-residents="existingResidents"
+                :ensure-lookups="ensureLookups"
                 count-title="Register resident"
                 count-label="How many residents would you like to add?"
                 count-hint="This adds a resident to an existing household. The household head is registered with a new household."
@@ -30,13 +31,14 @@
                 count-input-id="resident_count"
                 @member-added="refreshExistingResidents"
                 @finished="goToResidentsList"
+                @lookup-created="onLookupCreated"
             >
                 <template #household="{ disabled }">
                     <HouseholdSearch
                         v-model="selectedHouseholdId"
                         :options="households"
                         required
-                        hint="Search by street or head resident name."
+                        hint="Search by head resident name."
                         :disabled="disabled"
                     />
                 </template>
@@ -52,14 +54,20 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import HouseholdSearch from '@/components/HouseholdSearch.vue';
 import PageTabs from '@/components/PageTabs.vue';
 import SequentialResidentRegistration from '@/components/SequentialResidentRegistration.vue';
+import { useAuth } from '@/composables/useAuth';
 import { useSectionTabs } from '@/composables/useSectionTabs';
 import { extractErrorMessage } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
 import * as residentService from '@/services/residentService';
+import {
+    applyLookupCreated,
+    ensureResidentDemographicLookups,
+} from '@/utils/demographicLookups';
 
 const router = useRouter();
 const { residentTabs } = useSectionTabs();
+const { hasPermission } = useAuth();
 
 const loadingLookups = ref(true);
 const error = ref('');
@@ -80,6 +88,25 @@ const selectedHousehold = computed(() => (
         Number(household.household_id) === Number(selectedHouseholdId.value)
     )) ?? null
 ));
+
+function onLookupCreated(payload) {
+    applyLookupCreated({
+        nationality: nationalities,
+        religion: religions,
+        ethnicity: ethnicities,
+    }, payload);
+}
+
+function ensureLookups(form) {
+    return ensureResidentDemographicLookups(form, {
+        nationalities,
+        religions,
+        ethnicities,
+        canCreateNationality: hasPermission('nationality.create'),
+        canCreateReligion: hasPermission('religion.create'),
+        canCreateEthnicity: hasPermission('ethnicity.create'),
+    });
+}
 
 async function refreshExistingResidents() {
     try {

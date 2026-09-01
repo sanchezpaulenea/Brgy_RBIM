@@ -53,10 +53,11 @@
                     v-model="form.house_lot"
                     type="text"
                     maxlength="45"
-                    placeholder="N/A if not applicable"
+                    placeholder="Leave blank if not applicable"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.house_lot }"
                 >
+                <p v-if="errors.house_lot" class="rbim-error">{{ errors.house_lot }}</p>
             </div>
             <div>
                 <label class="rbim-label" for="block_num">Block No.</label>
@@ -65,9 +66,11 @@
                     v-model="form.block_num"
                     type="text"
                     maxlength="45"
-                    placeholder="N/A if not applicable"
+                    placeholder="Leave blank if not applicable"
                     class="rbim-input"
+                    :class="{ 'rbim-input-error': errors.block_num }"
                 >
+                <p v-if="errors.block_num" class="rbim-error">{{ errors.block_num }}</p>
             </div>
             <div class="sm:col-span-2">
                 <label class="rbim-label" for="unit_num">Floor/Room/Unit</label>
@@ -76,7 +79,7 @@
                     v-model="form.unit_num"
                     type="text"
                     maxlength="45"
-                    placeholder="N/A if not applicable"
+                    placeholder="Leave blank if not applicable"
                     class="rbim-input"
                 >
             </div>

@@ -2,13 +2,15 @@
 
 namespace App\Http\Requests\HouseholdManagement;
 
+use App\Http\Requests\HouseholdManagement\Concerns\NormalizesHouseholdAddress;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class UpdateHouseholdRequest extends FormRequest
 {
+    use NormalizesHouseholdAddress;
+
     public function authorize(): bool
     {
         return true;
@@ -16,17 +18,12 @@ class UpdateHouseholdRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $merge = [];
-
-        foreach (['house_lot', 'block_num', 'building_name', 'unit_num'] as $field) {
-            if ($this->exists($field)) {
-                $merge[$field] = $this->normalizeOptionalText($this->input($field));
-            }
-        }
-
-        if ($merge !== []) {
-            $this->merge($merge);
-        }
+        $this->mergeNormalizedAddressFields([
+            'house_lot',
+            'block_num',
+            'building_name',
+            'unit_num',
+        ]);
     }
 
     /**
@@ -94,17 +91,9 @@ class UpdateHouseholdRequest extends FormRequest
                     'Provide at least one household field to update.',
                 );
             },
+            function (Validator $validator): void {
+                $this->validateUniqueLotAndBlock($validator, $this->householdFromRoute());
+            },
         ];
-    }
-
-    private function normalizeOptionalText(mixed $value): mixed
-    {
-        if (! is_string($value)) {
-            return $value;
-        }
-
-        $formatted = Str::of($value)->squish()->toString();
-
-        return $formatted === '' ? null : $formatted;
     }
 }

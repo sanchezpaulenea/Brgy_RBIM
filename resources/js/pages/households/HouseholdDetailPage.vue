@@ -76,41 +76,6 @@
                     </dl>
                 </article>
 
-                <article class="rbim-card p-6">
-                    <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">
-                        Latest assessment
-                    </h2>
-                    <dl v-if="household.latest_assessment" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Census Status</dt>
-                            <dd class="mt-1 text-sm text-slate-900">{{ household.latest_assessment.census_status || '—' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Visit Start</dt>
-                            <dd class="mt-1 text-sm text-slate-900">{{ formatDateTime(household.latest_assessment.visit_start) }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Visit End</dt>
-                            <dd class="mt-1 text-sm text-slate-900">{{ formatDateTime(household.latest_assessment.visit_end) }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Encoder</dt>
-                            <dd class="mt-1 text-sm text-slate-900">{{ household.latest_assessment.encoder_name || '—' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Interviewer</dt>
-                            <dd class="mt-1 text-sm text-slate-900">{{ household.latest_assessment.interviewer_name || '—' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Supervisor</dt>
-                            <dd class="mt-1 text-sm text-slate-900">{{ household.latest_assessment.supervisor_name || '—' }}</dd>
-                        </div>
-                    </dl>
-                    <p v-else class="mt-4 text-sm text-slate-500">
-                        No household assessment on file.
-                    </p>
-                </article>
-
                 <div class="rbim-card overflow-hidden">
                     <div class="border-b border-slate-200 px-4 py-3">
                         <h3 class="text-sm font-semibold text-slate-900">Household members</h3>
@@ -280,7 +245,7 @@ import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
 import { ageFromDateOfBirth, formatDateTime } from '@/utils/format';
-import { applyValidationErrors, optionalText, toId } from '@/utils/residentForm';
+import { applyValidationErrors, optionalAddressText, toId } from '@/utils/residentForm';
 
 const route = useRoute();
 const { hasPermission } = useAuth();
@@ -427,10 +392,10 @@ async function handleUpdate() {
     try {
         await householdService.updateHousehold(route.params.id, {
             street_id: toId(editForm.street_id),
-            house_lot: optionalText(editForm.house_lot),
-            block_num: optionalText(editForm.block_num),
-            building_name: optionalText(editForm.building_name),
-            unit_num: optionalText(editForm.unit_num),
+            house_lot: optionalAddressText(editForm.house_lot),
+            block_num: optionalAddressText(editForm.block_num),
+            building_name: optionalAddressText(editForm.building_name),
+            unit_num: optionalAddressText(editForm.unit_num),
             household_status_id: toId(editForm.household_status_id),
         });
         successMessage.value = 'Household updated successfully.';
