@@ -188,7 +188,7 @@ import { extractErrorMessage } from '@/services/http';
 import * as userService from '@/services/userService';
 import { matchesSearch } from '@/utils/format';
 
-const { hasPermission } = useAuth();
+const { hasPermission, user: currentUser, refreshSession } = useAuth();
 const { userTabs } = useSectionTabs();
 
 const users = ref([]);
@@ -292,6 +292,14 @@ function replaceUser(updated) {
     users.value = users.value.map((row) => (row.user_id === updated.user_id ? updated : row));
 }
 
+async function syncCurrentUserSession(account) {
+    if (Number(account.user_id) !== Number(currentUser.value?.user_id)) {
+        return;
+    }
+
+    await refreshSession();
+}
+
 async function handleAssignRole(account) {
     const roleId = Number(selectedRoleByUser[account.user_id]);
 
@@ -303,7 +311,7 @@ async function handleAssignRole(account) {
 
     const allowed = await askConfirm({
         title: 'Assign role',
-        message: `Assign the ${roleName} role to "${account.username}"?`,
+        message: `Assign the ${roleName} role to ${account.username}?`,
         confirmLabel: 'Assign role',
     });
 
@@ -320,6 +328,7 @@ async function handleAssignRole(account) {
         replaceUser(await userService.fetchUser(account.user_id));
         selectedRoleByUser[account.user_id] = '';
         successMessage.value = `Assigned ${roleName} to "${account.username}".`;
+        await syncCurrentUserSession(account);
     } catch (err) {
         error.value = extractErrorMessage(err, 'Unable to assign role.');
     } finally {
@@ -347,6 +356,7 @@ async function handleRoleStatus(account, assignment) {
         await userService.updateUserRoleStatus(assignment.user_role_id, !assignment.enable);
         replaceUser(await userService.fetchUser(account.user_id));
         successMessage.value = `${assignment.enable ? 'Disabled' : 'Enabled'} ${assignment.role_name} for "${account.username}".`;
+        await syncCurrentUserSession(account);
     } catch (err) {
         error.value = extractErrorMessage(err, 'Unable to update role status.');
     } finally {

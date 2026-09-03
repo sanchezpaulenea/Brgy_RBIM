@@ -132,8 +132,8 @@ class AuthenticationService
         return [
             'user' => $user,
             'must_change_password' => (bool) $user->must_change_password,
-            'roles' => $user->roles->pluck('role_name'),
-            'permissions' => $user->permissions()->pluck('permission'),
+            'roles' => $this->enabledRoleNames($user),
+            'permissions' => $this->enabledPermissionNames($user),
         ];
     }
 
@@ -401,7 +401,7 @@ class AuthenticationService
      */
     public function sessionPayload(User $user, bool $includeStatus = false): array
     {
-        $user->loadMissing(['userStatus', 'roles.permissions', 'personnel.position']);
+        $user->loadMissing(['userStatus', 'personnel.position']);
 
         $payload = $this->sessionUser($user);
 
@@ -412,9 +412,35 @@ class AuthenticationService
 
         return [
             'user' => $payload,
-            'roles' => $user->roles->pluck('role_name'),
-            'permissions' => $user->permissions()->pluck('permission'),
+            'roles' => $this->enabledRoleNames($user),
+            'permissions' => $this->enabledPermissionNames($user),
         ];
+    }
+
+    /**
+     * Role names from every enabled user_role row (enable = 1).
+     *
+     * @return Collection<int, string>
+     */
+    protected function enabledRoleNames(User $user): Collection
+    {
+        return $user->roles()
+            ->pluck('role_name')
+            ->unique()
+            ->values();
+    }
+
+    /**
+     * Distinct permission slugs unioned across every enabled role.
+     *
+     * @return Collection<int, string>
+     */
+    protected function enabledPermissionNames(User $user): Collection
+    {
+        return $user->permissions()
+            ->pluck('permission')
+            ->unique()
+            ->values();
     }
 
     public function updateAvatar(User $user, ?UploadedFile $photo, ?string $preset): User

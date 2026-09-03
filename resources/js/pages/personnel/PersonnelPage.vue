@@ -408,6 +408,19 @@ async function savePersonnel(confirmDuplicate = false) {
             await personnelService.updatePersonnel(editingId.value, payload);
             successMessage.value = 'Personnel updated successfully.';
         } else {
+            const fullName = [form.personnel_first_name.trim(), form.personnel_last_name.trim()]
+                .filter(Boolean)
+                .join(' ');
+            const allowed = await askConfirm({
+                title: 'Create personnel',
+                message: `Create personnel record for ${fullName}?`,
+                confirmLabel: 'Create',
+            });
+
+            if (!allowed) {
+                return;
+            }
+
             await personnelService.createPersonnel(payload);
             successMessage.value = 'Personnel created successfully.';
         }

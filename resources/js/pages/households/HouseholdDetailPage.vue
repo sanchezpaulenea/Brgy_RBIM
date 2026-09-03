@@ -34,6 +34,42 @@
             <template v-else-if="household">
                 <article class="rbim-card p-6">
                     <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                        Latest Assessment
+                    </h2>
+                    <dl class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Census Status</dt>
+                            <dd class="mt-1 text-sm text-slate-900">{{ censusStatusLabel(latestAssessment) }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Visit Start</dt>
+                            <dd class="mt-1 text-sm text-slate-900">{{ formatDateTime(latestAssessment?.visit_start) }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Visit End</dt>
+                            <dd class="mt-1 text-sm text-slate-900">{{ formatDateTime(latestAssessment?.visit_end) }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Encoder</dt>
+                            <dd class="mt-1 text-sm text-slate-900">{{ latestAssessment?.encoder_name || '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Interviewer</dt>
+                            <dd class="mt-1 text-sm text-slate-900">{{ latestAssessment?.interviewer_name || '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Supervisor</dt>
+                            <dd class="mt-1 text-sm text-slate-900">{{ latestAssessment?.supervisor_name || '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Previous Assessment</dt>
+                            <dd class="mt-1 text-sm text-slate-900">{{ previousAssessmentLabel(latestAssessment) }}</dd>
+                        </div>
+                    </dl>
+                </article>
+
+                <article class="rbim-card p-6">
+                    <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">
                         Household {{ household.household_id }}
                     </h2>
                     <dl class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -244,7 +280,7 @@ import { useSectionTabs } from '@/composables/useSectionTabs';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
-import { ageFromDateOfBirth, formatDateTime } from '@/utils/format';
+import { ageFromDateOfBirth, censusStatusLabel, formatDateTime } from '@/utils/format';
 import { applyValidationErrors, optionalAddressText, toId } from '@/utils/residentForm';
 
 const route = useRoute();
@@ -272,6 +308,7 @@ const confirm = reactive({
 });
 
 const canUpdate = computed(() => hasPermission('household.update'));
+const latestAssessment = computed(() => household.value?.latest_assessment ?? null);
 
 function emptyEditForm() {
     return {
@@ -288,6 +325,24 @@ function ageLabel(dateOfBirth) {
     const age = ageFromDateOfBirth(dateOfBirth);
 
     return age === null ? '—' : String(age);
+}
+
+function previousAssessmentLabel(assessment) {
+    if (!assessment) {
+        return '—';
+    }
+
+    if (!assessment.previous_assessment_id) {
+        return 'None (first visit)';
+    }
+
+    const previous = assessment.previous_assessment;
+
+    if (!previous) {
+        return `Assessment ${assessment.previous_assessment_id}`;
+    }
+
+    return `Assessment ${previous.assessment_id} — ${censusStatusLabel(previous)}`;
 }
 
 function handleConfirmCancel() {

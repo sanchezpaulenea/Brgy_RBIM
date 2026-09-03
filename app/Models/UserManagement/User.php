@@ -4,6 +4,7 @@ namespace App\Models\UserManagement;
 
 use App\Models\BarangayPersonnel\BarangayPersonnel;
 use App\Models\Logs\UserLog;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -229,46 +230,40 @@ class User extends Authenticatable
     }
 
     /**
-     * Returns the unique permissions across all active roles.
+     * Distinct permissions granted through every enabled role assignment.
      *
-     * Requires `roles.permissions` to be eager-loaded first.
+     * Joins all `user_role` rows where enable = 1 for this user, then unions
+     * `role_permission` across those roles (no duplicates).
      *
      * @return Collection<int, Permission>
      */
     public function permissions(): Collection
     {
-        return new Collection(
-            $this->roles
-                ->flatMap(fn (Role $role) => $role->permissions)
-                ->unique('permission_id')
-                ->values()
-                ->all()
-        );
+        return $this->enabledPermissionQuery()
+            ->orderBy('permission')
+            ->get();
     }
 
     /**
-     * Checks whether the user has a specific permission slug via active role assignments.
-     *
-     * Joins: user_role → role_permission → permission (respects user_role.enable).
+     * Checks whether the user has a specific permission slug via any enabled role.
      */
     public function hasPermission(string $permission): bool
     {
-        return Permission::query()
+        return $this->enabledPermissionQuery()
             ->where('permission', $permission)
-            ->whereExists(function ($query) {
-                $query->selectRaw('1')
-                    ->from('user_role')
-                    ->join(
-                        'role_permission',
-                        'role_permission.role_id',
-                        '=',
-                        'user_role.role_id'
-                    )
-                    ->whereColumn('role_permission.permission_id', 'permission.permission_id')
-                    ->where('user_role.user_id', $this->user_id)
-                    ->where('user_role.enable', 1);
-            })
             ->exists();
+    }
+
+    /**
+     * Permission rows reachable through user_role.enable = 1 for this user.
+     */
+    protected function enabledPermissionQuery(): Builder
+    {
+        return Permission::query()->whereHas('roles', function (Builder $query): void {
+            $query->whereHas('userRoles', function (Builder $query): void {
+                $query->where('user_id', $this->user_id)->where('enable', 1);
+            });
+        });
     }
 
     public function hasRole(string $roleName): bool

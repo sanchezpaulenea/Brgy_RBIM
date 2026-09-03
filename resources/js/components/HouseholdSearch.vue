@@ -52,7 +52,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { householdDisplayLabel, matchesSearch } from '@/utils/format';
+import { householdDisplayLabel, householdIdentitySearchText, matchesSearch } from '@/utils/format';
 
 const props = defineProps({
     modelValue: {
@@ -69,7 +69,7 @@ const props = defineProps({
     },
     placeholder: {
         type: String,
-        default: 'Search head resident name',
+        default: 'Search household ID, street, or house/lot number',
     },
     hint: {
         type: String,
@@ -109,7 +109,13 @@ const selected = computed(() => (
 const selectedLabel = computed(() => (selected.value ? householdDisplayLabel(selected.value) : ''));
 
 const filtered = computed(() => {
-    const list = props.options.filter((option) => matchesSearch(headName(option), query.value));
+    if (selected.value && query.value === householdDisplayLabel(selected.value)) {
+        return [selected.value];
+    }
+
+    const list = props.options.filter((option) => (
+        matchesSearch(householdIdentitySearchText(option), query.value)
+    ));
 
     return list.slice(0, HOUSEHOLD_SEARCH_LIMIT);
 });
@@ -133,10 +139,6 @@ watch(query, (value) => {
 
     highlightedIndex.value = 0;
 });
-
-function headName(option) {
-    return option.head_name || option.head?.full_name || '';
-}
 
 function optionLabel(option) {
     return householdDisplayLabel(option);

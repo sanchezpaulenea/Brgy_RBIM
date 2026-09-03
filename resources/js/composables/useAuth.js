@@ -112,10 +112,6 @@ export function useAuth() {
     }
 
     function hasPermission(permission) {
-        if (roles.value.includes(ROLES.SUPER_ADMIN)) {
-            return true;
-        }
-
         return permissions.value.includes(permission);
     }
 
@@ -140,11 +136,7 @@ export function useAuth() {
     }
 
     function canAccessRoute(meta = {}) {
-        if (isSuperAdmin.value) {
-            return !meta.hideFromSuperAdmin;
-        }
-
-        if (meta.requiresSuperAdmin) {
+        if (meta.requiresSuperAdmin && !isSuperAdmin.value) {
             return false;
         }
 
@@ -157,6 +149,13 @@ export function useAuth() {
         }
 
         return true;
+    }
+
+    async function refreshSession() {
+        const data = await authService.fetchMe();
+        setSession(data);
+
+        return data;
     }
 
     return {
@@ -172,6 +171,7 @@ export function useAuth() {
         isSuperAdmin,
         isSystemAdministrator,
         initialize,
+        refreshSession,
         login,
         logout,
         changePassword,

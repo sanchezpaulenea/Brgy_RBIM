@@ -9,18 +9,17 @@ class ReligionPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isSuperAdmin()
-            || $user->hasPermission('religion.view')
+        return $user->hasPermission('religion.view')
             || $user->canListResidentReferenceData();
     }
 
     public function create(User $user): bool
     {
-        return $user->isSuperAdmin() || $user->hasPermission('religion.create');
+        return $user->hasPermission('religion.create');
     }
 
     public function delete(User $user, Religion $religion): bool
     {
-        return $user->isSuperAdmin() || $user->hasPermission('religion.delete');
+        return $user->hasPermission('religion.delete');
     }
 }

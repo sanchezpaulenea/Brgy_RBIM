@@ -22,6 +22,6 @@ class SystemSettingPolicy
 
     public function update(User $user, Setting $setting): bool
     {
-        return $user->isSystemAdministrator() && $user->hasPermission('setting.update');
+        return $user->isSuperAdmin() && $user->hasPermission('setting.update');
     }
 }

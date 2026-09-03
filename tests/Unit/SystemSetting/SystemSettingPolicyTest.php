@@ -17,20 +17,30 @@ class SystemSettingPolicyTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_admin_can_view_and_update_settings_when_permitted(): void
+    public function test_admin_can_view_settings_but_cannot_update_them(): void
     {
         $policy = new SystemSettingPolicy;
-        $admin = $this->user(true, ['setting.view', 'setting.update']);
+        $admin = $this->user(true, false, ['setting.view', 'setting.update']);
         $setting = new Setting;
 
         $this->assertTrue($policy->viewAny($admin));
-        $this->assertTrue($policy->update($admin, $setting));
+        $this->assertFalse($policy->update($admin, $setting));
+    }
+
+    public function test_super_admin_can_view_and_update_settings_when_permitted(): void
+    {
+        $policy = new SystemSettingPolicy;
+        $superAdmin = $this->user(true, true, ['setting.view', 'setting.update']);
+        $setting = new Setting;
+
+        $this->assertTrue($policy->viewAny($superAdmin));
+        $this->assertTrue($policy->update($superAdmin, $setting));
     }
 
     public function test_encoder_cannot_view_or_update_settings(): void
     {
         $policy = new SystemSettingPolicy;
-        $encoder = $this->user(false, ['setting.view', 'setting.update']);
+        $encoder = $this->user(false, false, ['setting.view', 'setting.update']);
         $setting = new Setting;
 
         $this->assertFalse($policy->viewAny($encoder));
@@ -40,10 +50,11 @@ class SystemSettingPolicyTest extends TestCase
     /**
      * @param  list<string>  $permissions
      */
-    private function user(bool $isSystemAdministrator, array $permissions): User
+    private function user(bool $isSystemAdministrator, bool $isSuperAdmin, array $permissions): User
     {
         $user = Mockery::mock(User::class)->makePartial();
         $user->shouldReceive('isSystemAdministrator')->zeroOrMoreTimes()->andReturn($isSystemAdministrator);
+        $user->shouldReceive('isSuperAdmin')->zeroOrMoreTimes()->andReturn($isSuperAdmin);
         $user->shouldReceive('hasPermission')->zeroOrMoreTimes()->andReturnUsing(
             fn (string $permission) => in_array($permission, $permissions, true)
         );

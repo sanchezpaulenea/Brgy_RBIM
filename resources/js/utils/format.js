@@ -187,6 +187,18 @@ export function isCallbackCensusStatus(item) {
     return Number(item.census_status_id ?? item.id) === 2;
 }
 
+export function householdIdentitySearchText(household) {
+    if (!household) {
+        return '';
+    }
+
+    return [
+        household.household_id,
+        household.street_name,
+        household.house_lot,
+    ].filter((part) => part !== null && part !== undefined && String(part).trim() !== '').join(' ');
+}
+
 export function householdDisplayLabel(household) {
     if (!household) {
         return '—';

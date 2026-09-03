@@ -38,7 +38,8 @@
                         v-model="selectedHouseholdId"
                         :options="households"
                         required
-                        hint="Search by head resident name."
+                        placeholder="Search household ID, street, or house/lot number"
+                        hint="Search by household ID, street, or house/lot number."
                         :disabled="disabled"
                     />
                 </template>

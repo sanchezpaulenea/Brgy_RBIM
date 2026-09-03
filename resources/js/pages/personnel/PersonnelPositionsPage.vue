@@ -186,7 +186,6 @@ async function loadPositions() {
 }
 
 async function handleCreatePosition() {
-    creating.value = true;
     createError.value = '';
     successMessage.value = '';
 
@@ -195,10 +194,21 @@ async function handleCreatePosition() {
 
     if (validationError) {
         createError.value = validationError;
-        creating.value = false;
 
         return;
     }
+
+    const allowed = await askConfirm({
+        title: 'Create position',
+        message: `Create position '${positionName}'?`,
+        confirmLabel: 'Create',
+    });
+
+    if (!allowed) {
+        return;
+    }
+
+    creating.value = true;
 
     try {
         const item = await lookupService.createPersonnelPosition({

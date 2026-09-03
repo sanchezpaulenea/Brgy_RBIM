@@ -9,18 +9,17 @@ class EthnicityPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isSuperAdmin()
-            || $user->hasPermission('ethnicity.view')
+        return $user->hasPermission('ethnicity.view')
             || $user->canListResidentReferenceData();
     }
 
     public function create(User $user): bool
     {
-        return $user->isSuperAdmin() || $user->hasPermission('ethnicity.create');
+        return $user->hasPermission('ethnicity.create');
     }
 
     public function delete(User $user, Ethnicity $ethnicity): bool
     {
-        return $user->isSuperAdmin() || $user->hasPermission('ethnicity.delete');
+        return $user->hasPermission('ethnicity.delete');
     }
 }
