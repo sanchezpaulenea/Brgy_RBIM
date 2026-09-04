@@ -34,11 +34,11 @@ export function useSectionTabs() {
         hasPermission('household.view')
             ? { name: 'households', label: 'View Households' }
             : null,
-        hasPermission('householdassessment.view')
-            ? { name: 'household-assessments', label: 'Assessment' }
-            : null,
         hasPermission('household.create')
             ? { name: 'household-register', label: 'Register Household' }
+            : null,
+        hasPermission('householdassessment.view')
+            ? { name: 'household-assessments', label: 'Assessment' }
             : null,
         hasPermission('street.view')
             ? { name: 'streets', label: 'Street' }

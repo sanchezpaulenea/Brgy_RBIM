@@ -187,16 +187,22 @@ export function isCallbackCensusStatus(item) {
     return Number(item.census_status_id ?? item.id) === 2;
 }
 
-export function householdIdentitySearchText(household) {
+export function householdIdentitySearchText(household, includeHead = false) {
     if (!household) {
         return '';
     }
 
-    return [
+    const parts = [
         household.household_id,
         household.street_name,
         household.house_lot,
-    ].filter((part) => part !== null && part !== undefined && String(part).trim() !== '').join(' ');
+    ];
+
+    if (includeHead) {
+        parts.push(household.head_name || household.head?.full_name);
+    }
+
+    return parts.filter((part) => part !== null && part !== undefined && String(part).trim() !== '').join(' ');
 }
 
 export function householdDisplayLabel(household) {

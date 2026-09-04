@@ -38,20 +38,17 @@
                     </select>
                     <p v-if="errors.census_status_id" class="rbim-error">{{ errors.census_status_id }}</p>
                 </div>
-                <div v-if="callbackSelected">
-                    <label for="assessment_next_visit_date" class="rbim-label">
-                        Next Visit Date<span class="rbim-required" aria-hidden="true">*</span>
-                    </label>
-                    <input
-                        id="assessment_next_visit_date"
-                        v-model="form.next_visit_date"
-                        type="date"
-                        :min="today"
-                        class="rbim-input"
-                        :class="{ 'rbim-input-error': errors.next_visit_date }"
-                    >
-                    <p v-if="errors.next_visit_date" class="rbim-error">{{ errors.next_visit_date }}</p>
-                </div>
+                <BirthDateField
+                    v-if="callbackSelected"
+                    v-model="form.next_visit_date"
+                    input-id="assessment_next_visit_date"
+                    label="Next Visit Date"
+                    placeholder="Select next visit date"
+                    :min="today"
+                    required
+                    :show-age="false"
+                    :error="errors.next_visit_date"
+                />
                 <div>
                     <label for="assessment_interviewer_id" class="rbim-label">
                         Interviewer<span class="rbim-required" aria-hidden="true">*</span>
@@ -107,6 +104,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue';
+import BirthDateField from '@/components/BirthDateField.vue';
 import { useAuth } from '@/composables/useAuth';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
@@ -223,6 +221,8 @@ async function handleSave() {
 
     if (callbackSelected.value && !form.next_visit_date) {
         errors.next_visit_date = 'Next visit date is required when census status is CB (Callback).';
+    } else if (callbackSelected.value && form.next_visit_date < today) {
+        errors.next_visit_date = 'Next visit date cannot be in the past.';
     }
 
     if (Object.keys(errors).length) {

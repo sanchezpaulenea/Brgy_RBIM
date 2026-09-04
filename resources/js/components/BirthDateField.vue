@@ -119,7 +119,7 @@
                     </ul>
                 </div>
             </div>
-            <p v-if="summary" class="mt-2 text-xs text-slate-500">{{ summary }}</p>
+            <p v-if="showAge && summary" class="mt-2 text-xs text-slate-500">{{ summary }}</p>
         </div>
 
         <p v-if="error" class="rbim-error">{{ error }}</p>
@@ -140,6 +140,7 @@ const MONTH_NAMES_FULL = [
 ];
 
 const OLDEST_SUPPORTED_AGE = 120;
+const DEFAULT_FUTURE_YEARS = 10;
 
 const props = defineProps({
     modelValue: {
@@ -158,9 +159,17 @@ const props = defineProps({
         type: String,
         default: 'Select date of birth',
     },
+    min: {
+        type: String,
+        default: '',
+    },
     max: {
         type: String,
         default: '',
+    },
+    showAge: {
+        type: Boolean,
+        default: true,
     },
     error: {
         type: String,
@@ -190,20 +199,62 @@ const year = ref('');
 const month = ref('');
 const day = ref('');
 
-const latest = computed(() => parse(props.max) ?? parse(new Date().toISOString().slice(0, 10)));
+const latest = computed(() => {
+    const parsedMax = parse(props.max);
+
+    if (parsedMax) {
+        return parsedMax;
+    }
+
+    const parsedMin = parse(props.min);
+
+    if (parsedMin) {
+        return addYears(parsedMin, DEFAULT_FUTURE_YEARS);
+    }
+
+    return parse(new Date().toISOString().slice(0, 10));
+});
+
+const earliest = computed(() => {
+    const parsedMin = parse(props.min);
+
+    if (parsedMin) {
+        return parsedMin;
+    }
+
+    return {
+        year: latest.value.year - OLDEST_SUPPORTED_AGE,
+        month: 1,
+        day: 1,
+    };
+});
 
 const yearOptions = computed(() => {
-    const newest = latest.value.year;
+    const start = earliest.value.year;
+    const end = latest.value.year;
+    const years = Array.from({ length: Math.max(end - start + 1, 1) }, (unused, index) => start + index);
+    const futureRange = Boolean(parse(props.min)) && !isBefore(earliest.value, todayParts());
 
-    return Array.from({ length: OLDEST_SUPPORTED_AGE + 1 }, (unused, index) => newest - index);
+    return futureRange ? years : years.reverse();
 });
 
 const monthOptions = computed(() => {
-    const limit = Number(year.value) === latest.value.year ? latest.value.month : 12;
+    let startMonth = 1;
+    let endMonth = 12;
+
+    if (year.value) {
+        if (Number(year.value) === earliest.value.year) {
+            startMonth = earliest.value.month;
+        }
+
+        if (Number(year.value) === latest.value.year) {
+            endMonth = latest.value.month;
+        }
+    }
 
     return MONTH_NAMES
-        .slice(0, year.value ? limit : 12)
-        .map((label, index) => ({ value: index + 1, label }));
+        .map((label, index) => ({ value: index + 1, label }))
+        .filter((option) => option.value >= startMonth && option.value <= endMonth);
 });
 
 const dayOptions = computed(() => {
@@ -212,13 +263,18 @@ const dayOptions = computed(() => {
     }
 
     const selectedYear = Number(year.value) || latest.value.year;
+    let startDay = 1;
     let total = new Date(selectedYear, Number(month.value), 0).getDate();
+
+    if (selectedYear === earliest.value.year && Number(month.value) === earliest.value.month) {
+        startDay = earliest.value.day;
+    }
 
     if (selectedYear === latest.value.year && Number(month.value) === latest.value.month) {
         total = Math.min(total, latest.value.day);
     }
 
-    return Array.from({ length: total }, (unused, index) => index + 1);
+    return Array.from({ length: Math.max(total - startDay + 1, 0) }, (unused, index) => startDay + index);
 });
 
 const monthLabel = computed(() => (
@@ -261,6 +317,40 @@ function parse(value) {
         month: Number(match[2]),
         day: Number(match[3]),
     };
+}
+
+function todayParts() {
+    return parse(new Date().toISOString().slice(0, 10));
+}
+
+function addYears(parts, years) {
+    const date = new Date(parts.year + years, parts.month - 1, parts.day);
+
+    return {
+        year: date.getFullYear(),
+        month: date.getMonth() + 1,
+        day: date.getDate(),
+    };
+}
+
+function compareParts(left, right) {
+    if (!left || !right) {
+        return 0;
+    }
+
+    if (left.year !== right.year) {
+        return left.year - right.year;
+    }
+
+    if (left.month !== right.month) {
+        return left.month - right.month;
+    }
+
+    return left.day - right.day;
+}
+
+function isBefore(left, right) {
+    return compareParts(left, right) < 0;
 }
 
 function isComplete() {
@@ -372,8 +462,9 @@ watch(() => props.modelValue, (value) => {
 watch([year, month], () => {
     const available = dayOptions.value;
 
-    if (day.value && !available.includes(Number(day.value))) {
-        day.value = available[available.length - 1];
+    if (day.value && available.length && !available.includes(Number(day.value))) {
+        const selected = Number(day.value);
+        day.value = selected < available[0] ? available[0] : available[available.length - 1];
     }
 
     if (month.value && !monthOptions.value.some((option) => option.value === Number(month.value))) {
