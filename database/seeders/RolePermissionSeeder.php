@@ -11,9 +11,10 @@ class RolePermissionSeeder extends Seeder
     {
         /*
          * Maps each role to its permission set as defined in brgy_rbim.sql,
-         * plus Super Admin coverage of Increment 2 lookup modules and user.delete.
+         * plus Super Admin coverage of Increment 2 lookup modules.
          * System settings (permission_id 15, 16) belong to Admin and Super Admin.
          * Household and resident registration belong to Encoder and Admin.
+         * householdassessment.updatestatus (permission_id 39) belongs to Admin.
          *
          * role_id 1 = Encoder
          * role_id 2 = Admin
@@ -62,6 +63,7 @@ class RolePermissionSeeder extends Seeder
             ['role_permission_id' => 41, 'role_id' => 2, 'permission_id' => 36],
             ['role_permission_id' => 42, 'role_id' => 2, 'permission_id' => 37],
             ['role_permission_id' => 43, 'role_id' => 2, 'permission_id' => 38],
+            ['role_permission_id' => 81, 'role_id' => 2, 'permission_id' => 39],
             // Super Admin
             ['role_permission_id' => 7, 'role_id' => 3, 'permission_id' => 1],
             ['role_permission_id' => 10, 'role_id' => 3, 'permission_id' => 2],
@@ -99,7 +101,6 @@ class RolePermissionSeeder extends Seeder
             ['role_permission_id' => 75, 'role_id' => 3, 'permission_id' => 36],
             ['role_permission_id' => 76, 'role_id' => 3, 'permission_id' => 37],
             ['role_permission_id' => 77, 'role_id' => 3, 'permission_id' => 38],
-            ['role_permission_id' => 78, 'role_id' => 3, 'permission_id' => 39],
             // Guest
             ['role_permission_id' => 21, 'role_id' => 4, 'permission_id' => 17],
         ], ['role_permission_id'], ['role_id', 'permission_id']);

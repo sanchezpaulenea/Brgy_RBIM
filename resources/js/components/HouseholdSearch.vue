@@ -69,7 +69,7 @@ const props = defineProps({
     },
     placeholder: {
         type: String,
-        default: 'Search household ID, street, or house/lot number',
+        default: 'Search household head, household ID, street, or house/lot number',
     },
     hint: {
         type: String,
@@ -114,7 +114,7 @@ const filtered = computed(() => {
     }
 
     const list = props.options.filter((option) => (
-        matchesSearch(householdIdentitySearchText(option), query.value)
+        matchesSearch(householdIdentitySearchText(option, true), query.value)
     ));
 
     return list.slice(0, HOUSEHOLD_SEARCH_LIMIT);

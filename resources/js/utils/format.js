@@ -192,15 +192,18 @@ export function householdIdentitySearchText(household, includeHead = false) {
         return '';
     }
 
-    const parts = [
-        household.household_id,
-        household.street_name,
-        household.house_lot,
-    ];
-
-    if (includeHead) {
-        parts.push(household.head_name || household.head?.full_name);
-    }
+    const parts = includeHead
+        ? [
+            household.head_name || household.head?.full_name,
+            household.household_id,
+            household.street_name,
+            household.house_lot,
+        ]
+        : [
+            household.household_id,
+            household.street_name,
+            household.house_lot,
+        ];
 
     return parts.filter((part) => part !== null && part !== undefined && String(part).trim() !== '').join(' ');
 }

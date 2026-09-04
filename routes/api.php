@@ -42,6 +42,7 @@ Route::prefix('v1')->group(function () {
         Route::get('household-assessments', [HouseholdAssessmentController::class, 'indexAll'])->name('household-assessments.index');
         Route::get('households/{household}/assessments', [HouseholdAssessmentController::class, 'index'])->name('households.assessments.index');
         Route::post('households/{household}/assessments', [HouseholdAssessmentController::class, 'store'])->name('households.assessments.store');
+        Route::patch('household-assessments/{assessment}/status', [HouseholdAssessmentController::class, 'updateStatus'])->name('household-assessments.update-status');
         Route::get('households/{household}', [HouseholdController::class, 'show'])->name('households.show');
         Route::patch('households/{household}', [HouseholdController::class, 'update'])->name('households.update');
 

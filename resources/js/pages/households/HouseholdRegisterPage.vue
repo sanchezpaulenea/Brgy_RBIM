@@ -147,6 +147,8 @@
                             :ethnicities="ethnicities"
                             :marital-statuses="maritalStatuses"
                             :resident-types="residentTypes"
+                            :lookup-limit="REGISTER_HOUSEHOLD_LOOKUP_LIMIT"
+                            :preferred-lookup-ids="REGISTER_HOUSEHOLD_LOOKUP_IDS"
                             relationship-locked
                             id-prefix="head"
                             @validate-name="validateHeadName"
@@ -192,6 +194,8 @@ import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
 import * as residentService from '@/services/residentService';
 import {
+    REGISTER_HOUSEHOLD_LOOKUP_IDS,
+    REGISTER_HOUSEHOLD_LOOKUP_LIMIT,
     applyLookupCreated,
     ensureResidentDemographicLookups,
 } from '@/utils/demographicLookups';

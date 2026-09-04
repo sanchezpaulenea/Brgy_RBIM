@@ -2,6 +2,9 @@ import { extractErrorMessage } from '@/services/http';
 import * as lookupService from '@/services/lookupService';
 import { toId } from '@/utils/residentForm';
 
+export const REGISTER_HOUSEHOLD_LOOKUP_IDS = [1, 2, 3, 4, 5];
+export const REGISTER_HOUSEHOLD_LOOKUP_LIMIT = 5;
+
 export async function ensureLookupId({
     id,
     name,

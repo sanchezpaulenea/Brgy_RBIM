@@ -22,8 +22,7 @@
                         autocapitalize="off"
                         spellcheck="false"
                         class="rbim-input py-2"
-                        placeholder="Search household ID, street, house/lot number, or head name"
-                        title="Search by household ID, street, house/lot number, or head resident name"
+                        placeholder="Search household head"
                     >
                 </div>
                 <div>
@@ -253,7 +252,7 @@ import { useSectionTabs } from '@/composables/useSectionTabs';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
-import { formatDate, householdIdentitySearchText, matchesSearch } from '@/utils/format';
+import { formatDate, matchesSearch } from '@/utils/format';
 import { applyValidationErrors, optionalAddressText, toId } from '@/utils/residentForm';
 
 const router = useRouter();
@@ -292,9 +291,7 @@ const confirm = reactive({
 const canUpdate = computed(() => hasPermission('household.update'));
 
 const filteredItems = computed(() => (
-    items.value.filter((household) => (
-        matchesSearch(householdIdentitySearchText(household, true), filters.search)
-    ))
+    items.value.filter((household) => matchesSearch(household.head_name, filters.search))
 ));
 
 function emptyEditForm() {

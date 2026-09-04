@@ -32,6 +32,8 @@
             :resident-types="residentTypes"
             :existing-residents="existingResidents"
             :ensure-lookups="ensureLookups"
+            :lookup-limit="REGISTER_HOUSEHOLD_LOOKUP_LIMIT"
+            :preferred-lookup-ids="REGISTER_HOUSEHOLD_LOOKUP_IDS"
             count-title="Additional household members"
             count-label="How many household members would you like to add?"
             count-hint="The household head is already registered. This is how many more members you will encode next."
@@ -51,6 +53,10 @@
 import { computed, ref } from 'vue';
 import SequentialResidentRegistration from '@/components/SequentialResidentRegistration.vue';
 import { householdDisplayLabel } from '@/utils/format';
+import {
+    REGISTER_HOUSEHOLD_LOOKUP_IDS,
+    REGISTER_HOUSEHOLD_LOOKUP_LIMIT,
+} from '@/utils/demographicLookups';
 
 const props = defineProps({
     household: {

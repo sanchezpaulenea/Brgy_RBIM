@@ -13,6 +13,7 @@ use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\BarangayPersonnel\BarangayPersonnelRepositoryInterface;
 use App\Repositories\Interfaces\HouseholdManagement\HouseholdAssessmentRepositoryInterface;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
@@ -25,13 +26,22 @@ class HouseholdAssessmentServices
     ) {}
 
     /**
+     * Latest assessment per household (highest assessment_id). Visit history stays on the household detail list.
+     *
      * @return array<int, array<string, mixed>>
      */
     public function listAllAssessments(): array
     {
         return $this->householdAssessmentRepository
             ->listAll()
-            ->map(fn (HouseholdAssessment $assessment) => $this->formatListRecord($assessment))
+            ->unique('household_id')
+            ->values()
+            ->map(function (HouseholdAssessment $assessment) {
+                $payload = $this->formatListRecord($assessment);
+                $payload['is_latest'] = true;
+
+                return $payload;
+            })
             ->all();
     }
 
@@ -42,7 +52,13 @@ class HouseholdAssessmentServices
     {
         return $this->householdAssessmentRepository
             ->listByHousehold($household->household_id)
-            ->map(fn (HouseholdAssessment $assessment) => $this->formatAssessment($assessment))
+            ->values()
+            ->map(function (HouseholdAssessment $assessment, int $index) {
+                $payload = $this->formatAssessment($assessment) ?? [];
+                $payload['is_latest'] = $index === 0;
+
+                return $payload;
+            })
             ->all();
     }
 
@@ -129,6 +145,58 @@ class HouseholdAssessmentServices
             );
 
             return $this->formatAssessment($assessment);
+        });
+    }
+
+    /**
+     * Update census status only, and only while this is still the household's
+     * latest assessment with CB (Callback).
+     *
+     * @return array<string, mixed>
+     */
+    public function updateStatus(User $performedBy, HouseholdAssessment $assessment, int $censusStatusId): array
+    {
+        return DB::transaction(function () use ($performedBy, $assessment, $censusStatusId) {
+            $locked = $this->householdAssessmentRepository->lockById($assessment->assessment_id);
+
+            if ($locked === null) {
+                throw new ModelNotFoundException(
+                    "Household assessment [{$assessment->assessment_id}] not found.",
+                );
+            }
+
+            $latest = $this->householdAssessmentRepository->latestByHousehold($locked->household_id);
+
+            if ($latest === null || (int) $latest->assessment_id !== (int) $locked->assessment_id) {
+                throw new ConflictHttpException(
+                    'Only the latest household assessment can be updated.',
+                );
+            }
+
+            if ((int) $locked->census_status_id !== CensusStatus::CALLBACK) {
+                throw new ConflictHttpException(
+                    'Census status can only be updated while the latest assessment is still CB (Callback).',
+                );
+            }
+
+            $oldLabel = $this->censusStatusLabel($locked->censusStatus) ?? (string) $locked->census_status_id;
+            $updated = $this->householdAssessmentRepository->updateStatus($locked, $censusStatusId);
+
+            $this->auditLogRepository->log(
+                performedByUserId: $performedBy->user_id,
+                actionId: Action::UPDATE,
+                recordId: $updated->assessment_id,
+                description: 'Update household assessment status',
+                oldValue: $oldLabel,
+                newValue: $this->censusStatusLabel($updated->censusStatus) ?? (string) $censusStatusId,
+                target: 'census_status',
+                entity: 'household_assessment',
+            );
+
+            $payload = $this->formatAssessment($updated) ?? [];
+            $payload['is_latest'] = true;
+
+            return $payload;
         });
     }
 

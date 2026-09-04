@@ -4,6 +4,7 @@ namespace App\Http\Controllers\HouseholdManagament;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\HouseholdManagement\StoreHouseholdAssessmentRequest;
+use App\Http\Requests\HouseholdManagement\UpdateHouseholdAssessmentStatusRequest;
 use App\Models\HouseholdManagement\Household;
 use App\Models\HouseholdManagement\HouseholdAssessment;
 use App\Models\UserManagement\User;
@@ -74,5 +75,29 @@ class HouseholdAssessmentController extends Controller
             'message' => 'Household assessment encoded successfully.',
             'item' => $item,
         ], 201);
+    }
+
+    /**
+     * PATCH /api/v1/household-assessments/{assessment}/status
+     */
+    public function updateStatus(
+        UpdateHouseholdAssessmentStatusRequest $request,
+        HouseholdAssessment $assessment,
+    ): JsonResponse {
+        $this->authorize('updateStatus', $assessment);
+
+        /** @var User $performedBy */
+        $performedBy = $request->user();
+
+        $item = $this->householdAssessmentService->updateStatus(
+            $performedBy,
+            $assessment,
+            (int) $request->validated('census_status_id'),
+        );
+
+        return response()->json([
+            'message' => 'Household assessment status updated successfully.',
+            'item' => $item,
+        ]);
     }
 }

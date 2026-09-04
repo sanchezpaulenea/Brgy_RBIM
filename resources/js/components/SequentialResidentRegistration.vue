@@ -95,6 +95,8 @@
                         :ethnicities="ethnicities"
                         :marital-statuses="maritalStatuses"
                         :resident-types="residentTypes"
+                        :lookup-limit="lookupLimit"
+                        :preferred-lookup-ids="preferredLookupIds"
                         :id-prefix="idPrefix"
                         @validate-name="validateMemberName"
                         @lookup-created="emit('lookup-created', $event)"
@@ -200,6 +202,14 @@ const props = defineProps({
     ensureLookups: {
         type: Function,
         default: null,
+    },
+    lookupLimit: {
+        type: Number,
+        default: 12,
+    },
+    preferredLookupIds: {
+        type: Array,
+        default: () => [],
     },
 });
 

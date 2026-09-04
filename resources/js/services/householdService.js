@@ -68,6 +68,12 @@ export async function createHouseholdAssessment(householdId, payload) {
     return data.item;
 }
 
+export async function updateHouseholdAssessmentStatus(assessmentId, payload) {
+    const { data } = await http.patch(`/household-assessments/${assessmentId}/status`, payload);
+
+    return data.item;
+}
+
 export async function createResident(payload) {
     const { data } = await http.post('/residents', payload);
 

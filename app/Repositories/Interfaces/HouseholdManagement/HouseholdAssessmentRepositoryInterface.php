@@ -23,4 +23,8 @@ interface HouseholdAssessmentRepositoryInterface
     public function listByHousehold(int $householdId): Collection;
 
     public function latestByHousehold(int $householdId): ?HouseholdAssessment;
+
+    public function lockById(int $assessmentId): ?HouseholdAssessment;
+
+    public function updateStatus(HouseholdAssessment $assessment, int $censusStatusId): HouseholdAssessment;
 }

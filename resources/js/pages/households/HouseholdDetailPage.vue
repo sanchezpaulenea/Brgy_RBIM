@@ -34,7 +34,7 @@
             <template v-else-if="household">
                 <article class="rbim-card p-6">
                     <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">
-                        Latest Assessment
+                        Household {{ household.household_id }}<template v-if="household.street_name"> — {{ household.street_name }}</template>
                     </h2>
                     <dl class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         <div>

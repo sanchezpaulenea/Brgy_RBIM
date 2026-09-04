@@ -2,6 +2,7 @@
 
 namespace App\Repositories\HouseholdManagement;
 
+use App\Models\HouseholdManagement\CensusStatus;
 use App\Models\HouseholdManagement\HouseholdAssessment;
 use App\Repositories\Interfaces\HouseholdManagement\HouseholdAssessmentRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
@@ -65,5 +66,27 @@ class HouseholdAssessmentRepository implements HouseholdAssessmentRepositoryInte
             ->where('household_id', $householdId)
             ->orderByDesc('assessment_id')
             ->first();
+    }
+
+    public function lockById(int $assessmentId): ?HouseholdAssessment
+    {
+        return HouseholdAssessment::query()
+            ->with($this->relations())
+            ->where('assessment_id', $assessmentId)
+            ->lockForUpdate()
+            ->first();
+    }
+
+    public function updateStatus(HouseholdAssessment $assessment, int $censusStatusId): HouseholdAssessment
+    {
+        $assessment->census_status_id = $censusStatusId;
+
+        if ($censusStatusId !== CensusStatus::CALLBACK) {
+            $assessment->next_visit_date = null;
+        }
+
+        $assessment->save();
+
+        return $assessment->fresh($this->relations()) ?? $assessment;
     }
 }

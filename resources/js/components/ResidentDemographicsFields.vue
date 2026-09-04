@@ -164,6 +164,8 @@
             placeholder="Search or type a nationality"
             required
             :can-create="canCreateNationality"
+            :limit="lookupLimit"
+            :preferred-ids="preferredLookupIds"
             :error="errors.nationality_id"
             :hint="canCreateNationality ? 'Choose from the list, or type a new name and press Enter to add it.' : ''"
             @create="createNationality"
@@ -177,6 +179,8 @@
             placeholder="Search or type a religion"
             required
             :can-create="canCreateReligion"
+            :limit="lookupLimit"
+            :preferred-ids="preferredLookupIds"
             :error="errors.religion_id"
             :hint="canCreateReligion ? 'Choose from the list, or type a new name and press Enter to add it.' : ''"
             @create="createReligion"
@@ -190,6 +194,8 @@
             placeholder="Search or type an ethnicity"
             required
             :can-create="canCreateEthnicity"
+            :limit="lookupLimit"
+            :preferred-ids="preferredLookupIds"
             :error="errors.ethnicity_id"
             :hint="canCreateEthnicity ? 'Choose from the list, or type a new name and press Enter to add it.' : ''"
             @create="createEthnicity"
@@ -288,6 +294,14 @@ const props = defineProps({
     idPrefix: {
         type: String,
         default: 'resident',
+    },
+    lookupLimit: {
+        type: Number,
+        default: 12,
+    },
+    preferredLookupIds: {
+        type: Array,
+        default: () => [],
     },
 });
 

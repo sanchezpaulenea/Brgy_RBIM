@@ -30,6 +30,7 @@ const PERMISSION_LABELS = {
     'household.update': { group: 'Households', label: 'Update households' },
     'householdassessment.view': { group: 'Household assessments', label: 'View household assessments' },
     'householdassessment.create': { group: 'Household assessments', label: 'Create household assessments' },
+    'householdassessment.updatestatus': { group: 'Household assessments', label: 'Update household assessment status' },
     'nationality.view': { group: 'Nationalities', label: 'View nationalities' },
     'nationality.create': { group: 'Nationalities', label: 'Create nationalities' },
     'nationality.delete': { group: 'Nationalities', label: 'Delete nationalities' },

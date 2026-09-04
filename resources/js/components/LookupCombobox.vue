@@ -98,6 +98,14 @@ const props = defineProps({
         type: String,
         required: true,
     },
+    limit: {
+        type: Number,
+        default: 12,
+    },
+    preferredIds: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const emit = defineEmits(['update:modelValue', 'update:query', 'create']);
@@ -112,9 +120,21 @@ const selected = computed(() => (
 ));
 
 const filtered = computed(() => {
+    const term = query.value.trim();
+    const preferred = props.preferredIds
+        .map((id) => Number(id))
+        .filter((id) => Number.isInteger(id) && id > 0);
+
+    if (!term && preferred.length) {
+        return preferred
+            .map((id) => props.options.find((option) => Number(option.id) === id))
+            .filter(Boolean)
+            .slice(0, props.limit);
+    }
+
     const list = props.options.filter((option) => matchesSearch(option.label, query.value));
 
-    return list.slice(0, 12);
+    return list.slice(0, props.limit);
 });
 
 const newName = computed(() => {

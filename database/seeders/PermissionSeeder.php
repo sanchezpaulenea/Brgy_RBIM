@@ -48,7 +48,7 @@ class PermissionSeeder extends Seeder
             ['permission_id' => 36, 'permission' => 'religion.view'],
             ['permission_id' => 37, 'permission' => 'religion.create'],
             ['permission_id' => 38, 'permission' => 'religion.delete'],
-            ['permission_id' => 39, 'permission' => 'user.delete'],
+            ['permission_id' => 39, 'permission' => 'householdassessment.updatestatus'],
         ], ['permission_id'], ['permission']);
     }
 }
