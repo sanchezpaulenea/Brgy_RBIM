@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Sep 04, 2026 at 09:29 PM
+-- Generation Time: Sep 04, 2026 at 09:32 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -709,7 +709,7 @@ CREATE TABLE IF NOT EXISTS `role_permission` (
   PRIMARY KEY (`role_permission_id`),
   UNIQUE KEY `uq_permission_assignment` (`role_id`,`permission_id`),
   KEY `permission_role` (`permission_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=61 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `role_permission`
@@ -731,6 +731,7 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (55, 1, 34),
 (56, 1, 36),
 (57, 1, 37),
+(61, 1, 39),
 (16, 2, 15),
 (17, 2, 16),
 (18, 2, 17),
