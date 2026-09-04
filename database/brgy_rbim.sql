@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Aug 31, 2026 at 07:34 PM
+-- Generation Time: Sep 04, 2026 at 09:29 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `brgy_rbim`
+-- Database: `v2_rbim`
 --
 
 -- --------------------------------------------------------
@@ -392,7 +392,7 @@ CREATE TABLE IF NOT EXISTS `permission` (
   `permission` varchar(45) NOT NULL,
   PRIMARY KEY (`permission_id`),
   UNIQUE KEY `uq_permission` (`permission_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `permission`
@@ -436,7 +436,8 @@ INSERT INTO `permission` (`permission_id`, `permission`) VALUES
 (35, 'resident.update'),
 (36, 'religion.view'),
 (37, 'religion.create'),
-(38, 'religion.delete');
+(38, 'religion.delete'),
+(39, 'householdassessment.updatestatus');
 
 -- --------------------------------------------------------
 
@@ -708,7 +709,7 @@ CREATE TABLE IF NOT EXISTS `role_permission` (
   PRIMARY KEY (`role_permission_id`),
   UNIQUE KEY `uq_permission_assignment` (`role_id`,`permission_id`),
   KEY `permission_role` (`permission_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=61 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `role_permission`
@@ -754,6 +755,7 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (41, 2, 36),
 (42, 2, 37),
 (43, 2, 38),
+(60, 2, 39),
 (7, 3, 1),
 (10, 3, 2),
 (8, 3, 3),
