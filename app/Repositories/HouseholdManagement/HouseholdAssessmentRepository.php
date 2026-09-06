@@ -47,6 +47,19 @@ class HouseholdAssessmentRepository implements HouseholdAssessmentRepositoryInte
             ->get();
     }
 
+    public function listLatestPerHousehold(): Collection
+    {
+        $latestIds = HouseholdAssessment::query()
+            ->selectRaw('MAX(assessment_id)')
+            ->groupBy('household_id');
+
+        return HouseholdAssessment::query()
+            ->with($this->relations())
+            ->whereIn('assessment_id', $latestIds)
+            ->orderByDesc('assessment_id')
+            ->get();
+    }
+
     /**
      * @return Collection<int, HouseholdAssessment>
      */

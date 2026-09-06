@@ -18,6 +18,13 @@ interface HouseholdAssessmentRepositoryInterface
     public function listAll(): Collection;
 
     /**
+     * Latest visit per household (highest assessment_id).
+     *
+     * @return Collection<int, HouseholdAssessment>
+     */
+    public function listLatestPerHousehold(): Collection;
+
+    /**
      * @return Collection<int, HouseholdAssessment>
      */
     public function listByHousehold(int $householdId): Collection;

@@ -40,7 +40,7 @@
                     </button>
                 </div>
                 <p class="text-xs text-slate-500 sm:col-span-3">
-                    This table shows each household's latest assessment only. Open View to see earlier visits.
+                    Showing the latest visit per household. Use View to open visit history. Update status appears only when that latest visit is Callback.
                 </p>
             </form>
 

@@ -33,8 +33,7 @@ class HouseholdAssessmentServices
     public function listAllAssessments(): array
     {
         return $this->householdAssessmentRepository
-            ->listAll()
-            ->unique('household_id')
+            ->listLatestPerHousehold()
             ->values()
             ->map(function (HouseholdAssessment $assessment) {
                 $payload = $this->formatListRecord($assessment);
