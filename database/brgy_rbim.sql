@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Sep 06, 2026 at 11:46 AM
+-- Generation Time: Sep 06, 2026 at 12:24 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `v2_rbim`
+-- Database: `v3_rbim`
 --
 
 -- --------------------------------------------------------
@@ -136,6 +136,29 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `birth_attendant`
+--
+
+DROP TABLE IF EXISTS `birth_attendant`;
+CREATE TABLE IF NOT EXISTS `birth_attendant` (
+  `birth_attendant_id` int NOT NULL AUTO_INCREMENT,
+  `birth_attendant` varchar(45) NOT NULL,
+  PRIMARY KEY (`birth_attendant_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `birth_attendant`
+--
+
+INSERT INTO `birth_attendant` (`birth_attendant_id`, `birth_attendant`) VALUES
+(1, 'Doctor'),
+(2, 'Nurse'),
+(3, 'Midwife'),
+(4, 'Hilot');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `census_status`
 --
 
@@ -188,6 +211,85 @@ INSERT INTO `clan` (`clan_id`, `clan_name`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `community_tax_cert`
+--
+
+DROP TABLE IF EXISTS `community_tax_cert`;
+CREATE TABLE IF NOT EXISTS `community_tax_cert` (
+  `community_tax_cert` int NOT NULL AUTO_INCREMENT,
+  `has_valid_ctc` tinyint(1) NOT NULL,
+  `ctc_issued_here` tinyint(1) NOT NULL,
+  `resident_id` int NOT NULL,
+  PRIMARY KEY (`community_tax_cert`),
+  KEY `residentctc` (`resident_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `current_enrollment_status`
+--
+
+DROP TABLE IF EXISTS `current_enrollment_status`;
+CREATE TABLE IF NOT EXISTS `current_enrollment_status` (
+  `current_enrollment_status_id` int NOT NULL AUTO_INCREMENT,
+  `current_enrollement_status` varchar(45) NOT NULL,
+  PRIMARY KEY (`current_enrollment_status_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `current_enrollment_status`
+--
+
+INSERT INTO `current_enrollment_status` (`current_enrollment_status_id`, `current_enrollement_status`) VALUES
+(1, 'Yes, public'),
+(2, 'Yes, private'),
+(3, 'No');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `economic`
+--
+
+DROP TABLE IF EXISTS `economic`;
+CREATE TABLE IF NOT EXISTS `economic` (
+  `economic_id` int NOT NULL AUTO_INCREMENT,
+  `monthly_income` int NOT NULL,
+  `source_of_income_id` int NOT NULL,
+  `status_of_work_business_id` int NOT NULL,
+  `place_of_work_business` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `resident_id` int NOT NULL,
+  PRIMARY KEY (`economic_id`),
+  KEY `residenteconomic` (`resident_id`),
+  KEY `sourceofincome` (`source_of_income_id`),
+  KEY `statusofworkbusiness` (`status_of_work_business_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `education`
+--
+
+DROP TABLE IF EXISTS `education`;
+CREATE TABLE IF NOT EXISTS `education` (
+  `education_id` int NOT NULL,
+  `resident_id` int NOT NULL,
+  `highest_lvl_of_educ_id` int NOT NULL,
+  `current_enrollement_status_id` int NOT NULL,
+  `school_lvl_id` int NOT NULL,
+  `place_of_school_brgy` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `place_of_school_city_municipality` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  KEY `residenteducation` (`resident_id`),
+  KEY `currentenrollmentstatus` (`current_enrollement_status_id`),
+  KEY `highestlvlofeduc` (`highest_lvl_of_educ_id`),
+  KEY `schoollvl` (`school_lvl_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `ethnicity`
 --
 
@@ -208,6 +310,167 @@ INSERT INTO `ethnicity` (`ethnicity_id`, `ethnicity`) VALUES
 (2, 'Ilocano'),
 (3, 'Kankanaey'),
 (1, 'Tagalog');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `facility_visited_past_12mos`
+--
+
+DROP TABLE IF EXISTS `facility_visited_past_12mos`;
+CREATE TABLE IF NOT EXISTS `facility_visited_past_12mos` (
+  `facility_visited_past_12mos_id` int NOT NULL AUTO_INCREMENT,
+  `facility_visited_past_12mos` varchar(45) NOT NULL,
+  PRIMARY KEY (`facility_visited_past_12mos_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `facility_visited_past_12mos`
+--
+
+INSERT INTO `facility_visited_past_12mos` (`facility_visited_past_12mos_id`, `facility_visited_past_12mos`) VALUES
+(1, 'Government hospital'),
+(2, 'RHU/Health center'),
+(3, 'Brgy. Health Station'),
+(4, 'Private hospital'),
+(5, 'Private clinic'),
+(6, 'Pharmacy'),
+(7, 'Hilot/Herbalist');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `facility_visit_reason`
+--
+
+DROP TABLE IF EXISTS `facility_visit_reason`;
+CREATE TABLE IF NOT EXISTS `facility_visit_reason` (
+  `facility_visit_reason_id` int NOT NULL AUTO_INCREMENT,
+  `facility_visit_reason` varchar(45) NOT NULL,
+  PRIMARY KEY (`facility_visit_reason_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `facility_visit_reason`
+--
+
+INSERT INTO `facility_visit_reason` (`facility_visit_reason_id`, `facility_visit_reason`) VALUES
+(1, 'Sick/Injured'),
+(2, 'Prenatal/Postnatal'),
+(3, 'Gave birth'),
+(4, 'Dental'),
+(5, 'Medical check-up'),
+(6, 'Medical requirement'),
+(7, 'NHTS/CCT/4PS requirement');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `family_planning_method`
+--
+
+DROP TABLE IF EXISTS `family_planning_method`;
+CREATE TABLE IF NOT EXISTS `family_planning_method` (
+  `family_planning_method_id` int NOT NULL AUTO_INCREMENT,
+  `family_planning_method` varchar(45) NOT NULL,
+  PRIMARY KEY (`family_planning_method_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `family_planning_method`
+--
+
+INSERT INTO `family_planning_method` (`family_planning_method_id`, `family_planning_method`) VALUES
+(1, 'Female sterilization/Ligation'),
+(2, 'Male sterilization/vasectomy'),
+(3, 'IUD'),
+(4, 'Injectables'),
+(5, 'Implants'),
+(6, 'Pill'),
+(7, 'Condom'),
+(8, 'Modern natural FP'),
+(9, 'Lactational Amenorrhea Method (LAM)'),
+(10, 'Traditional');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `health`
+--
+
+DROP TABLE IF EXISTS `health`;
+CREATE TABLE IF NOT EXISTS `health` (
+  `health_id` int NOT NULL AUTO_INCREMENT,
+  `health_insurance_id` int NOT NULL,
+  `facility_visited_past_12mos_id` int NOT NULL,
+  `facility_visit_reason_id` int NOT NULL,
+  `disability` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `resident_id` int NOT NULL,
+  PRIMARY KEY (`health_id`),
+  KEY `residenthealth` (`resident_id`),
+  KEY `facilityvisited` (`facility_visited_past_12mos_id`),
+  KEY `facilityvisitreason` (`facility_visit_reason_id`),
+  KEY `healthinsurance` (`health_insurance_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `health_insurance`
+--
+
+DROP TABLE IF EXISTS `health_insurance`;
+CREATE TABLE IF NOT EXISTS `health_insurance` (
+  `health_insurance_id` int NOT NULL AUTO_INCREMENT,
+  `health_insurance` varchar(45) NOT NULL,
+  PRIMARY KEY (`health_insurance_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `health_insurance`
+--
+
+INSERT INTO `health_insurance` (`health_insurance_id`, `health_insurance`) VALUES
+(1, 'PhilHealth paying member'),
+(2, 'PhilHealth dependent of paying member'),
+(3, 'PhilHealth indigent member'),
+(4, 'PhilHealth dependent of indigent member'),
+(5, 'GSIS'),
+(6, 'SSS'),
+(7, 'Private/HMO');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `highest_lvl_of_educ`
+--
+
+DROP TABLE IF EXISTS `highest_lvl_of_educ`;
+CREATE TABLE IF NOT EXISTS `highest_lvl_of_educ` (
+  `highest_lvl_of_educ_id` int NOT NULL AUTO_INCREMENT,
+  `lvl_of_educ` varchar(45) NOT NULL,
+  PRIMARY KEY (`highest_lvl_of_educ_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `highest_lvl_of_educ`
+--
+
+INSERT INTO `highest_lvl_of_educ` (`highest_lvl_of_educ_id`, `lvl_of_educ`) VALUES
+(1, 'No education'),
+(2, 'Pre-school'),
+(3, 'Elementary level'),
+(4, 'Elementary graduate'),
+(5, 'High school level'),
+(6, 'High school graduate'),
+(7, 'Junior HS'),
+(8, 'Junior HS graduate'),
+(9, 'Senior HS level'),
+(10, 'Senior HS graduate'),
+(11, 'Vocational/Tech'),
+(12, 'College level'),
+(13, 'College graduate'),
+(14, 'Post-graduate');
 
 -- --------------------------------------------------------
 
@@ -241,9 +504,7 @@ CREATE TABLE IF NOT EXISTS `household` (
 
 INSERT INTO `household` (`household_id`, `clan_id`, `head_resident_id`, `street_id`, `house_lot`, `block_num`, `building_name`, `unit_num`, `registration_date`, `household_status_id`) VALUES
 (1, 1, 1, 1, 'Lot 15', 'Blk 4', 'Antonio', '3', '2026-08-15 18:21:34', 1),
-(2, 2, 2, 2, 'Lot 4', 'Blk 15', NULL, NULL, '2026-08-15 18:25:41', 1),
-(3, 3, 1, 3, 'Lot 7', 'Blk 9', NULL, NULL, '2026-08-15 18:25:56', 1),
-(4, 4, 1, 4, 'Lot 3', 'Blk 6', NULL, NULL, '2026-08-15 18:26:17', 1);
+(2, 2, 2, 2, 'Lot 4', 'Blk 15', NULL, NULL, '2026-08-15 18:25:41', 1);
 
 -- --------------------------------------------------------
 
@@ -307,6 +568,25 @@ INSERT INTO `household_status` (`household_status_id`, `household_status`) VALUE
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `infant_health`
+--
+
+DROP TABLE IF EXISTS `infant_health`;
+CREATE TABLE IF NOT EXISTS `infant_health` (
+  `infant_health_id` int NOT NULL AUTO_INCREMENT,
+  `place_of_delivery_id` int NOT NULL,
+  `birth_attendant_id` int NOT NULL,
+  `immunization` varchar(45) NOT NULL,
+  `resident_id` int NOT NULL,
+  PRIMARY KEY (`infant_health_id`),
+  KEY `placeofdelivery` (`place_of_delivery_id`),
+  KEY `birthattendant` (`birth_attendant_id`),
+  KEY `residentinfanthealth` (`resident_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `login_status`
 --
 
@@ -358,6 +638,30 @@ INSERT INTO `marital_status` (`marital_status_id`, `marital_status`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `migration`
+--
+
+DROP TABLE IF EXISTS `migration`;
+CREATE TABLE IF NOT EXISTS `migration` (
+  `migration_id` int NOT NULL AUTO_INCREMENT,
+  `previous_residence_6mos_brgy` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `previous_residence_6mos_city_municipality` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `previous_residence_5yrs_brgy` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `previous_residence_5yrs_city_municipality` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `date_of_transfer_in_brgy` date DEFAULT NULL,
+  `reason_for_leaving_id` int NOT NULL,
+  `will_return_to_previous_residence` tinyint(1) NOT NULL,
+  `reason_for_transfer_id` int NOT NULL,
+  `duration_of_stay` date DEFAULT NULL,
+  `resident_id` int NOT NULL,
+  PRIMARY KEY (`migration_id`),
+  KEY `reasonforleaving` (`reason_for_leaving_id`),
+  KEY `reasonfortransfer` (`reason_for_transfer_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `nationality`
 --
 
@@ -392,7 +696,7 @@ CREATE TABLE IF NOT EXISTS `permission` (
   `permission` varchar(45) NOT NULL,
   PRIMARY KEY (`permission_id`),
   UNIQUE KEY `uq_permission` (`permission_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=67 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `permission`
@@ -437,7 +741,34 @@ INSERT INTO `permission` (`permission_id`, `permission`) VALUES
 (36, 'religion.view'),
 (37, 'religion.create'),
 (38, 'religion.delete'),
-(39, 'householdassessment.updatestatus');
+(39, 'householdassessment.updatestatus'),
+(40, 'education.view'),
+(41, 'education.create'),
+(42, 'edcuation.update'),
+(43, 'economic.view'),
+(44, 'economic.create'),
+(45, 'economic.update'),
+(46, 'infanthealth.view'),
+(47, 'infanthealth.create'),
+(48, 'infanthealth.update'),
+(49, 'health.view'),
+(50, 'health.create'),
+(51, 'health.update'),
+(52, 'womenhealth.view'),
+(53, 'womanhealth.create'),
+(54, 'womanhealth.update'),
+(55, 'sociocivic.view'),
+(56, 'sociocivic.create'),
+(57, 'sociocivic.update'),
+(58, 'migration.view'),
+(59, 'migration.create'),
+(60, 'migration.update'),
+(61, 'ctc.view'),
+(62, 'ctc.create'),
+(63, 'ctc.update'),
+(64, 'skills.view'),
+(65, 'skills.create'),
+(66, 'skills.update');
 
 -- --------------------------------------------------------
 
@@ -486,6 +817,87 @@ INSERT INTO `personnel_status` (`personnel_status_id`, `personnel_status`) VALUE
 (5, 'On Leave'),
 (3, 'Resigned'),
 (4, 'Retired');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `place_of_delivery`
+--
+
+DROP TABLE IF EXISTS `place_of_delivery`;
+CREATE TABLE IF NOT EXISTS `place_of_delivery` (
+  `place_of_delivery_id` int NOT NULL AUTO_INCREMENT,
+  `place_of_delivery` varchar(45) NOT NULL,
+  PRIMARY KEY (`place_of_delivery_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `place_of_delivery`
+--
+
+INSERT INTO `place_of_delivery` (`place_of_delivery_id`, `place_of_delivery`) VALUES
+(1, 'Public hospital'),
+(2, 'Private hospital'),
+(3, 'Lying-in clinic'),
+(4, 'Home');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `reason_for_leaving`
+--
+
+DROP TABLE IF EXISTS `reason_for_leaving`;
+CREATE TABLE IF NOT EXISTS `reason_for_leaving` (
+  `reason_for_leaving_id` int NOT NULL AUTO_INCREMENT,
+  `reason_for_leaving` varchar(45) NOT NULL,
+  PRIMARY KEY (`reason_for_leaving_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `reason_for_leaving`
+--
+
+INSERT INTO `reason_for_leaving` (`reason_for_leaving_id`, `reason_for_leaving`) VALUES
+(1, 'Lack of employment'),
+(2, 'Perception of better income in other place'),
+(3, 'Schooling'),
+(4, 'Presence of relatives and friends in other pl'),
+(5, 'Employment/Job Relocation'),
+(6, 'Disaster-related Relocation'),
+(7, 'Retirement'),
+(8, 'To live with Parents'),
+(9, 'To live with Children'),
+(10, 'Marriage'),
+(11, 'Annulment/Divorce/Separation'),
+(12, 'Community-related Reasons'),
+(13, 'Health-related Reasons'),
+(14, 'Peace and Security'),
+(15, 'Others');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `reason_for_transfer`
+--
+
+DROP TABLE IF EXISTS `reason_for_transfer`;
+CREATE TABLE IF NOT EXISTS `reason_for_transfer` (
+  `reason_for_transfer_id` int NOT NULL AUTO_INCREMENT,
+  `reason_for_transfer` varchar(45) NOT NULL,
+  PRIMARY KEY (`reason_for_transfer_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `reason_for_transfer`
+--
+
+INSERT INTO `reason_for_transfer` (`reason_for_transfer_id`, `reason_for_transfer`) VALUES
+(1, 'Availability of jobs'),
+(2, 'Higher wage'),
+(3, 'Presence of schools or universities'),
+(4, 'Presence of relatives and friends in other pl'),
+(5, 'Housing');
 
 -- --------------------------------------------------------
 
@@ -709,7 +1121,7 @@ CREATE TABLE IF NOT EXISTS `role_permission` (
   PRIMARY KEY (`role_permission_id`),
   UNIQUE KEY `uq_permission_assignment` (`role_id`,`permission_id`),
   KEY `permission_role` (`permission_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=156 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `role_permission`
@@ -733,6 +1145,34 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (63, 1, 35),
 (56, 1, 36),
 (57, 1, 37),
+(61, 1, 39),
+(91, 1, 40),
+(92, 1, 41),
+(117, 1, 42),
+(93, 1, 43),
+(94, 1, 44),
+(95, 1, 45),
+(96, 1, 46),
+(97, 1, 47),
+(98, 1, 48),
+(99, 1, 49),
+(100, 1, 50),
+(101, 1, 51),
+(102, 1, 52),
+(103, 1, 53),
+(104, 1, 54),
+(105, 1, 55),
+(106, 1, 56),
+(107, 1, 57),
+(108, 1, 58),
+(109, 1, 59),
+(110, 1, 60),
+(111, 1, 61),
+(112, 1, 62),
+(113, 1, 63),
+(114, 1, 64),
+(115, 1, 65),
+(116, 1, 66),
 (16, 2, 15),
 (17, 2, 16),
 (18, 2, 17),
@@ -758,6 +1198,33 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (42, 2, 37),
 (43, 2, 38),
 (60, 2, 39),
+(64, 2, 40),
+(65, 2, 41),
+(66, 2, 42),
+(67, 2, 43),
+(68, 2, 44),
+(69, 2, 45),
+(70, 2, 46),
+(71, 2, 47),
+(72, 2, 48),
+(73, 2, 49),
+(74, 2, 50),
+(75, 2, 51),
+(76, 2, 52),
+(77, 2, 53),
+(78, 2, 54),
+(79, 2, 55),
+(80, 2, 56),
+(81, 2, 57),
+(82, 2, 58),
+(83, 2, 59),
+(84, 2, 60),
+(85, 2, 61),
+(86, 2, 62),
+(87, 2, 63),
+(88, 2, 64),
+(89, 2, 65),
+(90, 2, 66),
 (7, 3, 1),
 (10, 3, 2),
 (8, 3, 3),
@@ -776,7 +1243,64 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (59, 3, 16),
 (20, 3, 17),
 (22, 3, 18),
-(21, 4, 17);
+(21, 4, 17),
+(124, 4, 19),
+(125, 4, 20),
+(126, 4, 22),
+(127, 4, 23),
+(128, 4, 25),
+(129, 4, 26),
+(130, 4, 27),
+(131, 4, 28),
+(132, 4, 30),
+(133, 4, 31),
+(134, 4, 33),
+(135, 4, 34),
+(136, 4, 36),
+(137, 4, 37),
+(138, 4, 40),
+(139, 4, 41),
+(140, 4, 43),
+(141, 4, 44),
+(142, 4, 46),
+(143, 4, 47),
+(154, 4, 49),
+(155, 4, 50),
+(144, 4, 52),
+(145, 4, 53),
+(146, 4, 55),
+(147, 4, 56),
+(148, 4, 58),
+(149, 4, 59),
+(150, 4, 61),
+(151, 4, 62),
+(152, 4, 64),
+(153, 4, 65);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `school_lvl`
+--
+
+DROP TABLE IF EXISTS `school_lvl`;
+CREATE TABLE IF NOT EXISTS `school_lvl` (
+  `school_lvl_id` int NOT NULL AUTO_INCREMENT,
+  `school_lvl` varchar(45) NOT NULL,
+  PRIMARY KEY (`school_lvl_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `school_lvl`
+--
+
+INSERT INTO `school_lvl` (`school_lvl_id`, `school_lvl`) VALUES
+(1, 'Pre-school'),
+(2, 'Elementary'),
+(3, 'Junior High School'),
+(4, 'Senior High School'),
+(5, 'Vocational/Technical'),
+(6, 'College/University');
 
 -- --------------------------------------------------------
 
@@ -799,6 +1323,173 @@ CREATE TABLE IF NOT EXISTS `sex` (
 INSERT INTO `sex` (`sex_id`, `sex`) VALUES
 (2, 'Female'),
 (1, 'Male');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `skills_development`
+--
+
+DROP TABLE IF EXISTS `skills_development`;
+CREATE TABLE IF NOT EXISTS `skills_development` (
+  `skills_development_id` int NOT NULL AUTO_INCREMENT,
+  `skills_development_training` varchar(45) NOT NULL,
+  `skill_type_id` int NOT NULL,
+  `resident_id` int NOT NULL,
+  PRIMARY KEY (`skills_development_id`),
+  KEY `residentskills` (`resident_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `skill_type`
+--
+
+DROP TABLE IF EXISTS `skill_type`;
+CREATE TABLE IF NOT EXISTS `skill_type` (
+  `skill_type_id` int NOT NULL AUTO_INCREMENT,
+  `skill_type` varchar(45) NOT NULL,
+  PRIMARY KEY (`skill_type_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `skill_type`
+--
+
+INSERT INTO `skill_type` (`skill_type_id`, `skill_type`) VALUES
+(1, 'Refrigeration and Airconditioning'),
+(2, 'Automotive/Heavy Equipment Servicing'),
+(3, 'Metal Worker'),
+(4, 'Building Wiring'),
+(5, 'Installation'),
+(6, 'Heavy Equipment Operation'),
+(7, 'Plumbing'),
+(8, 'Welding'),
+(9, 'Carpentry'),
+(10, 'Baking'),
+(11, 'Dressmaking'),
+(12, 'Linguist'),
+(13, 'Computer Graphics'),
+(14, 'Painting'),
+(15, 'Beauty Care'),
+(16, 'Commercial Cooking'),
+(17, 'Housekeeping'),
+(18, 'Massage Therapy'),
+(19, 'Others');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sociocivic`
+--
+
+DROP TABLE IF EXISTS `sociocivic`;
+CREATE TABLE IF NOT EXISTS `sociocivic` (
+  `sociocivic_id` int NOT NULL AUTO_INCREMENT,
+  `solo_parent_status_id` int NOT NULL,
+  `registered_sen_citizen` tinyint(1) NOT NULL,
+  `registered_barangay_voter` varchar(45) DEFAULT NULL,
+  `resident_id` int NOT NULL,
+  PRIMARY KEY (`sociocivic_id`),
+  KEY `residentsociocivic` (`resident_id`),
+  KEY `soloparentstatus` (`solo_parent_status_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `solo_parent_status`
+--
+
+DROP TABLE IF EXISTS `solo_parent_status`;
+CREATE TABLE IF NOT EXISTS `solo_parent_status` (
+  `solo_parent_status_id` int NOT NULL AUTO_INCREMENT,
+  `solo_parent_status` varchar(45) NOT NULL,
+  PRIMARY KEY (`solo_parent_status_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `solo_parent_status`
+--
+
+INSERT INTO `solo_parent_status` (`solo_parent_status_id`, `solo_parent_status`) VALUES
+(1, 'Registered Solo Parent'),
+(2, 'Non-Solo Parent'),
+(3, 'Unregistered Solo Parent');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `source_of_fp_method`
+--
+
+DROP TABLE IF EXISTS `source_of_fp_method`;
+CREATE TABLE IF NOT EXISTS `source_of_fp_method` (
+  `source_of_fp_method_id` int NOT NULL AUTO_INCREMENT,
+  `source_of_fp_method` varchar(45) NOT NULL,
+  PRIMARY KEY (`source_of_fp_method_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `source_of_fp_method`
+--
+
+INSERT INTO `source_of_fp_method` (`source_of_fp_method_id`, `source_of_fp_method`) VALUES
+(1, 'Government hospital'),
+(2, 'RHU/Health center'),
+(3, 'Brgy. Health Station'),
+(4, 'Private hospital'),
+(5, 'Pharmacy');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `source_of_income`
+--
+
+DROP TABLE IF EXISTS `source_of_income`;
+CREATE TABLE IF NOT EXISTS `source_of_income` (
+  `source_of_income_id` int NOT NULL AUTO_INCREMENT,
+  `source_of_income` varchar(45) NOT NULL,
+  PRIMARY KEY (`source_of_income_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `source_of_income`
+--
+
+INSERT INTO `source_of_income` (`source_of_income_id`, `source_of_income`) VALUES
+(1, 'Employment'),
+(2, 'Business'),
+(3, 'Remittance'),
+(4, 'Investments'),
+(5, 'Others');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `status_of_work_business`
+--
+
+DROP TABLE IF EXISTS `status_of_work_business`;
+CREATE TABLE IF NOT EXISTS `status_of_work_business` (
+  `status_of_work_business_id` int NOT NULL AUTO_INCREMENT,
+  `status_of_work_business` varchar(45) NOT NULL,
+  PRIMARY KEY (`status_of_work_business_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `status_of_work_business`
+--
+
+INSERT INTO `status_of_work_business` (`status_of_work_business_id`, `status_of_work_business`) VALUES
+(1, 'Permanent Work'),
+(2, 'Casual Work'),
+(3, 'Contractual Work'),
+(4, 'Individually Owned Business'),
+(5, 'Shared/Partnership Business'),
+(6, 'Corporate Business');
 
 -- --------------------------------------------------------
 
@@ -979,6 +1670,25 @@ INSERT INTO `user_status` (`user_status_id`, `user_status`, `can_login`) VALUES
 (4, 'Suspended', 0),
 (8, 'Inactive', 0);
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `women_health`
+--
+
+DROP TABLE IF EXISTS `women_health`;
+CREATE TABLE IF NOT EXISTS `women_health` (
+  `women_health_id` int NOT NULL AUTO_INCREMENT,
+  `living_children` int NOT NULL,
+  `family_planning_method_id` int NOT NULL,
+  `source_of_fp_method_id` int NOT NULL,
+  `have_intention_to_use_fp` tinyint(1) NOT NULL,
+  `health_id` int NOT NULL,
+  PRIMARY KEY (`women_health_id`),
+  KEY `fpmethod` (`family_planning_method_id`),
+  KEY `sourceoffpmethod` (`source_of_fp_method_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 --
 -- Constraints for dumped tables
 --
@@ -998,6 +1708,38 @@ ALTER TABLE `barangay_personnel`
   ADD CONSTRAINT `personnel_status` FOREIGN KEY (`personnel_status_id`) REFERENCES `personnel_status` (`personnel_status_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 --
+-- Constraints for table `community_tax_cert`
+--
+ALTER TABLE `community_tax_cert`
+  ADD CONSTRAINT `residentctc` FOREIGN KEY (`resident_id`) REFERENCES `resident` (`resident_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `economic`
+--
+ALTER TABLE `economic`
+  ADD CONSTRAINT `residenteconomic` FOREIGN KEY (`resident_id`) REFERENCES `resident` (`resident_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `sourceofincome` FOREIGN KEY (`source_of_income_id`) REFERENCES `source_of_income` (`source_of_income_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `statusofworkbusiness` FOREIGN KEY (`status_of_work_business_id`) REFERENCES `status_of_work_business` (`status_of_work_business_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `education`
+--
+ALTER TABLE `education`
+  ADD CONSTRAINT `currentenrollmentstatus` FOREIGN KEY (`current_enrollement_status_id`) REFERENCES `current_enrollment_status` (`current_enrollment_status_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `highestlvlofeduc` FOREIGN KEY (`highest_lvl_of_educ_id`) REFERENCES `highest_lvl_of_educ` (`highest_lvl_of_educ_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `residenteducation` FOREIGN KEY (`resident_id`) REFERENCES `resident` (`resident_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `schoollvl` FOREIGN KEY (`school_lvl_id`) REFERENCES `school_lvl` (`school_lvl_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `health`
+--
+ALTER TABLE `health`
+  ADD CONSTRAINT `facilityvisited` FOREIGN KEY (`facility_visited_past_12mos_id`) REFERENCES `facility_visited_past_12mos` (`facility_visited_past_12mos_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `facilityvisitreason` FOREIGN KEY (`facility_visit_reason_id`) REFERENCES `facility_visit_reason` (`facility_visit_reason_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `healthinsurance` FOREIGN KEY (`health_insurance_id`) REFERENCES `health_insurance` (`health_insurance_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `residenthealth` FOREIGN KEY (`resident_id`) REFERENCES `resident` (`resident_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
 -- Constraints for table `household`
 --
 ALTER TABLE `household`
@@ -1005,6 +1747,21 @@ ALTER TABLE `household`
   ADD CONSTRAINT `house_head` FOREIGN KEY (`head_resident_id`) REFERENCES `resident` (`resident_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `house_status` FOREIGN KEY (`household_status_id`) REFERENCES `household_status` (`household_status_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `house_street` FOREIGN KEY (`street_id`) REFERENCES `street` (`street_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `infant_health`
+--
+ALTER TABLE `infant_health`
+  ADD CONSTRAINT `birthattendant` FOREIGN KEY (`birth_attendant_id`) REFERENCES `birth_attendant` (`birth_attendant_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `placeofdelivery` FOREIGN KEY (`place_of_delivery_id`) REFERENCES `place_of_delivery` (`place_of_delivery_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `residentinfanthealth` FOREIGN KEY (`resident_id`) REFERENCES `resident` (`resident_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `migration`
+--
+ALTER TABLE `migration`
+  ADD CONSTRAINT `reasonforleaving` FOREIGN KEY (`reason_for_leaving_id`) REFERENCES `reason_for_leaving` (`reason_for_leaving_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `reasonfortransfer` FOREIGN KEY (`reason_for_transfer_id`) REFERENCES `reason_for_transfer` (`reason_for_transfer_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 --
 -- Constraints for table `resident`
@@ -1029,6 +1786,19 @@ ALTER TABLE `role_permission`
   ADD CONSTRAINT `role_permission` FOREIGN KEY (`role_id`) REFERENCES `role` (`role_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 --
+-- Constraints for table `skills_development`
+--
+ALTER TABLE `skills_development`
+  ADD CONSTRAINT `residentskills` FOREIGN KEY (`resident_id`) REFERENCES `resident` (`resident_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `sociocivic`
+--
+ALTER TABLE `sociocivic`
+  ADD CONSTRAINT `residentsociocivic` FOREIGN KEY (`resident_id`) REFERENCES `resident` (`resident_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `soloparentstatus` FOREIGN KEY (`solo_parent_status_id`) REFERENCES `solo_parent_status` (`solo_parent_status_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
 -- Constraints for table `user`
 --
 ALTER TABLE `user`
@@ -1049,6 +1819,13 @@ ALTER TABLE `user_role`
   ADD CONSTRAINT `role_assignor` FOREIGN KEY (`assigned_by`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `user_assigned` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `user_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`role_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `women_health`
+--
+ALTER TABLE `women_health`
+  ADD CONSTRAINT `fpmethod` FOREIGN KEY (`family_planning_method_id`) REFERENCES `family_planning_method` (`family_planning_method_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `sourceoffpmethod` FOREIGN KEY (`source_of_fp_method_id`) REFERENCES `source_of_fp_method` (`source_of_fp_method_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
