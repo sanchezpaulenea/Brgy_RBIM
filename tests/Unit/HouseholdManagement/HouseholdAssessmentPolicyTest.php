@@ -58,12 +58,23 @@ class HouseholdAssessmentPolicyTest extends TestCase
         $this->assertTrue($policy->view($admin, $assessment));
     }
 
-    public function test_admin_can_update_status_when_permitted(): void
+    public function test_admin_can_update_status(): void
     {
         $assessment = new HouseholdAssessment;
 
         $this->assertTrue((new HouseholdAssessmentPolicy)->updateStatus($this->user([
             'isAdmin' => true,
+            'isEncoder' => false,
+            'permissions' => [],
+        ]), $assessment));
+    }
+
+    public function test_user_with_update_status_permission_can_update_status(): void
+    {
+        $assessment = new HouseholdAssessment;
+
+        $this->assertTrue((new HouseholdAssessmentPolicy)->updateStatus($this->user([
+            'isAdmin' => false,
             'isEncoder' => false,
             'permissions' => ['householdassessment.updatestatus'],
         ]), $assessment));
@@ -76,7 +87,7 @@ class HouseholdAssessmentPolicyTest extends TestCase
         $this->assertFalse((new HouseholdAssessmentPolicy)->updateStatus($this->user([
             'isAdmin' => false,
             'isEncoder' => true,
-            'permissions' => ['householdassessment.updatestatus'],
+            'permissions' => [],
         ]), $assessment));
     }
 
