@@ -731,7 +731,6 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (55, 1, 34),
 (56, 1, 36),
 (57, 1, 37),
-(61, 1, 39),
 (16, 2, 15),
 (17, 2, 16),
 (18, 2, 17),

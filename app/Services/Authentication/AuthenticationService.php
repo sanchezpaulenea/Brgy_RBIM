@@ -5,6 +5,7 @@ namespace App\Services\Authentication;
 use App\Models\Authentication\LoginStatus;
 use App\Models\BarangayPersonnel\PersonnelStatus;
 use App\Models\Logs\Action;
+use App\Models\UserManagement\Role;
 use App\Models\UserManagement\User;
 use App\Models\UserManagement\UserStatus;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
@@ -18,6 +19,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -437,10 +439,52 @@ class AuthenticationService
      */
     protected function enabledPermissionNames(User $user): Collection
     {
+        $this->ensureAdminHouseholdAssessmentStatusPermission();
+
         return $user->permissions()
             ->pluck('permission')
             ->unique()
             ->values();
+    }
+
+    /**
+     * Assign householdassessment.updatestatus to Admin, the same way
+     * household.view and resident.view already belong to that role.
+     */
+    protected function ensureAdminHouseholdAssessmentStatusPermission(): void
+    {
+        if (
+            ! Schema::hasTable('permission')
+            || ! Schema::hasTable('role')
+            || ! Schema::hasTable('role_permission')
+        ) {
+            return;
+        }
+
+        DB::table('permission')->updateOrInsert(
+            ['permission_id' => 39],
+            ['permission' => 'householdassessment.updatestatus'],
+        );
+
+        $adminRoleId = DB::table('role')->where('role_name', Role::ADMIN)->value('role_id');
+
+        if ($adminRoleId === null) {
+            return;
+        }
+
+        $alreadyAssigned = DB::table('role_permission')
+            ->where('role_id', $adminRoleId)
+            ->where('permission_id', 39)
+            ->exists();
+
+        if ($alreadyAssigned) {
+            return;
+        }
+
+        DB::table('role_permission')->insert([
+            'role_id' => $adminRoleId,
+            'permission_id' => 39,
+        ]);
     }
 
     public function updateAvatar(User $user, ?UploadedFile $photo, ?string $preset): User

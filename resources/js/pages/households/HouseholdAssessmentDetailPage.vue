@@ -131,7 +131,6 @@ import PageTabs from '@/components/PageTabs.vue';
 import UpdateAssessmentStatusDialog from '@/components/UpdateAssessmentStatusDialog.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useSectionTabs } from '@/composables/useSectionTabs';
-import { ROLES } from '@/constants/roles';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
@@ -147,7 +146,7 @@ import { toId } from '@/utils/residentForm';
 const route = useRoute();
 const router = useRouter();
 const { householdTabs } = useSectionTabs();
-const { hasPermission, hasRole } = useAuth();
+const { hasPermission } = useAuth();
 
 const household = ref(null);
 const assessments = ref([]);
@@ -174,9 +173,7 @@ const confirm = reactive({
 });
 
 const householdLabel = computed(() => householdDisplayLabel(household.value));
-const canUpdateStatus = computed(() => (
-    hasRole(ROLES.ADMIN) && hasPermission('householdassessment.updatestatus')
-));
+const canUpdateStatus = computed(() => hasPermission('householdassessment.updatestatus'));
 const latestAssessmentTitle = computed(() => {
     const id = household.value?.household_id;
     const street = household.value?.street_name;
