@@ -142,7 +142,6 @@ import PageTabs from '@/components/PageTabs.vue';
 import UpdateAssessmentStatusDialog from '@/components/UpdateAssessmentStatusDialog.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useSectionTabs } from '@/composables/useSectionTabs';
-import { ROLES } from '@/constants/roles';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
@@ -157,7 +156,7 @@ import { toId } from '@/utils/residentForm';
 
 const router = useRouter();
 const { householdTabs } = useSectionTabs();
-const { hasPermission, hasRole } = useAuth();
+const { hasPermission } = useAuth();
 
 const items = ref([]);
 const censusStatuses = ref([]);
@@ -187,9 +186,7 @@ const confirm = reactive({
     onCancel: null,
 });
 
-const canUpdateStatus = computed(() => (
-    hasRole(ROLES.ADMIN) && hasPermission('householdassessment.updatestatus')
-));
+const canUpdateStatus = computed(() => hasPermission('householdassessment.updatestatus'));
 
 const filteredItems = computed(() => (
     items.value.filter((assessment) => {

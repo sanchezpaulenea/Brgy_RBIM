@@ -24,6 +24,6 @@ class HouseholdAssessmentPolicy
 
     public function updateStatus(User $user, HouseholdAssessment $assessment): bool
     {
-        return $user->isAdmin() && $user->hasPermission('householdassessment.updatestatus');
+        return $user->isAdmin() || $user->hasPermission('householdassessment.updatestatus');
     }
 }
