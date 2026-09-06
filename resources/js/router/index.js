@@ -155,6 +155,16 @@ const routes = [
         },
     },
     {
+        path: '/residents/verification',
+        name: 'resident-verification',
+        component: () => import('@/pages/residents/ResidentsPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresPermissions: ['resident.view'],
+            verificationMonitoring: true,
+        },
+    },
+    {
         path: '/residents/register',
         name: 'resident-register',
         component: () => import('@/pages/residents/ResidentRegisterPage.vue'),

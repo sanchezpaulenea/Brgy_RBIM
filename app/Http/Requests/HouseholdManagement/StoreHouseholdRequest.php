@@ -5,10 +5,12 @@ namespace App\Http\Requests\HouseholdManagement;
 use App\Http\Requests\HouseholdManagement\Concerns\NormalizesHouseholdAddress;
 use App\Rules\ValidPersonnelName;
 use App\Rules\ValidPlaceName;
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
+use Throwable;
 
 class StoreHouseholdRequest extends FormRequest
 {
@@ -135,7 +137,34 @@ class StoreHouseholdRequest extends FormRequest
     {
         $validator->after(function (Validator $validator): void {
             $this->validateUniqueLotAndBlock($validator);
+            $this->validateHouseholdHeadAge($validator);
         });
+    }
+
+    private function validateHouseholdHeadAge(Validator $validator): void
+    {
+        if ($validator->errors()->has('head.date_of_birth')) {
+            return;
+        }
+
+        $dateOfBirth = $this->input('head.date_of_birth');
+
+        if (! is_string($dateOfBirth) || $dateOfBirth === '') {
+            return;
+        }
+
+        try {
+            $age = Carbon::parse($dateOfBirth)->age;
+        } catch (Throwable) {
+            return;
+        }
+
+        if ($age < 15) {
+            $validator->errors()->add(
+                'head.date_of_birth',
+                'The household head must be at least 15 years old.',
+            );
+        }
     }
 
     private function titleCaseName(mixed $value): mixed

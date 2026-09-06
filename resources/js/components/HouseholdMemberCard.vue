@@ -271,7 +271,8 @@ import LookupCombobox from '@/components/LookupCombobox.vue';
 import { useAuth } from '@/composables/useAuth';
 import { extractErrorMessage } from '@/services/http';
 import * as lookupService from '@/services/lookupService';
-import { ageFromDateOfBirth, todayDate } from '@/utils/format';
+import { ageFromDateOfBirth, dateYearsAgo, todayDate } from '@/utils/format';
+import { HOUSEHOLD_HEAD_MIN_AGE } from '@/utils/residentForm';
 
 const HEAD_RELATIONSHIP_ID = 1;
 
@@ -330,7 +331,9 @@ const props = defineProps({
 
 const emit = defineEmits(['remove', 'lookup-created', 'lookup-error']);
 
-const maxBirthDate = todayDate();
+const maxBirthDate = computed(() => (
+    form.value.isHead ? dateYearsAgo(HOUSEHOLD_HEAD_MIN_AGE) : todayDate()
+));
 const { hasPermission } = useAuth();
 
 const canCreateNationality = computed(() => hasPermission('nationality.create'));

@@ -139,6 +139,7 @@
                         <h3 class="text-sm font-semibold text-slate-900">Head Resident</h3>
                         <ResidentDemographicsFields
                             v-model="head"
+                            :min-age="HOUSEHOLD_HEAD_MIN_AGE"
                             :errors="headErrors"
                             :sexes="sexes"
                             :relationship-options="headRelationshipOptions"
@@ -201,6 +202,7 @@ import {
 } from '@/utils/demographicLookups';
 import {
     HEAD_RELATIONSHIP_ID,
+    HOUSEHOLD_HEAD_MIN_AGE,
     applyValidationErrors,
     assignResidentNameError,
     duplicateResidentMatch,
@@ -402,7 +404,10 @@ async function handleSave() {
     });
 
     const householdValid = validateHousehold();
-    const headValid = validateResidentForm(head.value, headErrors, { requireRelationship: false });
+    const headValid = validateResidentForm(head.value, headErrors, {
+        requireRelationship: false,
+        minAge: HOUSEHOLD_HEAD_MIN_AGE,
+    });
     Object.assign(headErrors, lookupErrors);
 
     if (!householdValid || !headValid || Object.keys(lookupErrors).length) {

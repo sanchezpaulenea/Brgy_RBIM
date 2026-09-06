@@ -1,6 +1,9 @@
+import { ageFromDateOfBirth, todayDate } from '@/utils/format';
 import { personnelNameValidationError, placeNameValidationError } from '@/utils/validation';
 
 export const HEAD_RELATIONSHIP_ID = 1;
+
+export const HOUSEHOLD_HEAD_MIN_AGE = 15;
 
 export const DEFAULT_BIRTH_COUNTRY = 'Philippines';
 
@@ -64,7 +67,7 @@ export function assignResidentNameError(form, errors, field, label, required = f
     delete errors[field];
 }
 
-export function validateResidentForm(form, errors, { requireRelationship = true } = {}) {
+export function validateResidentForm(form, errors, { requireRelationship = true, minAge = 0 } = {}) {
     assignResidentNameError(form, errors, 'last_name', 'Last Name', true);
     assignResidentNameError(form, errors, 'first_name', 'First Name', true);
     assignResidentNameError(form, errors, 'middle_name', 'Middle Name');
@@ -84,6 +87,18 @@ export function validateResidentForm(form, errors, { requireRelationship = true 
 
     if (!form.date_of_birth) {
         errors.date_of_birth = 'Date of birth is required.';
+    } else if (form.date_of_birth > todayDate()) {
+        errors.date_of_birth = 'Date of birth cannot be in the future.';
+    } else if (minAge > 0) {
+        const age = ageFromDateOfBirth(form.date_of_birth);
+
+        if (age === null || age < minAge) {
+            errors.date_of_birth = minAge === HOUSEHOLD_HEAD_MIN_AGE
+                ? `The household head must be at least ${minAge} years old.`
+                : `Age must be at least ${minAge} years.`;
+        } else {
+            delete errors.date_of_birth;
+        }
     } else {
         delete errors.date_of_birth;
     }

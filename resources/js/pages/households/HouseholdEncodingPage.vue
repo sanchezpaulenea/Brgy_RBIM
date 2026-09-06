@@ -91,7 +91,7 @@ import {
     applyLookupCreated,
     ensureResidentDemographicLookups,
 } from '@/utils/demographicLookups';
-import { optionalAddressText } from '@/utils/residentForm';
+import { HOUSEHOLD_HEAD_MIN_AGE, optionalAddressText } from '@/utils/residentForm';
 import { personnelNameValidationError } from '@/utils/validation';
 
 const HEAD_RELATIONSHIP_ID = 1;
@@ -386,6 +386,12 @@ function validateMembers() {
 
         if (!member.date_of_birth) {
             errors.date_of_birth = 'Date of birth is required.';
+        } else if (member.isHead) {
+            const age = ageFromDateOfBirth(member.date_of_birth);
+
+            if (age === null || age < HOUSEHOLD_HEAD_MIN_AGE) {
+                errors.date_of_birth = `The household head must be at least ${HOUSEHOLD_HEAD_MIN_AGE} years old.`;
+            }
         }
 
         if (!member.nationality_id) {

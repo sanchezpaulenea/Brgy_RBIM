@@ -115,6 +115,23 @@ export function todayDate() {
     return new Date(now.getTime() - (offset * 60_000)).toISOString().slice(0, 10);
 }
 
+export function dateYearsAgo(years, from = todayDate()) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(from));
+
+    if (!match) {
+        return todayDate();
+    }
+
+    const date = new Date(Number(match[1]) - Number(years), Number(match[2]) - 1, Number(match[3]));
+    const pad = (part) => String(part).padStart(2, '0');
+
+    return [
+        date.getFullYear(),
+        pad(date.getMonth() + 1),
+        pad(date.getDate()),
+    ].join('-');
+}
+
 /**
  * Completed years of age from an ISO date of birth (`YYYY-MM-DD`).
  */

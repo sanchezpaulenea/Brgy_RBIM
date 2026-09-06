@@ -13,8 +13,8 @@
             :disabled="disabled"
             class="rbim-input"
             :class="{ 'rbim-input-error': error }"
-            @focus="open = true"
-            @input="open = true"
+            @focus="openDropdown"
+            @input="openDropdown"
             @blur="open = false"
             @keydown.down.prevent="move(1)"
             @keydown.up.prevent="move(-1)"
@@ -32,8 +32,9 @@
             <li
                 v-for="(option, index) in filtered"
                 :key="option.household_id"
-                class="cursor-pointer px-3 py-2 text-sm"
-                :class="index === highlightedIndex ? 'bg-brand text-white' : 'text-slate-700 hover:bg-brand-muted'"
+                class="cursor-pointer px-3 py-2 text-sm text-slate-700 hover:bg-brand-muted"
+                :class="index === highlightedIndex ? 'bg-brand-muted' : ''"
+                @mouseenter="highlightedIndex = index"
                 @mousedown.prevent="select(option)"
             >
                 {{ optionLabel(option) }}
@@ -97,7 +98,7 @@ const emit = defineEmits(['update:modelValue']);
 
 const query = ref('');
 const open = ref(false);
-const highlightedIndex = ref(0);
+const highlightedIndex = ref(-1);
 const root = ref(null);
 
 const HOUSEHOLD_SEARCH_LIMIT = 5;
@@ -137,8 +138,13 @@ watch(query, (value) => {
         emit('update:modelValue', null);
     }
 
-    highlightedIndex.value = 0;
+    highlightedIndex.value = -1;
 });
+
+function openDropdown() {
+    open.value = true;
+    highlightedIndex.value = -1;
+}
 
 function optionLabel(option) {
     return householdDisplayLabel(option);
@@ -164,11 +170,20 @@ function move(step) {
         return;
     }
 
+    if (highlightedIndex.value < 0) {
+        highlightedIndex.value = step > 0 ? 0 : filtered.value.length - 1;
+        return;
+    }
+
     const next = highlightedIndex.value + step;
     highlightedIndex.value = (next + filtered.value.length) % filtered.value.length;
 }
 
 function selectHighlighted() {
+    if (highlightedIndex.value < 0) {
+        return;
+    }
+
     const option = filtered.value[highlightedIndex.value];
 
     if (option) {

@@ -302,6 +302,10 @@ function isSidebarTabActive(tab) {
         return isHouseholdAssessmentRoute.value;
     }
 
+    if (tab.name === 'residents') {
+        return route.name === 'residents' || route.name === 'resident-detail';
+    }
+
     return route.name === tab.name;
 }
 

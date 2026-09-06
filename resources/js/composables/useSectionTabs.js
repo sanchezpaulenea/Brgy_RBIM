@@ -49,6 +49,9 @@ export function useSectionTabs() {
         hasPermission('resident.view')
             ? { name: 'residents', label: 'View Residents' }
             : null,
+        hasPermission('resident.view')
+            ? { name: 'resident-verification', label: 'Resident Verification Monitoring' }
+            : null,
         hasPermission('resident.create')
             ? { name: 'resident-register', label: 'Register Resident' }
             : null,

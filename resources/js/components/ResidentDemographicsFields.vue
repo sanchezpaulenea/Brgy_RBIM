@@ -246,7 +246,7 @@ import LookupCombobox from '@/components/LookupCombobox.vue';
 import { useAuth } from '@/composables/useAuth';
 import { extractErrorMessage } from '@/services/http';
 import * as lookupService from '@/services/lookupService';
-import { todayDate } from '@/utils/format';
+import { dateYearsAgo, todayDate } from '@/utils/format';
 
 const form = defineModel({ type: Object, required: true });
 
@@ -303,10 +303,16 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    minAge: {
+        type: Number,
+        default: 0,
+    },
 });
 
 const emit = defineEmits(['validate-name', 'lookup-created', 'lookup-error']);
-const maxBirthDate = todayDate();
+const maxBirthDate = computed(() => (
+    props.minAge > 0 ? dateYearsAgo(props.minAge) : todayDate()
+));
 const { hasPermission } = useAuth();
 
 const canCreateNationality = computed(() => hasPermission('nationality.create'));
