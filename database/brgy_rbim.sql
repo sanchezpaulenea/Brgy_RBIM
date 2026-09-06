@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Sep 06, 2026 at 11:34 AM
+-- Generation Time: Sep 06, 2026 at 11:46 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `brgy_rbim`
+-- Database: `v2_rbim`
 --
 
 -- --------------------------------------------------------
@@ -241,7 +241,9 @@ CREATE TABLE IF NOT EXISTS `household` (
 
 INSERT INTO `household` (`household_id`, `clan_id`, `head_resident_id`, `street_id`, `house_lot`, `block_num`, `building_name`, `unit_num`, `registration_date`, `household_status_id`) VALUES
 (1, 1, 1, 1, 'Lot 15', 'Blk 4', 'Antonio', '3', '2026-08-15 18:21:34', 1),
-(2, 2, 2, 2, 'Lot 4', 'Blk 15', NULL, NULL, '2026-08-15 18:25:41', 1);
+(2, 2, 2, 2, 'Lot 4', 'Blk 15', NULL, NULL, '2026-08-15 18:25:41', 1),
+(3, 3, 1, 3, 'Lot 7', 'Blk 9', NULL, NULL, '2026-08-15 18:25:56', 1),
+(4, 4, 1, 4, 'Lot 3', 'Blk 6', NULL, NULL, '2026-08-15 18:26:17', 1);
 
 -- --------------------------------------------------------
 
@@ -707,7 +709,7 @@ CREATE TABLE IF NOT EXISTS `role_permission` (
   PRIMARY KEY (`role_permission_id`),
   UNIQUE KEY `uq_permission_assignment` (`role_id`,`permission_id`),
   KEY `permission_role` (`permission_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `role_permission`
@@ -719,6 +721,7 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (45, 1, 20),
 (46, 1, 22),
 (47, 1, 23),
+(62, 1, 24),
 (48, 1, 25),
 (49, 1, 26),
 (50, 1, 27),
@@ -727,6 +730,7 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (53, 1, 31),
 (54, 1, 33),
 (55, 1, 34),
+(63, 1, 35),
 (56, 1, 36),
 (57, 1, 37),
 (61, 1, 39),
@@ -904,7 +908,7 @@ CREATE TABLE IF NOT EXISTS `user_log` (
   PRIMARY KEY (`user_log_id`),
   KEY `user_log` (`user_id`),
   KEY `login_status` (`login_status_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `user_log`
@@ -916,9 +920,7 @@ INSERT INTO `user_log` (`user_log_id`, `user_id`, `login_time`, `logout_time`, `
 (3, 3, '2026-08-31 19:29:59', '2026-08-31 19:30:16', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (4, 3, '2026-08-31 19:30:26', '2026-08-31 19:30:38', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (5, 2, '2026-08-31 19:30:44', '2026-08-31 19:30:44', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(6, 2, '2026-08-31 19:30:47', '2026-08-31 19:30:47', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(7, 1, '2026-09-06 11:27:22', '2026-09-06 11:27:35', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(8, 2, '2026-09-06 11:27:44', '2026-09-06 11:27:44', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
+(6, 2, '2026-08-31 19:30:47', '2026-08-31 19:30:47', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
 
 -- --------------------------------------------------------
 
