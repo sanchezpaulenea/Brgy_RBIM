@@ -10,7 +10,7 @@
                 {{ successMessage }}
             </div>
 
-            <form class="rbim-card grid gap-3 p-4 sm:grid-cols-5">
+            <form class="rbim-card grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
                 <div>
                     <label for="resident-search" class="rbim-label">Search</label>
                     <input
@@ -22,7 +22,7 @@
                         autocapitalize="off"
                         spellcheck="false"
                         class="rbim-input py-2"
-                        placeholder="Search resident name"
+                        placeholder="Search name or household"
                     >
                 </div>
                 <div>
@@ -31,6 +31,15 @@
                         <option value="">All households</option>
                         <option v-for="household in households" :key="household.household_id" :value="household.household_id">
                             {{ householdDisplayLabel(household) }}
+                        </option>
+                    </select>
+                </div>
+                <div>
+                    <label for="resident-filter-sex" class="rbim-label">Sex</label>
+                    <select id="resident-filter-sex" v-model="filters.sex_id" class="rbim-input py-2">
+                        <option value="">All sexes</option>
+                        <option v-for="sex in sexes" :key="sex.id" :value="sex.id">
+                            {{ sex.label }}
                         </option>
                     </select>
                 </div>
@@ -52,7 +61,31 @@
                         </option>
                     </select>
                 </div>
-                <div class="flex items-end">
+                <div>
+                    <label for="resident-filter-age-min" class="rbim-label">Age from</label>
+                    <input
+                        id="resident-filter-age-min"
+                        v-model="filters.age_min"
+                        type="number"
+                        min="0"
+                        max="150"
+                        class="rbim-input py-2"
+                        placeholder="Min"
+                    >
+                </div>
+                <div class="flex items-end gap-2">
+                    <div class="flex-1">
+                        <label for="resident-filter-age-max" class="rbim-label">Age to</label>
+                        <input
+                            id="resident-filter-age-max"
+                            v-model="filters.age_max"
+                            type="number"
+                            min="0"
+                            max="150"
+                            class="rbim-input py-2"
+                            placeholder="Max"
+                        >
+                    </div>
                     <button type="button" class="rbim-btn-outline" :disabled="loading" @click="clearFilters">
                         Refresh
                     </button>
@@ -73,20 +106,34 @@
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Sex</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Age</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
+                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Profiling</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            <tr v-for="resident in filteredItems" :key="resident.resident_id">
+                            <tr
+                                v-for="resident in items"
+                                :key="resident.resident_id"
+                                class="cursor-pointer hover:bg-slate-50"
+                                @click="openDetail(resident.resident_id)"
+                            >
                                 <td class="px-4 py-3 font-medium text-slate-900">{{ resident.full_name || personDisplayName(resident) }}</td>
                                 <td class="px-4 py-3 text-slate-600">{{ householdLabelFor(resident) }}</td>
                                 <td class="px-4 py-3 text-slate-600">{{ resident.relationship_to_hh || '—' }}</td>
                                 <td class="px-4 py-3 text-slate-600">{{ resident.sex || '—' }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ ageLabel(resident.date_of_birth) }}</td>
+                                <td class="px-4 py-3 text-slate-600">{{ resident.age ?? ageLabel(resident.date_of_birth) }}</td>
                                 <td class="px-4 py-3 text-slate-600">{{ resident.resident_status || '—' }}</td>
+                                <td class="px-4 py-3">
+                                    <span
+                                        class="rounded-full px-2 py-0.5 text-xs"
+                                        :class="profilingBadgeClass(resident)"
+                                    >
+                                        {{ profilingSummary(resident) }}
+                                    </span>
+                                </td>
                             </tr>
-                            <tr v-if="!filteredItems.length">
-                                <td colspan="6" class="px-4 py-8 text-center text-slate-500">
-                                    {{ items.length ? 'No residents match the current filters.' : 'No resident records found.' }}
+                            <tr v-if="!items.length">
+                                <td colspan="7" class="px-4 py-8 text-center text-slate-500">
+                                    No resident records found.
                                 </td>
                             </tr>
                         </tbody>
@@ -107,7 +154,7 @@ import { extractErrorMessage } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
 import * as residentService from '@/services/residentService';
-import { ageFromDateOfBirth, householdDisplayLabel, matchesSearch, personDisplayName } from '@/utils/format';
+import { ageFromDateOfBirth, householdDisplayLabel, personDisplayName } from '@/utils/format';
 import { toId } from '@/utils/residentForm';
 
 const route = useRoute();
@@ -116,6 +163,7 @@ const { residentTabs } = useSectionTabs();
 
 const items = ref([]);
 const households = ref([]);
+const sexes = ref([]);
 const residentTypes = ref([]);
 const residentStatuses = ref([]);
 const loading = ref(false);
@@ -124,8 +172,11 @@ const successMessage = ref('');
 const filters = reactive({
     search: '',
     household_id: '',
+    sex_id: '',
     resident_type_id: '',
     resident_status_id: '',
+    age_min: '',
+    age_max: '',
 });
 
 const householdById = computed(() => {
@@ -138,12 +189,86 @@ const householdById = computed(() => {
     return map;
 });
 
-const filteredItems = computed(() => (
-    items.value.filter((resident) => (
-        matchesSearch(resident.full_name || personDisplayName(resident), filters.search)
-        || matchesSearch(householdLabelFor(resident), filters.search)
-    ))
-));
+function openDetail(residentId) {
+    router.push({ name: 'resident-detail', params: { id: residentId } });
+}
+
+async function loadLookups() {
+    const [householdItems, typeItems, statusItems, sexItems] = await Promise.all([
+        householdService.fetchHouseholds(),
+        lookupService.fetchLookup('resident-type'),
+        lookupService.fetchLookup('resident-status'),
+        lookupService.fetchLookup('sex'),
+    ]);
+
+    households.value = householdItems;
+    residentTypes.value = typeItems;
+    residentStatuses.value = statusItems;
+    sexes.value = sexItems;
+}
+
+async function loadResidents() {
+    loading.value = true;
+    error.value = '';
+
+    try {
+        items.value = await residentService.fetchResidents({
+            search: filters.search.trim() || undefined,
+            household_id: toId(filters.household_id) ?? undefined,
+            sex_id: toId(filters.sex_id) ?? undefined,
+            resident_type_id: toId(filters.resident_type_id) ?? undefined,
+            resident_status_id: toId(filters.resident_status_id) ?? undefined,
+            age_min: filters.age_min === '' ? undefined : Number(filters.age_min),
+            age_max: filters.age_max === '' ? undefined : Number(filters.age_max),
+        });
+    } catch (err) {
+        error.value = extractErrorMessage(err, 'Unable to load residents.');
+    } finally {
+        loading.value = false;
+    }
+}
+
+function clearFilters() {
+    filters.search = '';
+    filters.household_id = '';
+    filters.sex_id = '';
+    filters.resident_type_id = '';
+    filters.resident_status_id = '';
+    filters.age_min = '';
+    filters.age_max = '';
+    loadResidents();
+}
+
+watch(
+    () => [
+        filters.search,
+        filters.household_id,
+        filters.sex_id,
+        filters.resident_type_id,
+        filters.resident_status_id,
+        filters.age_min,
+        filters.age_max,
+    ],
+    () => {
+        loadResidents();
+    },
+);
+
+function profilingSummary(resident) {
+    return resident?.profiling_completeness?.summary || '—';
+}
+
+function profilingBadgeClass(resident) {
+    const completeness = resident?.profiling_completeness;
+
+    if (!completeness || completeness.applicable_count === 0) {
+        return 'bg-slate-100 text-slate-500';
+    }
+
+    return completeness.is_complete
+        ? 'bg-emerald-50 text-emerald-700'
+        : 'bg-amber-50 text-amber-800';
+}
 
 function ageLabel(dateOfBirth) {
     const age = ageFromDateOfBirth(dateOfBirth);
@@ -160,50 +285,6 @@ function householdLabelFor(resident) {
 
     return resident.household_id ? `Household ${resident.household_id}` : '—';
 }
-
-async function loadLookups() {
-    const [householdItems, typeItems, statusItems] = await Promise.all([
-        householdService.fetchHouseholds(),
-        lookupService.fetchLookup('resident-type'),
-        lookupService.fetchLookup('resident-status'),
-    ]);
-
-    households.value = householdItems;
-    residentTypes.value = typeItems;
-    residentStatuses.value = statusItems;
-}
-
-async function loadResidents() {
-    loading.value = true;
-    error.value = '';
-
-    try {
-        items.value = await residentService.fetchResidents({
-            household_id: toId(filters.household_id) ?? undefined,
-            resident_type_id: toId(filters.resident_type_id) ?? undefined,
-            resident_status_id: toId(filters.resident_status_id) ?? undefined,
-        });
-    } catch (err) {
-        error.value = extractErrorMessage(err, 'Unable to load residents.');
-    } finally {
-        loading.value = false;
-    }
-}
-
-function clearFilters() {
-    filters.search = '';
-    filters.household_id = '';
-    filters.resident_type_id = '';
-    filters.resident_status_id = '';
-    loadResidents();
-}
-
-watch(
-    () => [filters.household_id, filters.resident_type_id, filters.resident_status_id],
-    () => {
-        loadResidents();
-    },
-);
 
 onMounted(async () => {
     try {

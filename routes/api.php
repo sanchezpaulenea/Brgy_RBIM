@@ -10,10 +10,19 @@ use App\Http\Controllers\HouseholdManagament\StreetController;
 use App\Http\Controllers\Logs\AuditLogController;
 use App\Http\Controllers\Logs\UserLogController;
 use App\Http\Controllers\Lookups\LookupController;
+use App\Http\Controllers\ResidentManagement\Ctc\CtcController;
 use App\Http\Controllers\ResidentManagement\Demographic\EthnicityController;
 use App\Http\Controllers\ResidentManagement\Demographic\NationalityController;
 use App\Http\Controllers\ResidentManagement\Demographic\ReligionController;
 use App\Http\Controllers\ResidentManagement\Demographic\ResidentController;
+use App\Http\Controllers\ResidentManagement\Economic\EconomicController;
+use App\Http\Controllers\ResidentManagement\Education\EducationController;
+use App\Http\Controllers\ResidentManagement\Health\HealthController;
+use App\Http\Controllers\ResidentManagement\Health\InfantHealthController;
+use App\Http\Controllers\ResidentManagement\Health\WomenHealthController;
+use App\Http\Controllers\ResidentManagement\Migration\MigrationController;
+use App\Http\Controllers\ResidentManagement\Skill\SkillController;
+use App\Http\Controllers\ResidentManagement\Sociocivic\SociocivicController;
 use App\Http\Controllers\SystemSetting\SystemSettingController;
 use App\Http\Controllers\UserManagement\RolePermissionController;
 use App\Http\Controllers\UserManagement\UserController;
@@ -51,6 +60,25 @@ Route::prefix('v1')->group(function () {
         Route::get('residents/{resident}', [ResidentController::class, 'show'])->name('residents.show');
         Route::patch('residents/{resident}', [ResidentController::class, 'update'])->name('residents.update');
 
+        Route::post('residents/{resident}/education', [EducationController::class, 'store'])->name('residents.education.store');
+        Route::patch('educations/{education}', [EducationController::class, 'update'])->name('educations.update');
+        Route::post('residents/{resident}/economic', [EconomicController::class, 'store'])->name('residents.economic.store');
+        Route::patch('economics/{economic}', [EconomicController::class, 'update'])->name('economics.update');
+        Route::post('residents/{resident}/infant-health', [InfantHealthController::class, 'store'])->name('residents.infant-health.store');
+        Route::patch('infant-health/{infantHealth}', [InfantHealthController::class, 'update'])->name('infant-health.update');
+        Route::post('residents/{resident}/health', [HealthController::class, 'store'])->name('residents.health.store');
+        Route::patch('health-records/{health}', [HealthController::class, 'update'])->name('health-records.update');
+        Route::post('residents/{resident}/women-health', [WomenHealthController::class, 'store'])->name('residents.women-health.store');
+        Route::patch('women-health/{womenHealth}', [WomenHealthController::class, 'update'])->name('women-health.update');
+        Route::post('residents/{resident}/sociocivic', [SociocivicController::class, 'store'])->name('residents.sociocivic.store');
+        Route::patch('sociocivics/{sociocivic}', [SociocivicController::class, 'update'])->name('sociocivics.update');
+        Route::post('residents/{resident}/migration', [MigrationController::class, 'store'])->name('residents.migration.store');
+        Route::patch('migrations/{migration}', [MigrationController::class, 'update'])->name('migrations.update');
+        Route::post('residents/{resident}/ctc', [CtcController::class, 'store'])->name('residents.ctc.store');
+        Route::patch('ctcs/{ctc}', [CtcController::class, 'update'])->name('ctcs.update');
+        Route::post('residents/{resident}/skills', [SkillController::class, 'store'])->name('residents.skills.store');
+        Route::patch('skills/{skillsDevelopment}', [SkillController::class, 'update'])->name('skills.update');
+
         Route::get('streets', [StreetController::class, 'index'])->name('streets.index');
         Route::post('streets', [StreetController::class, 'store'])->name('streets.store');
         Route::get('nationalities', [NationalityController::class, 'index'])->name('nationalities.index');
@@ -70,6 +98,22 @@ Route::prefix('v1')->group(function () {
         Route::get('resident-statuses', [LookupController::class, 'index'])->defaults('lookup', 'resident-status')->name('resident-statuses.index');
         Route::get('resident-types', [LookupController::class, 'index'])->defaults('lookup', 'resident-type')->name('resident-types.index');
         Route::get('sexes', [LookupController::class, 'index'])->defaults('lookup', 'sex')->name('sexes.index');
+        Route::get('highest-lvls-of-educ', [LookupController::class, 'index'])->defaults('lookup', 'highest-lvl-of-educ')->name('highest-lvls-of-educ.index');
+        Route::get('current-enrollment-statuses', [LookupController::class, 'index'])->defaults('lookup', 'current-enrollment-status')->name('current-enrollment-statuses.index');
+        Route::get('school-lvls', [LookupController::class, 'index'])->defaults('lookup', 'school-lvl')->name('school-lvls.index');
+        Route::get('sources-of-income', [LookupController::class, 'index'])->defaults('lookup', 'source-of-income')->name('sources-of-income.index');
+        Route::get('statuses-of-work-business', [LookupController::class, 'index'])->defaults('lookup', 'status-of-work-business')->name('statuses-of-work-business.index');
+        Route::get('places-of-delivery', [LookupController::class, 'index'])->defaults('lookup', 'place-of-delivery')->name('places-of-delivery.index');
+        Route::get('birth-attendants', [LookupController::class, 'index'])->defaults('lookup', 'birth-attendant')->name('birth-attendants.index');
+        Route::get('health-insurances', [LookupController::class, 'index'])->defaults('lookup', 'health-insurance')->name('health-insurances.index');
+        Route::get('facilities-visited-past-12mos', [LookupController::class, 'index'])->defaults('lookup', 'facility-visited-past-12mos')->name('facilities-visited-past-12mos.index');
+        Route::get('facility-visit-reasons', [LookupController::class, 'index'])->defaults('lookup', 'facility-visit-reason')->name('facility-visit-reasons.index');
+        Route::get('family-planning-methods', [LookupController::class, 'index'])->defaults('lookup', 'family-planning-method')->name('family-planning-methods.index');
+        Route::get('sources-of-fp-method', [LookupController::class, 'index'])->defaults('lookup', 'source-of-fp-method')->name('sources-of-fp-method.index');
+        Route::get('solo-parent-statuses', [LookupController::class, 'index'])->defaults('lookup', 'solo-parent-status')->name('solo-parent-statuses.index');
+        Route::get('reasons-for-leaving', [LookupController::class, 'index'])->defaults('lookup', 'reason-for-leaving')->name('reasons-for-leaving.index');
+        Route::get('reasons-for-transfer', [LookupController::class, 'index'])->defaults('lookup', 'reason-for-transfer')->name('reasons-for-transfer.index');
+        Route::get('skill-types', [LookupController::class, 'index'])->defaults('lookup', 'skill-type')->name('skill-types.index');
 
         Route::middleware('system.admin')->group(function () {
             Route::get('users/create-options', [UserController::class, 'createOptions'])->name('users.create-options');

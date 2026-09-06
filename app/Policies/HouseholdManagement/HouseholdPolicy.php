@@ -19,7 +19,7 @@ class HouseholdPolicy
 
     public function create(User $user): bool
     {
-        return ($user->isEncoder() || $user->isAdmin()) && $user->hasPermission('household.create');
+        return $user->hasPermission('household.create');
     }
 
     public function update(User $user, Household $household): bool

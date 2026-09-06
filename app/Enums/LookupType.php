@@ -14,6 +14,22 @@ use App\Models\ResidentManagement\Demographic\RelationshipToHouseholdHead;
 use App\Models\ResidentManagement\Demographic\ResidentStatus;
 use App\Models\ResidentManagement\Demographic\ResidentType;
 use App\Models\ResidentManagement\Demographic\Sex;
+use App\Models\ResidentManagement\Economic\SourceOfIncome;
+use App\Models\ResidentManagement\Economic\StatusOfWorkBusiness;
+use App\Models\ResidentManagement\Education\CurrentEnrollmentStatus;
+use App\Models\ResidentManagement\Education\HighestLvlOfEduc;
+use App\Models\ResidentManagement\Education\SchoolLvl;
+use App\Models\ResidentManagement\Health\BirthAttendant;
+use App\Models\ResidentManagement\Health\FacilityVisitedPast12Mos;
+use App\Models\ResidentManagement\Health\FacilityVisitReason;
+use App\Models\ResidentManagement\Health\FamilyPlanningMethod;
+use App\Models\ResidentManagement\Health\HealthInsurance;
+use App\Models\ResidentManagement\Health\PlaceOfDelivery;
+use App\Models\ResidentManagement\Health\SourceOfFPMethod;
+use App\Models\ResidentManagement\Migration\ReasonForLeaving;
+use App\Models\ResidentManagement\Migration\ReasonForTransfer;
+use App\Models\ResidentManagement\Skill\SkillType;
+use App\Models\ResidentManagement\Sociocivic\SoloParentStatus;
 use App\Models\UserManagement\Permission;
 use App\Models\UserManagement\UserStatus;
 use Illuminate\Database\Eloquent\Model;
@@ -35,6 +51,22 @@ enum LookupType: string
     case ResidentStatus = 'resident-status';
     case ResidentType = 'resident-type';
     case Sex = 'sex';
+    case HighestLvlOfEduc = 'highest-lvl-of-educ';
+    case CurrentEnrollmentStatus = 'current-enrollment-status';
+    case SchoolLvl = 'school-lvl';
+    case SourceOfIncome = 'source-of-income';
+    case StatusOfWorkBusiness = 'status-of-work-business';
+    case PlaceOfDelivery = 'place-of-delivery';
+    case BirthAttendant = 'birth-attendant';
+    case HealthInsurance = 'health-insurance';
+    case FacilityVisitedPast12Mos = 'facility-visited-past-12mos';
+    case FacilityVisitReason = 'facility-visit-reason';
+    case FamilyPlanningMethod = 'family-planning-method';
+    case SourceOfFpMethod = 'source-of-fp-method';
+    case SoloParentStatus = 'solo-parent-status';
+    case ReasonForLeaving = 'reason-for-leaving';
+    case ReasonForTransfer = 'reason-for-transfer';
+    case SkillType = 'skill-type';
 
     /**
      * @return class-string<Model>
@@ -56,6 +88,22 @@ enum LookupType: string
             self::ResidentStatus => ResidentStatus::class,
             self::ResidentType => ResidentType::class,
             self::Sex => Sex::class,
+            self::HighestLvlOfEduc => HighestLvlOfEduc::class,
+            self::CurrentEnrollmentStatus => CurrentEnrollmentStatus::class,
+            self::SchoolLvl => SchoolLvl::class,
+            self::SourceOfIncome => SourceOfIncome::class,
+            self::StatusOfWorkBusiness => StatusOfWorkBusiness::class,
+            self::PlaceOfDelivery => PlaceOfDelivery::class,
+            self::BirthAttendant => BirthAttendant::class,
+            self::HealthInsurance => HealthInsurance::class,
+            self::FacilityVisitedPast12Mos => FacilityVisitedPast12Mos::class,
+            self::FacilityVisitReason => FacilityVisitReason::class,
+            self::FamilyPlanningMethod => FamilyPlanningMethod::class,
+            self::SourceOfFpMethod => SourceOfFPMethod::class,
+            self::SoloParentStatus => SoloParentStatus::class,
+            self::ReasonForLeaving => ReasonForLeaving::class,
+            self::ReasonForTransfer => ReasonForTransfer::class,
+            self::SkillType => SkillType::class,
         };
     }
 
@@ -78,12 +126,38 @@ enum LookupType: string
             self::ResidentStatus,
             self::ResidentType,
             self::Sex,
+            ...self::incrementTwoLookups(),
         ], true);
+    }
+
+    /**
+     * @return list<self>
+     */
+    public static function incrementTwoLookups(): array
+    {
+        return [
+            self::HighestLvlOfEduc,
+            self::CurrentEnrollmentStatus,
+            self::SchoolLvl,
+            self::SourceOfIncome,
+            self::StatusOfWorkBusiness,
+            self::PlaceOfDelivery,
+            self::BirthAttendant,
+            self::HealthInsurance,
+            self::FacilityVisitedPast12Mos,
+            self::FacilityVisitReason,
+            self::FamilyPlanningMethod,
+            self::SourceOfFpMethod,
+            self::SoloParentStatus,
+            self::ReasonForLeaving,
+            self::ReasonForTransfer,
+            self::SkillType,
+        ];
     }
 
     public function orderColumn(): string
     {
-        return match ($this) {
+        return $this->labelColumn() ?? match ($this) {
             self::CensusStatus => 'status_name',
             self::Clan => 'clan_name',
             self::HouseholdStatus => 'household_status',
@@ -96,11 +170,69 @@ enum LookupType: string
         };
     }
 
+    public function idColumn(): ?string
+    {
+        return match ($this) {
+            self::HighestLvlOfEduc => 'highest_lvl_of_educ_id',
+            self::CurrentEnrollmentStatus => 'current_enrollment_status_id',
+            self::SchoolLvl => 'school_lvl_id',
+            self::SourceOfIncome => 'source_of_income_id',
+            self::StatusOfWorkBusiness => 'status_of_work_business_id',
+            self::PlaceOfDelivery => 'place_of_delivery_id',
+            self::BirthAttendant => 'birth_attendant_id',
+            self::HealthInsurance => 'health_insurance_id',
+            self::FacilityVisitedPast12Mos => 'facility_visited_past_12mos_id',
+            self::FacilityVisitReason => 'facility_visit_reason_id',
+            self::FamilyPlanningMethod => 'family_planning_method_id',
+            self::SourceOfFpMethod => 'source_of_fp_method_id',
+            self::SoloParentStatus => 'solo_parent_status_id',
+            self::ReasonForLeaving => 'reason_for_leaving_id',
+            self::ReasonForTransfer => 'reason_for_transfer_id',
+            self::SkillType => 'skill_type_id',
+            default => null,
+        };
+    }
+
+    public function labelColumn(): ?string
+    {
+        return match ($this) {
+            self::HighestLvlOfEduc => 'lvl_of_educ',
+            self::CurrentEnrollmentStatus => 'current_enrollement_status',
+            self::SchoolLvl => 'school_lvl',
+            self::SourceOfIncome => 'source_of_income',
+            self::StatusOfWorkBusiness => 'status_of_work_business',
+            self::PlaceOfDelivery => 'place_of_delivery',
+            self::BirthAttendant => 'birth_attendant',
+            self::HealthInsurance => 'health_insurance',
+            self::FacilityVisitedPast12Mos => 'facility_visited_past_12mos',
+            self::FacilityVisitReason => 'facility_visit_reason',
+            self::FamilyPlanningMethod => 'family_planning_method',
+            self::SourceOfFpMethod => 'source_of_fp_method',
+            self::SoloParentStatus => 'solo_parent_status',
+            self::ReasonForLeaving => 'reason_for_leaving',
+            self::ReasonForTransfer => 'reason_for_transfer',
+            self::SkillType => 'skill_type',
+            default => null,
+        };
+    }
+
     /**
      * @return array<string, mixed>
      */
     public function format(Model $model): array
     {
+        $idColumn = $this->idColumn();
+        $labelColumn = $this->labelColumn();
+
+        if ($idColumn !== null && $labelColumn !== null) {
+            return [
+                'id' => $model->getKey(),
+                'label' => (string) $model->getAttribute($labelColumn),
+                $idColumn => $model->getKey(),
+                $labelColumn => $model->getAttribute($labelColumn),
+            ];
+        }
+
         return match ($this) {
             self::CensusStatus => [
                 'id' => $model->getKey(),

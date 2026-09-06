@@ -164,6 +164,15 @@ const routes = [
         },
     },
     {
+        path: '/residents/:id(\\d+)',
+        name: 'resident-detail',
+        component: () => import('@/pages/residents/ResidentDetailPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresPermissions: ['resident.view'],
+        },
+    },
+    {
         path: '/residents/nationalities',
         name: 'nationalities',
         component: () => import('@/pages/lookups/LookupManagementPage.vue'),

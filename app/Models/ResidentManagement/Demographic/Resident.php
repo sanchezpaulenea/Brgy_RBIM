@@ -4,8 +4,19 @@ namespace App\Models\ResidentManagement\Demographic;
 
 use App\Models\HouseholdManagement\Clan;
 use App\Models\HouseholdManagement\Household;
+use App\Models\ResidentManagement\Ctc\Ctc;
+use App\Models\ResidentManagement\Economic\Economic;
+use App\Models\ResidentManagement\Education\Education;
+use App\Models\ResidentManagement\Health\Health;
+use App\Models\ResidentManagement\Health\InfantHealth;
+use App\Models\ResidentManagement\Health\WomenHealth;
+use App\Models\ResidentManagement\Migration\Migration;
+use App\Models\ResidentManagement\Skill\SkillsDevelopment;
+use App\Models\ResidentManagement\Sociocivic\Sociocivic;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Resident extends Model
 {
@@ -130,5 +141,294 @@ class Resident extends Model
     public function status(): BelongsTo
     {
         return $this->belongsTo(ResidentStatus::class, 'resident_status_id', 'resident_status_id');
+    }
+
+    public function age(): ?int
+    {
+        if ($this->date_of_birth === null) {
+            return null;
+        }
+
+        return $this->date_of_birth->age;
+    }
+
+    public function ageInMonths(): ?int
+    {
+        if ($this->date_of_birth === null) {
+            return null;
+        }
+
+        return (int) $this->date_of_birth->diffInMonths(now());
+    }
+
+    public function isInfant(): bool
+    {
+        $months = $this->ageInMonths();
+
+        return $months !== null && $months >= 0 && $months <= 11;
+    }
+
+    public function isFemale(): bool
+    {
+        return (int) $this->sex_id === Sex::FEMALE;
+    }
+
+    public function canHaveInfantHealth(): bool
+    {
+        return $this->isInfant();
+    }
+
+    public function canHaveWomenHealth(): bool
+    {
+        $age = $this->age();
+
+        return $this->isFemale() && $age !== null && $age >= 10 && $age <= 54;
+    }
+
+    public function canHaveCtc(): bool
+    {
+        $age = $this->age();
+
+        return $age !== null && $age >= 18;
+    }
+
+    public function canHaveSkills(): bool
+    {
+        $age = $this->age();
+
+        return $age !== null && $age >= 15;
+    }
+
+    /**
+     * Sociocivic fields that apply at the resident's current age.
+     *
+     * @return array{solo_parent: bool, senior_citizen: bool, barangay_voter: bool}
+     */
+    public function sociocivicFieldRelevance(): array
+    {
+        $age = $this->age();
+
+        return [
+            'solo_parent' => $age !== null && $age >= 10,
+            'senior_citizen' => $age !== null && $age >= 60,
+            'barangay_voter' => $age !== null && $age >= 15,
+        ];
+    }
+
+    /**
+     * @return array<string, bool>
+     */
+    public function applicableSections(): array
+    {
+        return [
+            'education' => true,
+            'economic' => true,
+            'infant_health' => $this->canHaveInfantHealth(),
+            'health' => true,
+            'women_health' => $this->canHaveWomenHealth(),
+            'sociocivic' => true,
+            'migration' => true,
+            'ctc' => $this->canHaveCtc(),
+            'skills' => $this->canHaveSkills(),
+        ];
+    }
+
+    /**
+     * Profiling completeness for age/sex-applicable sub-records only.
+     * Infant health and women's health are omitted when the resident is outside those gates.
+     *
+     * @return array{
+     *     completed_count: int,
+     *     applicable_count: int,
+     *     is_complete: bool,
+     *     summary: string,
+     *     completed: list<array{key: string, label: string}>,
+     *     missing: list<array{key: string, label: string}>
+     * }
+     */
+    public function profilingCompleteness(): array
+    {
+        $completed = [];
+        $missing = [];
+
+        foreach ($this->applicableSections() as $key => $isApplicable) {
+            if (! $isApplicable) {
+                continue;
+            }
+
+            $entry = [
+                'key' => $key,
+                'label' => self::sectionLabel($key),
+            ];
+
+            if ($this->hasSectionRecord($key)) {
+                $completed[] = $entry;
+            } else {
+                $missing[] = $entry;
+            }
+        }
+
+        $applicableCount = count($completed) + count($missing);
+        $completedCount = count($completed);
+
+        return [
+            'completed_count' => $completedCount,
+            'applicable_count' => $applicableCount,
+            'is_complete' => $applicableCount > 0 && $completedCount === $applicableCount,
+            'summary' => $applicableCount === 0
+                ? 'No applicable sections'
+                : $completedCount.' of '.$applicableCount.' applicable sections completed',
+            'completed' => $completed,
+            'missing' => $missing,
+        ];
+    }
+
+    public static function sectionLabel(string $key): string
+    {
+        return match ($key) {
+            'education' => 'Education',
+            'economic' => 'Economic',
+            'infant_health' => 'Infant health',
+            'health' => 'Health',
+            'women_health' => 'Women\'s health',
+            'sociocivic' => 'Sociocivic',
+            'migration' => 'Migration',
+            'ctc' => 'CTC',
+            'skills' => 'Skills',
+            default => $key,
+        };
+    }
+
+    public function hasSectionRecord(string $section): bool
+    {
+        return match ($section) {
+            'education' => $this->presenceFromExistsOrRelation('education_exists', 'education'),
+            'economic' => $this->presenceFromExistsOrRelation('economic_exists', 'economic'),
+            'infant_health' => $this->presenceFromExistsOrRelation('infant_health_exists', 'infantHealth'),
+            'health' => $this->presenceFromExistsOrRelation('health_exists', 'health'),
+            'women_health' => $this->womenHealthPresent(),
+            'sociocivic' => $this->presenceFromExistsOrRelation('sociocivic_exists', 'sociocivic'),
+            'migration' => $this->presenceFromExistsOrRelation('migration_exists', 'migration'),
+            'ctc' => $this->presenceFromExistsOrRelation('community_tax_cert_exists', 'communityTaxCert'),
+            'skills' => $this->presenceFromExistsOrRelation('skills_development_exists', 'skillsDevelopment'),
+            default => false,
+        };
+    }
+
+    private function presenceFromExistsOrRelation(string $existsAttribute, string $relation): bool
+    {
+        if (array_key_exists($existsAttribute, $this->attributes)) {
+            return (bool) $this->getAttribute($existsAttribute);
+        }
+
+        if ($this->relationLoaded($relation)) {
+            return $this->getRelation($relation) !== null;
+        }
+
+        return $this->{$relation}()->exists();
+    }
+
+    private function womenHealthPresent(): bool
+    {
+        if (array_key_exists('women_health_exists', $this->attributes)) {
+            return (bool) $this->getAttribute('women_health_exists');
+        }
+
+        if ($this->relationLoaded('health')) {
+            $health = $this->getRelation('health');
+
+            if ($health === null) {
+                return false;
+            }
+
+            if ($health->relationLoaded('womenHealth')) {
+                return $health->getRelation('womenHealth') !== null;
+            }
+        }
+
+        if ($this->relationLoaded('womenHealth')) {
+            return $this->getRelation('womenHealth') !== null;
+        }
+
+        return $this->womenHealth()->exists();
+    }
+
+    /**
+     * @return HasOne<Education, $this>
+     */
+    public function education(): HasOne
+    {
+        return $this->hasOne(Education::class, 'resident_id', 'resident_id');
+    }
+
+    /**
+     * @return HasOne<Economic, $this>
+     */
+    public function economic(): HasOne
+    {
+        return $this->hasOne(Economic::class, 'resident_id', 'resident_id');
+    }
+
+    /**
+     * @return HasOne<InfantHealth, $this>
+     */
+    public function infantHealth(): HasOne
+    {
+        return $this->hasOne(InfantHealth::class, 'resident_id', 'resident_id');
+    }
+
+    /**
+     * @return HasOne<Health, $this>
+     */
+    public function health(): HasOne
+    {
+        return $this->hasOne(Health::class, 'resident_id', 'resident_id');
+    }
+
+    /**
+     * @return HasOneThrough<WomenHealth, Health, $this>
+     */
+    public function womenHealth(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            WomenHealth::class,
+            Health::class,
+            'resident_id',
+            'health_id',
+            'resident_id',
+            'health_id'
+        );
+    }
+
+    /**
+     * @return HasOne<Sociocivic, $this>
+     */
+    public function sociocivic(): HasOne
+    {
+        return $this->hasOne(Sociocivic::class, 'resident_id', 'resident_id');
+    }
+
+    /**
+     * @return HasOne<Migration, $this>
+     */
+    public function migration(): HasOne
+    {
+        return $this->hasOne(Migration::class, 'resident_id', 'resident_id');
+    }
+
+    /**
+     * @return HasOne<Ctc, $this>
+     */
+    public function communityTaxCert(): HasOne
+    {
+        return $this->hasOne(Ctc::class, 'resident_id', 'resident_id');
+    }
+
+    /**
+     * @return HasOne<SkillsDevelopment, $this>
+     */
+    public function skillsDevelopment(): HasOne
+    {
+        return $this->hasOne(SkillsDevelopment::class, 'resident_id', 'resident_id');
     }
 }

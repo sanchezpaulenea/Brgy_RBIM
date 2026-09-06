@@ -1,21 +1,21 @@
 import http from '@/services/http';
 
-export async function fetchResidents(filters = {}) {
+function compactParams(filters = {}) {
     const params = {};
 
-    if (filters.household_id) {
-        params.household_id = filters.household_id;
-    }
+    Object.entries(filters).forEach(([key, value]) => {
+        if (value === undefined || value === null || value === '') {
+            return;
+        }
 
-    if (filters.resident_type_id) {
-        params.resident_type_id = filters.resident_type_id;
-    }
+        params[key] = value;
+    });
 
-    if (filters.resident_status_id) {
-        params.resident_status_id = filters.resident_status_id;
-    }
+    return params;
+}
 
-    const { data } = await http.get('/residents', { params });
+export async function fetchResidents(filters = {}) {
+    const { data } = await http.get('/residents', { params: compactParams(filters) });
 
     return data.items;
 }
@@ -28,6 +28,120 @@ export async function fetchResident(id) {
 
 export async function createResident(payload) {
     const { data } = await http.post('/residents', payload);
+
+    return data.item;
+}
+
+export async function updateResident(id, payload) {
+    const { data } = await http.patch(`/residents/${id}`, payload);
+
+    return data.item;
+}
+
+export async function createEducation(residentId, payload) {
+    const { data } = await http.post(`/residents/${residentId}/education`, payload);
+
+    return data.item;
+}
+
+export async function updateEducation(educationId, payload) {
+    const { data } = await http.patch(`/educations/${educationId}`, payload);
+
+    return data.item;
+}
+
+export async function createEconomic(residentId, payload) {
+    const { data } = await http.post(`/residents/${residentId}/economic`, payload);
+
+    return data.item;
+}
+
+export async function updateEconomic(economicId, payload) {
+    const { data } = await http.patch(`/economics/${economicId}`, payload);
+
+    return data.item;
+}
+
+export async function createInfantHealth(residentId, payload) {
+    const { data } = await http.post(`/residents/${residentId}/infant-health`, payload);
+
+    return data.item;
+}
+
+export async function updateInfantHealth(infantHealthId, payload) {
+    const { data } = await http.patch(`/infant-health/${infantHealthId}`, payload);
+
+    return data.item;
+}
+
+export async function createHealth(residentId, payload) {
+    const { data } = await http.post(`/residents/${residentId}/health`, payload);
+
+    return data.item;
+}
+
+export async function updateHealth(healthId, payload) {
+    const { data } = await http.patch(`/health-records/${healthId}`, payload);
+
+    return data.item;
+}
+
+export async function createWomenHealth(residentId, payload) {
+    const { data } = await http.post(`/residents/${residentId}/women-health`, payload);
+
+    return data.item;
+}
+
+export async function updateWomenHealth(womenHealthId, payload) {
+    const { data } = await http.patch(`/women-health/${womenHealthId}`, payload);
+
+    return data.item;
+}
+
+export async function createSociocivic(residentId, payload) {
+    const { data } = await http.post(`/residents/${residentId}/sociocivic`, payload);
+
+    return data.item;
+}
+
+export async function updateSociocivic(sociocivicId, payload) {
+    const { data } = await http.patch(`/sociocivics/${sociocivicId}`, payload);
+
+    return data.item;
+}
+
+export async function createMigration(residentId, payload) {
+    const { data } = await http.post(`/residents/${residentId}/migration`, payload);
+
+    return data.item;
+}
+
+export async function updateMigration(migrationId, payload) {
+    const { data } = await http.patch(`/migrations/${migrationId}`, payload);
+
+    return data.item;
+}
+
+export async function createCtc(residentId, payload) {
+    const { data } = await http.post(`/residents/${residentId}/ctc`, payload);
+
+    return data.item;
+}
+
+export async function updateCtc(ctcId, payload) {
+    const { data } = await http.patch(`/ctcs/${ctcId}`, payload);
+
+    return data.item;
+}
+
+export async function createSkills(residentId, payload) {
+    const { data } = await http.post(`/residents/${residentId}/skills`, payload);
+
+    return data.item;
+}
+
+export async function updateSkills(skillsId, payload) {
+    const { data } = await http.patch(`/skills/${skillsId}`, payload);
 
     return data.item;
 }

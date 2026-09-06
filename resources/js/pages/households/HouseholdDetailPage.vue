@@ -129,7 +129,15 @@
                             </thead>
                             <tbody class="divide-y divide-slate-100">
                                 <tr v-for="member in household.residents || []" :key="member.resident_id">
-                                    <td class="px-4 py-3 font-medium text-slate-900">{{ member.full_name }}</td>
+                                    <td class="px-4 py-3 font-medium text-slate-900">
+                                        <RouterLink
+                                            :to="{ name: 'resident-detail', params: { id: member.resident_id } }"
+                                            class="text-brand hover:underline"
+                                            @click.stop
+                                        >
+                                            {{ member.full_name }}
+                                        </RouterLink>
+                                    </td>
                                     <td class="px-4 py-3 text-slate-600">{{ member.relationship_to_hh || '—' }}</td>
                                     <td class="px-4 py-3 text-slate-600">{{ member.sex || '—' }}</td>
                                     <td class="px-4 py-3 text-slate-600">{{ ageLabel(member.date_of_birth) }}</td>

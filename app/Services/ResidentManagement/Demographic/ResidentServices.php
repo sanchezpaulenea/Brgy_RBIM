@@ -10,6 +10,15 @@ use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\HouseholdManagement\HouseholdRepositoryInterface;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Demographic\ResidentRepositoryInterface;
+use App\Services\ResidentManagement\Ctc\CtcService;
+use App\Services\ResidentManagement\Economic\EconomicService;
+use App\Services\ResidentManagement\Education\EducationService;
+use App\Services\ResidentManagement\Health\HealthService;
+use App\Services\ResidentManagement\Health\InfantHealthService;
+use App\Services\ResidentManagement\Health\WomenHealthService;
+use App\Services\ResidentManagement\Migration\MigrationService;
+use App\Services\ResidentManagement\Skill\SkillService;
+use App\Services\ResidentManagement\Sociocivic\SociocivicService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -19,10 +28,27 @@ class ResidentServices
         protected ResidentRepositoryInterface $residentRepository,
         protected HouseholdRepositoryInterface $householdRepository,
         protected AuditLogRepositoryInterface $auditLogRepository,
+        protected EducationService $educationService,
+        protected EconomicService $economicService,
+        protected InfantHealthService $infantHealthService,
+        protected HealthService $healthService,
+        protected WomenHealthService $womenHealthService,
+        protected SociocivicService $sociocivicService,
+        protected MigrationService $migrationService,
+        protected CtcService $ctcService,
+        protected SkillService $skillService,
     ) {}
 
     /**
-     * @param  array{household_id?: int, resident_type_id?: int, resident_status_id?: int}  $filters
+     * @param  array{
+     *     search?: string,
+     *     household_id?: int,
+     *     sex_id?: int,
+     *     resident_type_id?: int,
+     *     resident_status_id?: int,
+     *     age_min?: int,
+     *     age_max?: int
+     * }  $filters
      * @return array<int, array<string, mixed>>
      */
     public function listResidents(array $filters = []): array
@@ -40,7 +66,7 @@ class ResidentServices
     {
         $fresh = $this->residentRepository->findById($resident->resident_id);
 
-        return $this->formatRecord($fresh ?? $resident);
+        return $this->formatRecord($fresh ?? $resident, includeSubRecords: true);
     }
 
     /**
@@ -96,7 +122,7 @@ class ResidentServices
     /**
      * @return array<string, mixed>
      */
-    public function formatRecord(Resident $resident): array
+    public function formatRecord(Resident $resident, bool $includeSubRecords = false): array
     {
         $resident->loadMissing([
             'household',
@@ -111,7 +137,7 @@ class ResidentServices
             'relationshipToHouseholdHead',
         ]);
 
-        return [
+        $payload = [
             'resident_id' => $resident->resident_id,
             'last_name' => $resident->last_name,
             'first_name' => $resident->first_name,
@@ -123,6 +149,8 @@ class ResidentServices
             'sex_id' => $resident->sex_id,
             'sex' => $resident->sex?->sex,
             'date_of_birth' => $resident->date_of_birth?->format('Y-m-d'),
+            'age' => $resident->age(),
+            'age_in_months' => $resident->ageInMonths(),
             'birth_city_municipality' => $resident->birth_city_municipality,
             'birth_province' => $resident->birth_province,
             'birth_country' => $resident->birth_country,
@@ -141,7 +169,42 @@ class ResidentServices
             'resident_status_id' => $resident->resident_status_id,
             'resident_status' => $resident->status?->resident_status,
             'household_id' => $resident->household_id,
+            'is_household_head' => (int) ($resident->household?->head_resident_id ?? 0) === (int) $resident->resident_id,
+            'applicable_sections' => $resident->applicableSections(),
+            'profiling_completeness' => $resident->profilingCompleteness(),
         ];
+
+        if ($includeSubRecords) {
+            $payload['education'] = $resident->education
+                ? $this->educationService->formatRecord($resident->education)
+                : null;
+            $payload['economic'] = $resident->economic
+                ? $this->economicService->formatRecord($resident->economic)
+                : null;
+            $payload['infant_health'] = $resident->infantHealth
+                ? $this->infantHealthService->formatRecord($resident->infantHealth)
+                : null;
+            $payload['health'] = $resident->health
+                ? $this->healthService->formatRecord($resident->health)
+                : null;
+            $payload['women_health'] = $resident->health?->womenHealth
+                ? $this->womenHealthService->formatRecord($resident->health->womenHealth)
+                : null;
+            $payload['sociocivic'] = $resident->sociocivic
+                ? $this->sociocivicService->formatRecord($resident->sociocivic)
+                : null;
+            $payload['migration'] = $resident->migration
+                ? $this->migrationService->formatRecord($resident->migration)
+                : null;
+            $payload['ctc'] = $resident->communityTaxCert
+                ? $this->ctcService->formatRecord($resident->communityTaxCert)
+                : null;
+            $payload['skills'] = $resident->skillsDevelopment
+                ? $this->skillService->formatRecord($resident->skillsDevelopment)
+                : null;
+        }
+
+        return $payload;
     }
 
     /**

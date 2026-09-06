@@ -35,9 +35,9 @@ class ResidentPolicyTest extends TestCase
         ])));
     }
 
-    public function test_super_admin_cannot_create_a_resident(): void
+    public function test_guest_can_create_a_resident_when_permitted(): void
     {
-        $this->assertFalse((new ResidentPolicy)->create($this->user([
+        $this->assertTrue((new ResidentPolicy)->create($this->user([
             'isAdmin' => false,
             'isEncoder' => false,
             'permissions' => ['resident.create'],

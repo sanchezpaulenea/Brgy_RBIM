@@ -35,9 +35,9 @@ class HouseholdPolicyTest extends TestCase
         ])));
     }
 
-    public function test_super_admin_cannot_create_a_household(): void
+    public function test_guest_can_create_a_household_when_permitted(): void
     {
-        $this->assertFalse((new HouseholdPolicy)->create($this->user([
+        $this->assertTrue((new HouseholdPolicy)->create($this->user([
             'isAdmin' => false,
             'isEncoder' => false,
             'permissions' => ['household.create'],

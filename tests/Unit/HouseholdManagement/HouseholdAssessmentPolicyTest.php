@@ -35,9 +35,9 @@ class HouseholdAssessmentPolicyTest extends TestCase
         ])));
     }
 
-    public function test_super_admin_cannot_create_an_assessment(): void
+    public function test_guest_can_create_an_assessment_when_permitted(): void
     {
-        $this->assertFalse((new HouseholdAssessmentPolicy)->create($this->user([
+        $this->assertTrue((new HouseholdAssessmentPolicy)->create($this->user([
             'isAdmin' => false,
             'isEncoder' => false,
             'permissions' => ['householdassessment.create'],

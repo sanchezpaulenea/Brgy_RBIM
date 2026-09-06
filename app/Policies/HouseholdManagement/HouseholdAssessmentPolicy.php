@@ -19,7 +19,7 @@ class HouseholdAssessmentPolicy
 
     public function create(User $user): bool
     {
-        return ($user->isEncoder() || $user->isAdmin()) && $user->hasPermission('householdassessment.create');
+        return $user->hasPermission('householdassessment.create');
     }
 
     public function updateStatus(User $user, HouseholdAssessment $assessment): bool
