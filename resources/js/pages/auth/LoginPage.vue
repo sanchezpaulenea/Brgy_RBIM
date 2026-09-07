@@ -134,6 +134,8 @@ function startLockoutTimer(seconds) {
 onMounted(() => {
     if (route.query.reason === 'inactive') {
         generalError.value = 'You have been logged out due to inactivity.';
+    } else if (route.query.reason === 'concurrent_login') {
+        generalError.value = 'You have been logged out because your account was signed in on another device.';
     } else if (route.query.reason === 'unauthorized') {
         generalError.value = typeof route.query.message === 'string' && route.query.message !== ''
             ? route.query.message

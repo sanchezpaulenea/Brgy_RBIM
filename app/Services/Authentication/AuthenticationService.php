@@ -13,10 +13,12 @@ use App\Repositories\Interfaces\Logs\UserLogRepositoryInterface;
 use App\Repositories\Interfaces\UserManagement\UserRepositoryInterface;
 use App\Services\SystemSetting\SystemSettingService;
 use Carbon\Carbon;
+use DateTimeInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -27,6 +29,14 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class AuthenticationService
 {
+    public const LOGOUT_REASON_CONCURRENT_LOGIN = 'concurrent_login';
+
+    public const LOGOUT_REASON_IDLE_TIMEOUT = 'idle_timeout';
+
+    public const CONCURRENT_LOGIN_MESSAGE = 'You have been logged out because your account was signed in on another device.';
+
+    public const IDLE_TIMEOUT_MESSAGE = 'Session expired due to inactivity. Please log in again.';
+
     public function __construct(
         protected UserRepositoryInterface $userRepository,
         protected UserLogRepositoryInterface $userLogRepository,
@@ -130,6 +140,7 @@ class AuthenticationService
         $request->session()->regenerate();
         $request->session()->put('user_log_id', $log->user_log_id);
         $this->touchSessionActivity($request);
+        $this->replaceActiveSession($user, $request, $log->user_log_id);
 
         return [
             'user' => $user,
@@ -141,17 +152,24 @@ class AuthenticationService
 
     /**
      * End the current session and record logout_time on the open user_log row.
+     *
+     * When this session was already closed because a newer login superseded it,
+     * skip rewriting logout_time so the forced-logout timestamp is preserved.
      */
-    public function logout(User $user, Request $request): void
+    public function logout(User $user, Request $request, bool $recordLogoutTime = true): void
     {
-        $userLogId = $request->session()->get('user_log_id');
+        if ($recordLogoutTime) {
+            $userLogId = $request->session()->get('user_log_id');
 
-        if ($userLogId) {
-            $this->userLogRepository->updateLogoutTime(
-                (int) $userLogId,
-                now()->setTimezone(config('app.timezone'))
-            );
+            if ($userLogId) {
+                $this->userLogRepository->updateLogoutTime(
+                    (int) $userLogId,
+                    now()->setTimezone(config('app.timezone'))
+                );
+            }
         }
+
+        $this->forgetActiveSessionIfCurrent($user, $request);
 
         Auth::guard('web')->logout();
         $request->session()->invalidate();
@@ -218,6 +236,30 @@ class AuthenticationService
         }
 
         return null;
+    }
+
+    /**
+     * Reject this request when another browser or device holds the active session.
+     */
+    public function enforceConcurrentSession(User $user, Request $request): ?string
+    {
+        $activeSessionId = $this->cachedActiveSessionId($user->user_id);
+
+        if ($activeSessionId === null) {
+            $this->claimActiveSession($user, $request);
+
+            return null;
+        }
+
+        if ($activeSessionId === $request->session()->getId()) {
+            $this->claimActiveSession($user, $request);
+
+            return null;
+        }
+
+        $this->logout($user, $request, recordLogoutTime: false);
+
+        return self::CONCURRENT_LOGIN_MESSAGE;
     }
 
     /**
@@ -348,6 +390,82 @@ class AuthenticationService
     private function touchSessionActivity(Request $request): void
     {
         $request->session()->put('last_activity', now(config('app.timezone'))->toDateTimeString());
+    }
+
+    /**
+     * Close any still-open success logs from a previous device, then mark this
+     * session as the only active one in cache.
+     */
+    private function replaceActiveSession(User $user, Request $request, int $userLogId): void
+    {
+        Cache::lock($this->activeSessionLockKey($user->user_id), 10)->block(5, function () use ($user, $request, $userLogId): void {
+            $this->closeSupersededSessions($user, $userLogId);
+            $this->claimActiveSession($user, $request);
+        });
+    }
+
+    private function closeSupersededSessions(User $user, int $currentUserLogId): void
+    {
+        $closedLogs = $this->userLogRepository->closeOpenSuccessLogsBefore(
+            $user->user_id,
+            $currentUserLogId,
+            now()->setTimezone(config('app.timezone'))
+        );
+
+        foreach ($closedLogs as $closedLog) {
+            $this->auditLogRepository->log(
+                performedByUserId: $user->user_id,
+                actionId: Action::UPDATE,
+                recordId: (int) $closedLog->user_log_id,
+                description: 'Session ended because the account was signed in on another device.',
+                oldValue: null,
+                newValue: self::LOGOUT_REASON_CONCURRENT_LOGIN,
+                target: 'session',
+                entity: 'user_log',
+            );
+        }
+    }
+
+    private function claimActiveSession(User $user, Request $request): void
+    {
+        Cache::put(
+            $this->activeSessionCacheKey($user->user_id),
+            $request->session()->getId(),
+            $this->activeSessionTtl(),
+        );
+    }
+
+    private function forgetActiveSessionIfCurrent(User $user, Request $request): void
+    {
+        if ($this->cachedActiveSessionId($user->user_id) !== $request->session()->getId()) {
+            return;
+        }
+
+        Cache::forget($this->activeSessionCacheKey($user->user_id));
+    }
+
+    private function cachedActiveSessionId(int $userId): ?string
+    {
+        $cached = Cache::get($this->activeSessionCacheKey($userId));
+
+        return is_string($cached) && $cached !== '' ? $cached : null;
+    }
+
+    private function activeSessionCacheKey(int $userId): string
+    {
+        return "user_active_session:{$userId}";
+    }
+
+    private function activeSessionLockKey(int $userId): string
+    {
+        return "user_session_claim:{$userId}";
+    }
+
+    private function activeSessionTtl(): DateTimeInterface
+    {
+        $minutes = max(1, (int) config('session.lifetime'));
+
+        return now()->addMinutes($minutes);
     }
 
     private function isSessionExpired(mixed $lastActivity, int $timeoutMinutes): bool

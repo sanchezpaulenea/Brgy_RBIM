@@ -38,6 +38,38 @@ class UserLogRepository implements UserLogRepositoryInterface
         UserLog::where('user_log_id', $userLogId)->update(['logout_time' => $value]);
     }
 
+    /**
+     * @return Collection<int, UserLog>
+     */
+    public function closeOpenSuccessLogsBefore(int $userId, int $currentUserLogId, Carbon $logoutTime): Collection
+    {
+        $value = $logoutTime
+            ->copy()
+            ->setTimezone(config('app.timezone'))
+            ->format('Y-m-d H:i:s');
+
+        $openLogs = UserLog::query()
+            ->where('user_id', $userId)
+            ->where('login_status_id', LoginStatus::SUCCESS)
+            ->where('user_log_id', '<', $currentUserLogId)
+            ->whereColumn('logout_time', 'login_time')
+            ->get();
+
+        if ($openLogs->isEmpty()) {
+            return $openLogs;
+        }
+
+        UserLog::query()
+            ->whereIn('user_log_id', $openLogs->pluck('user_log_id'))
+            ->update(['logout_time' => $value]);
+
+        $openLogs->each(function (UserLog $log) use ($logoutTime): void {
+            $log->logout_time = $logoutTime->copy()->setTimezone(config('app.timezone'));
+        });
+
+        return $openLogs;
+    }
+
     public function countRecentFailedAttempts(int $userId, int $withinMinutes): int
     {
         if ($withinMinutes <= 0) {

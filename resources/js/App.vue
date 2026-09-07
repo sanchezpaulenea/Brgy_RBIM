@@ -50,12 +50,23 @@ function handleUnauthorized(event) {
         return;
     }
 
-    const message = typeof event.detail?.message === 'string' && event.detail.message !== ''
-        ? event.detail.message
-        : 'Your session is no longer valid. Please log in again.';
+    const reason = event.detail?.reason;
+    let query = { reason: 'unauthorized' };
+
+    if (reason === 'concurrent_login') {
+        query = { reason: 'concurrent_login' };
+    } else if (reason === 'idle_timeout') {
+        query = { reason: 'inactive' };
+    } else {
+        const message = typeof event.detail?.message === 'string' && event.detail.message !== ''
+            ? event.detail.message
+            : 'Your session is no longer valid. Please log in again.';
+
+        query = { reason: 'unauthorized', message };
+    }
 
     logout().then(() => {
-        router.push({ name: 'login', query: { reason: 'unauthorized', message } });
+        router.push({ name: 'login', query });
     });
 }
 

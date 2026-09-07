@@ -17,6 +17,14 @@ interface UserLogRepositoryInterface
 
     public function updateLogoutTime(int $userLogId, Carbon $logoutTime): void;
 
+    /**
+     * Close successful login rows that are still open (logout_time equals login_time)
+     * and were created before the given user_log_id.
+     *
+     * @return Collection<int, UserLog>
+     */
+    public function closeOpenSuccessLogsBefore(int $userId, int $currentUserLogId, Carbon $logoutTime): Collection;
+
     public function countRecentFailedAttempts(int $userId, int $withinMinutes): int;
 
     public function getLastLockTime(int $userId): ?Carbon;

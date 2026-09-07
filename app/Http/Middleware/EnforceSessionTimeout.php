@@ -34,9 +34,19 @@ class EnforceSessionTimeout
             ], 401);
         }
 
+        $concurrencyMessage = $this->authenticationService->enforceConcurrentSession($user, $request);
+
+        if ($concurrencyMessage !== null) {
+            return response()->json([
+                'message' => $concurrencyMessage,
+                'reason' => AuthenticationService::LOGOUT_REASON_CONCURRENT_LOGIN,
+            ], 401);
+        }
+
         if (! $this->authenticationService->enforceSessionTimeout($user, $request)) {
             return response()->json([
-                'message' => 'Session expired due to inactivity. Please log in again.',
+                'message' => AuthenticationService::IDLE_TIMEOUT_MESSAGE,
+                'reason' => AuthenticationService::LOGOUT_REASON_IDLE_TIMEOUT,
             ], 401);
         }
 
