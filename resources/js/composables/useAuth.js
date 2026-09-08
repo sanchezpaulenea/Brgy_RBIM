@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue';
 import { ROLES } from '@/constants/roles';
 import * as authService from '@/services/authService';
+import { clearAllFormDrafts } from '@/utils/formDraft';
 
 const user = ref(null);
 const roles = ref([]);
@@ -89,6 +90,7 @@ export function useAuth() {
             // Session may already be invalid; still clear local state.
         } finally {
             clearSession();
+            clearAllFormDrafts();
             loading.value = false;
         }
     }
@@ -99,6 +101,7 @@ export function useAuth() {
         try {
             await authService.changePassword(payload);
             clearSession();
+            clearAllFormDrafts();
         } finally {
             loading.value = false;
         }

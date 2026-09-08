@@ -180,7 +180,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
@@ -212,6 +212,12 @@ import {
     toId,
     validateResidentForm,
 } from '@/utils/residentForm';
+import {
+    HOUSEHOLD_REGISTER_DRAFT_KEY,
+    clearFormDraft,
+    readFormDraft,
+    writeFormDraft,
+} from '@/utils/formDraft';
 
 const router = useRouter();
 const { householdTabs } = useSectionTabs();
@@ -269,6 +275,39 @@ function emptyHead() {
         relationship_to_hh_id: HEAD_RELATIONSHIP_ID,
     });
 }
+
+function restoreHouseholdRegisterDraft() {
+    const draft = readFormDraft(HOUSEHOLD_REGISTER_DRAFT_KEY);
+
+    if (!draft) {
+        return;
+    }
+
+    if (draft.household && typeof draft.household === 'object') {
+        Object.assign(household, emptyHousehold(), draft.household);
+    }
+
+    if (draft.head && typeof draft.head === 'object') {
+        head.value = {
+            ...emptyHead(),
+            ...draft.head,
+            relationship_to_hh_id: HEAD_RELATIONSHIP_ID,
+        };
+    }
+}
+
+restoreHouseholdRegisterDraft();
+
+watch(
+    [household, head],
+    () => {
+        writeFormDraft(HOUSEHOLD_REGISTER_DRAFT_KEY, {
+            household: { ...household },
+            head: { ...head.value },
+        });
+    },
+    { deep: true },
+);
 
 function handleConfirmCancel() {
     confirm.open = false;
@@ -446,6 +485,10 @@ async function handleSave() {
             unit_num: optionalAddressText(household.unit_num),
             head: headData,
         });
+
+        clearFormDraft(HOUSEHOLD_REGISTER_DRAFT_KEY);
+        Object.assign(household, emptyHousehold());
+        head.value = emptyHead();
 
         successMessage.value = '';
         await refreshExistingResidents();
