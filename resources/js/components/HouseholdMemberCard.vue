@@ -177,22 +177,6 @@
                 :hint="canCreateEthnicity ? 'Choose from the list, or type a new name and press Enter to add it.' : ''"
                 @create="createEthnicity"
             />
-            <div>
-                <label class="rbim-label" :for="`${idPrefix}-resident_type`">
-                    Resident type<span class="rbim-required" aria-hidden="true">*</span>
-                </label>
-                <select
-                    :id="`${idPrefix}-resident_type`"
-                    :value="form.resident_type_id"
-                    class="rbim-input"
-                    :class="{ 'rbim-input-error': errors.resident_type_id }"
-                    @change="patch('resident_type_id', $event.target.value)"
-                >
-                    <option value="">Select resident type</option>
-                    <option v-for="option in residentTypes" :key="option.id" :value="option.id">{{ option.label }}</option>
-                </select>
-                <p v-if="errors.resident_type_id" class="rbim-error">{{ errors.resident_type_id }}</p>
-            </div>
         </div>
 
         <fieldset class="mt-4">
@@ -316,10 +300,6 @@ const props = defineProps({
         default: () => [],
     },
     ethnicities: {
-        type: Array,
-        default: () => [],
-    },
-    residentTypes: {
         type: Array,
         default: () => [],
     },

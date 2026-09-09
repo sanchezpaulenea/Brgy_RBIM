@@ -14,6 +14,17 @@
                 Loading registration form...
             </div>
 
+            <ResidentSectionWizard
+                v-else-if="createdHousehold && !headSectionsComplete && headResident"
+                :key="headResident.resident_id"
+                :resident="headResident"
+                :lookups="profilingLookups"
+                :location="profilingLookups.location"
+                title="Household head profile"
+                id-prefix="head-section"
+                @finished="headSectionsComplete = true"
+            />
+
             <HouseholdContinueMembersFlow
                 v-else-if="createdHousehold && !membersComplete"
                 :household="createdHousehold"
@@ -23,9 +34,9 @@
                 :religions="religions"
                 :ethnicities="ethnicities"
                 :marital-statuses="maritalStatuses"
-                :resident-types="residentTypes"
                 :existing-residents="existingResidents"
                 :ensure-lookups="ensureLookups"
+                :profiling-lookups="profilingLookups"
                 @member-added="refreshExistingResidents"
                 @members-complete="membersComplete = true"
                 @lookup-created="onLookupCreated"
@@ -43,7 +54,7 @@
                 </h2>
                 <p class="mt-1 text-xs text-slate-500">
                     Fields marked with <span class="rbim-required">*</span> are required.
-                    The household and head resident are saved together.
+                    Continue saves the household and head resident, then education through skills can be filled or skipped.
                 </p>
 
                 <form class="mt-4 space-y-8" novalidate @submit.prevent="handleSave">
@@ -147,7 +158,6 @@
                             :religions="religions"
                             :ethnicities="ethnicities"
                             :marital-statuses="maritalStatuses"
-                            :resident-types="residentTypes"
                             :lookup-limit="REGISTER_HOUSEHOLD_LOOKUP_LIMIT"
                             :preferred-lookup-ids="REGISTER_HOUSEHOLD_LOOKUP_IDS"
                             relationship-locked
@@ -160,7 +170,7 @@
 
                     <div class="flex flex-wrap items-center gap-2">
                         <button type="submit" class="rbim-btn" :disabled="saving">
-                            {{ saving ? 'Saving...' : 'Register household' }}
+                            {{ saving ? 'Saving...' : 'Continue' }}
                         </button>
                     </div>
                 </form>
@@ -188,6 +198,7 @@ import HouseholdAssessmentForm from '@/components/HouseholdAssessmentForm.vue';
 import HouseholdContinueMembersFlow from '@/components/HouseholdContinueMembersFlow.vue';
 import PageTabs from '@/components/PageTabs.vue';
 import ResidentDemographicsFields from '@/components/ResidentDemographicsFields.vue';
+import ResidentSectionWizard from '@/components/ResidentSectionWizard.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useSectionTabs } from '@/composables/useSectionTabs';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
@@ -218,6 +229,10 @@ import {
     readFormDraft,
     writeFormDraft,
 } from '@/utils/formDraft';
+import {
+    emptyProfilingLookups,
+    fetchProfilingLookups,
+} from '@/utils/profilingLookups';
 
 const router = useRouter();
 const { householdTabs } = useSectionTabs();
@@ -228,6 +243,7 @@ const saving = ref(false);
 const error = ref('');
 const successMessage = ref('');
 const createdHousehold = ref(null);
+const headSectionsComplete = ref(false);
 const membersComplete = ref(false);
 
 const clans = ref([]);
@@ -238,8 +254,8 @@ const nationalities = ref([]);
 const religions = ref([]);
 const ethnicities = ref([]);
 const maritalStatuses = ref([]);
-const residentTypes = ref([]);
 const existingResidents = ref([]);
+const profilingLookups = reactive(emptyProfilingLookups());
 
 const household = reactive(emptyHousehold());
 const head = ref(emptyHead());
@@ -258,6 +274,22 @@ const confirm = reactive({
 const headRelationshipOptions = computed(() => (
     relationships.value.filter((option) => Number(option.id) === HEAD_RELATIONSHIP_ID)
 ));
+
+const headResident = computed(() => {
+    const household = createdHousehold.value;
+
+    if (!household) {
+        return null;
+    }
+
+    if (household.head) {
+        return household.head;
+    }
+
+    return household.head_resident_id
+        ? { resident_id: household.head_resident_id }
+        : null;
+});
 
 function emptyHousehold() {
     return {
@@ -398,7 +430,7 @@ async function loadLookups() {
             religionItems,
             ethnicityItems,
             maritalItems,
-            residentTypeItems,
+            sectionLookups,
         ] = await Promise.all([
             lookupService.fetchLookup('clan'),
             lookupService.fetchStreets(),
@@ -408,7 +440,7 @@ async function loadLookups() {
             lookupService.fetchReligions(),
             lookupService.fetchEthnicities(),
             lookupService.fetchLookup('marital-status'),
-            lookupService.fetchLookup('resident-type'),
+            fetchProfilingLookups(),
         ]);
 
         clans.value = clanItems;
@@ -419,7 +451,7 @@ async function loadLookups() {
         religions.value = religionItems;
         ethnicities.value = ethnicityItems;
         maritalStatuses.value = maritalItems;
-        residentTypes.value = residentTypeItems;
+        Object.assign(profilingLookups, sectionLookups);
         await refreshExistingResidents();
     } catch (err) {
         error.value = extractErrorMessage(err, 'Unable to load the registration form.');

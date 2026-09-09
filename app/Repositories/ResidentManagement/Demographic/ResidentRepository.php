@@ -21,7 +21,7 @@ class ResidentRepository implements ResidentRepositoryInterface
             'religion',
             'ethnicity',
             'maritalStatus',
-            'residentType',
+            'migration.residentType',
             'status',
             'relationshipToHouseholdHead',
         ];
@@ -54,7 +54,10 @@ class ResidentRepository implements ResidentRepositoryInterface
             )
             ->when(
                 ! empty($filters['resident_type_id']),
-                fn ($query) => $query->where('resident_type_id', $filters['resident_type_id']),
+                fn ($query) => $query->whereHas(
+                    'migration',
+                    fn ($migrationQuery) => $migrationQuery->where('resident_type_id', $filters['resident_type_id']),
+                ),
             )
             ->when(
                 ! empty($filters['resident_status_id']),
@@ -186,6 +189,7 @@ class ResidentRepository implements ResidentRepositoryInterface
             'health.womenHealth.familyPlanningMethod',
             'health.womenHealth.sourceOfFpMethod',
             'sociocivic.soloParentStatus',
+            'migration.residentType',
             'migration.reasonForLeaving',
             'migration.reasonForTransfer',
             'communityTaxCert',

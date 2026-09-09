@@ -178,6 +178,10 @@ export function lookupById(options, id) {
     return options.find((option) => Number(option.id) === Number(id)) ?? null;
 }
 
+export function firstLookupId(options) {
+    return options?.[0]?.id ?? null;
+}
+
 export function titleCaseWords(value) {
     return String(value ?? '')
         .trim()

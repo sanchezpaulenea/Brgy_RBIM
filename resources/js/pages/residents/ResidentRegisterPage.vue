@@ -20,9 +20,9 @@
                 :religions="religions"
                 :ethnicities="ethnicities"
                 :marital-statuses="maritalStatuses"
-                :resident-types="residentTypes"
                 :existing-residents="existingResidents"
                 :ensure-lookups="ensureLookups"
+                :profiling-lookups="profilingLookups"
                 count-title="Register resident"
                 count-label="How many residents would you like to add?"
                 count-hint="This adds a resident to an existing household. The household head is registered with a new household."
@@ -49,7 +49,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import HouseholdSearch from '@/components/HouseholdSearch.vue';
@@ -65,6 +65,10 @@ import {
     applyLookupCreated,
     ensureResidentDemographicLookups,
 } from '@/utils/demographicLookups';
+import {
+    emptyProfilingLookups,
+    fetchProfilingLookups,
+} from '@/utils/profilingLookups';
 
 const router = useRouter();
 const { residentTabs } = useSectionTabs();
@@ -81,8 +85,8 @@ const nationalities = ref([]);
 const religions = ref([]);
 const ethnicities = ref([]);
 const maritalStatuses = ref([]);
-const residentTypes = ref([]);
 const existingResidents = ref([]);
+const profilingLookups = reactive(emptyProfilingLookups());
 
 const selectedHousehold = computed(() => (
     households.value.find((household) => (
@@ -147,7 +151,7 @@ async function loadLookups() {
             religionItems,
             ethnicityItems,
             maritalItems,
-            residentTypeItems,
+            sectionLookups,
         ] = await Promise.all([
             householdService.fetchHouseholds(),
             lookupService.fetchLookup('sex'),
@@ -156,7 +160,7 @@ async function loadLookups() {
             lookupService.fetchReligions(),
             lookupService.fetchEthnicities(),
             lookupService.fetchLookup('marital-status'),
-            lookupService.fetchLookup('resident-type'),
+            fetchProfilingLookups(),
         ]);
 
         households.value = householdItems;
@@ -166,7 +170,7 @@ async function loadLookups() {
         religions.value = religionItems;
         ethnicities.value = ethnicityItems;
         maritalStatuses.value = maritalItems;
-        residentTypes.value = residentTypeItems;
+        Object.assign(profilingLookups, sectionLookups);
 
         await refreshExistingResidents();
     } catch (err) {

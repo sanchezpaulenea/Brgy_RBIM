@@ -70,7 +70,6 @@ class UpdateResidentRequest extends FormRequest
             'religion_id' => ['sometimes', 'required', 'integer', Rule::exists('religion', 'religion_id')],
             'ethnicity_id' => ['sometimes', 'required', 'integer', Rule::exists('ethnicity', 'ethnicity_id')],
             'marital_status_id' => ['sometimes', 'required', 'integer', Rule::exists('marital_status', 'marital_status_id')],
-            'resident_type_id' => ['sometimes', 'required', 'integer', Rule::exists('resident_type', 'resident_type_id')],
             'clan_id' => ['sometimes', 'required', 'integer', Rule::exists('clan', 'clan_id')],
             'resident_status_id' => [
                 'sometimes',
@@ -98,7 +97,6 @@ class UpdateResidentRequest extends FormRequest
             'religion_id.exists' => 'The selected religion does not exist.',
             'ethnicity_id.exists' => 'The selected ethnicity does not exist.',
             'marital_status_id.exists' => 'The selected marital status does not exist.',
-            'resident_type_id.exists' => 'The selected resident type does not exist.',
             'clan_id.exists' => 'The selected clan does not exist.',
             'resident_status_id.exists' => 'The selected resident status does not exist.',
             'household_id.exists' => 'The selected household does not exist.',
@@ -128,7 +126,6 @@ class UpdateResidentRequest extends FormRequest
                     'religion_id',
                     'ethnicity_id',
                     'marital_status_id',
-                    'resident_type_id',
                     'clan_id',
                     'resident_status_id',
                     'household_id',

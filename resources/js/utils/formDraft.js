@@ -2,6 +2,10 @@ const DRAFT_PREFIX = 'rbim.form-draft.';
 
 export const HOUSEHOLD_REGISTER_DRAFT_KEY = 'household-register';
 
+export function residentSectionDraftKey(residentId) {
+    return `resident-sections-${residentId}`;
+}
+
 function storageKey(name) {
     return `${DRAFT_PREFIX}${name}`;
 }

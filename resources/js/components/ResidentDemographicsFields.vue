@@ -218,24 +218,6 @@
             </select>
             <p v-if="errors.marital_status_id" class="rbim-error">{{ errors.marital_status_id }}</p>
         </div>
-        <div>
-            <label :for="`${idPrefix}-resident_type`" class="rbim-label">
-                Resident Type<span class="rbim-required" aria-hidden="true">*</span>
-            </label>
-            <select
-                :id="`${idPrefix}-resident_type`"
-                :value="form.resident_type_id"
-                class="rbim-input"
-                :class="{ 'rbim-input-error': errors.resident_type_id }"
-                @change="patch('resident_type_id', $event.target.value)"
-            >
-                <option value="">Select resident type</option>
-                <option v-for="option in residentTypes" :key="option.id" :value="option.id">
-                    {{ option.label }}
-                </option>
-            </select>
-            <p v-if="errors.resident_type_id" class="rbim-error">{{ errors.resident_type_id }}</p>
-        </div>
     </div>
 </template>
 
@@ -280,10 +262,6 @@ const props = defineProps({
         default: () => [],
     },
     maritalStatuses: {
-        type: Array,
-        default: () => [],
-    },
-    residentTypes: {
         type: Array,
         default: () => [],
     },

@@ -29,11 +29,11 @@
             :religions="religions"
             :ethnicities="ethnicities"
             :marital-statuses="maritalStatuses"
-            :resident-types="residentTypes"
             :existing-residents="existingResidents"
             :ensure-lookups="ensureLookups"
             :lookup-limit="REGISTER_HOUSEHOLD_LOOKUP_LIMIT"
             :preferred-lookup-ids="REGISTER_HOUSEHOLD_LOOKUP_IDS"
+            :profiling-lookups="profilingLookups"
             count-title="Additional household members"
             count-label="How many household members would you like to add?"
             count-hint="The household head is already registered. This is how many more members you will encode next."
@@ -87,10 +87,6 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
-    residentTypes: {
-        type: Array,
-        default: () => [],
-    },
     existingResidents: {
         type: Array,
         default: () => [],
@@ -98,6 +94,10 @@ const props = defineProps({
     ensureLookups: {
         type: Function,
         default: null,
+    },
+    profilingLookups: {
+        type: Object,
+        default: () => ({}),
     },
 });
 

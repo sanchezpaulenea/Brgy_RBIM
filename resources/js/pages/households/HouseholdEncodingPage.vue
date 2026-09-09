@@ -45,7 +45,6 @@
                                 :marital-statuses="maritalStatuses"
                                 :religions="religions"
                                 :ethnicities="ethnicities"
-                                :resident-types="residentTypes"
                                 :errors="memberErrors[member.key] ?? {}"
                                 @update:model-value="updateMember(index, $event)"
                                 @remove="removeMember(index)"
@@ -95,7 +94,6 @@ import { HOUSEHOLD_HEAD_MIN_AGE, optionalAddressText } from '@/utils/residentFor
 import { personnelNameValidationError } from '@/utils/validation';
 
 const HEAD_RELATIONSHIP_ID = 1;
-const DEFAULT_RESIDENT_TYPE_ID = 1;
 const DEFAULT_BIRTH_COUNTRY = 'Philippines';
 
 const { hasPermission } = useAuth();
@@ -119,7 +117,6 @@ const nationalities = ref([]);
 const maritalStatuses = ref([]);
 const religions = ref([]);
 const ethnicities = ref([]);
-const residentTypes = ref([]);
 
 const identificationErrors = ref({});
 const memberErrors = ref({});
@@ -201,7 +198,6 @@ function createMember(isHead) {
         birth_city_municipality: '',
         birth_province: '',
         birth_country: DEFAULT_BIRTH_COUNTRY,
-        resident_type_id: DEFAULT_RESIDENT_TYPE_ID,
         highest_education_attained: '',
         enrollment_status: '',
         school_level: '',
@@ -272,7 +268,6 @@ async function loadLookups() {
             maritalItems,
             religionItems,
             ethnicityItems,
-            residentTypeItems,
         ] = await Promise.all([
             householdService.fetchLocationProfile(),
             lookupService.fetchStreets(),
@@ -283,7 +278,6 @@ async function loadLookups() {
             lookupService.fetchLookup('marital-status'),
             lookupService.fetchReligions(),
             lookupService.fetchEthnicities(),
-            lookupService.fetchLookup('resident-type'),
         ]);
 
         Object.assign(location, {
@@ -300,7 +294,6 @@ async function loadLookups() {
         maritalStatuses.value = maritalItems;
         religions.value = religionItems;
         ethnicities.value = ethnicityItems;
-        residentTypes.value = residentTypeItems;
     } catch (loadError) {
         error.value = extractErrorMessage(loadError, 'Unable to load the encoding form.');
     } finally {
@@ -410,10 +403,6 @@ function validateMembers() {
             errors.ethnicity_id = 'Ethnicity is required.';
         }
 
-        if (!member.resident_type_id) {
-            errors.resident_type_id = 'Resident type is required.';
-        }
-
         if (!String(member.birth_city_municipality ?? '').trim()) {
             errors.birth_city_municipality = 'City / municipality of birth is required.';
         }
@@ -520,7 +509,6 @@ function residentPayload(member) {
         religion_id: toId(member.religion_id),
         ethnicity_id: toId(member.ethnicity_id),
         marital_status_id: toId(member.marital_status_id),
-        resident_type_id: toId(member.resident_type_id),
         clan_id: toId(identification.clan_id),
     };
 }

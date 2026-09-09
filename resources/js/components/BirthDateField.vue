@@ -26,7 +26,7 @@
             v-if="open"
             class="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white p-3 shadow-lg"
         >
-            <div class="grid grid-cols-3 gap-2">
+            <div class="grid gap-2" :class="precision === 'month' ? 'grid-cols-2' : 'grid-cols-3'">
                 <div ref="monthRoot" class="relative">
                     <span class="mb-1 block text-xs font-medium text-slate-500">Month</span>
                     <button
@@ -57,7 +57,7 @@
                     </ul>
                 </div>
 
-                <div ref="dayRoot" class="relative">
+                <div v-if="precision !== 'month'" ref="dayRoot" class="relative">
                     <span class="mb-1 block text-xs font-medium text-slate-500">Day</span>
                     <button
                         type="button"
@@ -183,6 +183,11 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    precision: {
+        type: String,
+        default: 'day',
+        validator: (value) => ['day', 'month'].includes(value),
+    },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -292,6 +297,10 @@ const displayText = computed(() => {
 
     const monthName = MONTH_NAMES_FULL[Number(month.value) - 1] ?? MONTH_NAMES[Number(month.value) - 1];
 
+    if (props.precision === 'month') {
+        return `${monthName} ${year.value}`;
+    }
+
     return `${monthName} ${day.value}, ${year.value}`;
 });
 
@@ -354,6 +363,10 @@ function isBefore(left, right) {
 }
 
 function isComplete() {
+    if (props.precision === 'month') {
+        return Boolean(year.value && month.value);
+    }
+
     return Boolean(year.value && month.value && day.value);
 }
 
@@ -460,6 +473,10 @@ watch(() => props.modelValue, (value) => {
 }, { immediate: true });
 
 watch([year, month], () => {
+    if (props.precision === 'month' && year.value && month.value) {
+        day.value = 1;
+    }
+
     const available = dayOptions.value;
 
     if (day.value && available.length && !available.includes(Number(day.value))) {

@@ -54,7 +54,6 @@ class StoreResidentRequest extends FormRequest
             'religion_id' => ['required', 'integer', Rule::exists('religion', 'religion_id')],
             'ethnicity_id' => ['required', 'integer', Rule::exists('ethnicity', 'ethnicity_id')],
             'marital_status_id' => ['required', 'integer', Rule::exists('marital_status', 'marital_status_id')],
-            'resident_type_id' => ['required', 'integer', Rule::exists('resident_type', 'resident_type_id')],
             'clan_id' => ['sometimes', 'integer', Rule::exists('clan', 'clan_id')],
             'resident_status_id' => [
                 'sometimes',
@@ -91,8 +90,6 @@ class StoreResidentRequest extends FormRequest
             'ethnicity_id.exists' => 'The selected ethnicity does not exist.',
             'marital_status_id.required' => 'Marital status is required.',
             'marital_status_id.exists' => 'The selected marital status does not exist.',
-            'resident_type_id.required' => 'Resident type is required.',
-            'resident_type_id.exists' => 'The selected resident type does not exist.',
             'clan_id.exists' => 'The selected clan does not exist.',
             'resident_status_id.exists' => 'The selected resident status does not exist.',
             'household_id.required' => 'Household is required.',

@@ -41,7 +41,6 @@ class Resident extends Model
         'religion_id',
         'ethnicity_id',
         'marital_status_id',
-        'resident_type_id',
         'clan_id',
         'resident_status_id',
         'household_id',
@@ -125,14 +124,6 @@ class Resident extends Model
     public function maritalStatus(): BelongsTo
     {
         return $this->belongsTo(MaritalStatus::class, 'marital_status_id', 'marital_status_id');
-    }
-
-    /**
-     * @return BelongsTo<ResidentType, $this>
-     */
-    public function residentType(): BelongsTo
-    {
-        return $this->belongsTo(ResidentType::class, 'resident_type_id', 'resident_type_id');
     }
 
     /**

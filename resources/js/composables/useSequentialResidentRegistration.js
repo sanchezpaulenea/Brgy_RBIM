@@ -51,6 +51,7 @@ export function useSequentialResidentRegistration({
     const currentMember = ref(1);
     const member = ref(emptyResidentForm());
     const memberErrors = reactive({});
+    const createdResident = ref(null);
     const confirm = reactive({
         open: false,
         title: '',
@@ -67,16 +68,13 @@ export function useSequentialResidentRegistration({
 
     const isLastMember = computed(() => currentMember.value >= totalMembers.value);
 
-    const saveButtonLabel = computed(() => {
-        if (saving.value) {
-            return 'Saving...';
-        }
-
-        return isLastMember.value ? 'Register member' : 'Save & continue';
-    });
+    const saveButtonLabel = computed(() => (
+        saving.value ? 'Saving...' : 'Continue'
+    ));
 
     function resetMemberForm() {
         member.value = emptyResidentForm();
+        createdResident.value = null;
         Object.keys(memberErrors).forEach((key) => {
             delete memberErrors[key];
         });
@@ -187,22 +185,14 @@ export function useSequentialResidentRegistration({
         saving.value = true;
 
         try {
-            await residentService.createResident({
+            createdResident.value = await residentService.createResident({
                 ...residentPayload(member.value),
                 household_id: householdId,
             });
 
             onMemberAdded?.();
-
-            if (isLastMember.value) {
-                onFinished?.({ total: totalMembers.value, householdId });
-                return;
-            }
-
-            const completed = currentMember.value;
-            currentMember.value += 1;
-            resetMemberForm();
-            successMessage.value = `Member ${completed} of ${totalMembers.value} saved. Continue with the next member.`;
+            successMessage.value = '';
+            step.value = 'sections';
         } catch (err) {
             const validationErrors = extractValidationErrors(err);
 
@@ -217,6 +207,21 @@ export function useSequentialResidentRegistration({
         }
     }
 
+    function completeMemberSections() {
+        const householdId = toId(getHouseholdId?.());
+
+        if (isLastMember.value) {
+            onFinished?.({ total: totalMembers.value, householdId });
+            return;
+        }
+
+        const completed = currentMember.value;
+        currentMember.value += 1;
+        resetMemberForm();
+        successMessage.value = `Member ${completed} of ${totalMembers.value} saved. Continue with the next member.`;
+        step.value = 'members';
+    }
+
     return {
         step,
         saving,
@@ -228,6 +233,7 @@ export function useSequentialResidentRegistration({
         currentMember,
         member,
         memberErrors,
+        createdResident,
         confirm,
         memberRelationships,
         isLastMember,
@@ -237,6 +243,7 @@ export function useSequentialResidentRegistration({
         handleConfirmCancel,
         validateMemberName,
         handleSaveMember,
+        completeMemberSections,
         resetMemberForm,
     };
 }

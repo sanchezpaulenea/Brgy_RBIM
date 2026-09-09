@@ -13,6 +13,7 @@ class MigrationRepository implements MigrationRepositoryInterface
     private function defaultRelations(): array
     {
         return [
+            'residentType',
             'reasonForLeaving',
             'reasonForTransfer',
         ];

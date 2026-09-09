@@ -1,5 +1,5 @@
 <template>
-    <AppLayout :title="pageTitle">
+    <AppLayout title="Resident Management">
         <div class="space-y-6">
             <PageTabs :tabs="residentTabs" />
 
@@ -10,11 +10,7 @@
                 {{ successMessage }}
             </div>
 
-            <p v-if="isVerificationMonitoring" class="text-sm text-slate-600">
-                Residents with the lowest profiling completeness appear first so staff can follow up on missing sub-records.
-            </p>
-
-            <form class="rbim-card grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+            <form class="rbim-card grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                 <div>
                     <label for="resident-search" class="rbim-label">Search</label>
                     <input
@@ -28,24 +24,6 @@
                         class="rbim-input py-2"
                         placeholder="Search resident name"
                     >
-                </div>
-                <div>
-                    <HouseholdSearch
-                        v-model="filters.household_id"
-                        :options="households"
-                        input-id="resident-filter-household"
-                        label="Household"
-                        placeholder="Search household"
-                    />
-                </div>
-                <div>
-                    <label for="resident-filter-sex" class="rbim-label">Sex</label>
-                    <select id="resident-filter-sex" v-model="filters.sex_id" class="rbim-input py-2">
-                        <option value="">All sexes</option>
-                        <option v-for="sex in sexes" :key="sex.id" :value="sex.id">
-                            {{ sex.label }}
-                        </option>
-                    </select>
                 </div>
                 <div>
                     <label for="resident-filter-type" class="rbim-label">Resident Type</label>
@@ -94,19 +72,9 @@
                         Refresh
                     </button>
                 </div>
-                <div v-if="isVerificationMonitoring" class="flex items-end xl:col-span-7">
-                    <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-                        <input
-                            v-model="incompleteOnly"
-                            type="checkbox"
-                            class="h-4 w-4 rounded border-slate-300 text-brand focus:ring-brand"
-                        >
-                        Show incomplete profiles only
-                    </label>
-                </div>
             </form>
 
-            <div v-if="loading" class="rbim-card p-8 text-center text-sm text-slate-500">
+            <div v-if="loading" class="rbim-card p-8 text-center text-slate-500">
                 Loading residents...
             </div>
             <div v-else class="rbim-card overflow-hidden">
@@ -125,7 +93,7 @@
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             <tr
-                                v-for="resident in displayedItems"
+                                v-for="resident in items"
                                 :key="resident.resident_id"
                                 class="cursor-pointer hover:bg-slate-50"
                                 @click="openDetail(resident.resident_id)"
@@ -145,7 +113,7 @@
                                     </span>
                                 </td>
                             </tr>
-                            <tr v-if="!displayedItems.length">
+                            <tr v-if="!items.length">
                                 <td colspan="7" class="px-4 py-8 text-center text-slate-500">
                                     No resident records found.
                                 </td>
@@ -162,7 +130,6 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
-import HouseholdSearch from '@/components/HouseholdSearch.vue';
 import PageTabs from '@/components/PageTabs.vue';
 import { useSectionTabs } from '@/composables/useSectionTabs';
 import { extractErrorMessage } from '@/services/http';
@@ -171,30 +138,20 @@ import * as lookupService from '@/services/lookupService';
 import * as residentService from '@/services/residentService';
 import { ageFromDateOfBirth, householdDisplayLabel, personDisplayName } from '@/utils/format';
 import { toId } from '@/utils/residentForm';
-import { completenessRatio, isProfileIncomplete } from '@/utils/residentProfiling';
 
 const route = useRoute();
 const router = useRouter();
 const { residentTabs } = useSectionTabs();
 
-const isVerificationMonitoring = computed(() => Boolean(route.meta.verificationMonitoring));
-const pageTitle = computed(() => (
-    isVerificationMonitoring.value ? 'Resident Verification Monitoring' : 'Resident Management'
-));
-
 const items = ref([]);
 const households = ref([]);
-const sexes = ref([]);
 const residentTypes = ref([]);
 const residentStatuses = ref([]);
 const loading = ref(false);
 const error = ref('');
 const successMessage = ref('');
-const incompleteOnly = ref(true);
 const filters = reactive({
     search: '',
-    household_id: '',
-    sex_id: '',
     resident_type_id: '',
     resident_status_id: '',
     age_min: '',
@@ -211,44 +168,20 @@ const householdById = computed(() => {
     return map;
 });
 
-const displayedItems = computed(() => {
-    let rows = items.value;
-
-    if (isVerificationMonitoring.value && incompleteOnly.value) {
-        rows = rows.filter((resident) => isProfileIncomplete(resident));
-    }
-
-    if (!isVerificationMonitoring.value) {
-        return rows;
-    }
-
-    return [...rows].sort((left, right) => {
-        const ratioDelta = completenessRatio(left) - completenessRatio(right);
-
-        if (ratioDelta !== 0) {
-            return ratioDelta;
-        }
-
-        return String(left.full_name || '').localeCompare(String(right.full_name || ''));
-    });
-});
-
 function openDetail(residentId) {
     router.push({ name: 'resident-detail', params: { id: residentId } });
 }
 
 async function loadLookups() {
-    const [householdItems, typeItems, statusItems, sexItems] = await Promise.all([
+    const [householdItems, typeItems, statusItems] = await Promise.all([
         householdService.fetchHouseholds(),
         lookupService.fetchLookup('resident-type'),
         lookupService.fetchLookup('resident-status'),
-        lookupService.fetchLookup('sex'),
     ]);
 
     households.value = householdItems;
     residentTypes.value = typeItems;
     residentStatuses.value = statusItems;
-    sexes.value = sexItems;
 }
 
 async function loadResidents() {
@@ -258,8 +191,6 @@ async function loadResidents() {
     try {
         items.value = await residentService.fetchResidents({
             search: filters.search.trim() || undefined,
-            household_id: toId(filters.household_id) ?? undefined,
-            sex_id: toId(filters.sex_id) ?? undefined,
             resident_type_id: toId(filters.resident_type_id) ?? undefined,
             resident_status_id: toId(filters.resident_status_id) ?? undefined,
             age_min: filters.age_min === '' ? undefined : Number(filters.age_min),
@@ -274,13 +205,10 @@ async function loadResidents() {
 
 function clearFilters() {
     filters.search = '';
-    filters.household_id = '';
-    filters.sex_id = '';
     filters.resident_type_id = '';
     filters.resident_status_id = '';
     filters.age_min = '';
     filters.age_max = '';
-    incompleteOnly.value = isVerificationMonitoring.value;
     loadResidents();
 }
 
@@ -289,8 +217,6 @@ let filterTimer = null;
 watch(
     () => [
         filters.search,
-        filters.household_id,
-        filters.sex_id,
         filters.resident_type_id,
         filters.resident_status_id,
         filters.age_min,
@@ -336,10 +262,6 @@ function householdLabelFor(resident) {
     return resident.household_id ? `Household ${resident.household_id}` : '—';
 }
 
-watch(isVerificationMonitoring, () => {
-    incompleteOnly.value = isVerificationMonitoring.value;
-});
-
 onMounted(async () => {
     try {
         await loadLookups();
@@ -347,16 +269,11 @@ onMounted(async () => {
         error.value = extractErrorMessage(err, 'Unable to load resident filters.');
     }
 
-    const registeredCount = Number.parseInt(String(route.query.registered ?? ''), 10);
-    const createdHouseholdId = route.query.household_id;
-
-    if (createdHouseholdId && !isVerificationMonitoring.value) {
-        filters.household_id = Number(createdHouseholdId) || createdHouseholdId;
-    }
-
     await loadResidents();
 
-    if (!isVerificationMonitoring.value && Number.isInteger(registeredCount) && registeredCount > 0) {
+    const registeredCount = Number.parseInt(String(route.query.registered ?? ''), 10);
+
+    if (Number.isInteger(registeredCount) && registeredCount > 0) {
         successMessage.value = registeredCount === 1
             ? '1 resident registered successfully.'
             : `${registeredCount} residents registered successfully.`;

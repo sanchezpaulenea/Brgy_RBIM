@@ -176,7 +176,6 @@
                             :religions="lookups.religion"
                             :ethnicities="lookups.ethnicity"
                             :marital-statuses="lookups.maritalStatus"
-                            :resident-types="lookups.residentType"
                             :relationship-locked="Boolean(resident?.is_household_head)"
                             @validate-name="() => {}"
                         />
@@ -502,9 +501,13 @@
                     </template>
 
                     <template v-else-if="editing === 'migration'">
+                        <p class="text-sm text-slate-500">
+                            Current household address: {{ location.barangay || '—' }}, {{ location.city || '—' }}.
+                            Resident type is identified by comparing previous residence 6 months ago with this address.
+                        </p>
                         <div class="grid gap-4 sm:grid-cols-2">
                             <div>
-                                <label class="rbim-label">Previous Residence 6 Months Barangay</label>
+                                <label class="rbim-label">Previous Residence 6 Months Ago (Barangay)<span class="rbim-required" aria-hidden="true">*</span></label>
                                 <input
                                     v-model="editForm.previous_residence_6mos_brgy"
                                     type="text"
@@ -515,7 +518,7 @@
                                 <p v-if="editErrors.previous_residence_6mos_brgy" class="rbim-error">{{ editErrors.previous_residence_6mos_brgy }}</p>
                             </div>
                             <div>
-                                <label class="rbim-label">Previous Residence 6 Months City / Municipality</label>
+                                <label class="rbim-label">Previous Residence 6 Months Ago (City / Municipality)<span class="rbim-required" aria-hidden="true">*</span></label>
                                 <input
                                     v-model="editForm.previous_residence_6mos_city_municipality"
                                     type="text"
@@ -526,7 +529,7 @@
                                 <p v-if="editErrors.previous_residence_6mos_city_municipality" class="rbim-error">{{ editErrors.previous_residence_6mos_city_municipality }}</p>
                             </div>
                             <div>
-                                <label class="rbim-label">Previous Residence 5 Years Barangay</label>
+                                <label class="rbim-label">Previous Residence 5 Years Ago (Barangay)<span class="rbim-required" aria-hidden="true">*</span></label>
                                 <input
                                     v-model="editForm.previous_residence_5yrs_brgy"
                                     type="text"
@@ -537,7 +540,7 @@
                                 <p v-if="editErrors.previous_residence_5yrs_brgy" class="rbim-error">{{ editErrors.previous_residence_5yrs_brgy }}</p>
                             </div>
                             <div>
-                                <label class="rbim-label">Previous Residence 5 Years City / Municipality</label>
+                                <label class="rbim-label">Previous Residence 5 Years Ago (City / Municipality)<span class="rbim-required" aria-hidden="true">*</span></label>
                                 <input
                                     v-model="editForm.previous_residence_5yrs_city_municipality"
                                     type="text"
@@ -548,62 +551,90 @@
                                 <p v-if="editErrors.previous_residence_5yrs_city_municipality" class="rbim-error">{{ editErrors.previous_residence_5yrs_city_municipality }}</p>
                             </div>
                             <div>
-                                <BirthDateField
-                                    v-model="editForm.date_of_transfer_in_brgy"
-                                    label="Date of Transfer into Barangay"
-                                    input-id="migration-transfer-date"
-                                    placeholder="Select date"
-                                    :max="todayIso"
-                                    :show-age="false"
-                                    :error="editErrors.date_of_transfer_in_brgy"
-                                />
-                            </div>
-                            <div>
-                                <BirthDateField
-                                    v-model="editForm.duration_of_stay"
-                                    label="Duration of Stay"
-                                    input-id="migration-duration-of-stay"
-                                    placeholder="Select date"
-                                    :show-age="false"
-                                    :error="editErrors.duration_of_stay"
-                                />
-                            </div>
-                            <div>
-                                <label class="rbim-label">Reason for Leaving<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <select
-                                    v-model="editForm.reason_for_leaving_id"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.reason_for_leaving_id }"
+                                <label class="rbim-label">Length of Stay in the Barangay</label>
+                                <input
+                                    type="text"
+                                    class="rbim-input bg-slate-50"
+                                    :value="migrationClassification.stayLabel || '—'"
+                                    disabled
                                 >
-                                    <option value="">Select</option>
-                                    <option v-for="option in lookups.reasonForLeaving" :key="option.id" :value="option.id">{{ option.label }}</option>
-                                </select>
-                                <p v-if="editErrors.reason_for_leaving_id" class="rbim-error">{{ editErrors.reason_for_leaving_id }}</p>
+                                <p class="mt-1 text-xs text-slate-500">Computed from date of transfer. Do not encode.</p>
                             </div>
                             <div>
-                                <label class="rbim-label">Reason for Transfer<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <select
-                                    v-model="editForm.reason_for_transfer_id"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.reason_for_transfer_id }"
+                                <label class="rbim-label">Type of Resident</label>
+                                <input
+                                    type="text"
+                                    class="rbim-input bg-slate-50"
+                                    :value="migrationClassification.typeLabel || '—'"
+                                    disabled
                                 >
-                                    <option value="">Select</option>
-                                    <option v-for="option in lookups.reasonForTransfer" :key="option.id" :value="option.id">{{ option.label }}</option>
-                                </select>
-                                <p v-if="editErrors.reason_for_transfer_id" class="rbim-error">{{ editErrors.reason_for_transfer_id }}</p>
+                                <p class="mt-1 text-xs text-slate-500">Identified from previous and current barangay / city.</p>
                             </div>
-                            <div>
-                                <label class="rbim-label">Will Return to Previous Residence<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <select
-                                    v-model="editForm.will_return_to_previous_residence"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.will_return_to_previous_residence }"
-                                >
-                                    <option :value="true">Yes</option>
-                                    <option :value="false">No</option>
-                                </select>
-                                <p v-if="editErrors.will_return_to_previous_residence" class="rbim-error">{{ editErrors.will_return_to_previous_residence }}</p>
-                            </div>
+                            <template v-if="!migrationClassification.nonMigrant">
+                                <div>
+                                    <BirthDateField
+                                        v-model="editForm.date_of_transfer_in_brgy"
+                                        label="Date of Transfer into Barangay"
+                                        input-id="migration-transfer-date"
+                                        placeholder="Select month and year"
+                                        precision="month"
+                                        required
+                                        :max="todayIso"
+                                        :show-age="false"
+                                        :error="editErrors.date_of_transfer_in_brgy"
+                                    />
+                                </div>
+                                <div>
+                                    <BirthDateField
+                                        v-model="editForm.duration_of_stay"
+                                        label="Until When Does the Resident Intend to Stay"
+                                        input-id="migration-duration-of-stay"
+                                        placeholder="Select date"
+                                        :show-age="false"
+                                        :error="editErrors.duration_of_stay"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="rbim-label">Reason for Leaving Previous Residence<span class="rbim-required" aria-hidden="true">*</span></label>
+                                    <select
+                                        v-model="editForm.reason_for_leaving_id"
+                                        class="rbim-input"
+                                        :class="{ 'rbim-input-error': editErrors.reason_for_leaving_id }"
+                                    >
+                                        <option value="">Select</option>
+                                        <option v-for="option in lookups.reasonForLeaving" :key="option.id" :value="option.id">{{ option.label }}</option>
+                                    </select>
+                                    <p v-if="editErrors.reason_for_leaving_id" class="rbim-error">{{ editErrors.reason_for_leaving_id }}</p>
+                                </div>
+                                <div>
+                                    <label class="rbim-label">Reason for Transferring in this Barangay<span class="rbim-required" aria-hidden="true">*</span></label>
+                                    <select
+                                        v-model="editForm.reason_for_transfer_id"
+                                        class="rbim-input"
+                                        :class="{ 'rbim-input-error': editErrors.reason_for_transfer_id }"
+                                    >
+                                        <option value="">Select</option>
+                                        <option v-for="option in lookups.reasonForTransfer" :key="option.id" :value="option.id">{{ option.label }}</option>
+                                    </select>
+                                    <p v-if="editErrors.reason_for_transfer_id" class="rbim-error">{{ editErrors.reason_for_transfer_id }}</p>
+                                </div>
+                                <div>
+                                    <label class="rbim-label">Plan to Return to Previous Residence<span class="rbim-required" aria-hidden="true">*</span></label>
+                                    <select
+                                        v-model="editForm.will_return_to_previous_residence"
+                                        class="rbim-input"
+                                        :class="{ 'rbim-input-error': editErrors.will_return_to_previous_residence }"
+                                    >
+                                        <option value="">Select</option>
+                                        <option :value="true">Yes</option>
+                                        <option :value="false">No</option>
+                                    </select>
+                                    <p v-if="editErrors.will_return_to_previous_residence" class="rbim-error">{{ editErrors.will_return_to_previous_residence }}</p>
+                                </div>
+                            </template>
+                            <p v-else class="sm:col-span-2 text-sm text-slate-500">
+                                Previous residence matches the current barangay. Date of transfer, reasons, return plan, and intended stay are skipped for non-migrants.
+                            </p>
                         </div>
                     </template>
 
@@ -695,9 +726,11 @@ import ResidentDemographicsFields from '@/components/ResidentDemographicsFields.
 import { useAuth } from '@/composables/useAuth';
 import { useSectionTabs } from '@/composables/useSectionTabs';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
+import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
 import * as residentService from '@/services/residentService';
 import { HOUSEHOLD_HEAD_MIN_AGE, applyValidationErrors } from '@/utils/residentForm';
+import { classifyMigrationForm, formatMonthYear } from '@/utils/migration';
 import { ageFromDateOfBirth } from '@/utils/format';
 import {
     canPerformCreate,
@@ -727,6 +760,10 @@ const activeSection = ref('');
 const editForm = reactive({});
 const editErrors = reactive({});
 const todayIso = new Date().toISOString().slice(0, 10);
+const location = reactive({
+    barangay: '',
+    city: '',
+});
 const lookups = reactive({
     sex: [],
     relationship: [],
@@ -734,7 +771,6 @@ const lookups = reactive({
     religion: [],
     ethnicity: [],
     maritalStatus: [],
-    residentType: [],
     residentStatus: [],
     highestLvlOfEduc: [],
     currentEnrollmentStatus: [],
@@ -787,6 +823,8 @@ const familyPlanningIsNone = computed(() => (
 
 const sociocivicRelevance = computed(() => sociocivicFieldRelevance(resident.value));
 
+const migrationClassification = computed(() => classifyMigrationForm(editForm, location));
+
 const editorTitle = computed(() => {
     const titles = {
         demographics: 'Update resident information',
@@ -836,7 +874,6 @@ const demographicFields = computed(() => {
         { label: 'Religion', value: item.religion || '—' },
         { label: 'Ethnicity', value: item.ethnicity || '—' },
         { label: 'Marital Status', value: item.marital_status || '—' },
-        { label: 'Resident Type', value: item.resident_type || '—' },
         { label: 'Clan', value: item.clan_name || '—' },
         { label: 'Resident Status', value: item.resident_status || '—' },
     ];
@@ -1030,17 +1067,28 @@ function displayMigration(record) {
         return [];
     }
 
-    return [
-        { label: 'Previous Residence 6 Months Barangay', value: record.previous_residence_6mos_brgy || '—' },
-        { label: 'Previous Residence 6 Months City / Municipality', value: record.previous_residence_6mos_city_municipality || '—' },
-        { label: 'Previous Residence 5 Years Barangay', value: record.previous_residence_5yrs_brgy || '—' },
-        { label: 'Previous Residence 5 Years City / Municipality', value: record.previous_residence_5yrs_city_municipality || '—' },
-        { label: 'Date of Transfer into Barangay', value: record.date_of_transfer_in_brgy || '—' },
-        { label: 'Reason for Leaving', value: record.reason_for_leaving || '—' },
-        { label: 'Will Return to Previous Residence', value: yesNo(record.will_return_to_previous_residence) },
-        { label: 'Reason for Transfer', value: record.reason_for_transfer || '—' },
-        { label: 'Duration of Stay', value: record.duration_of_stay || '—' },
+    const fields = [
+        { label: 'Previous Residence 6 Months Ago (Barangay)', value: record.previous_residence_6mos_brgy || '—' },
+        { label: 'Previous Residence 6 Months Ago (City / Municipality)', value: record.previous_residence_6mos_city_municipality || '—' },
+        { label: 'Previous Residence 5 Years Ago (Barangay)', value: record.previous_residence_5yrs_brgy || '—' },
+        { label: 'Previous Residence 5 Years Ago (City / Municipality)', value: record.previous_residence_5yrs_city_municipality || '—' },
+        { label: 'Length of Stay in the Barangay', value: record.length_of_stay_label || '—' },
+        { label: 'Type of Resident', value: record.resident_type || '—' },
     ];
+
+    if (record.resident_type && /non[- ]migrant/i.test(record.resident_type)) {
+        return fields;
+    }
+
+    fields.push(
+        { label: 'Date of Transfer into Barangay', value: formatMonthYear(record.date_of_transfer_in_brgy) || '—' },
+        { label: 'Reason for Leaving', value: record.reason_for_leaving || '—' },
+        { label: 'Plan to Return to Previous Residence', value: yesNo(record.will_return_to_previous_residence) },
+        { label: 'Reason for Transfer', value: record.reason_for_transfer || '—' },
+        { label: 'Intended Stay Until', value: record.duration_of_stay || '—' },
+    );
+
+    return fields;
 }
 
 function displayCtc(record) {
@@ -1101,7 +1149,6 @@ function startDemographicsEdit() {
         ethnicity_id: item.ethnicity_id,
         ethnicity_name: item.ethnicity || '',
         marital_status_id: item.marital_status_id,
-        resident_type_id: item.resident_type_id,
         resident_status_id: item.resident_status_id,
     });
     editing.value = 'demographics';
@@ -1154,7 +1201,9 @@ function startSectionEdit(key) {
             previous_residence_5yrs_city_municipality: record.previous_residence_5yrs_city_municipality || '',
             date_of_transfer_in_brgy: record.date_of_transfer_in_brgy || '',
             reason_for_leaving_id: record.reason_for_leaving_id || '',
-            will_return_to_previous_residence: record.will_return_to_previous_residence ?? false,
+            will_return_to_previous_residence: record.will_return_to_previous_residence === true || record.will_return_to_previous_residence === false
+                ? record.will_return_to_previous_residence
+                : '',
             reason_for_transfer_id: record.reason_for_transfer_id || '',
             duration_of_stay: record.duration_of_stay || '',
         },
@@ -1236,6 +1285,14 @@ function preparePayload() {
         }
     }
 
+    if (editing.value === 'migration' && migrationClassification.value.nonMigrant) {
+        payload.date_of_transfer_in_brgy = null;
+        payload.reason_for_leaving_id = null;
+        payload.will_return_to_previous_residence = null;
+        payload.reason_for_transfer_id = null;
+        payload.duration_of_stay = null;
+    }
+
     if (editing.value === 'skills' && payload.skills_development_training) {
         payload.skills_development_training = titleCaseWords(payload.skills_development_training);
     }
@@ -1310,6 +1367,7 @@ async function handleSave() {
             delete payload.nationality_name;
             delete payload.religion_name;
             delete payload.ethnicity_name;
+            delete payload.resident_type_id;
 
             await residentService.updateResident(id, payload);
         } else if (editing.value === 'education') {
@@ -1392,7 +1450,6 @@ async function loadLookups() {
         religion,
         ethnicity,
         maritalStatus,
-        residentType,
         residentStatus,
         highestLvlOfEduc,
         currentEnrollmentStatus,
@@ -1410,6 +1467,7 @@ async function loadLookups() {
         reasonForLeaving,
         reasonForTransfer,
         skillType,
+        locationProfile,
     ] = await Promise.all([
         lookupService.fetchLookup('sex'),
         lookupService.fetchLookup('relationship-to-hh'),
@@ -1417,7 +1475,6 @@ async function loadLookups() {
         lookupService.fetchReligions(),
         lookupService.fetchEthnicities(),
         lookupService.fetchLookup('marital-status'),
-        lookupService.fetchLookup('resident-type'),
         lookupService.fetchLookup('resident-status'),
         lookupService.fetchLookup('highest-lvl-of-educ'),
         lookupService.fetchLookup('current-enrollment-status'),
@@ -1435,6 +1492,7 @@ async function loadLookups() {
         lookupService.fetchLookup('reason-for-leaving'),
         lookupService.fetchLookup('reason-for-transfer'),
         lookupService.fetchLookup('skill-type'),
+        householdService.fetchLocationProfile(),
     ]);
 
     lookups.sex = sex;
@@ -1443,7 +1501,6 @@ async function loadLookups() {
     lookups.religion = religion;
     lookups.ethnicity = ethnicity;
     lookups.maritalStatus = maritalStatus;
-    lookups.residentType = residentType;
     lookups.residentStatus = residentStatus;
     lookups.highestLvlOfEduc = highestLvlOfEduc;
     lookups.currentEnrollmentStatus = currentEnrollmentStatus;
@@ -1461,6 +1518,8 @@ async function loadLookups() {
     lookups.reasonForLeaving = reasonForLeaving;
     lookups.reasonForTransfer = reasonForTransfer;
     lookups.skillType = skillType;
+    location.barangay = locationProfile?.barangay ?? '';
+    location.city = locationProfile?.city ?? '';
 }
 
 async function loadResident() {

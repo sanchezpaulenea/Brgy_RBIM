@@ -63,6 +63,7 @@
             </p>
             <p class="mt-1 text-xs text-slate-500">
                 Fields marked with <span class="rbim-required">*</span> are required.
+                Continue saves this resident, then education through skills can be filled or skipped.
                 This resident will be added to {{ householdLabel }}.
             </p>
 
@@ -94,7 +95,6 @@
                         :religions="religions"
                         :ethnicities="ethnicities"
                         :marital-statuses="maritalStatuses"
-                        :resident-types="residentTypes"
                         :lookup-limit="lookupLimit"
                         :preferred-lookup-ids="preferredLookupIds"
                         :id-prefix="idPrefix"
@@ -108,9 +108,23 @@
                     <button type="submit" class="rbim-btn" :disabled="saving">
                         {{ saveButtonLabel }}
                     </button>
+                    <button v-if="showBack" type="button" class="rbim-btn-outline" :disabled="saving" @click="emit('back')">
+                        Back
+                    </button>
                 </div>
             </form>
         </article>
+
+        <ResidentSectionWizard
+            v-else-if="step === 'sections' && createdResident"
+            :key="createdResident.resident_id"
+            :resident="createdResident"
+            :lookups="profilingLookups"
+            :location="profilingLookups.location"
+            :title="sectionTitle"
+            :id-prefix="`${idPrefix}-section`"
+            @finished="completeMemberSections"
+        />
     </div>
 
     <ConfirmDialog
@@ -128,6 +142,7 @@
 import { computed, toRef, watch } from 'vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import ResidentDemographicsFields from '@/components/ResidentDemographicsFields.vue';
+import ResidentSectionWizard from '@/components/ResidentSectionWizard.vue';
 import {
     SEQUENTIAL_RESIDENT_MAX,
     useSequentialResidentRegistration,
@@ -160,10 +175,6 @@ const props = defineProps({
         default: () => [],
     },
     maritalStatuses: {
-        type: Array,
-        default: () => [],
-    },
-    residentTypes: {
         type: Array,
         default: () => [],
     },
@@ -211,6 +222,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    profilingLookups: {
+        type: Object,
+        default: () => ({}),
+    },
 });
 
 const emit = defineEmits(['finished', 'member-added', 'back', 'lookup-created']);
@@ -226,6 +241,7 @@ const {
     currentMember,
     member,
     memberErrors,
+    createdResident,
     confirm,
     memberRelationships,
     saveButtonLabel,
@@ -233,6 +249,7 @@ const {
     handleConfirmCancel,
     validateMemberName,
     handleSaveMember,
+    completeMemberSections,
     startCount,
 } = useSequentialResidentRegistration({
     getHouseholdId: () => props.household?.household_id,
@@ -252,8 +269,12 @@ function onLookupError({ field, message }) {
 
 const householdLabel = computed(() => householdDisplayLabel(props.household));
 
+const sectionTitle = computed(() => (
+    `Profile for member ${currentMember.value} of ${totalMembers.value}`
+));
+
 watch(() => props.household?.household_id, (householdId) => {
-    if (!householdId && step.value === 'members') {
+    if (!householdId && (step.value === 'members' || step.value === 'sections')) {
         startCount();
     }
 });

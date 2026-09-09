@@ -26,7 +26,6 @@ export function emptyResidentForm(overrides = {}) {
         ethnicity_id: '',
         ethnicity_name: '',
         marital_status_id: '',
-        resident_type_id: '',
         ...overrides,
     };
 }
@@ -149,12 +148,6 @@ export function validateResidentForm(form, errors, { requireRelationship = true,
         delete errors.marital_status_id;
     }
 
-    if (!toId(form.resident_type_id)) {
-        errors.resident_type_id = 'Resident type is required.';
-    } else {
-        delete errors.resident_type_id;
-    }
-
     return Object.keys(errors).length === 0;
 }
 
@@ -174,7 +167,6 @@ export function residentPayload(form) {
         religion_id: toId(form.religion_id),
         ethnicity_id: toId(form.ethnicity_id),
         marital_status_id: toId(form.marital_status_id),
-        resident_type_id: toId(form.resident_type_id),
     };
 }
 

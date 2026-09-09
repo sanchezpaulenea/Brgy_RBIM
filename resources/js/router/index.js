@@ -156,13 +156,7 @@ const routes = [
     },
     {
         path: '/residents/verification',
-        name: 'resident-verification',
-        component: () => import('@/pages/residents/ResidentsPage.vue'),
-        meta: {
-            requiresAuth: true,
-            requiresPermissions: ['resident.view'],
-            verificationMonitoring: true,
-        },
+        redirect: { name: 'residents' },
     },
     {
         path: '/residents/register',
