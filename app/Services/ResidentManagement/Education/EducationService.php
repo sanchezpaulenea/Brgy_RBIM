@@ -6,6 +6,7 @@ use App\Models\Logs\Action;
 use App\Models\ResidentManagement\Demographic\Resident;
 use App\Models\ResidentManagement\Education\CurrentEnrollmentStatus;
 use App\Models\ResidentManagement\Education\Education;
+use App\Models\ResidentManagement\Education\SchoolLvl;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Education\EducationRepositoryInterface;
@@ -139,6 +140,16 @@ class EducationService
 
         $data['place_of_school_brgy'] = null;
         $data['place_of_school_city_municipality'] = null;
+
+        $notApplicableId = SchoolLvl::notApplicableId();
+
+        if ($notApplicableId === null) {
+            throw ValidationException::withMessages([
+                'school_lvl_id' => ['The Not Applicable school level lookup is missing.'],
+            ]);
+        }
+
+        $data['school_lvl_id'] = $notApplicableId;
 
         return $data;
     }

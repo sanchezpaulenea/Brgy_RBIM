@@ -1294,7 +1294,7 @@ CREATE TABLE IF NOT EXISTS `school_lvl` (
   `school_lvl_id` int NOT NULL AUTO_INCREMENT,
   `school_lvl` varchar(45) NOT NULL,
   PRIMARY KEY (`school_lvl_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `school_lvl`
@@ -1306,7 +1306,8 @@ INSERT INTO `school_lvl` (`school_lvl_id`, `school_lvl`) VALUES
 (3, 'Junior High School'),
 (4, 'Senior High School'),
 (5, 'Vocational/Technical'),
-(6, 'College/University');
+(6, 'College/University'),
+(7, 'Not Applicable');
 
 -- --------------------------------------------------------
 

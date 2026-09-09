@@ -4,10 +4,13 @@ import { classifyMigrationForm } from '@/utils/migration';
 import { toId } from '@/utils/residentForm';
 import {
     firstLookupId,
+    hasDisability,
     isActiveWorkStatus,
     isEnrollmentStatusEnrolled,
     isFamilyPlanningNone,
+    isNotApplicableSchoolLvl,
     lookupById,
+    notApplicableSchoolLvlId,
     resolveApplicableSections,
     sociocivicFieldRelevance,
     titleCaseWords,
@@ -63,8 +66,10 @@ export function emptySectionForm(key) {
             facility_visited_past_12mos_id: '',
             facility_visit_reason_id: '',
             disability: '',
+            pwd_id_number: '',
         },
         women_health: {
+            number_pregnancies: '',
             living_children: '',
             family_planning_method_id: '',
             source_of_fp_method_id: '',
@@ -238,6 +243,10 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
             requiredSelect(form, errors, 'school_lvl_id', 'School level is required.');
             requiredPlace(form, errors, 'place_of_school_brgy', 'School barangay');
             requiredPlace(form, errors, 'place_of_school_city_municipality', 'School city / municipality');
+
+            if (isNotApplicableSchoolLvl(lookupById(lookups.schoolLvl, form.school_lvl_id))) {
+                errors.school_lvl_id = 'School level is required.';
+            }
         }
     }
 
@@ -275,9 +284,16 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
         } else {
             delete errors.disability;
         }
+
+        if (hasDisability(disability)) {
+            requiredInteger(form, errors, 'pwd_id_number', 'PWD ID number is required.', { min: 1 });
+        } else {
+            delete errors.pwd_id_number;
+        }
     }
 
     if (key === 'women_health') {
+        requiredInteger(form, errors, 'number_pregnancies', 'Number of pregnancies is required.');
         requiredInteger(form, errors, 'living_children', 'Living children is required.');
         requiredSelect(form, errors, 'family_planning_method_id', 'Family planning method is required.');
 
@@ -372,13 +388,21 @@ export function prepareSectionPayload(key, form, { lookups = {}, resident = {}, 
     )) {
         payload.place_of_school_brgy = null;
         payload.place_of_school_city_municipality = null;
-        payload.school_lvl_id = payload.school_lvl_id || firstLookupId(lookups.schoolLvl);
+        payload.school_lvl_id = notApplicableSchoolLvlId(lookups.schoolLvl);
     }
 
     if (key === 'economic' && !isActiveWorkStatus(
         lookupById(lookups.statusOfWorkBusiness, form.status_of_work_business_id),
     )) {
         payload.place_of_work_business = null;
+    }
+
+    if (key === 'health') {
+        if (hasDisability(form.disability)) {
+            payload.pwd_id_number = Number(form.pwd_id_number);
+        } else {
+            delete payload.pwd_id_number;
+        }
     }
 
     if (key === 'women_health' && isFamilyPlanningNone(
@@ -420,8 +444,14 @@ export function prepareSectionPayload(key, form, { lookups = {}, resident = {}, 
         payload.monthly_income = Number(payload.monthly_income);
     }
 
-    if (key === 'women_health' && payload.living_children !== null) {
-        payload.living_children = Number(payload.living_children);
+    if (key === 'women_health') {
+        if (payload.number_pregnancies !== null) {
+            payload.number_pregnancies = Number(payload.number_pregnancies);
+        }
+
+        if (payload.living_children !== null) {
+            payload.living_children = Number(payload.living_children);
+        }
     }
 
     return payload;

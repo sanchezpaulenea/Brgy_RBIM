@@ -4,6 +4,7 @@ namespace App\Http\Requests\ResidentManagement\Education;
 
 use App\Http\Requests\Concerns\TitleCasesAttributes;
 use App\Models\ResidentManagement\Education\CurrentEnrollmentStatus;
+use App\Models\ResidentManagement\Education\SchoolLvl;
 use App\Rules\ValidPlaceName;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -42,7 +43,12 @@ class StoreEducationRequest extends FormRequest
                 'integer',
                 Rule::exists('current_enrollment_status', 'current_enrollment_status_id'),
             ],
-            'school_lvl_id' => ['required', 'integer', Rule::exists('school_lvl', 'school_lvl_id')],
+            'school_lvl_id' => [
+                Rule::requiredIf(fn () => $this->isCurrentlyEnrolled()),
+                'nullable',
+                'integer',
+                Rule::exists('school_lvl', 'school_lvl_id'),
+            ],
             'place_of_school_brgy' => ['nullable', 'string', 'max:45', new ValidPlaceName('School barangay')],
             'place_of_school_city_municipality' => [
                 'nullable',
@@ -85,6 +91,14 @@ class StoreEducationRequest extends FormRequest
                     return;
                 }
 
+                $schoolLvl = SchoolLvl::query()
+                    ->where('school_lvl_id', $this->input('school_lvl_id'))
+                    ->first();
+
+                if ($schoolLvl === null || $schoolLvl->indicatesNotApplicable()) {
+                    $validator->errors()->add('school_lvl_id', 'School level is required when the resident is enrolled.');
+                }
+
                 if (! is_string($this->input('place_of_school_brgy')) || trim((string) $this->input('place_of_school_brgy')) === '') {
                     $validator->errors()->add('place_of_school_brgy', 'School barangay is required when the resident is enrolled.');
                 }
@@ -97,5 +111,20 @@ class StoreEducationRequest extends FormRequest
                 }
             },
         ];
+    }
+
+    private function isCurrentlyEnrolled(): bool
+    {
+        $statusId = (int) $this->input('current_enrollement_status_id');
+
+        if ($statusId === 0) {
+            return false;
+        }
+
+        $status = CurrentEnrollmentStatus::query()
+            ->where('current_enrollment_status_id', $statusId)
+            ->first();
+
+        return $status !== null && ! $status->isNotEnrolled();
     }
 }

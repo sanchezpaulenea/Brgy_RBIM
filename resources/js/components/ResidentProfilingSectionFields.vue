@@ -43,7 +43,7 @@
                         :class="{ 'rbim-input-error': errors.school_lvl_id }"
                     >
                         <option value="">Select</option>
-                        <option v-for="option in lookups.schoolLvl" :key="option.id" :value="option.id">{{ option.label }}</option>
+                        <option v-for="option in enrolledSchoolLevels" :key="option.id" :value="option.id">{{ option.label }}</option>
                     </select>
                     <p v-if="errors.school_lvl_id" class="rbim-error">{{ errors.school_lvl_id }}</p>
                 </div>
@@ -241,12 +241,43 @@
                     maxlength="45"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.disability }"
+                    placeholder="Leave blank or None if not applicable"
                 >
                 <p v-if="errors.disability" class="rbim-error">{{ errors.disability }}</p>
+            </div>
+            <div v-if="healthHasDisability">
+                <label class="rbim-label" :for="`${idPrefix}-pwd_id_number`">
+                    PWD ID Number<span class="rbim-required" aria-hidden="true">*</span>
+                </label>
+                <input
+                    :id="`${idPrefix}-pwd_id_number`"
+                    v-model="form.pwd_id_number"
+                    type="number"
+                    min="1"
+                    step="1"
+                    inputmode="numeric"
+                    class="rbim-input"
+                    :class="{ 'rbim-input-error': errors.pwd_id_number }"
+                >
+                <p v-if="errors.pwd_id_number" class="rbim-error">{{ errors.pwd_id_number }}</p>
             </div>
         </template>
 
         <template v-else-if="section === 'women_health'">
+            <div>
+                <label class="rbim-label" :for="`${idPrefix}-number_pregnancies`">
+                    Number of Pregnancies<span class="rbim-required" aria-hidden="true">*</span>
+                </label>
+                <input
+                    :id="`${idPrefix}-number_pregnancies`"
+                    v-model="form.number_pregnancies"
+                    type="number"
+                    min="0"
+                    class="rbim-input"
+                    :class="{ 'rbim-input-error': errors.number_pregnancies }"
+                >
+                <p v-if="errors.number_pregnancies" class="rbim-error">{{ errors.number_pregnancies }}</p>
+            </div>
             <div>
                 <label class="rbim-label" :for="`${idPrefix}-living_children`">
                     Living Children<span class="rbim-required" aria-hidden="true">*</span>
@@ -603,9 +634,11 @@ import { computed } from 'vue';
 import BirthDateField from '@/components/BirthDateField.vue';
 import { classifyMigrationForm } from '@/utils/migration';
 import {
+    hasDisability,
     isActiveWorkStatus,
     isEnrollmentStatusEnrolled,
     isFamilyPlanningNone,
+    isNotApplicableSchoolLvl,
     lookupById,
     sociocivicFieldRelevance,
 } from '@/utils/residentProfiling';
@@ -647,6 +680,10 @@ const educationEnrolled = computed(() => (
     isEnrollmentStatusEnrolled(lookupById(props.lookups.currentEnrollmentStatus, props.form.current_enrollement_status_id))
 ));
 
+const enrolledSchoolLevels = computed(() => (
+    (props.lookups.schoolLvl ?? []).filter((option) => !isNotApplicableSchoolLvl(option))
+));
+
 const economicActiveWork = computed(() => (
     isActiveWorkStatus(lookupById(props.lookups.statusOfWorkBusiness, props.form.status_of_work_business_id))
 ));
@@ -654,6 +691,8 @@ const economicActiveWork = computed(() => (
 const familyPlanningIsNone = computed(() => (
     isFamilyPlanningNone(lookupById(props.lookups.familyPlanningMethod, props.form.family_planning_method_id))
 ));
+
+const healthHasDisability = computed(() => hasDisability(props.form.disability));
 
 const sociocivicRelevance = computed(() => sociocivicFieldRelevance(props.resident));
 

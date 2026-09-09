@@ -18,6 +18,7 @@ class StoreWomenHealthRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'number_pregnancies' => ['required', 'integer', 'min:0'],
             'living_children' => ['required', 'integer', 'min:0'],
             'family_planning_method_id' => [
                 'required',
@@ -39,6 +40,9 @@ class StoreWomenHealthRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'number_pregnancies.required' => 'Number of pregnancies is required.',
+            'number_pregnancies.integer' => 'Number of pregnancies must be numeric.',
+            'living_children.required' => 'Living children is required.',
             'living_children.integer' => 'Living children must be numeric.',
             'family_planning_method_id.exists' => 'The selected family planning method does not exist.',
             'source_of_fp_method_id.exists' => 'The selected source of family planning method does not exist.',

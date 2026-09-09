@@ -78,6 +78,7 @@ class WomenHealthService
 
         $previous = $this->auditSnapshot($womenHealth);
         $data = $this->applyFamilyPlanningRules(array_merge($womenHealth->only([
+            'number_pregnancies',
             'living_children',
             'family_planning_method_id',
             'source_of_fp_method_id',
@@ -112,6 +113,7 @@ class WomenHealthService
             'women_health_id' => $womenHealth->women_health_id,
             'health_id' => $womenHealth->health_id,
             'resident_id' => $womenHealth->health?->resident_id,
+            'number_pregnancies' => $womenHealth->number_pregnancies,
             'living_children' => $womenHealth->living_children,
             'family_planning_method_id' => $womenHealth->family_planning_method_id,
             'family_planning_method' => $womenHealth->familyPlanningMethod?->family_planning_method,
@@ -164,6 +166,7 @@ class WomenHealthService
         $womenHealth->loadMissing(['familyPlanningMethod', 'sourceOfFpMethod']);
 
         return [
+            'number of pregnancies' => (string) $womenHealth->number_pregnancies,
             'living children' => (string) $womenHealth->living_children,
             'family planning method' => (string) ($womenHealth->familyPlanningMethod?->family_planning_method ?? $womenHealth->family_planning_method_id),
             'source of fp method' => (string) ($womenHealth->sourceOfFpMethod?->source_of_fp_method ?? $womenHealth->source_of_fp_method_id),

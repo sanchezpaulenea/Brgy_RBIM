@@ -22,6 +22,7 @@ class UpdateWomenHealthRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'number_pregnancies' => ['sometimes', 'required', 'integer', 'min:0'],
             'living_children' => ['sometimes', 'required', 'integer', 'min:0'],
             'family_planning_method_id' => [
                 'sometimes',
@@ -44,6 +45,7 @@ class UpdateWomenHealthRequest extends FormRequest
         return [
             function (Validator $validator): void {
                 $this->requireAtLeastOne($validator, [
+                    'number_pregnancies',
                     'living_children',
                     'family_planning_method_id',
                     'source_of_fp_method_id',

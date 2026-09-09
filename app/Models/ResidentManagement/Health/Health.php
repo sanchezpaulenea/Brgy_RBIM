@@ -6,9 +6,18 @@ use App\Models\ResidentManagement\Demographic\Resident;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 
 class Health extends Model
 {
+    /**
+     * Sentinel stored when the resident has no disability / no PWD ID.
+     *
+     * health.pwd_id_number is INT NOT NULL with no DEFAULT, so NULL cannot
+     * be persisted without a schema change. 0 = not applicable / no PWD ID.
+     */
+    public const PWD_ID_NOT_APPLICABLE = 0;
+
     protected $table = 'health';
 
     protected $primaryKey = 'health_id';
@@ -20,12 +29,31 @@ class Health extends Model
         'facility_visited_past_12mos_id',
         'facility_visit_reason_id',
         'disability',
+        'pwd_id_number',
         'resident_id',
     ];
 
     public function getRouteKeyName(): string
     {
         return 'health_id';
+    }
+
+    /**
+     * True when disability is a real condition (not empty / "None").
+     */
+    public static function indicatesDisability(mixed $disability): bool
+    {
+        if (! is_string($disability)) {
+            return false;
+        }
+
+        $value = Str::of($disability)->squish()->lower()->toString();
+
+        if ($value === '') {
+            return false;
+        }
+
+        return ! (bool) preg_match('/^(none|n\/a|n\.a\.?|na|not applicable)$/', $value);
     }
 
     /**

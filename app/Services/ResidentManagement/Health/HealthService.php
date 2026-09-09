@@ -34,6 +34,7 @@ class HealthService
         }
 
         $data['resident_id'] = $resident->resident_id;
+        $data = $this->applyPwdIdNumber($data);
 
         return DB::transaction(function () use ($performedBy, $data) {
             $health = $this->healthRepository->create($data);
@@ -60,6 +61,7 @@ class HealthService
     public function update(User $performedBy, Health $health, array $data): array
     {
         $previous = $this->auditSnapshot($health);
+        $data = $this->applyPwdIdNumber($data, $health);
 
         return DB::transaction(function () use ($performedBy, $health, $data, $previous) {
             $updated = $this->healthRepository->update($health, $data);
@@ -98,7 +100,32 @@ class HealthService
             'facility_visit_reason_id' => $health->facility_visit_reason_id,
             'facility_visit_reason' => $health->facilityVisitReason?->facility_visit_reason,
             'disability' => $health->disability,
+            'pwd_id_number' => $health->pwd_id_number === Health::PWD_ID_NOT_APPLICABLE
+                ? null
+                : $health->pwd_id_number,
         ];
+    }
+
+    /**
+     * health.pwd_id_number is INT NOT NULL with no DEFAULT. A real PWD ID is
+     * only collected when the resident has a disability. When disability is
+     * empty or "None", 0 is stored as "not applicable / no PWD ID" because
+     * NULL is not allowed without a schema change.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function applyPwdIdNumber(array $data, ?Health $existing = null): array
+    {
+        $disability = array_key_exists('disability', $data)
+            ? $data['disability']
+            : $existing?->disability;
+
+        if (! Health::indicatesDisability($disability)) {
+            $data['pwd_id_number'] = Health::PWD_ID_NOT_APPLICABLE;
+        }
+
+        return $data;
     }
 
     /**
@@ -117,6 +144,9 @@ class HealthService
             'facility visited' => (string) ($health->facilityVisitedPast12Mos?->facility_visited_past_12mos ?? $health->facility_visited_past_12mos_id),
             'visit reason' => (string) ($health->facilityVisitReason?->facility_visit_reason ?? $health->facility_visit_reason_id),
             'disability' => (string) ($health->disability ?? ''),
+            'pwd id number' => $health->pwd_id_number === Health::PWD_ID_NOT_APPLICABLE
+                ? 'N/A'
+                : (string) $health->pwd_id_number,
         ];
     }
 }

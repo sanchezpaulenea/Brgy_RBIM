@@ -5,6 +5,7 @@ namespace App\Http\Requests\ResidentManagement\Education;
 use App\Http\Requests\Concerns\RequiresAtLeastOneField;
 use App\Http\Requests\Concerns\TitleCasesAttributes;
 use App\Models\ResidentManagement\Education\CurrentEnrollmentStatus;
+use App\Models\ResidentManagement\Education\SchoolLvl;
 use App\Rules\ValidPlaceName;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -84,6 +85,16 @@ class UpdateEducationRequest extends FormRequest
 
                 if ($status === null || $status->isNotEnrolled()) {
                     return;
+                }
+
+                $schoolLvlId = $this->input('school_lvl_id')
+                    ?? $this->route('education')?->school_lvl_id;
+                $schoolLvl = SchoolLvl::query()
+                    ->where('school_lvl_id', $schoolLvlId)
+                    ->first();
+
+                if ($schoolLvl === null || $schoolLvl->indicatesNotApplicable()) {
+                    $validator->errors()->add('school_lvl_id', 'School level is required when the resident is enrolled.');
                 }
 
                 $brgy = $this->exists('place_of_school_brgy')

@@ -166,6 +166,32 @@ export function isFamilyPlanningNone(option) {
     return /\bnone\b/i.test(String(option.label ?? ''));
 }
 
+export function isNotApplicableSchoolLvl(option) {
+    const text = String(option?.label ?? option ?? '').trim().toLowerCase();
+
+    return /^(none|n\/a|n\.a\.?|na|not applicable)$/.test(text);
+}
+
+export function notApplicableSchoolLvlId(options) {
+    const match = (options ?? []).find((option) => isNotApplicableSchoolLvl(option));
+
+    return match?.id ?? null;
+}
+
+/**
+ * True when disability is a real condition (not empty / "None").
+ * Mirrors Health::indicatesDisability().
+ */
+export function hasDisability(value) {
+    const text = String(value ?? '').trim().toLowerCase();
+
+    if (text === '') {
+        return false;
+    }
+
+    return !/^(none|n\/a|n\.a\.?|na|not applicable)$/.test(text);
+}
+
 export function isActiveWorkStatus(option) {
     if (!option) {
         return false;

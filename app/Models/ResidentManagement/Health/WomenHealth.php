@@ -14,6 +14,7 @@ class WomenHealth extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'number_pregnancies',
         'living_children',
         'family_planning_method_id',
         'source_of_fp_method_id',

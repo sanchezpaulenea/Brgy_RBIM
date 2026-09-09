@@ -225,7 +225,7 @@
                                         :class="{ 'rbim-input-error': editErrors.school_lvl_id }"
                                     >
                                         <option value="">Select</option>
-                                        <option v-for="option in lookups.schoolLvl" :key="option.id" :value="option.id">{{ option.label }}</option>
+                                        <option v-for="option in enrolledSchoolLevels" :key="option.id" :value="option.id">{{ option.label }}</option>
                                     </select>
                                     <p v-if="editErrors.school_lvl_id" class="rbim-error">{{ editErrors.school_lvl_id }}</p>
                                 </div>
@@ -347,59 +347,30 @@
                     </template>
 
                     <template v-else-if="editing === 'health'">
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <div>
-                                <label class="rbim-label">Health Insurance<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <select
-                                    v-model="editForm.health_insurance_id"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.health_insurance_id }"
-                                >
-                                    <option value="">Select</option>
-                                    <option v-for="option in lookups.healthInsurance" :key="option.id" :value="option.id">{{ option.label }}</option>
-                                </select>
-                                <p v-if="editErrors.health_insurance_id" class="rbim-error">{{ editErrors.health_insurance_id }}</p>
-                            </div>
-                            <div>
-                                <label class="rbim-label">Facility Visited Past 12 Months<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <select
-                                    v-model="editForm.facility_visited_past_12mos_id"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.facility_visited_past_12mos_id }"
-                                >
-                                    <option value="">Select</option>
-                                    <option v-for="option in lookups.facilityVisited" :key="option.id" :value="option.id">{{ option.label }}</option>
-                                </select>
-                                <p v-if="editErrors.facility_visited_past_12mos_id" class="rbim-error">{{ editErrors.facility_visited_past_12mos_id }}</p>
-                            </div>
-                            <div>
-                                <label class="rbim-label">Facility Visit Reason<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <select
-                                    v-model="editForm.facility_visit_reason_id"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.facility_visit_reason_id }"
-                                >
-                                    <option value="">Select</option>
-                                    <option v-for="option in lookups.facilityVisitReason" :key="option.id" :value="option.id">{{ option.label }}</option>
-                                </select>
-                                <p v-if="editErrors.facility_visit_reason_id" class="rbim-error">{{ editErrors.facility_visit_reason_id }}</p>
-                            </div>
-                            <div>
-                                <label class="rbim-label">Disability</label>
-                                <input
-                                    v-model="editForm.disability"
-                                    type="text"
-                                    maxlength="45"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.disability }"
-                                >
-                                <p v-if="editErrors.disability" class="rbim-error">{{ editErrors.disability }}</p>
-                            </div>
-                        </div>
+                        <ResidentProfilingSectionFields
+                            section="health"
+                            :form="editForm"
+                            :errors="editErrors"
+                            :lookups="lookups"
+                            :resident="resident"
+                            :location="location"
+                            id-prefix="resident-edit-health"
+                        />
                     </template>
 
                     <template v-else-if="editing === 'women_health'">
                         <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="rbim-label">Number of Pregnancies<span class="rbim-required" aria-hidden="true">*</span></label>
+                                <input
+                                    v-model="editForm.number_pregnancies"
+                                    type="number"
+                                    min="0"
+                                    class="rbim-input"
+                                    :class="{ 'rbim-input-error': editErrors.number_pregnancies }"
+                                >
+                                <p v-if="editErrors.number_pregnancies" class="rbim-error">{{ editErrors.number_pregnancies }}</p>
+                            </div>
                             <div>
                                 <label class="rbim-label">Living Children<span class="rbim-required" aria-hidden="true">*</span></label>
                                 <input
@@ -723,6 +694,7 @@ import BirthDateField from '@/components/BirthDateField.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import PageTabs from '@/components/PageTabs.vue';
 import ResidentDemographicsFields from '@/components/ResidentDemographicsFields.vue';
+import ResidentProfilingSectionFields from '@/components/ResidentProfilingSectionFields.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useSectionTabs } from '@/composables/useSectionTabs';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
@@ -735,15 +707,16 @@ import { ageFromDateOfBirth } from '@/utils/format';
 import {
     canPerformCreate,
     canPerformUpdate,
+    hasDisability,
     isActiveWorkStatus,
     isEnrollmentStatusEnrolled,
     isFamilyPlanningNone,
+    isNotApplicableSchoolLvl,
     lookupById,
-    NON_SOLO_PARENT_STATUS_ID,
     resolveApplicableSections,
     sociocivicFieldRelevance,
-    titleCaseWords,
 } from '@/utils/residentProfiling';
+import { prepareSectionPayload, validateSectionForm } from '@/utils/residentSectionForm';
 
 const route = useRoute();
 const { residentTabs } = useSectionTabs();
@@ -811,6 +784,10 @@ const relationshipOptions = computed(() => {
 
 const educationEnrolled = computed(() => (
     isEnrollmentStatusEnrolled(lookupById(lookups.currentEnrollmentStatus, editForm.current_enrollement_status_id))
+));
+
+const enrolledSchoolLevels = computed(() => (
+    (lookups.schoolLvl ?? []).filter((option) => !isNotApplicableSchoolLvl(option))
 ));
 
 const economicActiveWork = computed(() => (
@@ -979,13 +956,20 @@ function displayEducation(record) {
         return [];
     }
 
-    return [
+    const fields = [
         { label: 'Highest Level of Education', value: record.highest_lvl_of_educ || '—' },
         { label: 'Current Enrollment Status', value: record.current_enrollment_status || '—' },
         { label: 'School Level', value: record.school_lvl || '—' },
-        { label: 'School Barangay', value: record.place_of_school_brgy || '—' },
-        { label: 'School City / Municipality', value: record.place_of_school_city_municipality || '—' },
     ];
+
+    if (!isNotApplicableSchoolLvl(record.school_lvl)) {
+        fields.push(
+            { label: 'School Barangay', value: record.place_of_school_brgy || '—' },
+            { label: 'School City / Municipality', value: record.place_of_school_city_municipality || '—' },
+        );
+    }
+
+    return fields;
 }
 
 function displayEconomic(record) {
@@ -1022,7 +1006,11 @@ function displayHealth(record) {
         { label: 'Health Insurance', value: record.health_insurance || '—' },
         { label: 'Facility Visited Past 12 Months', value: record.facility_visited_past_12mos || '—' },
         { label: 'Facility Visit Reason', value: record.facility_visit_reason || '—' },
-        { label: 'Disability', value: record.disability || '—' },
+        { label: 'Disability', value: record.disability || 'None' },
+        {
+            label: 'PWD ID Number',
+            value: hasDisability(record.disability) ? (record.pwd_id_number || '—') : 'N/A',
+        },
     ];
 }
 
@@ -1032,6 +1020,7 @@ function displayWomenHealth(record) {
     }
 
     return [
+        { label: 'Number of Pregnancies', value: record.number_pregnancies ?? '—' },
         { label: 'Living Children', value: record.living_children ?? '—' },
         { label: 'Family Planning Method', value: record.family_planning_method || '—' },
         { label: 'Source of Family Planning Method', value: record.source_of_fp_method || '—' },
@@ -1182,8 +1171,10 @@ function startSectionEdit(key) {
             facility_visited_past_12mos_id: record.facility_visited_past_12mos_id || '',
             facility_visit_reason_id: record.facility_visit_reason_id || '',
             disability: record.disability || '',
+            pwd_id_number: hasDisability(record.disability) && record.pwd_id_number ? record.pwd_id_number : '',
         },
         women_health: {
+            number_pregnancies: record.number_pregnancies ?? '',
             living_children: record.living_children ?? '',
             family_planning_method_id: record.family_planning_method_id || '',
             source_of_fp_method_id: record.source_of_fp_method_id || '',
@@ -1241,63 +1232,16 @@ function toPayload(form) {
     return payload;
 }
 
-function firstLookupId(options) {
-    return options[0]?.id ?? null;
-}
-
-function nonSoloParentId() {
-    const match = lookups.soloParentStatus.find((option) => /non[- ]solo/i.test(String(option.label ?? '')));
-
-    return match?.id ?? NON_SOLO_PARENT_STATUS_ID;
-}
-
 function preparePayload() {
-    const payload = toPayload(editForm);
-
-    if (editing.value === 'education' && !educationEnrolled.value) {
-        payload.place_of_school_brgy = null;
-        payload.place_of_school_city_municipality = null;
-        payload.school_lvl_id = payload.school_lvl_id || firstLookupId(lookups.schoolLvl);
+    if (editing.value === 'demographics') {
+        return toPayload(editForm);
     }
 
-    if (editing.value === 'economic' && !economicActiveWork.value) {
-        payload.place_of_work_business = null;
-    }
-
-    if (editing.value === 'women_health' && familyPlanningIsNone.value) {
-        payload.have_intention_to_use_fp = false;
-        payload.source_of_fp_method_id = payload.source_of_fp_method_id || firstLookupId(lookups.sourceOfFpMethod);
-    }
-
-    if (editing.value === 'sociocivic') {
-        const relevance = sociocivicRelevance.value;
-
-        if (!relevance.solo_parent) {
-            payload.solo_parent_status_id = nonSoloParentId();
-        }
-
-        if (!relevance.senior_citizen) {
-            payload.registered_sen_citizen = false;
-        }
-
-        if (!relevance.barangay_voter) {
-            payload.registered_barangay_voter = null;
-        }
-    }
-
-    if (editing.value === 'migration' && migrationClassification.value.nonMigrant) {
-        payload.date_of_transfer_in_brgy = null;
-        payload.reason_for_leaving_id = null;
-        payload.will_return_to_previous_residence = null;
-        payload.reason_for_transfer_id = null;
-        payload.duration_of_stay = null;
-    }
-
-    if (editing.value === 'skills' && payload.skills_development_training) {
-        payload.skills_development_training = titleCaseWords(payload.skills_development_training);
-    }
-
-    return payload;
+    return prepareSectionPayload(editing.value, editForm, {
+        lookups,
+        resident: resident.value,
+        location,
+    });
 }
 
 function isCreatingSection() {
@@ -1329,6 +1273,18 @@ async function handleSave() {
         delete editErrors[key];
     });
     editError.value = '';
+
+    if (editing.value && editing.value !== 'demographics') {
+        const valid = validateSectionForm(editing.value, editForm, editErrors, {
+            lookups,
+            resident: resident.value,
+            location,
+        });
+
+        if (!valid) {
+            return;
+        }
+    }
 
     if (editing.value === 'demographics' && resident.value.is_household_head) {
         const age = ageFromDateOfBirth(editForm.date_of_birth);
