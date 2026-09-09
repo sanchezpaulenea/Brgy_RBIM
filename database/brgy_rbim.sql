@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Sep 09, 2026 at 06:56 PM
+-- Generation Time: Sep 09, 2026 at 09:57 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -249,6 +249,30 @@ INSERT INTO `current_enrollment_status` (`current_enrollment_status_id`, `curren
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `disability`
+--
+
+DROP TABLE IF EXISTS `disability`;
+CREATE TABLE IF NOT EXISTS `disability` (
+  `disability_id` int NOT NULL AUTO_INCREMENT,
+  `disability` varchar(45) NOT NULL,
+  PRIMARY KEY (`disability_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `disability`
+--
+
+INSERT INTO `disability` (`disability_id`, `disability`) VALUES
+(1, 'Visual'),
+(2, 'Physical'),
+(3, 'Deaf'),
+(4, 'Speech/Language Impairment'),
+(5, 'Psychosocial');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `economic`
 --
 
@@ -404,14 +428,15 @@ CREATE TABLE IF NOT EXISTS `health` (
   `health_insurance_id` int NOT NULL,
   `facility_visited_past_12mos_id` int NOT NULL,
   `facility_visit_reason_id` int NOT NULL,
-  `disability` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `pwd_id_number` int NOT NULL,
+  `disability_id` int NOT NULL,
+  `pwd_id_number` int DEFAULT NULL,
   `resident_id` int NOT NULL,
   PRIMARY KEY (`health_id`),
   KEY `residenthealth` (`resident_id`),
   KEY `facilityvisited` (`facility_visited_past_12mos_id`),
   KEY `facilityvisitreason` (`facility_visit_reason_id`),
-  KEY `healthinsurance` (`health_insurance_id`)
+  KEY `healthinsurance` (`health_insurance_id`),
+  KEY `disability` (`disability_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -1394,8 +1419,8 @@ CREATE TABLE IF NOT EXISTS `sociocivic` (
   `sociocivic_id` int NOT NULL AUTO_INCREMENT,
   `solo_parent_status_id` int NOT NULL,
   `registered_sen_citizen` tinyint(1) NOT NULL,
-  `ncsc_rrn_id_number` int NOT NULL,
-  `osca_id_number` int NOT NULL,
+  `ncsc_rrn_id_number` varchar(45) DEFAULT NULL,
+  `osca_id_number` varchar(45) DEFAULT NULL,
   `registered_barangay_voter` varchar(45) DEFAULT NULL,
   `resident_id` int NOT NULL,
   PRIMARY KEY (`sociocivic_id`),
@@ -1742,6 +1767,7 @@ ALTER TABLE `education`
 -- Constraints for table `health`
 --
 ALTER TABLE `health`
+  ADD CONSTRAINT `disability` FOREIGN KEY (`disability_id`) REFERENCES `disability` (`disability_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `facilityvisited` FOREIGN KEY (`facility_visited_past_12mos_id`) REFERENCES `facility_visited_past_12mos` (`facility_visited_past_12mos_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `facilityvisitreason` FOREIGN KEY (`facility_visit_reason_id`) REFERENCES `facility_visit_reason` (`facility_visit_reason_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `healthinsurance` FOREIGN KEY (`health_insurance_id`) REFERENCES `health_insurance` (`health_insurance_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
