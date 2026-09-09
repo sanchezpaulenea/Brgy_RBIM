@@ -45,8 +45,18 @@ class MigrationClassifier
         mixed $currentBrgy,
         mixed $currentCity,
     ): bool {
-        return self::placesMatch($previousBrgy, $currentBrgy)
-            && self::placesMatch($previousCity, $currentCity);
+        if (! self::placesMatch($previousCity, $currentCity)) {
+            return false;
+        }
+
+        $previousBarangay = self::comparablePlace($previousBrgy);
+        $currentBarangay = self::comparablePlace($currentBrgy);
+
+        if ($previousBarangay === '' || $currentBarangay === '') {
+            return true;
+        }
+
+        return $previousBarangay === $currentBarangay;
     }
 
     public static function lengthOfStayMonths(mixed $transferDate, ?CarbonInterface $asOf = null): ?int
@@ -76,8 +86,9 @@ class MigrationClassifier
     }
 
     /**
-     * Non-migrant when previous and current barangay + city match.
-     * Otherwise migrant at 6 months of stay, transient below that.
+     * Non-migrant when previous and current city match, and barangay
+     * matches whenever both sides provided it. Otherwise migrant at 6
+     * months of stay, transient below that.
      */
     public static function classify(bool $sameAddress, ?int $stayMonths): int
     {
@@ -143,6 +154,7 @@ class MigrationClassifier
             return '';
         }
 
+        $normalized = preg_replace('/^(brgy\.?|barangay)\s+/u', '', $normalized) ?? $normalized;
         $normalized = preg_replace('/\s+(city|municipality)$/u', '', $normalized) ?? $normalized;
 
         return trim($normalized);

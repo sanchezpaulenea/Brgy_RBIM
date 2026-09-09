@@ -17,6 +17,7 @@ class HealthRepository implements HealthRepositoryInterface
             'healthInsurance',
             'facilityVisitedPast12Mos',
             'facilityVisitReason',
+            'disabilityType',
             'womenHealth.familyPlanningMethod',
             'womenHealth.sourceOfFpMethod',
         ];

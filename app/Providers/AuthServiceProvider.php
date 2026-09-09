@@ -29,6 +29,7 @@ use App\Models\ResidentManagement\Education\CurrentEnrollmentStatus;
 use App\Models\ResidentManagement\Education\Education;
 use App\Models\ResidentManagement\Education\HighestLvlOfEduc;
 use App\Models\ResidentManagement\Education\SchoolLvl;
+use App\Models\ResidentManagement\Health\Disability;
 use App\Models\ResidentManagement\Health\BirthAttendant;
 use App\Models\ResidentManagement\Health\FacilityVisitedPast12Mos;
 use App\Models\ResidentManagement\Health\FacilityVisitReason;
@@ -64,6 +65,7 @@ use App\Policies\ResidentManagement\Demographic\ReligionPolicy;
 use App\Policies\ResidentManagement\Demographic\ResidentPolicy;
 use App\Policies\ResidentManagement\Economic\EconomicPolicy;
 use App\Policies\ResidentManagement\Education\EducationPolicy;
+use App\Policies\ResidentManagement\Health\DisabilityPolicy;
 use App\Policies\ResidentManagement\Health\HealthPolicy;
 use App\Policies\ResidentManagement\Health\InfantHealthPolicy;
 use App\Policies\ResidentManagement\Health\WomenHealthPolicy;
@@ -127,6 +129,7 @@ class AuthServiceProvider extends ServiceProvider
         HealthInsurance::class => ReferenceLookupPolicy::class,
         FacilityVisitedPast12Mos::class => ReferenceLookupPolicy::class,
         FacilityVisitReason::class => ReferenceLookupPolicy::class,
+        Disability::class => DisabilityPolicy::class,
         FamilyPlanningMethod::class => ReferenceLookupPolicy::class,
         SourceOfFPMethod::class => ReferenceLookupPolicy::class,
         SoloParentStatus::class => ReferenceLookupPolicy::class,

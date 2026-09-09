@@ -6,6 +6,7 @@ use App\Models\Logs\Action;
 use App\Models\ResidentManagement\Demographic\Resident;
 use App\Models\ResidentManagement\Education\CurrentEnrollmentStatus;
 use App\Models\ResidentManagement\Education\Education;
+use App\Models\ResidentManagement\Education\HighestLvlOfEduc;
 use App\Models\ResidentManagement\Education\SchoolLvl;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
@@ -46,6 +47,7 @@ class EducationService
         }
 
         $data['resident_id'] = $resident->resident_id;
+        $data = $this->applyAgeThresholds($resident, $data);
         $data = $this->applyEnrollmentRules($data);
 
         return DB::transaction(function () use ($performedBy, $data) {
@@ -72,14 +74,16 @@ class EducationService
      */
     public function update(User $performedBy, Education $education, array $data): array
     {
+        $education->loadMissing('resident');
         $previous = $this->auditSnapshot($education);
-        $data = $this->applyEnrollmentRules(array_merge($education->only([
+        $data = $this->applyAgeThresholds($education->resident, array_merge($education->only([
             'highest_lvl_of_educ_id',
             'current_enrollement_status_id',
             'school_lvl_id',
             'place_of_school_brgy',
             'place_of_school_city_municipality',
         ]), $data));
+        $data = $this->applyEnrollmentRules($data);
 
         return DB::transaction(function () use ($performedBy, $education, $data, $previous) {
             $updated = $this->educationRepository->update($education, $data);
@@ -102,7 +106,11 @@ class EducationService
      */
     public function formatRecord(Education $education): array
     {
-        $education->loadMissing($this->relations());
+        $education->loadMissing(array_merge($this->relations(), ['resident']));
+        $relevance = $education->resident?->educationFieldRelevance() ?? [
+            'highest_level' => false,
+            'enrollment' => false,
+        ];
 
         return [
             'education_id' => $education->education_id,
@@ -115,7 +123,54 @@ class EducationService
             'school_lvl' => $education->schoolLvl?->school_lvl,
             'place_of_school_brgy' => $education->place_of_school_brgy,
             'place_of_school_city_municipality' => $education->place_of_school_city_municipality,
+            'field_relevance' => $relevance,
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function applyAgeThresholds(?Resident $resident, array $data): array
+    {
+        $relevance = $resident?->educationFieldRelevance() ?? [
+            'highest_level' => false,
+            'enrollment' => false,
+        ];
+
+        if (! $relevance['highest_level']) {
+            $highestId = HighestLvlOfEduc::notApplicableId();
+
+            if ($highestId === null) {
+                throw ValidationException::withMessages([
+                    'highest_lvl_of_educ_id' => ['The Not Applicable highest level of education lookup is missing.'],
+                ]);
+            }
+
+            $data['highest_lvl_of_educ_id'] = $highestId;
+        }
+
+        if (! $relevance['enrollment']) {
+            $data['current_enrollement_status_id'] = CurrentEnrollmentStatus::NOT_ENROLLED;
+            $data['place_of_school_brgy'] = null;
+            $data['place_of_school_city_municipality'] = null;
+            $data['school_lvl_id'] = $this->notApplicableSchoolLvlId();
+        }
+
+        return $data;
+    }
+
+    private function notApplicableSchoolLvlId(): int
+    {
+        $id = SchoolLvl::notApplicableId();
+
+        if ($id !== null) {
+            return $id;
+        }
+
+        return (int) SchoolLvl::query()->create([
+            'school_lvl' => SchoolLvl::NOT_APPLICABLE,
+        ])->school_lvl_id;
     }
 
     /**

@@ -190,6 +190,42 @@ class Resident extends Model
         return $age !== null && $age >= 15;
     }
 
+    public function canHaveEducation(): bool
+    {
+        $age = $this->age();
+
+        return $age !== null && $age >= 3;
+    }
+
+    public function canHaveEconomic(): bool
+    {
+        $age = $this->age();
+
+        return $age !== null && $age >= 15;
+    }
+
+    public function canHaveSociocivic(): bool
+    {
+        $age = $this->age();
+
+        return $age !== null && $age >= 10;
+    }
+
+    /**
+     * Education fields that apply at the resident's current age.
+     *
+     * @return array{highest_level: bool, enrollment: bool}
+     */
+    public function educationFieldRelevance(): array
+    {
+        $age = $this->age();
+
+        return [
+            'highest_level' => $age !== null && $age >= 5,
+            'enrollment' => $age !== null && $age >= 3 && $age <= 24,
+        ];
+    }
+
     /**
      * Sociocivic fields that apply at the resident's current age.
      *
@@ -212,12 +248,12 @@ class Resident extends Model
     public function applicableSections(): array
     {
         return [
-            'education' => true,
-            'economic' => true,
+            'education' => $this->canHaveEducation(),
+            'economic' => $this->canHaveEconomic(),
             'infant_health' => $this->canHaveInfantHealth(),
             'health' => true,
             'women_health' => $this->canHaveWomenHealth(),
-            'sociocivic' => true,
+            'sociocivic' => $this->canHaveSociocivic(),
             'migration' => true,
             'ctc' => $this->canHaveCtc(),
             'skills' => $this->canHaveSkills(),

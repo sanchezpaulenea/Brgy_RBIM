@@ -56,6 +56,7 @@
 import { computed, onMounted, watch } from 'vue';
 import ResidentProfilingSectionFields from '@/components/ResidentProfilingSectionFields.vue';
 import { useResidentSectionWizard } from '@/composables/useResidentSectionWizard';
+import { profilingResidentReady } from '@/utils/residentProfiling';
 
 const props = defineProps({
     resident: {
@@ -123,17 +124,27 @@ function onBack() {
     handleBack();
 }
 
-onMounted(() => {
+function beginWizard() {
+    if (!profilingResidentReady(props.resident)) {
+        return;
+    }
+
     if (!start()) {
         emit('finished');
     }
-});
+}
+
+onMounted(beginWizard);
 
 watch(() => props.resident?.resident_id, (id, previousId) => {
     if (id && id !== previousId) {
-        if (!start()) {
-            emit('finished');
-        }
+        beginWizard();
+    }
+});
+
+watch(() => profilingResidentReady(props.resident), (ready, wasReady) => {
+    if (ready && !wasReady) {
+        beginWizard();
     }
 });
 </script>

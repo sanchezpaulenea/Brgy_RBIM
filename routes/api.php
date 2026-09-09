@@ -17,6 +17,7 @@ use App\Http\Controllers\ResidentManagement\Demographic\ReligionController;
 use App\Http\Controllers\ResidentManagement\Demographic\ResidentController;
 use App\Http\Controllers\ResidentManagement\Economic\EconomicController;
 use App\Http\Controllers\ResidentManagement\Education\EducationController;
+use App\Http\Controllers\ResidentManagement\Health\DisabilityController;
 use App\Http\Controllers\ResidentManagement\Health\HealthController;
 use App\Http\Controllers\ResidentManagement\Health\InfantHealthController;
 use App\Http\Controllers\ResidentManagement\Health\WomenHealthController;
@@ -68,6 +69,7 @@ Route::prefix('v1')->group(function () {
         Route::patch('infant-health/{infantHealth}', [InfantHealthController::class, 'update'])->name('infant-health.update');
         Route::post('residents/{resident}/health', [HealthController::class, 'store'])->name('residents.health.store');
         Route::patch('health-records/{health}', [HealthController::class, 'update'])->name('health-records.update');
+        Route::post('disabilities', [DisabilityController::class, 'store'])->name('disabilities.store');
         Route::post('residents/{resident}/women-health', [WomenHealthController::class, 'store'])->name('residents.women-health.store');
         Route::patch('women-health/{womenHealth}', [WomenHealthController::class, 'update'])->name('women-health.update');
         Route::post('residents/{resident}/sociocivic', [SociocivicController::class, 'store'])->name('residents.sociocivic.store');
@@ -108,6 +110,7 @@ Route::prefix('v1')->group(function () {
         Route::get('health-insurances', [LookupController::class, 'index'])->defaults('lookup', 'health-insurance')->name('health-insurances.index');
         Route::get('facilities-visited-past-12mos', [LookupController::class, 'index'])->defaults('lookup', 'facility-visited-past-12mos')->name('facilities-visited-past-12mos.index');
         Route::get('facility-visit-reasons', [LookupController::class, 'index'])->defaults('lookup', 'facility-visit-reason')->name('facility-visit-reasons.index');
+        Route::get('disabilities', [LookupController::class, 'index'])->defaults('lookup', 'disability')->name('disabilities.index');
         Route::get('family-planning-methods', [LookupController::class, 'index'])->defaults('lookup', 'family-planning-method')->name('family-planning-methods.index');
         Route::get('sources-of-fp-method', [LookupController::class, 'index'])->defaults('lookup', 'source-of-fp-method')->name('sources-of-fp-method.index');
         Route::get('solo-parent-statuses', [LookupController::class, 'index'])->defaults('lookup', 'solo-parent-status')->name('solo-parent-statuses.index');

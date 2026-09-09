@@ -60,6 +60,22 @@ export const PLACE_NAME_PATTERN = /^\p{L}[\p{L}\d .,'\-]*$/u;
 
 export const PLACE_NAME_MIN_LENGTH = 3;
 
+export const NCSC_RRN_PATTERN = /^\d{6}$/;
+
+export function ncscRrnValidationError(value, required = false) {
+    const number = typeof value === 'string' || typeof value === 'number'
+        ? String(value).trim()
+        : '';
+
+    if (!number) {
+        return required ? 'NCSC-RRN is required.' : '';
+    }
+
+    return NCSC_RRN_PATTERN.test(number)
+        ? ''
+        : 'NCSC-RRN must be a 6-digit Registration Reference Number.';
+}
+
 /**
  * Each numeric setting drives real behaviour (lockouts, sessions, retention),
  * so the accepted range is bounded per key instead of "any number above zero".

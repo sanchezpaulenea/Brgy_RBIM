@@ -17,6 +17,8 @@ class Sociocivic extends Model
     protected $fillable = [
         'solo_parent_status_id',
         'registered_sen_citizen',
+        'ncsc_rrn_id_number',
+        'osca_id_number',
         'registered_barangay_voter',
         'resident_id',
     ];

@@ -19,6 +19,7 @@ use App\Models\ResidentManagement\Economic\StatusOfWorkBusiness;
 use App\Models\ResidentManagement\Education\CurrentEnrollmentStatus;
 use App\Models\ResidentManagement\Education\HighestLvlOfEduc;
 use App\Models\ResidentManagement\Education\SchoolLvl;
+use App\Models\ResidentManagement\Health\Disability;
 use App\Models\ResidentManagement\Health\BirthAttendant;
 use App\Models\ResidentManagement\Health\FacilityVisitedPast12Mos;
 use App\Models\ResidentManagement\Health\FacilityVisitReason;
@@ -61,6 +62,7 @@ enum LookupType: string
     case HealthInsurance = 'health-insurance';
     case FacilityVisitedPast12Mos = 'facility-visited-past-12mos';
     case FacilityVisitReason = 'facility-visit-reason';
+    case Disability = 'disability';
     case FamilyPlanningMethod = 'family-planning-method';
     case SourceOfFpMethod = 'source-of-fp-method';
     case SoloParentStatus = 'solo-parent-status';
@@ -98,6 +100,7 @@ enum LookupType: string
             self::HealthInsurance => HealthInsurance::class,
             self::FacilityVisitedPast12Mos => FacilityVisitedPast12Mos::class,
             self::FacilityVisitReason => FacilityVisitReason::class,
+            self::Disability => Disability::class,
             self::FamilyPlanningMethod => FamilyPlanningMethod::class,
             self::SourceOfFpMethod => SourceOfFPMethod::class,
             self::SoloParentStatus => SoloParentStatus::class,
@@ -146,6 +149,7 @@ enum LookupType: string
             self::HealthInsurance,
             self::FacilityVisitedPast12Mos,
             self::FacilityVisitReason,
+            self::Disability,
             self::FamilyPlanningMethod,
             self::SourceOfFpMethod,
             self::SoloParentStatus,
@@ -183,6 +187,7 @@ enum LookupType: string
             self::HealthInsurance => 'health_insurance_id',
             self::FacilityVisitedPast12Mos => 'facility_visited_past_12mos_id',
             self::FacilityVisitReason => 'facility_visit_reason_id',
+            self::Disability => 'disability_id',
             self::FamilyPlanningMethod => 'family_planning_method_id',
             self::SourceOfFpMethod => 'source_of_fp_method_id',
             self::SoloParentStatus => 'solo_parent_status_id',
@@ -206,6 +211,7 @@ enum LookupType: string
             self::HealthInsurance => 'health_insurance',
             self::FacilityVisitedPast12Mos => 'facility_visited_past_12mos',
             self::FacilityVisitReason => 'facility_visit_reason',
+            self::Disability => 'disability',
             self::FamilyPlanningMethod => 'family_planning_method',
             self::SourceOfFpMethod => 'source_of_fp_method',
             self::SoloParentStatus => 'solo_parent_status',

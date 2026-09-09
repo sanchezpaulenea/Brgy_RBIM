@@ -36,6 +36,7 @@ class CtcService
         }
 
         $data['resident_id'] = $resident->resident_id;
+        $data = $this->applyIssuedHereSkip($data);
 
         return DB::transaction(function () use ($performedBy, $data) {
             $ctc = $this->ctcRepository->create($data);
@@ -65,6 +66,10 @@ class CtcService
         $this->assertAdult($ctc->resident);
 
         $previous = $this->auditSnapshot($ctc);
+        $data = $this->applyIssuedHereSkip(array_merge($ctc->only([
+            'has_valid_ctc',
+            'ctc_issued_here',
+        ]), $data));
 
         return DB::transaction(function () use ($performedBy, $ctc, $data, $previous) {
             $updated = $this->ctcRepository->update($ctc, $data);
@@ -91,8 +96,26 @@ class CtcService
             'community_tax_cert' => $ctc->community_tax_cert,
             'resident_id' => $ctc->resident_id,
             'has_valid_ctc' => (bool) $ctc->has_valid_ctc,
-            'ctc_issued_here' => (bool) $ctc->ctc_issued_here,
+            'ctc_issued_here' => $ctc->has_valid_ctc ? (bool) $ctc->ctc_issued_here : false,
         ];
+    }
+
+    /**
+     * Q42B is skipped when Q42A is no. TINYINT NOT NULL stores 0.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function applyIssuedHereSkip(array $data): array
+    {
+        if (! filter_var($data['has_valid_ctc'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+            $data['has_valid_ctc'] = false;
+            $data['ctc_issued_here'] = false;
+        } elseif (! array_key_exists('ctc_issued_here', $data) || $data['ctc_issued_here'] === null || $data['ctc_issued_here'] === '') {
+            $data['ctc_issued_here'] = false;
+        }
+
+        return $data;
     }
 
     private function assertAdult(?Resident $resident): void

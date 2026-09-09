@@ -3,19 +3,21 @@ import { todayDate } from '@/utils/format';
 import { classifyMigrationForm } from '@/utils/migration';
 import { toId } from '@/utils/residentForm';
 import {
-    firstLookupId,
-    hasDisability,
-    isActiveWorkStatus,
+    ECONOMIC_STATUS_NOT_APPLICABLE,
+    ENROLLMENT_NOT_ENROLLED_ID,
+    educationFieldRelevance,
     isEnrollmentStatusEnrolled,
     isFamilyPlanningNone,
     isNotApplicableSchoolLvl,
     lookupById,
+    notApplicableHighestEducId,
     notApplicableSchoolLvlId,
     resolveApplicableSections,
     sociocivicFieldRelevance,
+    sourceOfIncomeSkipsWorkDetails,
     titleCaseWords,
 } from '@/utils/residentProfiling';
-import { placeNameValidationError } from '@/utils/validation';
+import { ncscRrnValidationError, placeNameValidationError } from '@/utils/validation';
 
 export const PROFILING_SECTION_ORDER = [
     'education',
@@ -65,7 +67,8 @@ export function emptySectionForm(key) {
             health_insurance_id: '',
             facility_visited_past_12mos_id: '',
             facility_visit_reason_id: '',
-            disability: '',
+            disability_id: '',
+            disability_name: '',
             pwd_id_number: '',
         },
         women_health: {
@@ -78,6 +81,9 @@ export function emptySectionForm(key) {
         sociocivic: {
             solo_parent_status_id: '',
             registered_sen_citizen: '',
+            ncsc_rrn_id_number: '',
+            osca_id_number: '',
+            is_registered_barangay_voter: '',
             registered_barangay_voter: '',
         },
         migration: {
@@ -232,20 +238,27 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
     });
 
     if (key === 'education') {
-        requiredSelect(form, errors, 'highest_lvl_of_educ_id', 'Highest level of education is required.');
-        requiredSelect(form, errors, 'current_enrollement_status_id', 'Current enrollment status is required.');
+        const relevance = educationFieldRelevance(resident);
 
-        const enrolled = isEnrollmentStatusEnrolled(
-            lookupById(lookups.currentEnrollmentStatus, form.current_enrollement_status_id),
-        );
+        if (relevance.highest_level) {
+            requiredSelect(form, errors, 'highest_lvl_of_educ_id', 'Highest level of education is required.');
+        }
 
-        if (enrolled) {
-            requiredSelect(form, errors, 'school_lvl_id', 'School level is required.');
-            requiredPlace(form, errors, 'place_of_school_brgy', 'School barangay');
-            requiredPlace(form, errors, 'place_of_school_city_municipality', 'School city / municipality');
+        if (relevance.enrollment) {
+            requiredSelect(form, errors, 'current_enrollement_status_id', 'Current enrollment status is required.');
 
-            if (isNotApplicableSchoolLvl(lookupById(lookups.schoolLvl, form.school_lvl_id))) {
-                errors.school_lvl_id = 'School level is required.';
+            const enrolled = isEnrollmentStatusEnrolled(
+                lookupById(lookups.currentEnrollmentStatus, form.current_enrollement_status_id),
+            );
+
+            if (enrolled) {
+                requiredSelect(form, errors, 'school_lvl_id', 'School level is required.');
+                requiredPlace(form, errors, 'place_of_school_brgy', 'School barangay');
+                requiredPlace(form, errors, 'place_of_school_city_municipality', 'School city / municipality');
+
+                if (isNotApplicableSchoolLvl(lookupById(lookups.schoolLvl, form.school_lvl_id))) {
+                    errors.school_lvl_id = 'School level is required.';
+                }
             }
         }
     }
@@ -253,16 +266,10 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
     if (key === 'economic') {
         requiredInteger(form, errors, 'monthly_income', 'Monthly income is required.');
         requiredSelect(form, errors, 'source_of_income_id', 'Source of income is required.');
-        requiredSelect(form, errors, 'status_of_work_business_id', 'Status of work / business is required.');
 
-        const activeWork = isActiveWorkStatus(
-            lookupById(lookups.statusOfWorkBusiness, form.status_of_work_business_id),
-        );
-
-        if (activeWork) {
+        if (!sourceOfIncomeSkipsWorkDetails(form.source_of_income_id, lookups.sourceOfIncome)) {
+            requiredSelect(form, errors, 'status_of_work_business_id', 'Status of work / business is required.');
             requiredPlace(form, errors, 'place_of_work_business', 'Place of work / business');
-        } else {
-            optionalPlace(form, errors, 'place_of_work_business', 'Place of work / business');
         }
     }
 
@@ -273,20 +280,29 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
     }
 
     if (key === 'health') {
-        requiredSelect(form, errors, 'health_insurance_id', 'Health insurance is required.');
-        requiredSelect(form, errors, 'facility_visited_past_12mos_id', 'Facility visited in the past 12 months is required.');
-        requiredSelect(form, errors, 'facility_visit_reason_id', 'Facility visit reason is required.');
+        const disabilityLabel = String(
+            lookupById(lookups.disability ?? [], form.disability_id)?.label
+                ?? form.disability_name
+                ?? form.disability
+                ?? '',
+        ).trim();
 
-        const disability = String(form.disability ?? '').trim();
-
-        if (disability.length > 45) {
-            errors.disability = 'Disability may not be longer than 45 characters.';
+        if (!form.disability_id && !disabilityLabel) {
+            errors.disability_id = 'Disability is required.';
         } else {
-            delete errors.disability;
+            delete errors.disability_id;
         }
 
-        if (hasDisability(disability)) {
-            requiredInteger(form, errors, 'pwd_id_number', 'PWD ID number is required.', { min: 1 });
+        if (disabilityLabel.length > 45) {
+            errors.disability_id = 'Disability may not be longer than 45 characters.';
+        }
+
+        const pwdId = String(form.pwd_id_number ?? '').trim();
+
+        if (pwdId === '') {
+            delete errors.pwd_id_number;
+        } else if (!/^\d+$/.test(pwdId) || Number(pwdId) < 1) {
+            errors.pwd_id_number = 'PWD ID number must be a positive whole number.';
         } else {
             delete errors.pwd_id_number;
         }
@@ -295,16 +311,6 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
     if (key === 'women_health') {
         requiredInteger(form, errors, 'number_pregnancies', 'Number of pregnancies is required.');
         requiredInteger(form, errors, 'living_children', 'Living children is required.');
-        requiredSelect(form, errors, 'family_planning_method_id', 'Family planning method is required.');
-
-        const none = isFamilyPlanningNone(
-            lookupById(lookups.familyPlanningMethod, form.family_planning_method_id),
-        );
-
-        if (!none) {
-            requiredSelect(form, errors, 'source_of_fp_method_id', 'Source of family planning method is required.');
-            requiredBoolean(form, errors, 'have_intention_to_use_fp', 'Intention to use family planning is required.');
-        }
     }
 
     if (key === 'sociocivic') {
@@ -316,13 +322,35 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
 
         if (relevance.senior_citizen) {
             requiredBoolean(form, errors, 'registered_sen_citizen', 'Registered senior citizen is required.');
+
+            if (form.registered_sen_citizen === true) {
+                const ncscError = ncscRrnValidationError(form.ncsc_rrn_id_number, false);
+
+                if (ncscError) {
+                    errors.ncsc_rrn_id_number = ncscError;
+                } else {
+                    delete errors.ncsc_rrn_id_number;
+                }
+
+                const osca = String(form.osca_id_number ?? '').trim();
+
+                if (osca.length > 45) {
+                    errors.osca_id_number = 'OSCA ID number may not be longer than 45 characters.';
+                } else {
+                    delete errors.osca_id_number;
+                }
+            }
         }
 
         if (relevance.barangay_voter) {
-            if (!['Yes', 'No'].includes(String(form.registered_barangay_voter ?? '').trim())) {
-                errors.registered_barangay_voter = 'Registered barangay voter is required.';
+            if (!['Yes', 'No'].includes(String(form.is_registered_barangay_voter ?? '').trim())) {
+                errors.is_registered_barangay_voter = 'Registered barangay voter is required.';
             } else {
-                delete errors.registered_barangay_voter;
+                delete errors.is_registered_barangay_voter;
+            }
+
+            if (form.is_registered_barangay_voter === 'Yes') {
+                requiredPlace(form, errors, 'registered_barangay_voter', 'Registered voter barangay');
             }
         }
     }
@@ -357,7 +385,10 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
 
     if (key === 'ctc') {
         requiredBoolean(form, errors, 'has_valid_ctc', 'Has valid community tax certificate is required.');
-        requiredBoolean(form, errors, 'ctc_issued_here', 'Community tax certificate issued here is required.');
+
+        if (form.has_valid_ctc === true) {
+            requiredBoolean(form, errors, 'ctc_issued_here', 'Community tax certificate issued here is required.');
+        }
     }
 
     if (key === 'skills') {
@@ -383,33 +414,60 @@ export function prepareSectionPayload(key, form, { lookups = {}, resident = {}, 
         payload[field] = toPayloadValue(value);
     });
 
-    if (key === 'education' && !isEnrollmentStatusEnrolled(
-        lookupById(lookups.currentEnrollmentStatus, form.current_enrollement_status_id),
-    )) {
-        payload.place_of_school_brgy = null;
-        payload.place_of_school_city_municipality = null;
-        payload.school_lvl_id = notApplicableSchoolLvlId(lookups.schoolLvl);
-    }
+    if (key === 'education') {
+        const relevance = educationFieldRelevance(resident);
 
-    if (key === 'economic' && !isActiveWorkStatus(
-        lookupById(lookups.statusOfWorkBusiness, form.status_of_work_business_id),
-    )) {
-        payload.place_of_work_business = null;
-    }
+        if (!relevance.highest_level) {
+            payload.highest_lvl_of_educ_id = notApplicableHighestEducId(lookups.highestLvlOfEduc);
+        }
 
-    if (key === 'health') {
-        if (hasDisability(form.disability)) {
-            payload.pwd_id_number = Number(form.pwd_id_number);
-        } else {
-            delete payload.pwd_id_number;
+        if (!relevance.enrollment || !isEnrollmentStatusEnrolled(
+            lookupById(lookups.currentEnrollmentStatus, form.current_enrollement_status_id),
+        )) {
+            payload.place_of_school_brgy = null;
+            payload.place_of_school_city_municipality = null;
+            payload.school_lvl_id = notApplicableSchoolLvlId(lookups.schoolLvl);
+        }
+
+        if (!relevance.enrollment) {
+            payload.current_enrollement_status_id = ENROLLMENT_NOT_ENROLLED_ID;
         }
     }
 
-    if (key === 'women_health' && isFamilyPlanningNone(
-        lookupById(lookups.familyPlanningMethod, form.family_planning_method_id),
-    )) {
-        payload.have_intention_to_use_fp = false;
-        payload.source_of_fp_method_id = payload.source_of_fp_method_id || firstLookupId(lookups.sourceOfFpMethod);
+    if (key === 'economic') {
+        if (sourceOfIncomeSkipsWorkDetails(form.source_of_income_id, lookups.sourceOfIncome)) {
+            payload.status_of_work_business_id = ECONOMIC_STATUS_NOT_APPLICABLE;
+            payload.place_of_work_business = null;
+        }
+    }
+
+    if (key === 'health') {
+        payload.health_insurance_id = payload.health_insurance_id || 0;
+        payload.facility_visited_past_12mos_id = payload.facility_visited_past_12mos_id || 0;
+        payload.facility_visit_reason_id = payload.facility_visit_reason_id || 0;
+        payload.pwd_id_number = form.pwd_id_number ? Number(form.pwd_id_number) : 0;
+
+        if (form.disability_id) {
+            payload.disability_id = Number(form.disability_id);
+            delete payload.disability;
+        } else if (String(form.disability_name ?? form.disability ?? '').trim()) {
+            payload.disability = String(form.disability_name ?? form.disability).trim();
+            delete payload.disability_id;
+        }
+
+        delete payload.disability_name;
+    }
+
+    if (key === 'women_health') {
+        if (isFamilyPlanningNone(lookupById(lookups.familyPlanningMethod, form.family_planning_method_id))) {
+            payload.family_planning_method_id = 0;
+            payload.source_of_fp_method_id = 0;
+            payload.have_intention_to_use_fp = false;
+        } else {
+            payload.family_planning_method_id = Number(form.family_planning_method_id);
+            payload.source_of_fp_method_id = form.source_of_fp_method_id ? Number(form.source_of_fp_method_id) : 0;
+            payload.have_intention_to_use_fp = form.have_intention_to_use_fp === true;
+        }
     }
 
     if (key === 'sociocivic') {
@@ -421,11 +479,26 @@ export function prepareSectionPayload(key, form, { lookups = {}, resident = {}, 
 
         if (!relevance.senior_citizen) {
             payload.registered_sen_citizen = false;
+            payload.ncsc_rrn_id_number = null;
+            payload.osca_id_number = null;
+        } else if (form.registered_sen_citizen !== true) {
+            payload.registered_sen_citizen = false;
+            payload.ncsc_rrn_id_number = null;
+            payload.osca_id_number = null;
         }
 
-        if (!relevance.barangay_voter) {
+        if (!relevance.barangay_voter || form.is_registered_barangay_voter !== 'Yes') {
             payload.registered_barangay_voter = null;
         }
+
+        delete payload.is_registered_barangay_voter;
+    }
+
+    if (key === 'ctc') {
+        payload.has_valid_ctc = form.has_valid_ctc === true;
+        payload.ctc_issued_here = form.has_valid_ctc === true
+            ? form.ctc_issued_here === true
+            : false;
     }
 
     if (key === 'migration' && classifyMigrationForm(form, location).nonMigrant) {

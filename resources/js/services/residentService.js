@@ -26,6 +26,22 @@ export async function fetchResident(id) {
     return data.item;
 }
 
+export async function loadProfilingResident(residentOrId) {
+    const id = typeof residentOrId === 'object'
+        ? residentOrId?.resident_id
+        : residentOrId;
+
+    if (!id) {
+        return residentOrId && typeof residentOrId === 'object' ? residentOrId : null;
+    }
+
+    try {
+        return await fetchResident(id);
+    } catch {
+        return typeof residentOrId === 'object' ? residentOrId : { resident_id: id };
+    }
+}
+
 export async function createResident(payload) {
     const { data } = await http.post('/residents', payload);
 

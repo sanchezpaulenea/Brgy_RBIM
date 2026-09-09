@@ -1,7 +1,7 @@
 <template>
     <div class="grid gap-4 sm:grid-cols-2">
         <template v-if="section === 'education'">
-            <div>
+            <div v-if="educationRelevance.highest_level">
                 <label class="rbim-label" :for="`${idPrefix}-highest_lvl_of_educ_id`">
                     Highest Level of Education<span class="rbim-required" aria-hidden="true">*</span>
                 </label>
@@ -16,7 +16,7 @@
                 </select>
                 <p v-if="errors.highest_lvl_of_educ_id" class="rbim-error">{{ errors.highest_lvl_of_educ_id }}</p>
             </div>
-            <div>
+            <div v-if="educationRelevance.enrollment">
                 <label class="rbim-label" :for="`${idPrefix}-current_enrollement_status_id`">
                     Current Enrollment Status<span class="rbim-required" aria-hidden="true">*</span>
                 </label>
@@ -31,7 +31,7 @@
                 </select>
                 <p v-if="errors.current_enrollement_status_id" class="rbim-error">{{ errors.current_enrollement_status_id }}</p>
             </div>
-            <template v-if="educationEnrolled">
+            <template v-if="educationRelevance.enrollment && educationEnrolled">
                 <div>
                     <label class="rbim-label" :for="`${idPrefix}-school_lvl_id`">
                         School Level<span class="rbim-required" aria-hidden="true">*</span>
@@ -76,6 +76,12 @@
                     <p v-if="errors.place_of_school_city_municipality" class="rbim-error">{{ errors.place_of_school_city_municipality }}</p>
                 </div>
             </template>
+            <p
+                v-if="!educationRelevance.highest_level && !educationRelevance.enrollment"
+                class="sm:col-span-2 text-sm text-slate-500"
+            >
+                No education fields apply at this resident's current age.
+            </p>
         </template>
 
         <template v-else-if="section === 'economic'">
@@ -108,7 +114,7 @@
                 </select>
                 <p v-if="errors.source_of_income_id" class="rbim-error">{{ errors.source_of_income_id }}</p>
             </div>
-            <div>
+            <div v-if="economicShowsWorkDetails">
                 <label class="rbim-label" :for="`${idPrefix}-status_of_work_business_id`">
                     Status of Work / Business<span class="rbim-required" aria-hidden="true">*</span>
                 </label>
@@ -123,7 +129,7 @@
                 </select>
                 <p v-if="errors.status_of_work_business_id" class="rbim-error">{{ errors.status_of_work_business_id }}</p>
             </div>
-            <div v-if="economicActiveWork">
+            <div v-if="economicShowsWorkDetails">
                 <label class="rbim-label" :for="`${idPrefix}-place_of_work_business`">
                     Place of Work / Business<span class="rbim-required" aria-hidden="true">*</span>
                 </label>
@@ -189,7 +195,7 @@
         <template v-else-if="section === 'health'">
             <div>
                 <label class="rbim-label" :for="`${idPrefix}-health_insurance_id`">
-                    Health Insurance<span class="rbim-required" aria-hidden="true">*</span>
+                    Health Insurance
                 </label>
                 <select
                     :id="`${idPrefix}-health_insurance_id`"
@@ -204,7 +210,7 @@
             </div>
             <div>
                 <label class="rbim-label" :for="`${idPrefix}-facility_visited_past_12mos_id`">
-                    Facility Visited Past 12 Months<span class="rbim-required" aria-hidden="true">*</span>
+                    Facility Visited Past 12 Months
                 </label>
                 <select
                     :id="`${idPrefix}-facility_visited_past_12mos_id`"
@@ -219,7 +225,7 @@
             </div>
             <div>
                 <label class="rbim-label" :for="`${idPrefix}-facility_visit_reason_id`">
-                    Facility Visit Reason<span class="rbim-required" aria-hidden="true">*</span>
+                    Facility Visit Reason
                 </label>
                 <select
                     :id="`${idPrefix}-facility_visit_reason_id`"
@@ -232,22 +238,22 @@
                 </select>
                 <p v-if="errors.facility_visit_reason_id" class="rbim-error">{{ errors.facility_visit_reason_id }}</p>
             </div>
+            <LookupCombobox
+                v-model="form.disability_id"
+                v-model:query="form.disability_name"
+                :options="lookups.disability ?? []"
+                :input-id="`${idPrefix}-disability`"
+                label="Disability"
+                placeholder="Search or type a disability"
+                required
+                can-create
+                :error="errors.disability_id || errors.disability"
+                hint="Choose from the list, or type a new name and press Enter to add it."
+                @create="createDisability"
+            />
             <div>
-                <label class="rbim-label" :for="`${idPrefix}-disability`">Disability</label>
-                <input
-                    :id="`${idPrefix}-disability`"
-                    v-model="form.disability"
-                    type="text"
-                    maxlength="45"
-                    class="rbim-input"
-                    :class="{ 'rbim-input-error': errors.disability }"
-                    placeholder="Leave blank or None if not applicable"
-                >
-                <p v-if="errors.disability" class="rbim-error">{{ errors.disability }}</p>
-            </div>
-            <div v-if="healthHasDisability">
                 <label class="rbim-label" :for="`${idPrefix}-pwd_id_number`">
-                    PWD ID Number<span class="rbim-required" aria-hidden="true">*</span>
+                    PWD ID Number
                 </label>
                 <input
                     :id="`${idPrefix}-pwd_id_number`"
@@ -294,7 +300,7 @@
             </div>
             <div>
                 <label class="rbim-label" :for="`${idPrefix}-family_planning_method_id`">
-                    Family Planning Method<span class="rbim-required" aria-hidden="true">*</span>
+                    Family Planning Method
                 </label>
                 <select
                     :id="`${idPrefix}-family_planning_method_id`"
@@ -310,7 +316,7 @@
             <template v-if="!familyPlanningIsNone">
                 <div>
                     <label class="rbim-label" :for="`${idPrefix}-source_of_fp_method_id`">
-                        Source of Family Planning Method<span class="rbim-required" aria-hidden="true">*</span>
+                        Source of Family Planning Method
                     </label>
                     <select
                         :id="`${idPrefix}-source_of_fp_method_id`"
@@ -325,7 +331,7 @@
                 </div>
                 <div>
                     <label class="rbim-label" :for="`${idPrefix}-have_intention_to_use_fp`">
-                        Intention to Use Family Planning<span class="rbim-required" aria-hidden="true">*</span>
+                        Intention to Use Family Planning
                     </label>
                     <select
                         :id="`${idPrefix}-have_intention_to_use_fp`"
@@ -376,28 +382,68 @@
                 </select>
                 <p v-if="errors.registered_sen_citizen" class="rbim-error">{{ errors.registered_sen_citizen }}</p>
             </div>
+            <template v-if="sociocivicRelevance.senior_citizen && form.registered_sen_citizen === true">
+                <div>
+                    <label class="rbim-label" :for="`${idPrefix}-ncsc_rrn_id_number`">
+                        NCSC-RRN
+                    </label>
+                    <input
+                        :id="`${idPrefix}-ncsc_rrn_id_number`"
+                        v-model="form.ncsc_rrn_id_number"
+                        type="text"
+                        inputmode="numeric"
+                        maxlength="6"
+                        placeholder="6-digit RRN"
+                        class="rbim-input"
+                        :class="{ 'rbim-input-error': errors.ncsc_rrn_id_number }"
+                    >
+                    <p v-if="errors.ncsc_rrn_id_number" class="rbim-error">{{ errors.ncsc_rrn_id_number }}</p>
+                </div>
+                <div>
+                    <label class="rbim-label" :for="`${idPrefix}-osca_id_number`">
+                        OSCA ID Number
+                    </label>
+                    <input
+                        :id="`${idPrefix}-osca_id_number`"
+                        v-model="form.osca_id_number"
+                        type="text"
+                        maxlength="45"
+                        class="rbim-input"
+                        :class="{ 'rbim-input-error': errors.osca_id_number }"
+                    >
+                    <p v-if="errors.osca_id_number" class="rbim-error">{{ errors.osca_id_number }}</p>
+                </div>
+            </template>
             <div v-if="sociocivicRelevance.barangay_voter">
-                <label class="rbim-label" :for="`${idPrefix}-registered_barangay_voter`">
+                <label class="rbim-label" :for="`${idPrefix}-is_registered_barangay_voter`">
                     Registered Barangay Voter<span class="rbim-required" aria-hidden="true">*</span>
                 </label>
                 <select
-                    :id="`${idPrefix}-registered_barangay_voter`"
-                    v-model="form.registered_barangay_voter"
+                    :id="`${idPrefix}-is_registered_barangay_voter`"
+                    v-model="form.is_registered_barangay_voter"
                     class="rbim-input"
-                    :class="{ 'rbim-input-error': errors.registered_barangay_voter }"
+                    :class="{ 'rbim-input-error': errors.is_registered_barangay_voter }"
                 >
                     <option value="">Select</option>
                     <option value="Yes">Yes</option>
                     <option value="No">No</option>
                 </select>
+                <p v-if="errors.is_registered_barangay_voter" class="rbim-error">{{ errors.is_registered_barangay_voter }}</p>
+            </div>
+            <div v-if="sociocivicRelevance.barangay_voter && form.is_registered_barangay_voter === 'Yes'">
+                <label class="rbim-label" :for="`${idPrefix}-registered_barangay_voter`">
+                    Barangay Where Registered<span class="rbim-required" aria-hidden="true">*</span>
+                </label>
+                <input
+                    :id="`${idPrefix}-registered_barangay_voter`"
+                    v-model="form.registered_barangay_voter"
+                    type="text"
+                    maxlength="45"
+                    class="rbim-input"
+                    :class="{ 'rbim-input-error': errors.registered_barangay_voter }"
+                >
                 <p v-if="errors.registered_barangay_voter" class="rbim-error">{{ errors.registered_barangay_voter }}</p>
             </div>
-            <p
-                v-if="!sociocivicRelevance.solo_parent && !sociocivicRelevance.senior_citizen && !sociocivicRelevance.barangay_voter"
-                class="sm:col-span-2 text-sm text-slate-500"
-            >
-                No sociocivic fields apply at this resident's current age. Continue will store the age-normalized defaults.
-            </p>
         </template>
 
         <template v-else-if="section === 'migration'">
@@ -576,7 +622,7 @@
                 </select>
                 <p v-if="errors.has_valid_ctc" class="rbim-error">{{ errors.has_valid_ctc }}</p>
             </div>
-            <div>
+            <div v-if="form.has_valid_ctc === true">
                 <label class="rbim-label" :for="`${idPrefix}-ctc_issued_here`">
                     Community Tax Certificate Issued Here<span class="rbim-required" aria-hidden="true">*</span>
                 </label>
@@ -632,15 +678,18 @@
 <script setup>
 import { computed } from 'vue';
 import BirthDateField from '@/components/BirthDateField.vue';
+import LookupCombobox from '@/components/LookupCombobox.vue';
+import { extractErrorMessage } from '@/services/http';
+import * as lookupService from '@/services/lookupService';
 import { classifyMigrationForm } from '@/utils/migration';
 import {
-    hasDisability,
-    isActiveWorkStatus,
+    educationFieldRelevance,
     isEnrollmentStatusEnrolled,
     isFamilyPlanningNone,
     isNotApplicableSchoolLvl,
     lookupById,
     sociocivicFieldRelevance,
+    sourceOfIncomeSkipsWorkDetails,
 } from '@/utils/residentProfiling';
 
 const props = defineProps({
@@ -676,6 +725,8 @@ const props = defineProps({
 
 const todayIso = new Date().toISOString().slice(0, 10);
 
+const educationRelevance = computed(() => educationFieldRelevance(props.resident));
+
 const educationEnrolled = computed(() => (
     isEnrollmentStatusEnrolled(lookupById(props.lookups.currentEnrollmentStatus, props.form.current_enrollement_status_id))
 ));
@@ -684,15 +735,14 @@ const enrolledSchoolLevels = computed(() => (
     (props.lookups.schoolLvl ?? []).filter((option) => !isNotApplicableSchoolLvl(option))
 ));
 
-const economicActiveWork = computed(() => (
-    isActiveWorkStatus(lookupById(props.lookups.statusOfWorkBusiness, props.form.status_of_work_business_id))
+const economicShowsWorkDetails = computed(() => (
+    !sourceOfIncomeSkipsWorkDetails(props.form.source_of_income_id, props.lookups.sourceOfIncome)
+        && Boolean(props.form.source_of_income_id)
 ));
 
 const familyPlanningIsNone = computed(() => (
     isFamilyPlanningNone(lookupById(props.lookups.familyPlanningMethod, props.form.family_planning_method_id))
 ));
-
-const healthHasDisability = computed(() => hasDisability(props.form.disability));
 
 const sociocivicRelevance = computed(() => sociocivicFieldRelevance(props.resident));
 
@@ -720,5 +770,26 @@ function parseBoolean(value) {
     }
 
     return '';
+}
+
+async function createDisability(name) {
+    try {
+        const item = await lookupService.createDisability({ disability: name });
+
+        if (!Array.isArray(props.lookups.disability)) {
+            props.lookups.disability = [];
+        }
+
+        if (!props.lookups.disability.some((option) => Number(option.id) === Number(item.id))) {
+            props.lookups.disability.push(item);
+        }
+
+        props.form.disability_id = item.id;
+        props.form.disability_name = item.label;
+        delete props.errors.disability_id;
+        delete props.errors.disability;
+    } catch (err) {
+        props.errors.disability_id = extractErrorMessage(err, 'Unable to add this disability.');
+    }
 }
 </script>

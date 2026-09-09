@@ -22,6 +22,20 @@ class MigrationClassifierTest extends TestCase
         );
     }
 
+    public function test_different_barangays_with_the_same_city_are_not_the_same_address(): void
+    {
+        $this->assertFalse(
+            MigrationClassifier::sameAsCurrentResidence('Irisan', 'Baguio City', 'Happy Hallow', 'Baguio City'),
+        );
+    }
+
+    public function test_missing_barangay_does_not_match_when_cities_differ(): void
+    {
+        $this->assertFalse(
+            MigrationClassifier::sameAsCurrentResidence('Happy Hallow', 'Baguio City', '', 'La Trinidad'),
+        );
+    }
+
     public function test_different_address_with_six_months_or_more_is_migrant(): void
     {
         $this->assertSame(
@@ -78,6 +92,10 @@ class MigrationClassifierTest extends TestCase
             'exact match' => ['Irisan', 'Baguio City', 'Irisan', 'Baguio City'],
             'city suffix' => ['Irisan', 'Baguio City', 'Irisan', 'Baguio'],
             'case and spacing' => ['irisan', 'baguio city', 'Irisan', 'Baguio'],
+            'missing current barangay' => ['Happy Hallow', 'Baguio City', '', 'Baguio City'],
+            'missing previous barangay' => ['', 'Baguio City', 'Happy Hallow', 'Baguio'],
+            'missing both barangays' => ['', 'Baguio City', '', 'Baguio City'],
+            'barangay prefix' => ['Barangay Happy Hallow', 'Baguio City', 'Happy Hallow', 'Baguio City'],
         ];
     }
 }

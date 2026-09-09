@@ -18,7 +18,7 @@ class StoreCtcRequest extends FormRequest
     {
         return [
             'has_valid_ctc' => ['required', 'boolean'],
-            'ctc_issued_here' => ['required', 'boolean'],
+            'ctc_issued_here' => ['nullable', 'boolean'],
         ];
     }
 }

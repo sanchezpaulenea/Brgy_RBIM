@@ -3,6 +3,8 @@ import { ageFromDateOfBirth } from '@/utils/format';
 
 export const SEX_FEMALE_ID = 2;
 export const ENROLLMENT_NOT_ENROLLED_ID = 3;
+export const ECONOMIC_STATUS_NOT_APPLICABLE = 0;
+export const SOURCE_OF_INCOME_SKIP_WORK_IDS = [3, 4, 5];
 export const NON_SOLO_PARENT_STATUS_ID = 2;
 
 /**
@@ -63,29 +65,51 @@ export function applicableSectionsFor(resident) {
     const months = residentAgeMonths(resident);
 
     return {
-        education: true,
-        economic: true,
+        education: age !== null && age >= 3,
+        economic: age !== null && age >= 15,
         infant_health: months !== null && months >= 0 && months <= 11,
         health: true,
         women_health: isFemaleResident(resident) && age !== null && age >= 10 && age <= 54,
-        sociocivic: true,
+        sociocivic: age !== null && age >= 10,
         migration: true,
         ctc: age !== null && age >= 18,
         skills: age !== null && age >= 15,
     };
 }
 
+export function profilingResidentReady(resident) {
+    return Boolean(resident?.resident_id)
+        && (residentAgeYears(resident) !== null || residentAgeMonths(resident) !== null);
+}
+
 export function resolveApplicableSections(resident) {
+    const local = applicableSectionsFor(resident);
     const fromApi = resident?.applicable_sections;
+
+    if (residentAgeYears(resident) !== null || residentAgeMonths(resident) !== null) {
+        return local;
+    }
 
     if (fromApi && typeof fromApi === 'object') {
         return {
-            ...applicableSectionsFor(resident),
+            ...local,
             ...fromApi,
         };
     }
 
-    return applicableSectionsFor(resident);
+    return local;
+}
+
+/**
+ * Mirrors Resident::educationFieldRelevance().
+ */
+export function educationFieldRelevance(resident) {
+    const age = residentAgeYears(resident);
+
+    return {
+        highest_level: age !== null && age >= 5,
+        enrollment: age !== null && age >= 3 && age <= 24,
+    };
 }
 
 /**
@@ -108,6 +132,36 @@ export function sociocivicFieldRelevance(resident) {
         solo_parent: age !== null && age >= 10,
         senior_citizen: age !== null && age >= 60,
         barangay_voter: age !== null && age >= 15,
+    };
+}
+
+export function sociocivicVoterFormState(record = {}) {
+    const stored = String(record?.registered_barangay_voter ?? '').trim();
+
+    if (stored && !/^(yes|no)$/i.test(stored)) {
+        return {
+            is_registered_barangay_voter: 'Yes',
+            registered_barangay_voter: stored,
+        };
+    }
+
+    if (/^yes$/i.test(stored) || record?.is_registered_barangay_voter === true) {
+        return {
+            is_registered_barangay_voter: 'Yes',
+            registered_barangay_voter: '',
+        };
+    }
+
+    if (/^no$/i.test(stored) || record?.is_registered_barangay_voter === false) {
+        return {
+            is_registered_barangay_voter: 'No',
+            registered_barangay_voter: '',
+        };
+    }
+
+    return {
+        is_registered_barangay_voter: '',
+        registered_barangay_voter: '',
     };
 }
 
@@ -160,7 +214,7 @@ export function isEnrollmentStatusEnrolled(option) {
 
 export function isFamilyPlanningNone(option) {
     if (!option) {
-        return false;
+        return true;
     }
 
     return /\bnone\b/i.test(String(option.label ?? ''));
@@ -170,6 +224,18 @@ export function isNotApplicableSchoolLvl(option) {
     const text = String(option?.label ?? option ?? '').trim().toLowerCase();
 
     return /^(none|n\/a|n\.a\.?|na|not applicable)$/.test(text);
+}
+
+export function isNotApplicableHighestEduc(option) {
+    const text = String(option?.label ?? option ?? '').trim().toLowerCase();
+
+    return /^(no education|none|n\/a|n\.a\.?|na|not applicable)$/.test(text);
+}
+
+export function notApplicableHighestEducId(options) {
+    const match = (options ?? []).find((option) => isNotApplicableHighestEduc(option));
+
+    return match?.id ?? null;
 }
 
 export function notApplicableSchoolLvlId(options) {
@@ -198,6 +264,19 @@ export function isActiveWorkStatus(option) {
     }
 
     return !/\b(unemployed|none|not working|inactive|no work)\b/i.test(String(option.label ?? ''));
+}
+
+export function sourceOfIncomeSkipsWorkDetails(sourceOfIncomeId, options = []) {
+    const id = Number(sourceOfIncomeId);
+
+    if (SOURCE_OF_INCOME_SKIP_WORK_IDS.includes(id)) {
+        return true;
+    }
+
+    const option = lookupById(options, sourceOfIncomeId);
+    const label = String(option?.label ?? '').trim().toLowerCase();
+
+    return /^(remittance|investments?|others?)$/.test(label);
 }
 
 export function lookupById(options, id) {

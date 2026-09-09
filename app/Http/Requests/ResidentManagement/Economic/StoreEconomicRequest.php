@@ -3,6 +3,7 @@
 namespace App\Http\Requests\ResidentManagement\Economic;
 
 use App\Http\Requests\Concerns\TitleCasesAttributes;
+use App\Models\ResidentManagement\Economic\SourceOfIncome;
 use App\Rules\ValidPlaceName;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -30,11 +31,18 @@ class StoreEconomicRequest extends FormRequest
             'monthly_income' => ['required', 'integer', 'min:0'],
             'source_of_income_id' => ['required', 'integer', Rule::exists('source_of_income', 'source_of_income_id')],
             'status_of_work_business_id' => [
+                Rule::excludeIf(fn () => $this->skipsWorkDetails()),
                 'required',
                 'integer',
                 Rule::exists('status_of_work_business', 'status_of_work_business_id'),
             ],
-            'place_of_work_business' => ['nullable', 'string', 'max:45', new ValidPlaceName('Place of work / business')],
+            'place_of_work_business' => [
+                Rule::excludeIf(fn () => $this->skipsWorkDetails()),
+                'required',
+                'string',
+                'max:45',
+                new ValidPlaceName('Place of work / business'),
+            ],
         ];
     }
 
@@ -48,6 +56,13 @@ class StoreEconomicRequest extends FormRequest
             'monthly_income.integer' => 'Monthly income must be numeric.',
             'source_of_income_id.exists' => 'The selected source of income does not exist.',
             'status_of_work_business_id.exists' => 'The selected work / business status does not exist.',
+            'status_of_work_business_id.required' => 'Status of work / business is required.',
+            'place_of_work_business.required' => 'Place of work / business is required.',
         ];
+    }
+
+    private function skipsWorkDetails(): bool
+    {
+        return SourceOfIncome::skipsWorkDetails($this->input('source_of_income_id'));
     }
 }

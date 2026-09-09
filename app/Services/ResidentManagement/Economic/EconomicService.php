@@ -5,6 +5,7 @@ namespace App\Services\ResidentManagement\Economic;
 use App\Models\Logs\Action;
 use App\Models\ResidentManagement\Demographic\Resident;
 use App\Models\ResidentManagement\Economic\Economic;
+use App\Models\ResidentManagement\Economic\SourceOfIncome;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Economic\EconomicRepositoryInterface;
@@ -34,6 +35,7 @@ class EconomicService
         }
 
         $data['resident_id'] = $resident->resident_id;
+        $data = $this->applyWorkDetailRules($data);
 
         return DB::transaction(function () use ($performedBy, $data) {
             $economic = $this->economicRepository->create($data);
@@ -60,6 +62,12 @@ class EconomicService
     public function update(User $performedBy, Economic $economic, array $data): array
     {
         $previous = $this->auditSnapshot($economic);
+        $data = $this->applyWorkDetailRules(array_merge($economic->only([
+            'monthly_income',
+            'source_of_income_id',
+            'status_of_work_business_id',
+            'place_of_work_business',
+        ]), $data));
 
         return DB::transaction(function () use ($performedBy, $economic, $data, $previous) {
             $updated = $this->economicRepository->update($economic, $data);
@@ -90,8 +98,12 @@ class EconomicService
             'monthly_income' => $economic->monthly_income,
             'source_of_income_id' => $economic->source_of_income_id,
             'source_of_income' => $economic->sourceOfIncome?->source_of_income,
-            'status_of_work_business_id' => $economic->status_of_work_business_id,
-            'status_of_work_business' => $economic->statusOfWorkBusiness?->status_of_work_business,
+            'status_of_work_business_id' => $economic->status_of_work_business_id === Economic::STATUS_NOT_APPLICABLE
+                ? null
+                : $economic->status_of_work_business_id,
+            'status_of_work_business' => $economic->status_of_work_business_id === Economic::STATUS_NOT_APPLICABLE
+                ? null
+                : $economic->statusOfWorkBusiness?->status_of_work_business,
             'place_of_work_business' => $economic->place_of_work_business,
         ];
     }
@@ -106,8 +118,29 @@ class EconomicService
         return [
             'monthly income' => (string) $economic->monthly_income,
             'source of income' => (string) ($economic->sourceOfIncome?->source_of_income ?? $economic->source_of_income_id),
-            'status of work' => (string) ($economic->statusOfWorkBusiness?->status_of_work_business ?? $economic->status_of_work_business_id),
+            'status of work' => $economic->status_of_work_business_id === Economic::STATUS_NOT_APPLICABLE
+                ? 'N/A'
+                : (string) ($economic->statusOfWorkBusiness?->status_of_work_business ?? $economic->status_of_work_business_id),
             'place of work' => (string) ($economic->place_of_work_business ?? ''),
         ];
+    }
+
+    /**
+     * Remittance, investments, and others skip Q17–Q18.
+     * status_of_work_business_id is INT NOT NULL, so 0 is stored as N/A.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function applyWorkDetailRules(array $data): array
+    {
+        if (! SourceOfIncome::skipsWorkDetails($data['source_of_income_id'] ?? null)) {
+            return $data;
+        }
+
+        $data['status_of_work_business_id'] = Economic::STATUS_NOT_APPLICABLE;
+        $data['place_of_work_business'] = null;
+
+        return $data;
     }
 }

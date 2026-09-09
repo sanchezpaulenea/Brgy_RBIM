@@ -11,7 +11,13 @@ use Illuminate\Support\Str;
 class Health extends Model
 {
     /**
-     * Sentinel stored when the resident has no disability / no PWD ID.
+     * Sentinel stored when an optional health lookup (Q26–Q28) is left blank.
+     * Those FKs were dropped so 0 can be persisted without a lookup row.
+     */
+    public const LOOKUP_NOT_APPLICABLE = 0;
+
+    /**
+     * Sentinel stored when the resident has no PWD ID.
      *
      * health.pwd_id_number is INT NOT NULL with no DEFAULT, so NULL cannot
      * be persisted without a schema change. 0 = not applicable / no PWD ID.
@@ -28,7 +34,7 @@ class Health extends Model
         'health_insurance_id',
         'facility_visited_past_12mos_id',
         'facility_visit_reason_id',
-        'disability',
+        'disability_id',
         'pwd_id_number',
         'resident_id',
     ];
@@ -94,6 +100,14 @@ class Health extends Model
             'facility_visit_reason_id',
             'facility_visit_reason_id'
         );
+    }
+
+    /**
+     * @return BelongsTo<Disability, $this>
+     */
+    public function disabilityType(): BelongsTo
+    {
+        return $this->belongsTo(Disability::class, 'disability_id', 'disability_id');
     }
 
     /**

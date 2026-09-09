@@ -16,6 +16,12 @@ export async function deletePersonnelPosition(id) {
     await http.delete(`/personnel-positions/${id}`);
 }
 
+export async function createDisability(payload) {
+    const { data } = await http.post('/disabilities', payload);
+
+    return data.item;
+}
+
 export async function fetchLookup(slug) {
     const { data } = await http.get(`/lookups/${slug}`);
 

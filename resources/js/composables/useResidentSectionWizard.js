@@ -187,8 +187,8 @@ export function useResidentSectionWizard({
             return 'idle';
         }
 
-        rememberCurrentForm();
         skipped[currentKey.value] = true;
+        delete localForms[currentKey.value];
         persistLocal();
 
         return goNext();

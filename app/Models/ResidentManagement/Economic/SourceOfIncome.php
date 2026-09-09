@@ -7,6 +7,27 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SourceOfIncome extends Model
 {
+    public const EMPLOYMENT = 1;
+
+    public const BUSINESS = 2;
+
+    public const REMITTANCE = 3;
+
+    public const INVESTMENTS = 4;
+
+    public const OTHERS = 5;
+
+    /**
+     * Q17–Q18 are skipped for these sources.
+     *
+     * @var list<int>
+     */
+    public const SKIP_WORK_DETAIL_IDS = [
+        self::REMITTANCE,
+        self::INVESTMENTS,
+        self::OTHERS,
+    ];
+
     protected $table = 'source_of_income';
 
     protected $primaryKey = 'source_of_income_id';
@@ -20,6 +41,11 @@ class SourceOfIncome extends Model
     public function getRouteKeyName(): string
     {
         return 'source_of_income_id';
+    }
+
+    public static function skipsWorkDetails(mixed $sourceOfIncomeId): bool
+    {
+        return in_array((int) $sourceOfIncomeId, self::SKIP_WORK_DETAIL_IDS, true);
     }
 
     /**

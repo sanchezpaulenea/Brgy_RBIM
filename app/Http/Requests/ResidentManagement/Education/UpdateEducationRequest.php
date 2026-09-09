@@ -37,13 +37,15 @@ class UpdateEducationRequest extends FormRequest
         return [
             'highest_lvl_of_educ_id' => [
                 'sometimes',
-                'required',
+                Rule::requiredIf(fn () => $this->educationRelevance()['highest_level'] && $this->exists('highest_lvl_of_educ_id')),
+                'nullable',
                 'integer',
                 Rule::exists('highest_lvl_of_educ', 'highest_lvl_of_educ_id'),
             ],
             'current_enrollement_status_id' => [
                 'sometimes',
-                'required',
+                Rule::requiredIf(fn () => $this->educationRelevance()['enrollment'] && $this->exists('current_enrollement_status_id')),
+                'nullable',
                 'integer',
                 Rule::exists('current_enrollment_status', 'current_enrollment_status_id'),
             ],
@@ -73,6 +75,10 @@ class UpdateEducationRequest extends FormRequest
             },
             function (Validator $validator): void {
                 if ($validator->errors()->isNotEmpty()) {
+                    return;
+                }
+
+                if (! $this->educationRelevance()['enrollment']) {
                     return;
                 }
 
@@ -115,6 +121,24 @@ class UpdateEducationRequest extends FormRequest
                     );
                 }
             },
+        ];
+    }
+
+    /**
+     * @return array{highest_level: bool, enrollment: bool}
+     */
+    private function educationRelevance(): array
+    {
+        $education = $this->route('education');
+        $resident = $education?->resident;
+
+        if ($resident !== null) {
+            return $resident->educationFieldRelevance();
+        }
+
+        return [
+            'highest_level' => true,
+            'enrollment' => true,
         ];
     }
 }

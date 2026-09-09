@@ -14,6 +14,10 @@
                 Loading registration form...
             </div>
 
+            <div v-else-if="loadingHeadProfile" class="rbim-card p-8 text-center text-sm text-slate-500">
+                Loading household head profile...
+            </div>
+
             <ResidentSectionWizard
                 v-else-if="createdHousehold && !headSectionsComplete && headResident"
                 :key="headResident.resident_id"
@@ -233,6 +237,7 @@ import {
     emptyProfilingLookups,
     fetchProfilingLookups,
 } from '@/utils/profilingLookups';
+import { profilingResidentReady } from '@/utils/residentProfiling';
 
 const router = useRouter();
 const { householdTabs } = useSectionTabs();
@@ -243,6 +248,7 @@ const saving = ref(false);
 const error = ref('');
 const successMessage = ref('');
 const createdHousehold = ref(null);
+const loadingHeadProfile = ref(false);
 const headSectionsComplete = ref(false);
 const membersComplete = ref(false);
 
@@ -277,18 +283,13 @@ const headRelationshipOptions = computed(() => (
 
 const headResident = computed(() => {
     const household = createdHousehold.value;
+    const head = household?.head;
 
-    if (!household) {
-        return null;
+    if (profilingResidentReady(head)) {
+        return head;
     }
 
-    if (household.head) {
-        return household.head;
-    }
-
-    return household.head_resident_id
-        ? { resident_id: household.head_resident_id }
-        : null;
+    return null;
 });
 
 function emptyHousehold() {
@@ -517,6 +518,24 @@ async function handleSave() {
             unit_num: optionalAddressText(household.unit_num),
             head: headData,
         });
+
+        const headId = createdHousehold.value?.head_resident_id
+            || createdHousehold.value?.head?.resident_id;
+
+        if (headId) {
+            loadingHeadProfile.value = true;
+
+            try {
+                createdHousehold.value = {
+                    ...createdHousehold.value,
+                    head: await residentService.loadProfilingResident(
+                        createdHousehold.value.head ?? headId,
+                    ),
+                };
+            } finally {
+                loadingHeadProfile.value = false;
+            }
+        }
 
         clearFormDraft(HOUSEHOLD_REGISTER_DRAFT_KEY);
         Object.assign(household, emptyHousehold());

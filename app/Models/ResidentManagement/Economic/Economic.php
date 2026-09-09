@@ -8,6 +8,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Economic extends Model
 {
+    /**
+     * Sentinel stored when Q17 is skipped (remittance / investments / others).
+     * The FK was dropped so 0 can be persisted without a lookup row.
+     */
+    public const STATUS_NOT_APPLICABLE = 0;
+
     protected $table = 'economic';
 
     protected $primaryKey = 'economic_id';

@@ -22,7 +22,7 @@ class UpdateCtcRequest extends FormRequest
     {
         return [
             'has_valid_ctc' => ['sometimes', 'required', 'boolean'],
-            'ctc_issued_here' => ['sometimes', 'required', 'boolean'],
+            'ctc_issued_here' => ['sometimes', 'nullable', 'boolean'],
         ];
     }
 

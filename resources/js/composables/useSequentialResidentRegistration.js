@@ -185,10 +185,12 @@ export function useSequentialResidentRegistration({
         saving.value = true;
 
         try {
-            createdResident.value = await residentService.createResident({
-                ...residentPayload(member.value),
-                household_id: householdId,
-            });
+            createdResident.value = await residentService.loadProfilingResident(
+                await residentService.createResident({
+                    ...residentPayload(member.value),
+                    household_id: householdId,
+                }),
+            );
 
             onMemberAdded?.();
             successMessage.value = '';

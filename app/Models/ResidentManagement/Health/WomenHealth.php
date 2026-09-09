@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class WomenHealth extends Model
 {
+    /**
+     * Sentinel stored when Q23–Q25 lookups are skipped or left blank.
+     * Those FKs were dropped so 0 can be persisted without a lookup row.
+     */
+    public const LOOKUP_NOT_APPLICABLE = 0;
+
     protected $table = 'women_health';
 
     protected $primaryKey = 'women_health_id';

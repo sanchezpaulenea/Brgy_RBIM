@@ -13,7 +13,11 @@ export function normalizePlace(value) {
         return '';
     }
 
-    return text.replace(/\s+(city|municipality)$/i, '').trim().toLowerCase();
+    return text
+        .replace(/^(brgy\.?|barangay)\s+/i, '')
+        .replace(/\s+(city|municipality)$/i, '')
+        .trim()
+        .toLowerCase();
 }
 
 export function placesMatch(left, right) {
@@ -24,7 +28,18 @@ export function placesMatch(left, right) {
 }
 
 export function sameAsCurrentResidence(previousBrgy, previousCity, currentBrgy, currentCity) {
-    return placesMatch(previousBrgy, currentBrgy) && placesMatch(previousCity, currentCity);
+    if (!placesMatch(previousCity, currentCity)) {
+        return false;
+    }
+
+    const previousBarangay = normalizePlace(previousBrgy);
+    const currentBarangay = normalizePlace(currentBrgy);
+
+    if (previousBarangay === '' || currentBarangay === '') {
+        return true;
+    }
+
+    return previousBarangay === currentBarangay;
 }
 
 export function lengthOfStayMonths(isoDate, asOf = new Date()) {
