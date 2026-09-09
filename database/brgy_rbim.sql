@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Sep 09, 2026 at 03:26 PM
+-- Generation Time: Sep 09, 2026 at 06:56 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `brgy_rbim`
+-- Database: `v3_rbim`
 --
 
 -- --------------------------------------------------------
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS `audit_log` (
   PRIMARY KEY (`audit_id`),
   KEY `action` (`action_id`),
   KEY `audit_user` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `audit_log`
@@ -87,8 +87,7 @@ INSERT INTO `audit_log` (`audit_id`, `user_id`, `action_id`, `record_id`, `descr
 (10, 1, 1, 3, 'Create barangay personnel', NULL, 'Rullan, Deborah', '2026-08-31 19:29:32', 'record', 'barangay_personnel'),
 (11, 1, 1, 7, 'Assign role to user', NULL, '1', '2026-08-31 19:29:46', 'assignment', 'user role'),
 (12, 1, 1, 3, 'Create user account', NULL, 'deborah', '2026-08-31 19:29:46', 'account', 'user'),
-(13, 3, 2, 3, 'User changed password', '[REDACTED]', '[REDACTED]', '2026-08-31 19:30:16', 'password', 'user'),
-(14, 2, 2, 6, 'Session ended because the account was signed in on another device.', NULL, 'concurrent_login', '2026-09-09 13:45:56', 'session', 'user_log');
+(13, 3, 2, 3, 'User changed password', '[REDACTED]', '[REDACTED]', '2026-08-31 19:30:16', 'password', 'user');
 
 -- --------------------------------------------------------
 
@@ -540,7 +539,7 @@ CREATE TABLE IF NOT EXISTS `household_assessment` (
 --
 
 INSERT INTO `household_assessment` (`assessment_id`, `household_id`, `census_status_id`, `visit_start`, `visit_end`, `next_visit_date`, `interviewer_id`, `supervisor_id`, `encoder_id`, `previous_assessment_id`) VALUES
-(1, 2, 2, '2026-08-15 18:22:21', '2026-08-17 18:21:38', '2026-09-17', 2, 1, 2, NULL),
+(1, 2, 1, '2026-08-15 18:22:21', '2026-08-17 18:21:38', NULL, 2, 1, 2, NULL),
 (2, 1, 2, '2026-08-15 18:22:21', '2026-08-15 18:30:00', '2026-08-17', 2, 1, 2, NULL),
 (3, 1, 1, '2026-08-15 18:24:53', '2026-08-15 18:30:29', NULL, 2, 1, 2, 2);
 
@@ -652,9 +651,9 @@ CREATE TABLE IF NOT EXISTS `migration` (
   `previous_residence_5yrs_city_municipality` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `date_of_transfer_in_brgy` date DEFAULT NULL,
   `resident_type_id` int NOT NULL,
-  `reason_for_leaving_id` int DEFAULT NULL,
-  `will_return_to_previous_residence` tinyint(1) DEFAULT NULL,
-  `reason_for_transfer_id` int DEFAULT NULL,
+  `reason_for_leaving_id` int NOT NULL,
+  `will_return_to_previous_residence` tinyint(1) NOT NULL,
+  `reason_for_transfer_id` int NOT NULL,
   `duration_of_stay` date DEFAULT NULL,
   `resident_id` int NOT NULL,
   PRIMARY KEY (`migration_id`),
@@ -1012,11 +1011,11 @@ CREATE TABLE IF NOT EXISTS `resident` (
 
 INSERT INTO `resident` (`resident_id`, `last_name`, `first_name`, `middle_name`, `suffix`, `relationship_to_hh_id`, `sex_id`, `date_of_birth`, `birth_city_municipality`, `birth_province`, `birth_country`, `nationality_id`, `religion_id`, `ethnicity_id`, `marital_status_id`, `clan_id`, `resident_status_id`, `household_id`) VALUES
 (1, 'Doe', 'John', NULL, NULL, 1, 1, '1975-08-13', 'Ilagan', 'Isabela', 'Philippines', 1, 1, 2, 2, 1, 1, 1),
-(2, 'Dela Cruz', 'Juan', NULL, NULL, 1, 1, '1985-08-14', 'Baguio', 'Benguet', 'Philippines', 1, 1, 2, 2, 2, 1, 2),
-(3, 'Dela Cruz', 'May', NULL, NULL, 4, 2, '2026-01-01', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 1, 2, 1, 2),
-(5, 'Dela Cruz', 'Pia', NULL, NULL, 4, 2, '2016-05-11', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 1, 2, 1, 2),
-(6, 'Dela Cruz', 'Jay', NULL, NULL, 3, 1, '2011-08-04', 'Baguio City', 'Benguet', 'Philippines', 4, 1, 2, 1, 2, 1, 2),
-(7, 'Dela Cruz', 'Jim', NULL, NULL, 11, 1, '1961-09-04', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 1, 2, 1, 2);
+(2, 'Dela Cruz', 'Juan', NULL, NULL, 1, 1, '1969-08-08', 'Baguio', 'Benguet', 'Philippines', 1, 1, 2, 2, 2, 1, 2),
+(3, 'Dela Cruz', 'Jay', NULL, NULL, 3, 1, '2011-08-04', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 1, 2, 1, 2),
+(5, 'Dela Cruz', 'May', NULL, NULL, 4, 2, '2026-01-01', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 1, 2, 1, 2),
+(6, 'Dela Cruz', 'Pia', NULL, NULL, 4, 2, '2016-04-13', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 1, 2, 1, 2),
+(7, 'Dela Cruz', 'Jim', NULL, NULL, 11, 1, '2016-04-13', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 4, 2, 1, 2);
 
 --
 -- Triggers `resident`
@@ -1294,7 +1293,7 @@ CREATE TABLE IF NOT EXISTS `school_lvl` (
   `school_lvl_id` int NOT NULL AUTO_INCREMENT,
   `school_lvl` varchar(45) NOT NULL,
   PRIMARY KEY (`school_lvl_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `school_lvl`
@@ -1306,8 +1305,7 @@ INSERT INTO `school_lvl` (`school_lvl_id`, `school_lvl`) VALUES
 (3, 'Junior High School'),
 (4, 'Senior High School'),
 (5, 'Vocational/Technical'),
-(6, 'College/University'),
-(7, 'Not Applicable');
+(6, 'College/University');
 
 -- --------------------------------------------------------
 
@@ -1396,6 +1394,8 @@ CREATE TABLE IF NOT EXISTS `sociocivic` (
   `sociocivic_id` int NOT NULL AUTO_INCREMENT,
   `solo_parent_status_id` int NOT NULL,
   `registered_sen_citizen` tinyint(1) NOT NULL,
+  `ncsc_rrn_id_number` int NOT NULL,
+  `osca_id_number` int NOT NULL,
   `registered_barangay_voter` varchar(45) DEFAULT NULL,
   `resident_id` int NOT NULL,
   PRIMARY KEY (`sociocivic_id`),
@@ -1605,7 +1605,7 @@ CREATE TABLE IF NOT EXISTS `user_log` (
   PRIMARY KEY (`user_log_id`),
   KEY `user_log` (`user_id`),
   KEY `login_status` (`login_status_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `user_log`
@@ -1617,9 +1617,7 @@ INSERT INTO `user_log` (`user_log_id`, `user_id`, `login_time`, `logout_time`, `
 (3, 3, '2026-08-31 19:29:59', '2026-08-31 19:30:16', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (4, 3, '2026-08-31 19:30:26', '2026-08-31 19:30:38', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (5, 2, '2026-08-31 19:30:44', '2026-08-31 19:30:44', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(6, 2, '2026-08-31 19:30:47', '2026-09-09 13:45:56', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(7, 2, '2026-09-09 13:45:56', '2026-09-09 14:05:26', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(8, 2, '2026-09-09 15:06:09', '2026-09-09 15:15:02', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
+(6, 2, '2026-08-31 19:30:47', '2026-08-31 19:30:47', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
 
 -- --------------------------------------------------------
 
