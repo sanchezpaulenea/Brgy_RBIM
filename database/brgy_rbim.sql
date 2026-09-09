@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Sep 06, 2026 at 12:24 PM
+-- Generation Time: Sep 09, 2026 at 01:44 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -405,6 +405,7 @@ CREATE TABLE IF NOT EXISTS `health` (
   `facility_visited_past_12mos_id` int NOT NULL,
   `facility_visit_reason_id` int NOT NULL,
   `disability` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `pwd_id_number` int NOT NULL,
   `resident_id` int NOT NULL,
   PRIMARY KEY (`health_id`),
   KEY `residenthealth` (`resident_id`),
@@ -649,6 +650,7 @@ CREATE TABLE IF NOT EXISTS `migration` (
   `previous_residence_5yrs_brgy` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `previous_residence_5yrs_city_municipality` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `date_of_transfer_in_brgy` date DEFAULT NULL,
+  `resident_type_id` int NOT NULL,
   `reason_for_leaving_id` int NOT NULL,
   `will_return_to_previous_residence` tinyint(1) NOT NULL,
   `reason_for_transfer_id` int NOT NULL,
@@ -656,7 +658,8 @@ CREATE TABLE IF NOT EXISTS `migration` (
   `resident_id` int NOT NULL,
   PRIMARY KEY (`migration_id`),
   KEY `reasonforleaving` (`reason_for_leaving_id`),
-  KEY `reasonfortransfer` (`reason_for_transfer_id`)
+  KEY `reasonfortransfer` (`reason_for_transfer_id`),
+  KEY `residenttype` (`resident_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -744,7 +747,7 @@ INSERT INTO `permission` (`permission_id`, `permission`) VALUES
 (39, 'householdassessment.updatestatus'),
 (40, 'education.view'),
 (41, 'education.create'),
-(42, 'edcuation.update'),
+(42, 'education.update'),
 (43, 'economic.view'),
 (44, 'economic.create'),
 (45, 'economic.update'),
@@ -754,7 +757,7 @@ INSERT INTO `permission` (`permission_id`, `permission`) VALUES
 (49, 'health.view'),
 (50, 'health.create'),
 (51, 'health.update'),
-(52, 'womenhealth.view'),
+(52, 'womanhealth.view'),
 (53, 'womanhealth.create'),
 (54, 'womanhealth.update'),
 (55, 'sociocivic.view'),
@@ -987,7 +990,6 @@ CREATE TABLE IF NOT EXISTS `resident` (
   `religion_id` int NOT NULL,
   `ethnicity_id` int NOT NULL,
   `marital_status_id` int NOT NULL,
-  `resident_type_id` int NOT NULL,
   `clan_id` int NOT NULL,
   `resident_status_id` int NOT NULL DEFAULT '1',
   `household_id` int NOT NULL,
@@ -1000,7 +1002,6 @@ CREATE TABLE IF NOT EXISTS `resident` (
   KEY `nationality` (`nationality_id`),
   KEY `ethnicity` (`ethnicity_id`),
   KEY `religion` (`religion_id`),
-  KEY `resident_type` (`resident_type_id`),
   KEY `household_resident` (`household_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -1008,9 +1009,9 @@ CREATE TABLE IF NOT EXISTS `resident` (
 -- Dumping data for table `resident`
 --
 
-INSERT INTO `resident` (`resident_id`, `last_name`, `first_name`, `middle_name`, `suffix`, `relationship_to_hh_id`, `sex_id`, `date_of_birth`, `birth_city_municipality`, `birth_province`, `birth_country`, `nationality_id`, `religion_id`, `ethnicity_id`, `marital_status_id`, `resident_type_id`, `clan_id`, `resident_status_id`, `household_id`) VALUES
-(1, 'Doe', 'John', NULL, NULL, 1, 1, '1975-08-13', 'Ilagan', 'Isabela', 'Philippines', 1, 1, 2, 2, 1, 1, 1, 1),
-(2, 'Dela Cruz', 'Juan', NULL, NULL, 1, 1, '1969-08-08', 'Baguio', 'Benguet', 'Philippines', 1, 1, 2, 2, 1, 2, 1, 2);
+INSERT INTO `resident` (`resident_id`, `last_name`, `first_name`, `middle_name`, `suffix`, `relationship_to_hh_id`, `sex_id`, `date_of_birth`, `birth_city_municipality`, `birth_province`, `birth_country`, `nationality_id`, `religion_id`, `ethnicity_id`, `marital_status_id`, `clan_id`, `resident_status_id`, `household_id`) VALUES
+(1, 'Doe', 'John', NULL, NULL, 1, 1, '1975-08-13', 'Ilagan', 'Isabela', 'Philippines', 1, 1, 2, 2, 1, 1, 1),
+(2, 'Dela Cruz', 'Juan', NULL, NULL, 1, 1, '1969-08-08', 'Baguio', 'Benguet', 'Philippines', 1, 1, 2, 2, 2, 1, 2);
 
 --
 -- Triggers `resident`
@@ -1080,7 +1081,7 @@ CREATE TABLE IF NOT EXISTS `resident_type` (
 
 INSERT INTO `resident_type` (`resident_type_id`, `resident_type`) VALUES
 (2, 'Migrant'),
-(1, 'Permanent Resident'),
+(1, 'Non-Migrant'),
 (3, 'Transient');
 
 -- --------------------------------------------------------
@@ -1679,6 +1680,7 @@ INSERT INTO `user_status` (`user_status_id`, `user_status`, `can_login`) VALUES
 DROP TABLE IF EXISTS `women_health`;
 CREATE TABLE IF NOT EXISTS `women_health` (
   `women_health_id` int NOT NULL AUTO_INCREMENT,
+  `number_pregnancies` int NOT NULL,
   `living_children` int NOT NULL,
   `family_planning_method_id` int NOT NULL,
   `source_of_fp_method_id` int NOT NULL,
@@ -1761,7 +1763,8 @@ ALTER TABLE `infant_health`
 --
 ALTER TABLE `migration`
   ADD CONSTRAINT `reasonforleaving` FOREIGN KEY (`reason_for_leaving_id`) REFERENCES `reason_for_leaving` (`reason_for_leaving_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  ADD CONSTRAINT `reasonfortransfer` FOREIGN KEY (`reason_for_transfer_id`) REFERENCES `reason_for_transfer` (`reason_for_transfer_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+  ADD CONSTRAINT `reasonfortransfer` FOREIGN KEY (`reason_for_transfer_id`) REFERENCES `reason_for_transfer` (`reason_for_transfer_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `residenttype` FOREIGN KEY (`resident_type_id`) REFERENCES `resident_type` (`resident_type_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 --
 -- Constraints for table `resident`
@@ -1775,7 +1778,6 @@ ALTER TABLE `resident`
   ADD CONSTRAINT `religion` FOREIGN KEY (`religion_id`) REFERENCES `religion` (`religion_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `resident_clan` FOREIGN KEY (`clan_id`) REFERENCES `clan` (`clan_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `resident_status` FOREIGN KEY (`resident_status_id`) REFERENCES `resident_status` (`resident_status_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  ADD CONSTRAINT `resident_type` FOREIGN KEY (`resident_type_id`) REFERENCES `resident_type` (`resident_type_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `sex` FOREIGN KEY (`sex_id`) REFERENCES `sex` (`sex_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 --
