@@ -1,8 +1,7 @@
 <template>
     <div ref="root" class="relative">
         <label v-if="label" :for="inputId" class="rbim-label">
-            {{ label }}
-            <span v-if="required" class="rbim-required" aria-hidden="true">*</span>
+            {{ label }}<span v-if="required" class="rbim-required" aria-hidden="true">*</span>
         </label>
         <input
             :id="inputId"

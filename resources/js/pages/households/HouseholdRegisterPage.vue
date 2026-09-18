@@ -58,12 +58,13 @@
                 </h2>
                 <p class="mt-1 text-xs text-slate-500">
                     Fields marked with <span class="rbim-required">*</span> are required.
-                    Continue saves the household and head resident, then education through skills can be filled or skipped.
+                    Click Continue to save the household and head resident information.
+                    You can complete the education and skills information in the next step or skip it.
                 </p>
 
                 <form class="mt-4 space-y-8" novalidate @submit.prevent="handleSave">
                     <section class="space-y-4">
-                        <h3 class="text-sm font-semibold text-slate-900">Household</h3>
+                        <h3 class="text-sm font-semibold text-slate-900">Household Information</h3>
                         <div class="grid gap-4 sm:grid-cols-2">
                             <div>
                                 <label for="clan_id" class="rbim-label">
@@ -151,7 +152,7 @@
                     </section>
 
                     <section class="space-y-4">
-                        <h3 class="text-sm font-semibold text-slate-900">Head Resident</h3>
+                        <h3 class="text-sm font-semibold text-slate-900">Household Head Information</h3>
                         <ResidentDemographicsFields
                             v-model="head"
                             :min-age="HOUSEHOLD_HEAD_MIN_AGE"

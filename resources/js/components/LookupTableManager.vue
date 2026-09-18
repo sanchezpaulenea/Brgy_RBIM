@@ -46,20 +46,20 @@
                 >
             </div>
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <table class="min-w-full table-fixed divide-y divide-slate-200 text-sm">
                     <thead class="bg-slate-50">
                         <tr>
-                            <th class="px-4 py-3 text-left font-semibold text-slate-600">ID</th>
-                            <th class="px-4 py-3 text-left font-semibold text-slate-600">{{ fieldLabel }}</th>
-                            <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
-                            <th v-if="canDelete" class="px-4 py-3 text-left font-semibold text-slate-600">Action</th>
+                            <th class="w-[18%] px-4 py-3 text-center font-semibold text-slate-600">{{ idColumnLabel }}</th>
+                            <th class="px-4 py-3 text-center font-semibold text-slate-600">{{ fieldLabel }}</th>
+                            <th class="w-[20%] px-4 py-3 text-center font-semibold text-slate-600">Status</th>
+                            <th v-if="canDelete" class="w-[18%] px-4 py-3 text-center font-semibold text-slate-600">Action</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         <tr v-for="item in filteredItems" :key="item.id">
-                            <td class="px-4 py-3 font-mono text-xs text-slate-700">{{ item.id }}</td>
-                            <td class="px-4 py-3 font-medium text-slate-900">{{ item.label }}</td>
-                            <td class="px-4 py-3">
+                            <td class="px-4 py-3 text-center text-slate-700">{{ item.id }}</td>
+                            <td class="px-4 py-3 text-center font-medium text-slate-900">{{ item.label }}</td>
+                            <td class="px-4 py-3 text-center">
                                 <span
                                     class="rounded-full px-2 py-0.5 text-xs"
                                     :class="isAssigned(item) ? 'bg-amber-50 text-amber-800' : 'bg-slate-100 text-slate-500'"
@@ -67,7 +67,7 @@
                                     {{ isAssigned(item) ? 'Assigned' : 'Available' }}
                                 </span>
                             </td>
-                            <td v-if="canDelete" class="px-4 py-3">
+                            <td v-if="canDelete" class="px-4 py-3 text-center">
                                 <button
                                     type="button"
                                     class="rbim-btn-danger"
@@ -176,6 +176,15 @@ const confirm = reactive({
 const inputId = computed(() => `${props.fieldName}-input`);
 const addButtonLabel = computed(() => `Add ${props.itemLabel}`);
 const pluralLabel = computed(() => props.itemLabelPlural || `${props.itemLabel}s`);
+const idColumnLabel = computed(() => {
+    const label = String(props.itemLabel ?? '').trim();
+
+    if (!label) {
+        return 'ID';
+    }
+
+    return `${label.charAt(0).toUpperCase()}${label.slice(1)} ID`;
+});
 
 const filteredItems = computed(() => (
     items.value.filter((item) => matchesSearch(item.label, search.value))

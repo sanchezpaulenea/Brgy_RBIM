@@ -11,7 +11,7 @@
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.highest_lvl_of_educ_id }"
                 >
-                    <option value="">Select</option>
+                    <option value="">Select education level</option>
                     <option v-for="option in lookups.highestLvlOfEduc" :key="option.id" :value="option.id">{{ option.label }}</option>
                 </select>
                 <p v-if="errors.highest_lvl_of_educ_id" class="rbim-error">{{ errors.highest_lvl_of_educ_id }}</p>
@@ -26,7 +26,7 @@
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.current_enrollement_status_id }"
                 >
-                    <option value="">Select</option>
+                    <option value="">Select enrollment status</option>
                     <option v-for="option in lookups.currentEnrollmentStatus" :key="option.id" :value="option.id">{{ option.label }}</option>
                 </select>
                 <p v-if="errors.current_enrollement_status_id" class="rbim-error">{{ errors.current_enrollement_status_id }}</p>
@@ -42,7 +42,7 @@
                         class="rbim-input"
                         :class="{ 'rbim-input-error': errors.school_lvl_id }"
                     >
-                        <option value="">Select</option>
+                        <option value="">Select school level</option>
                         <option v-for="option in enrolledSchoolLevels" :key="option.id" :value="option.id">{{ option.label }}</option>
                     </select>
                     <p v-if="errors.school_lvl_id" class="rbim-error">{{ errors.school_lvl_id }}</p>
@@ -63,7 +63,7 @@
                 </div>
                 <div>
                     <label class="rbim-label" :for="`${idPrefix}-place_of_school_city_municipality`">
-                        School City / Municipality<span class="rbim-required" aria-hidden="true">*</span>
+                        School City/Municipality<span class="rbim-required" aria-hidden="true">*</span>
                     </label>
                     <input
                         :id="`${idPrefix}-place_of_school_city_municipality`"
@@ -94,6 +94,8 @@
                     v-model="form.monthly_income"
                     type="number"
                     min="0"
+                    step="0.01"
+                    placeholder="0.00"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.monthly_income }"
                 >
@@ -109,14 +111,14 @@
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.source_of_income_id }"
                 >
-                    <option value="">Select</option>
+                    <option value="">Select source of income</option>
                     <option v-for="option in lookups.sourceOfIncome" :key="option.id" :value="option.id">{{ option.label }}</option>
                 </select>
                 <p v-if="errors.source_of_income_id" class="rbim-error">{{ errors.source_of_income_id }}</p>
             </div>
             <div v-if="economicShowsWorkDetails">
                 <label class="rbim-label" :for="`${idPrefix}-status_of_work_business_id`">
-                    Status of Work / Business<span class="rbim-required" aria-hidden="true">*</span>
+                    Status of Work/Business<span class="rbim-required" aria-hidden="true">*</span>
                 </label>
                 <select
                     :id="`${idPrefix}-status_of_work_business_id`"
@@ -124,14 +126,14 @@
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.status_of_work_business_id }"
                 >
-                    <option value="">Select</option>
+                    <option value="">Select work/business status</option>
                     <option v-for="option in lookups.statusOfWorkBusiness" :key="option.id" :value="option.id">{{ option.label }}</option>
                 </select>
                 <p v-if="errors.status_of_work_business_id" class="rbim-error">{{ errors.status_of_work_business_id }}</p>
             </div>
             <div v-if="economicShowsWorkDetails">
                 <label class="rbim-label" :for="`${idPrefix}-place_of_work_business`">
-                    Place of Work / Business<span class="rbim-required" aria-hidden="true">*</span>
+                    Place of Work/Business<span class="rbim-required" aria-hidden="true">*</span>
                 </label>
                 <input
                     :id="`${idPrefix}-place_of_work_business`"
@@ -156,7 +158,7 @@
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.place_of_delivery_id }"
                 >
-                    <option value="">Select</option>
+                    <option value="">Select place of delivery</option>
                     <option v-for="option in lookups.placeOfDelivery" :key="option.id" :value="option.id">{{ option.label }}</option>
                 </select>
                 <p v-if="errors.place_of_delivery_id" class="rbim-error">{{ errors.place_of_delivery_id }}</p>
@@ -171,7 +173,7 @@
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.birth_attendant_id }"
                 >
-                    <option value="">Select</option>
+                    <option value="">Select birth attendant</option>
                     <option v-for="option in lookups.birthAttendant" :key="option.id" :value="option.id">{{ option.label }}</option>
                 </select>
                 <p v-if="errors.birth_attendant_id" class="rbim-error">{{ errors.birth_attendant_id }}</p>
@@ -203,7 +205,7 @@
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.health_insurance_id }"
                 >
-                    <option value="">Select</option>
+                    <option value="">Select health insurance</option>
                     <option v-for="option in lookups.healthInsurance" :key="option.id" :value="option.id">{{ option.label }}</option>
                 </select>
                 <p v-if="errors.health_insurance_id" class="rbim-error">{{ errors.health_insurance_id }}</p>
@@ -218,7 +220,7 @@
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.facility_visited_past_12mos_id }"
                 >
-                    <option value="">Select</option>
+                    <option value="">Select facility visited</option>
                     <option v-for="option in lookups.facilityVisited" :key="option.id" :value="option.id">{{ option.label }}</option>
                 </select>
                 <p v-if="errors.facility_visited_past_12mos_id" class="rbim-error">{{ errors.facility_visited_past_12mos_id }}</p>
@@ -233,7 +235,7 @@
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.facility_visit_reason_id }"
                 >
-                    <option value="">Select</option>
+                    <option value="">Select visit reason</option>
                     <option v-for="option in lookups.facilityVisitReason" :key="option.id" :value="option.id">{{ option.label }}</option>
                 </select>
                 <p v-if="errors.facility_visit_reason_id" class="rbim-error">{{ errors.facility_visit_reason_id }}</p>
@@ -308,7 +310,7 @@
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.family_planning_method_id }"
                 >
-                    <option value="">Select</option>
+                    <option value="">Select family planning method</option>
                     <option v-for="option in lookups.familyPlanningMethod" :key="option.id" :value="option.id">{{ option.label }}</option>
                 </select>
                 <p v-if="errors.family_planning_method_id" class="rbim-error">{{ errors.family_planning_method_id }}</p>
@@ -324,7 +326,7 @@
                         class="rbim-input"
                         :class="{ 'rbim-input-error': errors.source_of_fp_method_id }"
                     >
-                        <option value="">Select</option>
+                        <option value="">Select source of method</option>
                         <option v-for="option in lookups.sourceOfFpMethod" :key="option.id" :value="option.id">{{ option.label }}</option>
                     </select>
                     <p v-if="errors.source_of_fp_method_id" class="rbim-error">{{ errors.source_of_fp_method_id }}</p>
@@ -340,7 +342,7 @@
                         :class="{ 'rbim-input-error': errors.have_intention_to_use_fp }"
                         @change="form.have_intention_to_use_fp = parseBoolean($event.target.value)"
                     >
-                        <option value="">Select</option>
+                        <option value="">Select intention</option>
                         <option value="true">Yes</option>
                         <option value="false">No</option>
                     </select>
@@ -360,7 +362,7 @@
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.solo_parent_status_id }"
                 >
-                    <option value="">Select</option>
+                    <option value="">Select solo parent status</option>
                     <option v-for="option in lookups.soloParentStatus" :key="option.id" :value="option.id">{{ option.label }}</option>
                 </select>
                 <p v-if="errors.solo_parent_status_id" class="rbim-error">{{ errors.solo_parent_status_id }}</p>
@@ -376,7 +378,7 @@
                     :class="{ 'rbim-input-error': errors.registered_sen_citizen }"
                     @change="form.registered_sen_citizen = parseBoolean($event.target.value)"
                 >
-                    <option value="">Select</option>
+                    <option value="">Select senior citizen status</option>
                     <option value="true">Yes</option>
                     <option value="false">No</option>
                 </select>
@@ -424,7 +426,7 @@
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.is_registered_barangay_voter }"
                 >
-                    <option value="">Select</option>
+                    <option value="">Select voter status</option>
                     <option value="Yes">Yes</option>
                     <option value="No">No</option>
                 </select>
@@ -561,7 +563,7 @@
                         class="rbim-input"
                         :class="{ 'rbim-input-error': errors.reason_for_leaving_id }"
                     >
-                        <option value="">Select</option>
+                        <option value="">Select reason for leaving</option>
                         <option v-for="option in lookups.reasonForLeaving" :key="option.id" :value="option.id">{{ option.label }}</option>
                     </select>
                     <p v-if="errors.reason_for_leaving_id" class="rbim-error">{{ errors.reason_for_leaving_id }}</p>
@@ -576,7 +578,7 @@
                         class="rbim-input"
                         :class="{ 'rbim-input-error': errors.reason_for_transfer_id }"
                     >
-                        <option value="">Select</option>
+                        <option value="">Select reason for transferring</option>
                         <option v-for="option in lookups.reasonForTransfer" :key="option.id" :value="option.id">{{ option.label }}</option>
                     </select>
                     <p v-if="errors.reason_for_transfer_id" class="rbim-error">{{ errors.reason_for_transfer_id }}</p>
@@ -592,7 +594,7 @@
                         :class="{ 'rbim-input-error': errors.will_return_to_previous_residence }"
                         @change="form.will_return_to_previous_residence = parseBoolean($event.target.value)"
                     >
-                        <option value="">Select</option>
+                        <option value="">Select plan to return</option>
                         <option value="true">Yes</option>
                         <option value="false">No</option>
                     </select>
@@ -616,7 +618,7 @@
                     :class="{ 'rbim-input-error': errors.has_valid_ctc }"
                     @change="form.has_valid_ctc = parseBoolean($event.target.value)"
                 >
-                    <option value="">Select</option>
+                    <option value="">Select CTC status</option>
                     <option value="true">Yes</option>
                     <option value="false">No</option>
                 </select>
@@ -633,7 +635,7 @@
                     :class="{ 'rbim-input-error': errors.ctc_issued_here }"
                     @change="form.ctc_issued_here = parseBoolean($event.target.value)"
                 >
-                    <option value="">Select</option>
+                    <option value="">Select where issued</option>
                     <option value="true">Yes</option>
                     <option value="false">No</option>
                 </select>
@@ -666,7 +668,7 @@
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.skill_type_id }"
                 >
-                    <option value="">Select</option>
+                    <option value="">Select skill type</option>
                     <option v-for="option in lookups.skillType" :key="option.id" :value="option.id">{{ option.label }}</option>
                 </select>
                 <p v-if="errors.skill_type_id" class="rbim-error">{{ errors.skill_type_id }}</p>

@@ -184,6 +184,30 @@ INSERT INTO `building_house_type` (`building_house_type_id`, `building_house_typ
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `census_status`
+--
+
+DROP TABLE IF EXISTS `census_status`;
+CREATE TABLE IF NOT EXISTS `census_status` (
+  `census_status_id` int NOT NULL AUTO_INCREMENT,
+  `status_code` varchar(45) NOT NULL,
+  `status_name` varchar(45) NOT NULL,
+  PRIMARY KEY (`census_status_id`),
+  UNIQUE KEY `uq_census_status_code` (`status_code`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `census_status`
+--
+
+INSERT INTO `census_status` (`census_status_id`, `status_code`, `status_name`) VALUES
+(1, 'C', 'Completed'),
+(2, 'CB', 'Callback'),
+(3, 'R', 'Refused');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `child_hhm_died`
 --
 
@@ -622,12 +646,16 @@ CREATE TABLE IF NOT EXISTS `household` (
   `clan_id` int NOT NULL,
   `head_resident_id` int NOT NULL,
   `street_id` int NOT NULL,
-  `number_of_house_story` int NOT NULL,
+  `number_of_house_story` int NOT NULL DEFAULT '1',
   `number_of_basement_level` int DEFAULT NULL,
   `house_lot` varchar(45) DEFAULT NULL,
+  `block_num` varchar(45) DEFAULT NULL,
+  `building_name` varchar(45) DEFAULT NULL,
+  `unit_num` varchar(45) DEFAULT NULL,
   `registration_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `household_status_id` int NOT NULL DEFAULT '1',
   PRIMARY KEY (`household_id`),
+  UNIQUE KEY `uq_lot_blk` (`house_lot`,`block_num`),
   KEY `house_street` (`street_id`),
   KEY `house_clan` (`clan_id`),
   KEY `house_status` (`household_status_id`),
@@ -638,9 +666,36 @@ CREATE TABLE IF NOT EXISTS `household` (
 -- Dumping data for table `household`
 --
 
-INSERT INTO `household` (`household_id`, `clan_id`, `head_resident_id`, `street_id`, `number_of_house_story`, `number_of_basement_level`, `house_lot`, `registration_date`, `household_status_id`) VALUES
-(1, 1, 1, 1, 1, 0, 'Lot 15', '2026-08-15 18:21:34', 1),
-(2, 2, 2, 2, 1, 0, 'Lot 4', '2026-08-15 18:25:41', 1);
+INSERT INTO `household` (`household_id`, `clan_id`, `head_resident_id`, `street_id`, `number_of_house_story`, `number_of_basement_level`, `house_lot`, `block_num`, `building_name`, `unit_num`, `registration_date`, `household_status_id`) VALUES
+(1, 1, 1, 1, 1, 0, 'Lot 15', NULL, NULL, NULL, '2026-08-15 18:21:34', 1),
+(2, 2, 2, 2, 1, 0, 'Lot 4', NULL, NULL, NULL, '2026-08-15 18:25:41', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `household_assessment`
+--
+
+DROP TABLE IF EXISTS `household_assessment`;
+CREATE TABLE IF NOT EXISTS `household_assessment` (
+  `assessment_id` int NOT NULL AUTO_INCREMENT,
+  `household_id` int NOT NULL,
+  `census_status_id` int NOT NULL,
+  `visit_start` datetime NOT NULL,
+  `visit_end` datetime NOT NULL,
+  `next_visit_date` date DEFAULT NULL,
+  `interviewer_id` int NOT NULL,
+  `supervisor_id` int NOT NULL,
+  `encoder_id` int NOT NULL,
+  `previous_assessment_id` int DEFAULT NULL,
+  PRIMARY KEY (`assessment_id`),
+  KEY `assessment_household` (`household_id`),
+  KEY `assessment_census_status` (`census_status_id`),
+  KEY `assessment_interviewer` (`interviewer_id`),
+  KEY `assessment_supervisor` (`supervisor_id`),
+  KEY `assessment_encoder` (`encoder_id`),
+  KEY `assessment_previous` (`previous_assessment_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -2047,6 +2102,17 @@ ALTER TABLE `household`
   ADD CONSTRAINT `house_head` FOREIGN KEY (`head_resident_id`) REFERENCES `resident` (`resident_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `house_status` FOREIGN KEY (`household_status_id`) REFERENCES `household_status` (`household_status_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `house_street` FOREIGN KEY (`street_id`) REFERENCES `street` (`street_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `household_assessment`
+--
+ALTER TABLE `household_assessment`
+  ADD CONSTRAINT `assessment_census_status` FOREIGN KEY (`census_status_id`) REFERENCES `census_status` (`census_status_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `assessment_encoder` FOREIGN KEY (`encoder_id`) REFERENCES `barangay_personnel` (`personnel_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `assessment_household` FOREIGN KEY (`household_id`) REFERENCES `household` (`household_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `assessment_interviewer` FOREIGN KEY (`interviewer_id`) REFERENCES `barangay_personnel` (`personnel_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `assessment_previous` FOREIGN KEY (`previous_assessment_id`) REFERENCES `household_assessment` (`assessment_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `assessment_supervisor` FOREIGN KEY (`supervisor_id`) REFERENCES `barangay_personnel` (`personnel_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 --
 -- Constraints for table `household_questions`

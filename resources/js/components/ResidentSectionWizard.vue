@@ -1,18 +1,16 @@
 <template>
     <article class="rbim-card p-6">
-        <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">
-            {{ title }}
-        </h2>
-        <p class="mt-1 text-sm font-medium text-slate-900">
-            {{ currentLabel }}
-            <span v-if="progressLabel" class="ml-2 text-xs font-normal text-slate-500">{{ progressLabel }}</span>
-        </p>
+        <div class="flex items-start justify-between gap-4">
+            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                {{ title }}
+            </h2>
+            <p v-if="progressLabel" class="shrink-0 text-sm font-semibold uppercase tracking-wider text-slate-500">
+                {{ progressLabel }}
+            </p>
+        </div>
         <p class="mt-1 text-xs text-slate-500">
-            Continue saves this section. Skip leaves it empty and flags it as missing.
-            Fields marked with <span class="rbim-required">*</span> are required when you continue.
-        </p>
-        <p v-if="residentName" class="mt-2 text-sm text-slate-700">
-            {{ residentName }}
+            Continue saves the information in this section. Skip leaves the section incomplete and marks it as missing.
+            Fields marked with <span class="rbim-required">*</span> are required to continue.
         </p>
 
         <div v-if="error" class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -20,32 +18,44 @@
         </div>
 
         <form class="mt-4 space-y-6" novalidate @submit.prevent="onContinue">
-            <ResidentProfilingSectionFields
-                v-if="currentKey"
-                :key="currentKey"
-                :section="currentKey"
-                :form="form"
-                :errors="errors"
-                :lookups="lookups"
-                :resident="resident"
-                :location="location"
-                :id-prefix="idPrefix"
-            />
+            <div class="space-y-4">
+                <div class="space-y-1">
+                    <p v-if="residentName" class="text-sm font-semibold uppercase tracking-wide text-brand">
+                        {{ residentName }}
+                    </p>
+                    <h3 v-if="currentLabel" class="text-sm font-semibold text-slate-900">
+                        {{ currentLabel }}
+                    </h3>
+                </div>
+                <ResidentProfilingSectionFields
+                    v-if="currentKey"
+                    :key="currentKey"
+                    :section="currentKey"
+                    :form="form"
+                    :errors="errors"
+                    :lookups="lookups"
+                    :resident="resident"
+                    :location="location"
+                    :id-prefix="idPrefix"
+                />
+            </div>
 
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex flex-wrap items-center gap-2">
+                    <button
+                        type="button"
+                        class="rbim-btn-outline"
+                        :disabled="saving || isFirstStep"
+                        @click="onBack"
+                    >
+                        Back
+                    </button>
+                    <button type="button" class="rbim-btn-outline" :disabled="saving" @click="onSkip">
+                        Skip
+                    </button>
+                </div>
                 <button type="submit" class="rbim-btn" :disabled="saving">
                     {{ saving ? 'Saving...' : 'Continue' }}
-                </button>
-                <button type="button" class="rbim-btn-outline" :disabled="saving" @click="onSkip">
-                    Skip
-                </button>
-                <button
-                    type="button"
-                    class="rbim-btn-outline"
-                    :disabled="saving || isFirstStep"
-                    @click="onBack"
-                >
-                    Back
                 </button>
             </div>
         </form>
@@ -56,6 +66,7 @@
 import { computed, onMounted, watch } from 'vue';
 import ResidentProfilingSectionFields from '@/components/ResidentProfilingSectionFields.vue';
 import { useResidentSectionWizard } from '@/composables/useResidentSectionWizard';
+import { personDisplayName } from '@/utils/format';
 import { profilingResidentReady } from '@/utils/residentProfiling';
 
 const props = defineProps({
@@ -103,7 +114,11 @@ const {
     getLocation: () => props.location,
 });
 
-const residentName = computed(() => props.resident?.full_name || '');
+const residentName = computed(() => {
+    const name = props.resident?.full_name || personDisplayName(props.resident);
+
+    return name ? name.toUpperCase() : '';
+});
 
 function completeIfFinished(result) {
     if (result === 'finished') {

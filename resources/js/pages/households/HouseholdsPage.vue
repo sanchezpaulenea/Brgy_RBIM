@@ -64,16 +64,16 @@
             </div>
             <div v-else class="rbim-card overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <table class="min-w-full table-fixed divide-y divide-slate-200 text-sm">
                         <thead class="bg-slate-50">
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Household ID</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Street</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">House/Lot Number</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Head Resident Name</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Registration Date</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Action</th>
+                                <th class="w-[12%] px-3 py-3 text-center font-semibold text-slate-600">Household ID</th>
+                                <th class="w-[12%] px-3 py-3 text-center font-semibold text-slate-600">Street</th>
+                                <th class="w-[14%] px-3 py-3 text-center font-semibold text-slate-600">House/Lot Number</th>
+                                <th class="px-3 py-3 text-center font-semibold text-slate-600">Head Resident Name</th>
+                                <th class="w-[10%] px-3 py-3 text-center font-semibold text-slate-600">Status</th>
+                                <th class="w-[14%] px-3 py-3 text-center font-semibold text-slate-600">Registration Date</th>
+                                <th class="w-[16%] px-3 py-3 text-center font-semibold text-slate-600">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -83,14 +83,14 @@
                                 class="cursor-pointer hover:bg-slate-50"
                                 @click="openDetail(household.household_id)"
                             >
-                                <td class="px-4 py-3 font-mono text-xs text-slate-700">{{ household.household_id }}</td>
-                                <td class="px-4 py-3 text-slate-900">{{ household.street_name || '—' }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ household.house_lot || '—' }}</td>
-                                <td class="px-4 py-3 font-medium text-slate-900">{{ household.head_name || '—' }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ household.household_status || '—' }}</td>
-                                <td class="px-4 py-3 whitespace-nowrap text-slate-600">{{ formatDate(household.registration_date) }}</td>
-                                <td class="px-4 py-3" @click.stop>
-                                    <div class="flex gap-2">
+                                <td class="px-3 py-3 text-center text-slate-700">{{ household.household_id }}</td>
+                                <td class="px-3 py-3 text-center text-slate-900">{{ household.street_name || '—' }}</td>
+                                <td class="px-3 py-3 text-center text-slate-600">{{ household.house_lot || '—' }}</td>
+                                <td class="px-3 py-3 text-center font-medium text-slate-900">{{ household.head_name || '—' }}</td>
+                                <td class="px-3 py-3 text-center text-slate-600">{{ household.household_status || '—' }}</td>
+                                <td class="px-3 py-3 text-center whitespace-nowrap text-slate-600">{{ formatDate(household.registration_date) }}</td>
+                                <td class="px-3 py-3" @click.stop>
+                                    <div class="flex justify-center gap-2">
                                         <button type="button" class="rbim-btn-action" @click="openDetail(household.household_id)">
                                             View
                                         </button>

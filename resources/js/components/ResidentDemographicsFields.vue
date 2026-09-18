@@ -111,7 +111,7 @@
             @update:model-value="patch('date_of_birth', $event)"
         />
         <div>
-            <label :for="`${idPrefix}-birth_city`" class="rbim-label">
+            <label :for="`${idPrefix}-birth_city`" class="rbim-label whitespace-nowrap">
                 Birth City/Municipality<span class="rbim-required" aria-hidden="true">*</span>
             </label>
             <input
