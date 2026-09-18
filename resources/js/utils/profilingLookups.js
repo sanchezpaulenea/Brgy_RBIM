@@ -23,6 +23,7 @@ export function emptyProfilingLookups() {
         location: {
             barangay: '',
             city: '',
+            province: '',
         },
     };
 }
@@ -86,6 +87,6 @@ export async function fetchProfilingLookups() {
         reasonForLeaving,
         reasonForTransfer,
         skillType,
-        location: location ?? { barangay: '', city: '' },
+        location: location ?? { barangay: '', city: '', province: '' },
     };
 }

@@ -20,10 +20,9 @@ class Household extends Model
         'clan_id',
         'head_resident_id',
         'street_id',
+        'number_of_house_story',
+        'number_of_basement_level',
         'house_lot',
-        'block_num',
-        'building_name',
-        'unit_num',
         'registration_date',
         'household_status_id',
     ];
@@ -33,6 +32,8 @@ class Household extends Model
      */
     protected $casts = [
         'registration_date' => 'datetime',
+        'number_of_house_story' => 'integer',
+        'number_of_basement_level' => 'integer',
     ];
 
     public function getRouteKeyName(): string
@@ -81,19 +82,11 @@ class Household extends Model
     }
 
     /**
-     * @return HasMany<HouseholdAssessment, $this>
+     * @return HasOne<HouseholdQuestions, $this>
      */
-    public function assessments(): HasMany
+    public function questions(): HasOne
     {
-        return $this->hasMany(HouseholdAssessment::class, 'household_id', 'household_id');
-    }
-
-    /**
-     * @return HasOne<HouseholdAssessment, $this>
-     */
-    public function latestAssessment(): HasOne
-    {
-        return $this->hasOne(HouseholdAssessment::class, 'household_id', 'household_id')
-            ->latestOfMany('assessment_id');
+        return $this->hasOne(HouseholdQuestions::class, 'household_id', 'household_id')
+            ->latestOfMany('household_questions_id');
     }
 }

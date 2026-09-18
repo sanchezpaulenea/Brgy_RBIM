@@ -184,30 +184,6 @@ INSERT INTO `building_house_type` (`building_house_type_id`, `building_house_typ
 -- --------------------------------------------------------
 
 --
--- Table structure for table `census_status`
---
-
-DROP TABLE IF EXISTS `census_status`;
-CREATE TABLE IF NOT EXISTS `census_status` (
-  `census_status_id` int NOT NULL AUTO_INCREMENT,
-  `status_code` varchar(45) NOT NULL,
-  `status_name` varchar(45) NOT NULL,
-  PRIMARY KEY (`census_status_id`),
-  UNIQUE KEY `uq_census_status_code` (`status_code`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `census_status`
---
-
-INSERT INTO `census_status` (`census_status_id`, `status_code`, `status_name`) VALUES
-(1, 'C', 'Completed'),
-(2, 'CB', 'Callback'),
-(3, 'R', 'Refused');
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `child_hhm_died`
 --
 
@@ -539,7 +515,7 @@ CREATE TABLE IF NOT EXISTS `fuel_type` (
   `fuel_type_id` int NOT NULL AUTO_INCREMENT,
   `fuel_type` varchar(45) NOT NULL,
   PRIMARY KEY (`fuel_type_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `fuel_type`
@@ -550,7 +526,10 @@ INSERT INTO `fuel_type` (`fuel_type_id`, `fuel_type`) VALUES
 (2, 'Liquefied petroleum gas (LGP)'),
 (3, 'Kerosene (gaas)'),
 (4, 'Electricity'),
-(5, 'Others');
+(5, 'Others'),
+(6, 'None'),
+(7, 'Wood'),
+(8, 'Charcoal');
 
 -- --------------------------------------------------------
 
@@ -646,16 +625,12 @@ CREATE TABLE IF NOT EXISTS `household` (
   `clan_id` int NOT NULL,
   `head_resident_id` int NOT NULL,
   `street_id` int NOT NULL,
-  `number_of_house_story` int NOT NULL DEFAULT '1',
+  `number_of_house_story` int NOT NULL,
   `number_of_basement_level` int DEFAULT NULL,
   `house_lot` varchar(45) DEFAULT NULL,
-  `block_num` varchar(45) DEFAULT NULL,
-  `building_name` varchar(45) DEFAULT NULL,
-  `unit_num` varchar(45) DEFAULT NULL,
   `registration_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `household_status_id` int NOT NULL DEFAULT '1',
   PRIMARY KEY (`household_id`),
-  UNIQUE KEY `uq_lot_blk` (`house_lot`,`block_num`),
   KEY `house_street` (`street_id`),
   KEY `house_clan` (`clan_id`),
   KEY `house_status` (`household_status_id`),
@@ -666,36 +641,9 @@ CREATE TABLE IF NOT EXISTS `household` (
 -- Dumping data for table `household`
 --
 
-INSERT INTO `household` (`household_id`, `clan_id`, `head_resident_id`, `street_id`, `number_of_house_story`, `number_of_basement_level`, `house_lot`, `block_num`, `building_name`, `unit_num`, `registration_date`, `household_status_id`) VALUES
-(1, 1, 1, 1, 1, 0, 'Lot 15', NULL, NULL, NULL, '2026-08-15 18:21:34', 1),
-(2, 2, 2, 2, 1, 0, 'Lot 4', NULL, NULL, NULL, '2026-08-15 18:25:41', 1);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `household_assessment`
---
-
-DROP TABLE IF EXISTS `household_assessment`;
-CREATE TABLE IF NOT EXISTS `household_assessment` (
-  `assessment_id` int NOT NULL AUTO_INCREMENT,
-  `household_id` int NOT NULL,
-  `census_status_id` int NOT NULL,
-  `visit_start` datetime NOT NULL,
-  `visit_end` datetime NOT NULL,
-  `next_visit_date` date DEFAULT NULL,
-  `interviewer_id` int NOT NULL,
-  `supervisor_id` int NOT NULL,
-  `encoder_id` int NOT NULL,
-  `previous_assessment_id` int DEFAULT NULL,
-  PRIMARY KEY (`assessment_id`),
-  KEY `assessment_household` (`household_id`),
-  KEY `assessment_census_status` (`census_status_id`),
-  KEY `assessment_interviewer` (`interviewer_id`),
-  KEY `assessment_supervisor` (`supervisor_id`),
-  KEY `assessment_encoder` (`encoder_id`),
-  KEY `assessment_previous` (`previous_assessment_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+INSERT INTO `household` (`household_id`, `clan_id`, `head_resident_id`, `street_id`, `number_of_house_story`, `number_of_basement_level`, `house_lot`, `registration_date`, `household_status_id`) VALUES
+(1, 1, 1, 1, 1, 0, 'Lot 15', '2026-08-15 18:21:34', 1),
+(2, 2, 2, 2, 1, 0, 'Lot 4', '2026-08-15 18:25:41', 1);
 
 -- --------------------------------------------------------
 
@@ -716,6 +664,8 @@ CREATE TABLE IF NOT EXISTS `household_questions` (
   `toilet_facility_type_id` int NOT NULL,
   `type_of_building_house_id` int NOT NULL,
   `construction_material_outer_wall_id` int NOT NULL,
+  `female_hhm_died_past_12mos` tinyint(1) NOT NULL,
+  `child_hhm_died_past_12mos` tinyint(1) NOT NULL,
   `household_id` int NOT NULL,
   PRIMARY KEY (`household_questions_id`),
   KEY `ownership_type_unit` (`ownership_of_housing_unit_id`),
@@ -799,7 +749,7 @@ CREATE TABLE IF NOT EXISTS `kitchen_garbage_disposal` (
   `kitchen_garbage_disposal_id` int NOT NULL AUTO_INCREMENT,
   `kitchen_garbage_disposal` varchar(45) NOT NULL,
   PRIMARY KEY (`kitchen_garbage_disposal_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `kitchen_garbage_disposal`
@@ -811,7 +761,8 @@ INSERT INTO `kitchen_garbage_disposal` (`kitchen_garbage_disposal_id`, `kitchen_
 (3, 'Composting'),
 (4, 'Burning'),
 (5, 'Dumping individual pit (not burned)'),
-(6, 'Picked-up by garbage truck');
+(6, 'Picked-up by garbage truck'),
+(7, 'Others');
 
 -- --------------------------------------------------------
 
@@ -1130,7 +1081,7 @@ CREATE TABLE IF NOT EXISTS `reason_for_leaving` (
   `reason_for_leaving_id` int NOT NULL AUTO_INCREMENT,
   `reason_for_leaving` varchar(45) NOT NULL,
   PRIMARY KEY (`reason_for_leaving_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `reason_for_leaving`
@@ -1151,7 +1102,8 @@ INSERT INTO `reason_for_leaving` (`reason_for_leaving_id`, `reason_for_leaving`)
 (12, 'Community-related Reasons'),
 (13, 'Health-related Reasons'),
 (14, 'Peace and Security'),
-(15, 'Others');
+(15, 'Others'),
+(16, 'Not Applicable');
 
 -- --------------------------------------------------------
 
@@ -1164,7 +1116,7 @@ CREATE TABLE IF NOT EXISTS `reason_for_transfer` (
   `reason_for_transfer_id` int NOT NULL AUTO_INCREMENT,
   `reason_for_transfer` varchar(45) NOT NULL,
   PRIMARY KEY (`reason_for_transfer_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `reason_for_transfer`
@@ -1175,7 +1127,8 @@ INSERT INTO `reason_for_transfer` (`reason_for_transfer_id`, `reason_for_transfe
 (2, 'Higher wage'),
 (3, 'Presence of schools or universities'),
 (4, 'Presence of relatives and friends in other pl'),
-(5, 'Housing');
+(5, 'Housing'),
+(6, 'Not Applicable');
 
 -- --------------------------------------------------------
 
@@ -1839,7 +1792,7 @@ CREATE TABLE IF NOT EXISTS `toilet_facility_type` (
   `toilet_facility_type_id` int NOT NULL AUTO_INCREMENT,
   `toilet_facility_type` varchar(45) NOT NULL,
   PRIMARY KEY (`toilet_facility_type_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `toilet_facility_type`
@@ -1852,7 +1805,8 @@ INSERT INTO `toilet_facility_type` (`toilet_facility_type_id`, `toilet_facility_
 (4, 'Water sealed, other depository, exclusive'),
 (5, 'Water sealed, sewer septic tank, shared'),
 (6, 'Water sealed, sewer septic tank, exclusive'),
-(7, 'Others');
+(7, 'Others'),
+(8, 'None');
 
 -- --------------------------------------------------------
 
@@ -2102,17 +2056,6 @@ ALTER TABLE `household`
   ADD CONSTRAINT `house_head` FOREIGN KEY (`head_resident_id`) REFERENCES `resident` (`resident_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `house_status` FOREIGN KEY (`household_status_id`) REFERENCES `household_status` (`household_status_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `house_street` FOREIGN KEY (`street_id`) REFERENCES `street` (`street_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
-
---
--- Constraints for table `household_assessment`
---
-ALTER TABLE `household_assessment`
-  ADD CONSTRAINT `assessment_census_status` FOREIGN KEY (`census_status_id`) REFERENCES `census_status` (`census_status_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  ADD CONSTRAINT `assessment_encoder` FOREIGN KEY (`encoder_id`) REFERENCES `barangay_personnel` (`personnel_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  ADD CONSTRAINT `assessment_household` FOREIGN KEY (`household_id`) REFERENCES `household` (`household_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  ADD CONSTRAINT `assessment_interviewer` FOREIGN KEY (`interviewer_id`) REFERENCES `barangay_personnel` (`personnel_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  ADD CONSTRAINT `assessment_previous` FOREIGN KEY (`previous_assessment_id`) REFERENCES `household_assessment` (`assessment_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  ADD CONSTRAINT `assessment_supervisor` FOREIGN KEY (`supervisor_id`) REFERENCES `barangay_personnel` (`personnel_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 --
 -- Constraints for table `household_questions`

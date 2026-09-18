@@ -29,8 +29,17 @@
                 @finished="headSectionsComplete = true"
             />
 
+            <HouseholdQuestionsForm
+                v-else-if="createdHousehold && !questionsComplete"
+                :household="createdHousehold"
+                :lookups="questionLookups"
+                :location="profilingLookups.location"
+                @finished="questionsComplete = true"
+                @skip="questionsComplete = true"
+            />
+
             <HouseholdContinueMembersFlow
-                v-else-if="createdHousehold && !membersComplete"
+                v-else-if="createdHousehold"
                 :household="createdHousehold"
                 :sexes="sexes"
                 :relationships="relationships"
@@ -42,14 +51,8 @@
                 :ensure-lookups="ensureLookups"
                 :profiling-lookups="profilingLookups"
                 @member-added="refreshExistingResidents"
-                @members-complete="membersComplete = true"
+                @members-complete="goToHouseholdDetail"
                 @lookup-created="onLookupCreated"
-            />
-
-            <HouseholdAssessmentForm
-                v-else-if="createdHousehold"
-                :household="createdHousehold"
-                @saved="goToHouseholdDetail"
             />
 
             <article v-else class="rbim-card p-6">
@@ -113,40 +116,52 @@
                                 <p v-if="householdErrors.house_lot" class="rbim-error">{{ householdErrors.house_lot }}</p>
                             </div>
                             <div>
-                                <label for="block_num" class="rbim-label">Block Number</label>
+                                <label for="number_of_house_story" class="rbim-label">
+                                    Number of House Story<span class="rbim-required" aria-hidden="true">*</span>
+                                </label>
                                 <input
-                                    id="block_num"
-                                    v-model="household.block_num"
-                                    type="text"
-                                    maxlength="45"
+                                    id="number_of_house_story"
+                                    v-model="household.number_of_house_story"
+                                    type="number"
+                                    min="1"
+                                    max="50"
+                                    step="1"
                                     class="rbim-input"
-                                    :class="{ 'rbim-input-error': householdErrors.block_num }"
+                                    :class="{ 'rbim-input-error': householdErrors.number_of_house_story }"
                                 >
-                                <p v-if="householdErrors.block_num" class="rbim-error">{{ householdErrors.block_num }}</p>
+                                <p v-if="householdErrors.number_of_house_story" class="rbim-error">{{ householdErrors.number_of_house_story }}</p>
                             </div>
                             <div>
-                                <label for="building_name" class="rbim-label">Building Name</label>
-                                <input
-                                    id="building_name"
-                                    v-model="household.building_name"
-                                    type="text"
-                                    maxlength="45"
+                                <label for="has_basement" class="rbim-label">
+                                    Does the house have a basement?<span class="rbim-required" aria-hidden="true">*</span>
+                                </label>
+                                <select
+                                    id="has_basement"
+                                    v-model="household.has_basement"
                                     class="rbim-input"
-                                    :class="{ 'rbim-input-error': householdErrors.building_name }"
+                                    :class="{ 'rbim-input-error': householdErrors.has_basement }"
                                 >
-                                <p v-if="householdErrors.building_name" class="rbim-error">{{ householdErrors.building_name }}</p>
+                                    <option value="">Select</option>
+                                    <option value="true">Yes</option>
+                                    <option value="false">No</option>
+                                </select>
+                                <p v-if="householdErrors.has_basement" class="rbim-error">{{ householdErrors.has_basement }}</p>
                             </div>
-                            <div>
-                                <label for="unit_num" class="rbim-label">Unit Number</label>
+                            <div v-if="household.has_basement === 'true'">
+                                <label for="number_of_basement_level" class="rbim-label">
+                                    Number of Basement Level<span class="rbim-required" aria-hidden="true">*</span>
+                                </label>
                                 <input
-                                    id="unit_num"
-                                    v-model="household.unit_num"
-                                    type="text"
-                                    maxlength="45"
+                                    id="number_of_basement_level"
+                                    v-model="household.number_of_basement_level"
+                                    type="number"
+                                    min="1"
+                                    max="20"
+                                    step="1"
                                     class="rbim-input"
-                                    :class="{ 'rbim-input-error': householdErrors.unit_num }"
+                                    :class="{ 'rbim-input-error': householdErrors.number_of_basement_level }"
                                 >
-                                <p v-if="householdErrors.unit_num" class="rbim-error">{{ householdErrors.unit_num }}</p>
+                                <p v-if="householdErrors.number_of_basement_level" class="rbim-error">{{ householdErrors.number_of_basement_level }}</p>
                             </div>
                         </div>
                     </section>
@@ -199,8 +214,8 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
-import HouseholdAssessmentForm from '@/components/HouseholdAssessmentForm.vue';
 import HouseholdContinueMembersFlow from '@/components/HouseholdContinueMembersFlow.vue';
+import HouseholdQuestionsForm from '@/components/HouseholdQuestionsForm.vue';
 import PageTabs from '@/components/PageTabs.vue';
 import ResidentDemographicsFields from '@/components/ResidentDemographicsFields.vue';
 import ResidentSectionWizard from '@/components/ResidentSectionWizard.vue';
@@ -217,6 +232,9 @@ import {
     ensureResidentDemographicLookups,
 } from '@/utils/demographicLookups';
 import {
+    emptyHouseholdStructure,
+    householdStructurePayload,
+    validateHouseholdStructure,
     HEAD_RELATIONSHIP_ID,
     HOUSEHOLD_HEAD_MIN_AGE,
     applyValidationErrors,
@@ -238,6 +256,10 @@ import {
     emptyProfilingLookups,
     fetchProfilingLookups,
 } from '@/utils/profilingLookups';
+import {
+    emptyHouseholdQuestionLookups,
+    fetchHouseholdQuestionLookups,
+} from '@/utils/householdQuestions';
 import { profilingResidentReady } from '@/utils/residentProfiling';
 
 const router = useRouter();
@@ -251,7 +273,7 @@ const successMessage = ref('');
 const createdHousehold = ref(null);
 const loadingHeadProfile = ref(false);
 const headSectionsComplete = ref(false);
-const membersComplete = ref(false);
+const questionsComplete = ref(false);
 
 const clans = ref([]);
 const streets = ref([]);
@@ -263,6 +285,7 @@ const ethnicities = ref([]);
 const maritalStatuses = ref([]);
 const existingResidents = ref([]);
 const profilingLookups = reactive(emptyProfilingLookups());
+const questionLookups = reactive(emptyHouseholdQuestionLookups());
 
 const household = reactive(emptyHousehold());
 const head = ref(emptyHead());
@@ -298,9 +321,7 @@ function emptyHousehold() {
         clan_id: '',
         street_id: '',
         house_lot: '',
-        block_num: '',
-        building_name: '',
-        unit_num: '',
+        ...emptyHouseholdStructure(),
     };
 }
 
@@ -415,6 +436,8 @@ function validateHousehold() {
         householdErrors.street_id = 'Street is required.';
     }
 
+    validateHouseholdStructure(household, householdErrors);
+
     return Object.keys(householdErrors).length === 0;
 }
 
@@ -433,6 +456,7 @@ async function loadLookups() {
             ethnicityItems,
             maritalItems,
             sectionLookups,
+            householdQuestionLookups,
         ] = await Promise.all([
             lookupService.fetchLookup('clan'),
             lookupService.fetchStreets(),
@@ -443,6 +467,7 @@ async function loadLookups() {
             lookupService.fetchEthnicities(),
             lookupService.fetchLookup('marital-status'),
             fetchProfilingLookups(),
+            fetchHouseholdQuestionLookups(),
         ]);
 
         clans.value = clanItems;
@@ -454,6 +479,7 @@ async function loadLookups() {
         ethnicities.value = ethnicityItems;
         maritalStatuses.value = maritalItems;
         Object.assign(profilingLookups, sectionLookups);
+        Object.assign(questionLookups, householdQuestionLookups);
         await refreshExistingResidents();
     } catch (err) {
         error.value = extractErrorMessage(err, 'Unable to load the registration form.');
@@ -514,9 +540,7 @@ async function handleSave() {
             clan_id: toId(household.clan_id),
             street_id: toId(household.street_id),
             house_lot: optionalAddressText(household.house_lot),
-            block_num: optionalAddressText(household.block_num),
-            building_name: optionalAddressText(household.building_name),
-            unit_num: optionalAddressText(household.unit_num),
+            ...householdStructurePayload(household),
             head: headData,
         });
 
@@ -577,7 +601,7 @@ function goToHouseholdDetail() {
     }
 
     router.push({
-        name: 'household-assessment-detail',
+        name: 'household-detail',
         params: { id: householdId },
         query: { encoded: '1' },
     });

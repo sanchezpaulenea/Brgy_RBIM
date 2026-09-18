@@ -564,7 +564,7 @@
                         :class="{ 'rbim-input-error': errors.reason_for_leaving_id }"
                     >
                         <option value="">Select reason for leaving</option>
-                        <option v-for="option in lookups.reasonForLeaving" :key="option.id" :value="option.id">{{ option.label }}</option>
+                        <option v-for="option in migrantReasonsForLeaving" :key="option.id" :value="option.id">{{ option.label }}</option>
                     </select>
                     <p v-if="errors.reason_for_leaving_id" class="rbim-error">{{ errors.reason_for_leaving_id }}</p>
                 </div>
@@ -579,7 +579,7 @@
                         :class="{ 'rbim-input-error': errors.reason_for_transfer_id }"
                     >
                         <option value="">Select reason for transferring</option>
-                        <option v-for="option in lookups.reasonForTransfer" :key="option.id" :value="option.id">{{ option.label }}</option>
+                        <option v-for="option in migrantReasonsForTransfer" :key="option.id" :value="option.id">{{ option.label }}</option>
                     </select>
                     <p v-if="errors.reason_for_transfer_id" class="rbim-error">{{ errors.reason_for_transfer_id }}</p>
                 </div>
@@ -688,6 +688,7 @@ import {
     educationFieldRelevance,
     isEnrollmentStatusEnrolled,
     isFamilyPlanningNone,
+    isNotApplicableLookup,
     isNotApplicableSchoolLvl,
     lookupById,
     sociocivicFieldRelevance,
@@ -735,6 +736,14 @@ const educationEnrolled = computed(() => (
 
 const enrolledSchoolLevels = computed(() => (
     (props.lookups.schoolLvl ?? []).filter((option) => !isNotApplicableSchoolLvl(option))
+));
+
+const migrantReasonsForLeaving = computed(() => (
+    (props.lookups.reasonForLeaving ?? []).filter((option) => !isNotApplicableLookup(option))
+));
+
+const migrantReasonsForTransfer = computed(() => (
+    (props.lookups.reasonForTransfer ?? []).filter((option) => !isNotApplicableLookup(option))
 ));
 
 const economicShowsWorkDetails = computed(() => (

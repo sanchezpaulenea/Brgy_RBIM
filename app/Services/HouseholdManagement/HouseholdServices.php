@@ -22,7 +22,7 @@ class HouseholdServices
         protected HouseholdRepositoryInterface $householdRepository,
         protected ResidentRepositoryInterface $residentRepository,
         protected AuditLogRepositoryInterface $auditLogRepository,
-        protected HouseholdAssessmentServices $householdAssessmentServices,
+        protected HouseholdQuestionsService $householdQuestionsService,
     ) {}
 
     /**
@@ -51,10 +51,9 @@ class HouseholdServices
                 $household = $this->householdRepository->create([
                     'clan_id' => $data['clan_id'],
                     'street_id' => $data['street_id'],
+                    'number_of_house_story' => $data['number_of_house_story'],
+                    'number_of_basement_level' => $this->basementLevelFromData($data),
                     'house_lot' => $data['house_lot'] ?? null,
-                    'block_num' => $data['block_num'] ?? null,
-                    'building_name' => $data['building_name'] ?? null,
-                    'unit_num' => $data['unit_num'] ?? null,
                     'registration_date' => now(),
                     'household_status_id' => $data['household_status_id'] ?? HouseholdStatus::ACTIVE,
                     'head_resident_id' => 0,
@@ -148,7 +147,7 @@ class HouseholdServices
      */
     public function updateHousehold(User $performedBy, Household $household, array $data): array
     {
-        unset($data['head_resident_id'], $data['head']);
+        unset($data['head_resident_id'], $data['head'], $data['has_basement']);
 
         $previous = $this->householdAuditSnapshot($household);
 
@@ -165,6 +164,85 @@ class HouseholdServices
         });
     }
 
+    public function reassignHead(
+        User $performedBy,
+        Resident $formerHead,
+        int $newHeadResidentId,
+        int $formerHeadRelationshipId,
+    ): void {
+        if ($formerHeadRelationshipId === RelationshipToHouseholdHead::HEAD) {
+            throw ValidationException::withMessages([
+                'former_head_relationship_to_hh_id' => [
+                    'The former household head must be given a relationship other than Head.',
+                ],
+            ]);
+        }
+
+        $household = $this->householdRepository->lockById((int) $formerHead->household_id);
+
+        if ($household === null) {
+            throw ValidationException::withMessages([
+                'new_head_resident_id' => ['The household for this resident does not exist.'],
+            ]);
+        }
+
+        if ((int) $household->head_resident_id !== (int) $formerHead->resident_id) {
+            return;
+        }
+
+        if ((int) $household->household_status_id !== HouseholdStatus::ACTIVE) {
+            return;
+        }
+
+        if ($newHeadResidentId === (int) $formerHead->resident_id) {
+            throw ValidationException::withMessages([
+                'new_head_resident_id' => ['Select a different household member as the new household head.'],
+            ]);
+        }
+
+        $newHead = $this->residentRepository->findById($newHeadResidentId);
+
+        if ($newHead === null || (int) $newHead->household_id !== (int) $household->household_id) {
+            throw ValidationException::withMessages([
+                'new_head_resident_id' => ['The new household head must belong to this household.'],
+            ]);
+        }
+
+        if ((int) $newHead->resident_status_id !== ResidentStatus::ACTIVE) {
+            throw ValidationException::withMessages([
+                'new_head_resident_id' => ['The new household head must have an active resident status.'],
+            ]);
+        }
+
+        $age = $newHead->age();
+
+        if ($age === null || $age < 15) {
+            throw ValidationException::withMessages([
+                'new_head_resident_id' => ['The new household head must be at least 15 years old.'],
+            ]);
+        }
+
+        $previousHeadName = $this->fullName($formerHead);
+
+        $this->residentRepository->update($newHead, [
+            'relationship_to_hh_id' => RelationshipToHouseholdHead::HEAD,
+        ]);
+
+        $updatedHousehold = $this->householdRepository->updateHeadResident($household, $newHeadResidentId);
+        $freshNewHead = $this->residentRepository->findById($newHeadResidentId) ?? $newHead;
+
+        $this->auditLogRepository->log(
+            performedByUserId: $performedBy->user_id,
+            actionId: Action::UPDATE,
+            recordId: $updatedHousehold->household_id,
+            description: 'Updated household head',
+            oldValue: $previousHeadName,
+            newValue: $this->fullName($freshNewHead),
+            target: 'head',
+            entity: 'household',
+        );
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -179,9 +257,8 @@ class HouseholdServices
             'street_id' => $household->street_id,
             'street_name' => $household->street?->street_name,
             'house_lot' => $household->house_lot,
-            'block_num' => $household->block_num,
-            'building_name' => $household->building_name,
-            'unit_num' => $household->unit_num,
+            'number_of_house_story' => $household->number_of_house_story,
+            'number_of_basement_level' => $household->number_of_basement_level,
             'registration_date' => $household->registration_date?->toDateTimeString(),
             'household_status_id' => $household->household_status_id,
             'household_status' => $household->status?->household_status,
@@ -208,11 +285,18 @@ class HouseholdServices
             'head.status',
             'head.clan',
             'head.relationshipToHouseholdHead',
-            'latestAssessment.censusStatus',
-            'latestAssessment.encoder',
-            'latestAssessment.interviewer',
-            'latestAssessment.supervisor',
-            'latestAssessment.previousAssessment.censusStatus',
+            'questions.ownershipOfHousingUnit',
+            'questions.ownershipOfLot',
+            'questions.fuelTypeForLighting',
+            'questions.fuelTypeForCooking',
+            'questions.mainSourceDrinkingWater',
+            'questions.kitchenGarbageDisposal',
+            'questions.toiletFacilityType',
+            'questions.typeOfBuildingHouse',
+            'questions.constructionMaterialOuterWall',
+            'questions.commonDiseases',
+            'questions.primaryNeeds',
+            'questions.intendToStay',
         ]);
 
         $payload = [
@@ -222,15 +306,16 @@ class HouseholdServices
             'street_id' => $household->street_id,
             'street_name' => $household->street?->street_name,
             'house_lot' => $household->house_lot,
-            'block_num' => $household->block_num,
-            'building_name' => $household->building_name,
-            'unit_num' => $household->unit_num,
+            'number_of_house_story' => $household->number_of_house_story,
+            'number_of_basement_level' => $household->number_of_basement_level,
             'registration_date' => $household->registration_date?->toDateTimeString(),
             'household_status_id' => $household->household_status_id,
             'household_status' => $household->status?->household_status,
             'head_resident_id' => $household->head_resident_id,
             'head' => $household->head !== null ? $this->formatResident($household->head) : null,
-            'latest_assessment' => $this->householdAssessmentServices->formatAssessment($household->latestAssessment),
+            'questions' => $household->questions !== null
+                ? $this->householdQuestionsService->formatRecord($household->questions)
+                : null,
         ];
 
         if ($includeResidents) {
@@ -325,9 +410,8 @@ class HouseholdServices
      *     clan: string,
      *     street: string,
      *     house lot: string,
-     *     block num: string,
-     *     building name: string,
-     *     unit num: string,
+     *     house stories: string,
+     *     basement levels: string,
      *     status: string
      * }
      */
@@ -339,9 +423,8 @@ class HouseholdServices
             'clan' => (string) ($household->clan?->clan_name ?? $household->clan_id),
             'street' => (string) ($household->street?->street_name ?? $household->street_id),
             'house lot' => (string) ($household->house_lot ?? ''),
-            'block num' => (string) ($household->block_num ?? ''),
-            'building name' => (string) ($household->building_name ?? ''),
-            'unit num' => (string) ($household->unit_num ?? ''),
+            'house stories' => (string) ($household->number_of_house_story ?? ''),
+            'basement levels' => (string) ($household->number_of_basement_level ?? ''),
             'status' => (string) ($household->status?->household_status ?? $household->household_status_id),
         ];
     }
@@ -351,9 +434,8 @@ class HouseholdServices
      *     clan: string,
      *     street: string,
      *     house lot: string,
-     *     block num: string,
-     *     building name: string,
-     *     unit num: string,
+     *     house stories: string,
+     *     basement levels: string,
      *     status: string
      * }  $previous
      */
@@ -381,6 +463,18 @@ class HouseholdServices
         }
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function basementLevelFromData(array $data): int
+    {
+        if (array_key_exists('has_basement', $data) && ! $data['has_basement']) {
+            return 0;
+        }
+
+        return (int) ($data['number_of_basement_level'] ?? 0);
+    }
+
     private function rethrowUnlessDuplicateLotBlock(UniqueConstraintViolationException $exception): never
     {
         $message = strtolower($exception->getMessage());
@@ -390,8 +484,7 @@ class HouseholdServices
         }
 
         throw ValidationException::withMessages([
-            'house_lot' => 'A household with this house/lot and block number already exists.',
-            'block_num' => 'A household with this house/lot and block number already exists.',
+            'house_lot' => 'A household with this house/lot number already exists.',
         ]);
     }
 

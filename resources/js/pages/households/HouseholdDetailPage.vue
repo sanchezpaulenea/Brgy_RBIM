@@ -34,42 +34,6 @@
             <template v-else-if="household">
                 <article class="rbim-card p-6">
                     <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">
-                        Household {{ household.household_id }}<template v-if="household.street_name"> — {{ household.street_name }}</template>
-                    </h2>
-                    <dl class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Census Status</dt>
-                            <dd class="mt-1 text-sm text-slate-900">{{ censusStatusLabel(latestAssessment) }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Visit Start</dt>
-                            <dd class="mt-1 text-sm text-slate-900">{{ formatDateTime(latestAssessment?.visit_start) }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Visit End</dt>
-                            <dd class="mt-1 text-sm text-slate-900">{{ formatDateTime(latestAssessment?.visit_end) }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Encoder</dt>
-                            <dd class="mt-1 text-sm text-slate-900">{{ latestAssessment?.encoder_name || '—' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Interviewer</dt>
-                            <dd class="mt-1 text-sm text-slate-900">{{ latestAssessment?.interviewer_name || '—' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Supervisor</dt>
-                            <dd class="mt-1 text-sm text-slate-900">{{ latestAssessment?.supervisor_name || '—' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Previous Assessment</dt>
-                            <dd class="mt-1 text-sm text-slate-900">{{ previousAssessmentLabel(latestAssessment) }}</dd>
-                        </div>
-                    </dl>
-                </article>
-
-                <article class="rbim-card p-6">
-                    <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">
                         Household {{ household.household_id }}
                     </h2>
                     <dl class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -86,16 +50,12 @@
                             <dd class="mt-1 text-sm text-slate-900">{{ household.house_lot || '—' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Block Number</dt>
-                            <dd class="mt-1 text-sm text-slate-900">{{ household.block_num || '—' }}</dd>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Number of House Story</dt>
+                            <dd class="mt-1 text-sm text-slate-900">{{ household.number_of_house_story ?? '—' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Building Name</dt>
-                            <dd class="mt-1 text-sm text-slate-900">{{ household.building_name || '—' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Unit Number</dt>
-                            <dd class="mt-1 text-sm text-slate-900">{{ household.unit_num || '—' }}</dd>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Number of Basement Level</dt>
+                            <dd class="mt-1 text-sm text-slate-900">{{ basementLevelLabel(household) }}</dd>
                         </div>
                         <div>
                             <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Household Status</dt>
@@ -108,6 +68,17 @@
                         <div>
                             <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Head Resident Name</dt>
                             <dd class="mt-1 text-sm text-slate-900">{{ household.head?.full_name || '—' }}</dd>
+                        </div>
+                    </dl>
+
+                    <h3 class="mt-8 text-sm font-semibold text-slate-900">Household Questions</h3>
+                    <p v-if="!household.questions" class="mt-2 text-sm text-slate-500">
+                        Household questions have not been encoded yet.
+                    </p>
+                    <dl v-else class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        <div v-for="field in questionDisplayFields(household.questions)" :key="field.label">
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">{{ field.label }}</dt>
+                            <dd class="mt-1 text-sm text-slate-900">{{ field.value }}</dd>
                         </div>
                     </dl>
                 </article>
@@ -160,7 +131,7 @@
             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
             @click.self="cancelEdit"
         >
-            <div class="w-full max-w-2xl rounded-xl bg-white shadow-xl" role="dialog" aria-modal="true">
+            <div class="w-full max-w-4xl overflow-hidden rounded-xl bg-white shadow-xl" role="dialog" aria-modal="true">
                 <div class="border-b border-slate-100 px-5 py-4">
                     <h2 class="text-base font-semibold text-slate-900">Update household</h2>
                     <p class="mt-1 text-sm text-slate-600">
@@ -168,8 +139,10 @@
                         The household head cannot be changed here.
                     </p>
                 </div>
-                <form class="space-y-4 px-5 py-4" novalidate @submit.prevent="handleUpdate">
-                    <div class="grid gap-4 sm:grid-cols-2">
+                <form class="max-h-[80vh] space-y-6 overflow-y-auto px-5 py-4" novalidate @submit.prevent="handleUpdate">
+                    <section class="space-y-4">
+                        <h3 class="text-sm font-semibold text-slate-900">Household Address and Status</h3>
+                        <div class="grid gap-4 sm:grid-cols-2">
                         <div>
                             <label for="detail_street_id" class="rbim-label">
                                 Street<span class="rbim-required" aria-hidden="true">*</span>
@@ -200,40 +173,52 @@
                             <p v-if="editErrors.house_lot" class="rbim-error">{{ editErrors.house_lot }}</p>
                         </div>
                         <div>
-                            <label for="detail_block_num" class="rbim-label">Block Number</label>
+                            <label for="detail_number_of_house_story" class="rbim-label">
+                                Number of House Story<span class="rbim-required" aria-hidden="true">*</span>
+                            </label>
                             <input
-                                id="detail_block_num"
-                                v-model="editForm.block_num"
-                                type="text"
-                                maxlength="45"
+                                id="detail_number_of_house_story"
+                                v-model="editForm.number_of_house_story"
+                                type="number"
+                                min="1"
+                                max="50"
+                                step="1"
                                 class="rbim-input"
-                                :class="{ 'rbim-input-error': editErrors.block_num }"
+                                :class="{ 'rbim-input-error': editErrors.number_of_house_story }"
                             >
-                            <p v-if="editErrors.block_num" class="rbim-error">{{ editErrors.block_num }}</p>
+                            <p v-if="editErrors.number_of_house_story" class="rbim-error">{{ editErrors.number_of_house_story }}</p>
                         </div>
                         <div>
-                            <label for="detail_building_name" class="rbim-label">Building Name</label>
-                            <input
-                                id="detail_building_name"
-                                v-model="editForm.building_name"
-                                type="text"
-                                maxlength="45"
+                            <label for="detail_has_basement" class="rbim-label">
+                                Does the house have a basement?<span class="rbim-required" aria-hidden="true">*</span>
+                            </label>
+                            <select
+                                id="detail_has_basement"
+                                v-model="editForm.has_basement"
                                 class="rbim-input"
-                                :class="{ 'rbim-input-error': editErrors.building_name }"
+                                :class="{ 'rbim-input-error': editErrors.has_basement }"
                             >
-                            <p v-if="editErrors.building_name" class="rbim-error">{{ editErrors.building_name }}</p>
+                                <option value="">Select</option>
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                            <p v-if="editErrors.has_basement" class="rbim-error">{{ editErrors.has_basement }}</p>
                         </div>
-                        <div>
-                            <label for="detail_unit_num" class="rbim-label">Unit Number</label>
+                        <div v-if="editForm.has_basement === 'true'">
+                            <label for="detail_number_of_basement_level" class="rbim-label">
+                                Number of Basement Level<span class="rbim-required" aria-hidden="true">*</span>
+                            </label>
                             <input
-                                id="detail_unit_num"
-                                v-model="editForm.unit_num"
-                                type="text"
-                                maxlength="45"
+                                id="detail_number_of_basement_level"
+                                v-model="editForm.number_of_basement_level"
+                                type="number"
+                                min="1"
+                                max="20"
+                                step="1"
                                 class="rbim-input"
-                                :class="{ 'rbim-input-error': editErrors.unit_num }"
+                                :class="{ 'rbim-input-error': editErrors.number_of_basement_level }"
                             >
-                            <p v-if="editErrors.unit_num" class="rbim-error">{{ editErrors.unit_num }}</p>
+                            <p v-if="editErrors.number_of_basement_level" class="rbim-error">{{ editErrors.number_of_basement_level }}</p>
                         </div>
                         <div>
                             <label for="detail_household_status_id" class="rbim-label">
@@ -252,7 +237,17 @@
                             </select>
                             <p v-if="editErrors.household_status_id" class="rbim-error">{{ editErrors.household_status_id }}</p>
                         </div>
-                    </div>
+                        </div>
+                    </section>
+                    <section class="space-y-4">
+                        <h3 class="text-sm font-semibold text-slate-900">Household Questions</h3>
+                        <HouseholdQuestionsFields
+                            :form="questionForm"
+                            :errors="questionErrors"
+                            :lookups="questionLookups"
+                            id-prefix="detail-questions"
+                        />
+                    </section>
                     <div class="flex justify-end gap-2">
                         <button type="button" class="rbim-btn-outline" @click="cancelEdit">
                             Cancel
@@ -282,14 +277,24 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import HouseholdQuestionsFields from '@/components/HouseholdQuestionsFields.vue';
 import PageTabs from '@/components/PageTabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useSectionTabs } from '@/composables/useSectionTabs';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
-import { ageFromDateOfBirth, censusStatusLabel, formatDateTime } from '@/utils/format';
-import { applyValidationErrors, optionalAddressText, toId } from '@/utils/residentForm';
+import { ageFromDateOfBirth, formatDateTime } from '@/utils/format';
+import { applyValidationErrors, householdStructureFromRecord, householdStructurePayload, optionalAddressText, toId, validateHouseholdStructure } from '@/utils/residentForm';
+import {
+    emptyHouseholdQuestionLookups,
+    emptyHouseholdQuestionsForm,
+    fetchHouseholdQuestionLookups,
+    householdQuestionsFromRecord,
+    householdQuestionsPayload,
+    validateHouseholdQuestions,
+    yesNoLabel,
+} from '@/utils/householdQuestions';
 
 const route = useRoute();
 const { hasPermission } = useAuth();
@@ -298,6 +303,8 @@ const { householdTabs } = useSectionTabs();
 const household = ref(null);
 const streets = ref([]);
 const householdStatuses = ref([]);
+const questionLookups = reactive(emptyHouseholdQuestionLookups());
+const location = reactive({ barangay: '', city: '', province: '' });
 const loading = ref(false);
 const saving = ref(false);
 const editing = ref(false);
@@ -305,6 +312,8 @@ const error = ref('');
 const successMessage = ref('');
 const editForm = reactive(emptyEditForm());
 const editErrors = reactive({});
+const questionForm = reactive(emptyHouseholdQuestionsForm());
+const questionErrors = reactive({});
 const confirm = reactive({
     open: false,
     title: '',
@@ -316,15 +325,14 @@ const confirm = reactive({
 });
 
 const canUpdate = computed(() => hasPermission('household.update'));
-const latestAssessment = computed(() => household.value?.latest_assessment ?? null);
 
 function emptyEditForm() {
     return {
         street_id: '',
         house_lot: '',
-        block_num: '',
-        building_name: '',
-        unit_num: '',
+        number_of_house_story: 1,
+        has_basement: '',
+        number_of_basement_level: '',
         household_status_id: '',
     };
 }
@@ -335,22 +343,41 @@ function ageLabel(dateOfBirth) {
     return age === null ? '—' : String(age);
 }
 
-function previousAssessmentLabel(assessment) {
-    if (!assessment) {
-        return '—';
-    }
+function basementLevelLabel(item) {
+    const levels = Number(item?.number_of_basement_level ?? 0);
 
-    if (!assessment.previous_assessment_id) {
-        return 'None (first visit)';
-    }
+    return levels > 0 ? String(levels) : 'None';
+}
 
-    const previous = assessment.previous_assessment;
+function joinList(values) {
+    const items = (values ?? []).filter(Boolean);
 
-    if (!previous) {
-        return `Assessment ${assessment.previous_assessment_id}`;
-    }
+    return items.length ? items.join(', ') : '—';
+}
 
-    return `Assessment ${previous.assessment_id} — ${censusStatusLabel(previous)}`;
+function questionDisplayFields(questions) {
+    return [
+        { label: 'Q45 Ownership of Housing Unit', value: questions.ownership_of_housing_unit || '—' },
+        { label: 'Q46 Ownership of Lot', value: questions.ownership_of_lot || '—' },
+        { label: 'Q47 Fuel for Lighting', value: questions.fuel_type_for_lighting || '—' },
+        { label: 'Q48 Fuel for Cooking', value: questions.fuel_type_for_cooking || '—' },
+        { label: 'Q49 Main Source of Drinking Water', value: questions.main_source_drinking_water || '—' },
+        { label: 'Q50a Kitchen Garbage Disposal', value: questions.kitchen_garbage_disposal || '—' },
+        { label: 'Q50b Segregate Garbage', value: yesNoLabel(questions.perform_garbage_seggragation) },
+        { label: 'Q51 Toilet Facility', value: questions.toilet_facility_type || '—' },
+        { label: 'Q52 Type of Building/House', value: questions.type_of_building_house || '—' },
+        { label: 'Q53 Construction Materials of the Outer Wall', value: questions.construction_material_outer_wall || '—' },
+        { label: 'Q54 Female Household Member Died in the Past 12 Months', value: yesNoLabel(questions.female_hhm_died_past_12mos) },
+        { label: 'Q55 Child Below 5 Died in the Past 12 Months', value: yesNoLabel(questions.child_hhm_died_past_12mos) },
+        { label: 'Q56 Common Diseases That Cause Death in this Barangay', value: joinList(questions.common_diseases) },
+        { label: 'Q57 Primary Needs of this Barangay', value: joinList(questions.primary_needs) },
+        {
+            label: 'Q58 Intended Stay Five Years From Now',
+            value: [questions.intend_to_stay_brgy, questions.intend_to_stay_municipality, questions.intend_to_stay_province]
+                .filter(Boolean)
+                .join(', ') || '—',
+        },
+    ];
 }
 
 function handleConfirmCancel() {
@@ -379,6 +406,12 @@ function clearEditErrors() {
     });
 }
 
+function clearQuestionErrors() {
+    Object.keys(questionErrors).forEach((key) => {
+        delete questionErrors[key];
+    });
+}
+
 function startEdit() {
     if (!household.value) {
         return;
@@ -388,18 +421,20 @@ function startEdit() {
     Object.assign(editForm, {
         street_id: household.value.street_id ?? '',
         house_lot: household.value.house_lot ?? '',
-        block_num: household.value.block_num ?? '',
-        building_name: household.value.building_name ?? '',
-        unit_num: household.value.unit_num ?? '',
+        ...householdStructureFromRecord(household.value),
         household_status_id: household.value.household_status_id ?? '',
     });
+    Object.assign(questionForm, householdQuestionsFromRecord(household.value.questions, location));
     clearEditErrors();
+    clearQuestionErrors();
 }
 
 function cancelEdit() {
     editing.value = false;
     Object.assign(editForm, emptyEditForm());
+    Object.assign(questionForm, emptyHouseholdQuestionsForm(location));
     clearEditErrors();
+    clearQuestionErrors();
 }
 
 async function loadHousehold() {
@@ -407,14 +442,18 @@ async function loadHousehold() {
     error.value = '';
 
     try {
-        const [item, streetItems, statusItems] = await Promise.all([
+        const [item, streetItems, statusItems, householdQuestionLookups, locationProfile] = await Promise.all([
             householdService.fetchHousehold(route.params.id),
             lookupService.fetchStreets(),
             lookupService.fetchLookup('household-status'),
+            fetchHouseholdQuestionLookups(),
+            householdService.fetchLocationProfile(),
         ]);
         household.value = item;
         streets.value = streetItems;
         householdStatuses.value = statusItems;
+        Object.assign(questionLookups, householdQuestionLookups);
+        Object.assign(location, locationProfile ?? { barangay: '', city: '', province: '' });
     } catch (err) {
         household.value = null;
         error.value = extractErrorMessage(err, 'Unable to load this household.');
@@ -434,7 +473,10 @@ async function handleUpdate() {
         editErrors.household_status_id = 'Household status is required.';
     }
 
-    if (Object.keys(editErrors).length) {
+    validateHouseholdStructure(editForm, editErrors);
+    validateHouseholdQuestions(questionForm, questionErrors);
+
+    if (Object.keys(editErrors).length || Object.keys(questionErrors).length) {
         return;
     }
 
@@ -456,11 +498,18 @@ async function handleUpdate() {
         await householdService.updateHousehold(route.params.id, {
             street_id: toId(editForm.street_id),
             house_lot: optionalAddressText(editForm.house_lot),
-            block_num: optionalAddressText(editForm.block_num),
-            building_name: optionalAddressText(editForm.building_name),
-            unit_num: optionalAddressText(editForm.unit_num),
+            ...householdStructurePayload(editForm),
             household_status_id: toId(editForm.household_status_id),
         });
+
+        const questionsPayload = householdQuestionsPayload(questionForm);
+        const questionsId = household.value?.questions?.household_questions_id;
+
+        if (questionsId) {
+            await householdService.updateHouseholdQuestions(questionsId, questionsPayload);
+        } else {
+            await householdService.createHouseholdQuestions(route.params.id, questionsPayload);
+        }
         successMessage.value = 'Household updated successfully.';
         cancelEdit();
         await loadHousehold();
@@ -469,6 +518,7 @@ async function handleUpdate() {
 
         if (Object.keys(validationErrors).length) {
             applyValidationErrors(editErrors, validationErrors);
+            applyValidationErrors(questionErrors, validationErrors);
         } else {
             error.value = extractErrorMessage(err, 'Unable to update this household.');
         }

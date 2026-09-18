@@ -37,8 +37,8 @@ export function useSectionTabs() {
         hasPermission('household.create')
             ? { name: 'household-register', label: 'Register Household' }
             : null,
-        hasPermission('householdassessment.view')
-            ? { name: 'household-assessments', label: 'Assessment' }
+        hasPermission('household.view')
+            ? { name: 'household-pet-census', label: 'Pet Census' }
             : null,
         hasPermission('street.view')
             ? { name: 'streets', label: 'Street' }

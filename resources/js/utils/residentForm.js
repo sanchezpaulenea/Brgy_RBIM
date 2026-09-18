@@ -5,6 +5,15 @@ export const HEAD_RELATIONSHIP_ID = 1;
 
 export const HOUSEHOLD_HEAD_MIN_AGE = 15;
 
+export const HOUSEHOLD_STATUS_ACTIVE = 1;
+
+export const RESIDENT_STATUS = {
+    ACTIVE: 1,
+    MOVED_OUT: 2,
+    DECEASED: 3,
+    ARCHIVE: 4,
+};
+
 export const DEFAULT_BIRTH_COUNTRY = 'Philippines';
 
 export function emptyResidentForm(overrides = {}) {
@@ -46,6 +55,88 @@ export function optionalAddressText(value) {
     }
 
     return text;
+}
+
+export function emptyHouseholdStructure() {
+    return {
+        number_of_house_story: 1,
+        has_basement: '',
+        number_of_basement_level: '',
+    };
+}
+
+export function householdStructureFromRecord(household) {
+    const levels = Number(household?.number_of_basement_level ?? 0);
+
+    return {
+        number_of_house_story: household?.number_of_house_story ?? 1,
+        has_basement: levels > 0 ? 'true' : 'false',
+        number_of_basement_level: levels > 0 ? String(levels) : '',
+    };
+}
+
+export function validateHouseholdStructure(form, errors) {
+    const stories = Number(form.number_of_house_story);
+
+    if (!Number.isInteger(stories) || stories < 1) {
+        errors.number_of_house_story = 'Number of house stories is required.';
+    } else {
+        delete errors.number_of_house_story;
+    }
+
+    if (form.has_basement !== 'true' && form.has_basement !== 'false') {
+        errors.has_basement = 'Please indicate whether the house has a basement.';
+    } else {
+        delete errors.has_basement;
+    }
+
+    if (form.has_basement === 'true') {
+        const levels = Number(form.number_of_basement_level);
+
+        if (!Number.isInteger(levels) || levels < 1) {
+            errors.number_of_basement_level = 'Number of basement levels is required.';
+        } else {
+            delete errors.number_of_basement_level;
+        }
+    } else {
+        delete errors.number_of_basement_level;
+    }
+
+    return !errors.number_of_house_story && !errors.has_basement && !errors.number_of_basement_level;
+}
+
+export function householdStructurePayload(form) {
+    const hasBasement = form.has_basement === 'true';
+
+    return {
+        number_of_house_story: Number(form.number_of_house_story),
+        has_basement: hasBasement,
+        number_of_basement_level: hasBasement ? Number(form.number_of_basement_level) : 0,
+    };
+}
+
+export function residentStatusRequiresHeadReplacement(statusId) {
+    return [
+        RESIDENT_STATUS.MOVED_OUT,
+        RESIDENT_STATUS.DECEASED,
+        RESIDENT_STATUS.ARCHIVE,
+    ].includes(Number(statusId));
+}
+
+export function eligibleHouseholdHeadCandidates(members, currentHeadId) {
+    return (members || []).filter((member) => {
+        if (Number(member.resident_id) === Number(currentHeadId)) {
+            return false;
+        }
+
+        if (Number(member.resident_status_id) !== RESIDENT_STATUS.ACTIVE) {
+            return false;
+        }
+
+        const age = ageFromDateOfBirth(member.date_of_birth);
+
+        return age !== null && age >= HOUSEHOLD_HEAD_MIN_AGE;
+    });
 }
 
 export function toId(value) {

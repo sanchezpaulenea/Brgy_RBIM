@@ -25,10 +25,8 @@ class StoreHouseholdRequest extends FormRequest
     {
         $this->mergeNormalizedAddressFields([
             'house_lot',
-            'block_num',
-            'building_name',
-            'unit_num',
         ]);
+        $this->mergeBasementLevelFromAnswer();
 
         $head = $this->input('head');
 
@@ -59,9 +57,15 @@ class StoreHouseholdRequest extends FormRequest
             'clan_id' => ['required', 'integer', Rule::exists('clan', 'clan_id')],
             'street_id' => ['required', 'integer', Rule::exists('street', 'street_id')],
             'house_lot' => ['nullable', 'string', 'max:45'],
-            'block_num' => ['nullable', 'string', 'max:45'],
-            'building_name' => ['nullable', 'string', 'max:45'],
-            'unit_num' => ['nullable', 'string', 'max:45'],
+            'number_of_house_story' => ['required', 'integer', 'min:1', 'max:50'],
+            'has_basement' => ['required', 'boolean'],
+            'number_of_basement_level' => [
+                Rule::requiredIf(fn () => $this->boolean('has_basement')),
+                'nullable',
+                'integer',
+                'min:0',
+                'max:20',
+            ],
             'household_status_id' => [
                 'sometimes',
                 'integer',
@@ -105,6 +109,11 @@ class StoreHouseholdRequest extends FormRequest
             'clan_id.exists' => 'The selected clan does not exist.',
             'street_id.required' => 'Street is required.',
             'street_id.exists' => 'The selected street does not exist.',
+            'number_of_house_story.required' => 'Number of house stories is required.',
+            'number_of_house_story.min' => 'Number of house stories must be at least 1.',
+            'has_basement.required' => 'Please indicate whether the house has a basement.',
+            'number_of_basement_level.required' => 'Number of basement levels is required when the house has a basement.',
+            'number_of_basement_level.min' => 'Number of basement levels must be at least 1 when the house has a basement.',
             'household_status_id.exists' => 'The selected household status does not exist.',
             'head.required' => 'Head resident information is required.',
             'head.last_name.required' => 'Head last name is required.',
@@ -133,9 +142,25 @@ class StoreHouseholdRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
-            $this->validateUniqueLotAndBlock($validator);
+            $this->validateBasementLevel($validator);
             $this->validateHouseholdHeadAge($validator);
         });
+    }
+
+    private function validateBasementLevel(Validator $validator): void
+    {
+        if (! $this->boolean('has_basement')) {
+            return;
+        }
+
+        $levels = $this->input('number_of_basement_level');
+
+        if (! is_numeric($levels) || (int) $levels < 1) {
+            $validator->errors()->add(
+                'number_of_basement_level',
+                'Number of basement levels is required when the house has a basement.',
+            );
+        }
     }
 
     private function validateHouseholdHeadAge(Validator $validator): void

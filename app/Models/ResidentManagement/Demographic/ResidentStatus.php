@@ -15,6 +15,15 @@ class ResidentStatus extends Model
 
     public const ARCHIVE = 4;
 
+    /**
+     * @var list<int>
+     */
+    public const HEAD_REPLACEMENT_STATUSES = [
+        self::MOVED_OUT,
+        self::DECEASED,
+        self::ARCHIVE,
+    ];
+
     protected $table = 'resident_status';
 
     protected $primaryKey = 'resident_status_id';
@@ -24,6 +33,11 @@ class ResidentStatus extends Model
     protected $fillable = [
         'resident_status',
     ];
+
+    public static function requiresHouseholdHeadReplacement(int $statusId): bool
+    {
+        return in_array($statusId, self::HEAD_REPLACEMENT_STATUSES, true);
+    }
 
     /**
      * @return HasMany<Resident, $this>

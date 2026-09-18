@@ -119,21 +119,12 @@ const routes = [
         },
     },
     {
-        path: '/households/assessments',
-        name: 'household-assessments',
-        component: () => import('@/pages/households/HouseholdAssessmentsPage.vue'),
+        path: '/households/pet-census',
+        name: 'household-pet-census',
+        component: () => import('@/pages/households/HouseholdPetCensusPage.vue'),
         meta: {
             requiresAuth: true,
-            requiresPermissions: ['householdassessment.view'],
-        },
-    },
-    {
-        path: '/households/:id(\\d+)/assessments',
-        name: 'household-assessment-detail',
-        component: () => import('@/pages/households/HouseholdAssessmentDetailPage.vue'),
-        meta: {
-            requiresAuth: true,
-            requiresPermissions: ['householdassessment.view'],
+            requiresPermissions: ['household.view'],
         },
     },
     {

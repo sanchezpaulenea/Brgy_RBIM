@@ -26,11 +26,18 @@ class HouseholdRepository implements HouseholdRepositoryInterface
             'head.status',
             'head.clan',
             'head.relationshipToHouseholdHead',
-            'latestAssessment.censusStatus',
-            'latestAssessment.encoder',
-            'latestAssessment.interviewer',
-            'latestAssessment.supervisor',
-            'latestAssessment.previousAssessment.censusStatus',
+            'questions.ownershipOfHousingUnit',
+            'questions.ownershipOfLot',
+            'questions.fuelTypeForLighting',
+            'questions.fuelTypeForCooking',
+            'questions.mainSourceDrinkingWater',
+            'questions.kitchenGarbageDisposal',
+            'questions.toiletFacilityType',
+            'questions.typeOfBuildingHouse',
+            'questions.constructionMaterialOuterWall',
+            'questions.commonDiseases',
+            'questions.primaryNeeds',
+            'questions.intendToStay',
         ];
     }
 
@@ -107,6 +114,14 @@ class HouseholdRepository implements HouseholdRepositoryInterface
         return $query->first();
     }
 
+    public function lockById(int $householdId): ?Household
+    {
+        return Household::query()
+            ->where('household_id', $householdId)
+            ->lockForUpdate()
+            ->first();
+    }
+
     /**
      * @param  array<string, mixed>  $attributes
      */
@@ -120,7 +135,7 @@ class HouseholdRepository implements HouseholdRepositoryInterface
      */
     public function update(Household $household, array $attributes): Household
     {
-        unset($attributes['head_resident_id'], $attributes['head']);
+        unset($attributes['head_resident_id'], $attributes['head'], $attributes['has_basement']);
 
         $household->fill($attributes);
         $household->save();

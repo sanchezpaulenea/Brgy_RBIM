@@ -4,12 +4,20 @@ namespace App\Providers;
 
 use App\Models\BarangayPersonnel\BarangayPersonnel;
 use App\Models\BarangayPersonnel\PersonnelPosition;
+use App\Models\HouseholdManagement\BuildingHouseType;
 use App\Models\HouseholdManagement\CensusStatus;
 use App\Models\HouseholdManagement\Clan;
+use App\Models\HouseholdManagement\ConstructionMaterialOuterWall;
+use App\Models\HouseholdManagement\FuelType;
 use App\Models\HouseholdManagement\Household;
 use App\Models\HouseholdManagement\HouseholdAssessment;
+use App\Models\HouseholdManagement\HouseholdQuestions;
 use App\Models\HouseholdManagement\HouseholdStatus;
+use App\Models\HouseholdManagement\KitchenGarbageDisposal;
+use App\Models\HouseholdManagement\OwnershipType;
 use App\Models\HouseholdManagement\Street;
+use App\Models\HouseholdManagement\ToiletFacilityType;
+use App\Models\HouseholdManagement\WaterSource;
 use App\Models\Logs\AuditLog;
 use App\Models\Logs\UserLog;
 use App\Models\ResidentManagement\Ctc\Ctc;
@@ -29,8 +37,8 @@ use App\Models\ResidentManagement\Education\CurrentEnrollmentStatus;
 use App\Models\ResidentManagement\Education\Education;
 use App\Models\ResidentManagement\Education\HighestLvlOfEduc;
 use App\Models\ResidentManagement\Education\SchoolLvl;
-use App\Models\ResidentManagement\Health\Disability;
 use App\Models\ResidentManagement\Health\BirthAttendant;
+use App\Models\ResidentManagement\Health\Disability;
 use App\Models\ResidentManagement\Health\FacilityVisitedPast12Mos;
 use App\Models\ResidentManagement\Health\FacilityVisitReason;
 use App\Models\ResidentManagement\Health\FamilyPlanningMethod;
@@ -54,6 +62,7 @@ use App\Policies\BarangayPersonnel\BarangayPersonnelPolicy;
 use App\Policies\BarangayPersonnel\PersonnelPolicy;
 use App\Policies\HouseholdManagement\HouseholdAssessmentPolicy;
 use App\Policies\HouseholdManagement\HouseholdPolicy;
+use App\Policies\HouseholdManagement\HouseholdQuestionsPolicy;
 use App\Policies\HouseholdManagement\StreetPolicy;
 use App\Policies\Logs\AuditLogPolicy;
 use App\Policies\Logs\UserLogPolicy;
@@ -97,6 +106,7 @@ class AuthServiceProvider extends ServiceProvider
         Setting::class => SystemSettingPolicy::class,
         Household::class => HouseholdPolicy::class,
         HouseholdAssessment::class => HouseholdAssessmentPolicy::class,
+        HouseholdQuestions::class => HouseholdQuestionsPolicy::class,
         Street::class => StreetPolicy::class,
         Resident::class => ResidentPolicy::class,
         Nationality::class => NationalityPolicy::class,
@@ -136,6 +146,13 @@ class AuthServiceProvider extends ServiceProvider
         ReasonForLeaving::class => ReferenceLookupPolicy::class,
         ReasonForTransfer::class => ReferenceLookupPolicy::class,
         SkillType::class => ReferenceLookupPolicy::class,
+        OwnershipType::class => ReferenceLookupPolicy::class,
+        FuelType::class => ReferenceLookupPolicy::class,
+        WaterSource::class => ReferenceLookupPolicy::class,
+        KitchenGarbageDisposal::class => ReferenceLookupPolicy::class,
+        ToiletFacilityType::class => ReferenceLookupPolicy::class,
+        BuildingHouseType::class => ReferenceLookupPolicy::class,
+        ConstructionMaterialOuterWall::class => ReferenceLookupPolicy::class,
     ];
 
     public function register(): void {}

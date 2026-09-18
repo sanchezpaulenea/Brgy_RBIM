@@ -181,12 +181,19 @@
                         />
                         <div>
                             <label for="resident-edit-status" class="rbim-label">Resident Status</label>
-                            <select id="resident-edit-status" v-model="editForm.resident_status_id" class="rbim-input">
+                            <select
+                                id="resident-edit-status"
+                                v-model="editForm.resident_status_id"
+                                class="rbim-input"
+                                @change="onResidentStatusChange"
+                            >
                                 <option v-for="option in lookups.residentStatus" :key="option.id" :value="option.id">
                                     {{ option.label }}
                                 </option>
                             </select>
                             <p v-if="editErrors.resident_status_id" class="rbim-error">{{ editErrors.resident_status_id }}</p>
+                            <p v-if="editErrors.new_head_resident_id" class="rbim-error">{{ editErrors.new_head_resident_id }}</p>
+                            <p v-if="editErrors.former_head_relationship_to_hh_id" class="rbim-error">{{ editErrors.former_head_relationship_to_hh_id }}</p>
                         </div>
                     </template>
 
@@ -614,7 +621,7 @@
                                         :class="{ 'rbim-input-error': editErrors.reason_for_leaving_id }"
                                     >
                                         <option value="">Select</option>
-                                        <option v-for="option in lookups.reasonForLeaving" :key="option.id" :value="option.id">{{ option.label }}</option>
+                                        <option v-for="option in migrantReasonsForLeaving" :key="option.id" :value="option.id">{{ option.label }}</option>
                                     </select>
                                     <p v-if="editErrors.reason_for_leaving_id" class="rbim-error">{{ editErrors.reason_for_leaving_id }}</p>
                                 </div>
@@ -626,7 +633,7 @@
                                         :class="{ 'rbim-input-error': editErrors.reason_for_transfer_id }"
                                     >
                                         <option value="">Select</option>
-                                        <option v-for="option in lookups.reasonForTransfer" :key="option.id" :value="option.id">{{ option.label }}</option>
+                                        <option v-for="option in migrantReasonsForTransfer" :key="option.id" :value="option.id">{{ option.label }}</option>
                                     </select>
                                     <p v-if="editErrors.reason_for_transfer_id" class="rbim-error">{{ editErrors.reason_for_transfer_id }}</p>
                                 </div>
@@ -719,6 +726,14 @@
             </div>
         </div>
 
+        <AssignHouseholdHeadDialog
+            :open="assigningHead"
+            :candidates="headCandidates"
+            :relationships="lookups.relationship"
+            @confirm="onHeadAssigned"
+            @cancel="onHeadAssignmentCancelled"
+        />
+
         <ConfirmDialog
             :open="confirm.open"
             :title="confirm.title"
@@ -735,6 +750,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
+import AssignHouseholdHeadDialog from '@/components/AssignHouseholdHeadDialog.vue';
 import BirthDateField from '@/components/BirthDateField.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import PageTabs from '@/components/PageTabs.vue';
@@ -746,7 +762,13 @@ import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
 import * as residentService from '@/services/residentService';
-import { HOUSEHOLD_HEAD_MIN_AGE, applyValidationErrors } from '@/utils/residentForm';
+import {
+    HOUSEHOLD_HEAD_MIN_AGE,
+    HOUSEHOLD_STATUS_ACTIVE,
+    applyValidationErrors,
+    eligibleHouseholdHeadCandidates,
+    residentStatusRequiresHeadReplacement,
+} from '@/utils/residentForm';
 import { classifyMigrationForm, formatMonthYear } from '@/utils/migration';
 import { ageFromDateOfBirth } from '@/utils/format';
 import {
@@ -755,6 +777,7 @@ import {
     canPerformUpdate,
     isEnrollmentStatusEnrolled,
     isFamilyPlanningNone,
+    isNotApplicableLookup,
     isNotApplicableSchoolLvl,
     lookupById,
     resolveApplicableSections,
@@ -775,6 +798,10 @@ const successMessage = ref('');
 const editError = ref('');
 const resident = ref(null);
 const editing = ref(null);
+const assigningHead = ref(false);
+const householdForHead = ref(null);
+const headReplacement = ref(null);
+const originalResidentStatusId = ref(null);
 const activeSection = ref('');
 const editForm = reactive({});
 const editErrors = reactive({});
@@ -829,6 +856,10 @@ const relationshipOptions = computed(() => {
     return lookups.relationship.filter((option) => Number(option.id) !== 1);
 });
 
+const headCandidates = computed(() => (
+    eligibleHouseholdHeadCandidates(householdForHead.value?.residents, resident.value?.resident_id)
+));
+
 const educationRelevance = computed(() => educationFieldRelevance(resident.value));
 
 const educationEnrolled = computed(() => (
@@ -837,6 +868,14 @@ const educationEnrolled = computed(() => (
 
 const enrolledSchoolLevels = computed(() => (
     (lookups.schoolLvl ?? []).filter((option) => !isNotApplicableSchoolLvl(option))
+));
+
+const migrantReasonsForLeaving = computed(() => (
+    (lookups.reasonForLeaving ?? []).filter((option) => !isNotApplicableLookup(option))
+));
+
+const migrantReasonsForTransfer = computed(() => (
+    (lookups.reasonForTransfer ?? []).filter((option) => !isNotApplicableLookup(option))
 ));
 
 const economicShowsWorkDetails = computed(() => (
@@ -1249,6 +1288,9 @@ function startDemographicsEdit() {
         marital_status_id: item.marital_status_id,
         resident_status_id: item.resident_status_id,
     });
+    originalResidentStatusId.value = item.resident_status_id;
+    headReplacement.value = null;
+    householdForHead.value = null;
     editing.value = 'demographics';
 }
 
@@ -1334,6 +1376,68 @@ function startSectionEdit(key) {
 function cancelEdit() {
     editing.value = null;
     editError.value = '';
+    assigningHead.value = false;
+    householdForHead.value = null;
+    headReplacement.value = null;
+    originalResidentStatusId.value = null;
+}
+
+async function ensureHouseholdForHead() {
+    const householdId = resident.value?.household_id;
+
+    if (!householdId) {
+        householdForHead.value = null;
+
+        return null;
+    }
+
+    if (Number(householdForHead.value?.household_id) === Number(householdId) && householdForHead.value?.residents) {
+        return householdForHead.value;
+    }
+
+    householdForHead.value = await householdService.fetchHousehold(householdId);
+
+    return householdForHead.value;
+}
+
+async function onResidentStatusChange() {
+    if (editing.value !== 'demographics' || !resident.value?.is_household_head) {
+        headReplacement.value = null;
+
+        return;
+    }
+
+    if (!residentStatusRequiresHeadReplacement(editForm.resident_status_id)) {
+        headReplacement.value = null;
+
+        return;
+    }
+
+    try {
+        const household = await ensureHouseholdForHead();
+
+        if (Number(household?.household_status_id) !== HOUSEHOLD_STATUS_ACTIVE) {
+            headReplacement.value = null;
+
+            return;
+        }
+
+        assigningHead.value = true;
+    } catch (err) {
+        editForm.resident_status_id = originalResidentStatusId.value;
+        editError.value = extractErrorMessage(err, 'Unable to load household members for head assignment.');
+    }
+}
+
+function onHeadAssigned(payload) {
+    headReplacement.value = payload;
+    assigningHead.value = false;
+}
+
+function onHeadAssignmentCancelled() {
+    assigningHead.value = false;
+    headReplacement.value = null;
+    editForm.resident_status_id = originalResidentStatusId.value;
 }
 
 function toPayload(form) {
@@ -1412,6 +1516,19 @@ async function handleSave() {
             editErrors.date_of_birth = `The household head must be at least ${HOUSEHOLD_HEAD_MIN_AGE} years old.`;
             return;
         }
+
+        if (residentStatusRequiresHeadReplacement(editForm.resident_status_id) && !headReplacement.value) {
+            await onResidentStatusChange();
+
+            if (!headReplacement.value && assigningHead.value) {
+                return;
+            }
+
+            if (!headReplacement.value && Number(householdForHead.value?.household_status_id) === HOUSEHOLD_STATUS_ACTIVE) {
+                editErrors.new_head_resident_id = 'Select a new household head from the household members before changing this resident\'s status.';
+                return;
+            }
+        }
     }
 
     if (isCreatingSection()) {
@@ -1437,6 +1554,11 @@ async function handleSave() {
         if (editing.value === 'demographics') {
             if (resident.value.is_household_head) {
                 delete payload.relationship_to_hh_id;
+            }
+
+            if (headReplacement.value) {
+                payload.new_head_resident_id = headReplacement.value.new_head_resident_id;
+                payload.former_head_relationship_to_hh_id = headReplacement.value.former_head_relationship_to_hh_id;
             }
 
             delete payload.nationality_name;

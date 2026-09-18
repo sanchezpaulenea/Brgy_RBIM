@@ -164,40 +164,52 @@
                             <p v-if="editErrors.house_lot" class="rbim-error">{{ editErrors.house_lot }}</p>
                         </div>
                         <div>
-                            <label for="edit_block_num" class="rbim-label">Block Number</label>
+                            <label for="edit_number_of_house_story" class="rbim-label">
+                                Number of House Story<span class="rbim-required" aria-hidden="true">*</span>
+                            </label>
                             <input
-                                id="edit_block_num"
-                                v-model="editForm.block_num"
-                                type="text"
-                                maxlength="45"
+                                id="edit_number_of_house_story"
+                                v-model="editForm.number_of_house_story"
+                                type="number"
+                                min="1"
+                                max="50"
+                                step="1"
                                 class="rbim-input"
-                                :class="{ 'rbim-input-error': editErrors.block_num }"
+                                :class="{ 'rbim-input-error': editErrors.number_of_house_story }"
                             >
-                            <p v-if="editErrors.block_num" class="rbim-error">{{ editErrors.block_num }}</p>
+                            <p v-if="editErrors.number_of_house_story" class="rbim-error">{{ editErrors.number_of_house_story }}</p>
                         </div>
                         <div>
-                            <label for="edit_building_name" class="rbim-label">Building Name</label>
-                            <input
-                                id="edit_building_name"
-                                v-model="editForm.building_name"
-                                type="text"
-                                maxlength="45"
+                            <label for="edit_has_basement" class="rbim-label">
+                                Does the house have a basement?<span class="rbim-required" aria-hidden="true">*</span>
+                            </label>
+                            <select
+                                id="edit_has_basement"
+                                v-model="editForm.has_basement"
                                 class="rbim-input"
-                                :class="{ 'rbim-input-error': editErrors.building_name }"
+                                :class="{ 'rbim-input-error': editErrors.has_basement }"
                             >
-                            <p v-if="editErrors.building_name" class="rbim-error">{{ editErrors.building_name }}</p>
+                                <option value="">Select</option>
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                            <p v-if="editErrors.has_basement" class="rbim-error">{{ editErrors.has_basement }}</p>
                         </div>
-                        <div>
-                            <label for="edit_unit_num" class="rbim-label">Unit Number</label>
+                        <div v-if="editForm.has_basement === 'true'">
+                            <label for="edit_number_of_basement_level" class="rbim-label">
+                                Number of Basement Level<span class="rbim-required" aria-hidden="true">*</span>
+                            </label>
                             <input
-                                id="edit_unit_num"
-                                v-model="editForm.unit_num"
-                                type="text"
-                                maxlength="45"
+                                id="edit_number_of_basement_level"
+                                v-model="editForm.number_of_basement_level"
+                                type="number"
+                                min="1"
+                                max="20"
+                                step="1"
                                 class="rbim-input"
-                                :class="{ 'rbim-input-error': editErrors.unit_num }"
+                                :class="{ 'rbim-input-error': editErrors.number_of_basement_level }"
                             >
-                            <p v-if="editErrors.unit_num" class="rbim-error">{{ editErrors.unit_num }}</p>
+                            <p v-if="editErrors.number_of_basement_level" class="rbim-error">{{ editErrors.number_of_basement_level }}</p>
                         </div>
                         <div>
                             <label for="edit_household_status_id" class="rbim-label">
@@ -253,7 +265,7 @@ import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
 import { formatDate, matchesSearch } from '@/utils/format';
-import { applyValidationErrors, optionalAddressText, toId } from '@/utils/residentForm';
+import { applyValidationErrors, householdStructureFromRecord, householdStructurePayload, optionalAddressText, toId, validateHouseholdStructure } from '@/utils/residentForm';
 
 const router = useRouter();
 const route = useRoute();
@@ -298,9 +310,9 @@ function emptyEditForm() {
     return {
         street_id: '',
         house_lot: '',
-        block_num: '',
-        building_name: '',
-        unit_num: '',
+        number_of_house_story: 1,
+        has_basement: '',
+        number_of_basement_level: '',
         household_status_id: '',
     };
 }
@@ -341,9 +353,7 @@ function startEdit(household) {
     Object.assign(editForm, {
         street_id: household.street_id ?? '',
         house_lot: household.house_lot ?? '',
-        block_num: household.block_num ?? '',
-        building_name: household.building_name ?? '',
-        unit_num: household.unit_num ?? '',
+        ...householdStructureFromRecord(household),
         household_status_id: household.household_status_id ?? '',
     });
     clearEditErrors();
@@ -411,6 +421,8 @@ async function handleUpdate() {
         editErrors.household_status_id = 'Household status is required.';
     }
 
+    validateHouseholdStructure(editForm, editErrors);
+
     if (Object.keys(editErrors).length) {
         return;
     }
@@ -433,9 +445,7 @@ async function handleUpdate() {
         await householdService.updateHousehold(editingId.value, {
             street_id: toId(editForm.street_id),
             house_lot: optionalAddressText(editForm.house_lot),
-            block_num: optionalAddressText(editForm.block_num),
-            building_name: optionalAddressText(editForm.building_name),
-            unit_num: optionalAddressText(editForm.unit_num),
+            ...householdStructurePayload(editForm),
             household_status_id: toId(editForm.household_status_id),
         });
         successMessage.value = 'Household updated successfully.';

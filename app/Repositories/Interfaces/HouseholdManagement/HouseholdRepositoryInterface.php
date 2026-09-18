@@ -15,6 +15,8 @@ interface HouseholdRepositoryInterface
 
     public function findById(int $householdId, bool $withResidents = false): ?Household;
 
+    public function lockById(int $householdId): ?Household;
+
     /**
      * @param  array<string, mixed>  $attributes
      */

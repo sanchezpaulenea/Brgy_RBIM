@@ -39,15 +39,15 @@ class Migration extends Model
     ];
 
     /**
-     * Keep null for non-migrants instead of coercing to false.
+     * Persist 0/1. Non-migrants store 0 because the column is NOT NULL.
      *
-     * @return Attribute<bool|null, bool|null>
+     * @return Attribute<bool|null, int|null>
      */
     protected function willReturnToPreviousResidence(): Attribute
     {
         return Attribute::make(
             get: fn ($value) => $value === null ? null : (bool) $value,
-            set: fn ($value) => $value === null || $value === '' ? null : (int) (bool) $value,
+            set: fn ($value) => $value === null || $value === '' ? 0 : (int) (bool) $value,
         );
     }
 

@@ -16,18 +16,11 @@ class Sociocivic extends Model
 
     protected $fillable = [
         'solo_parent_status_id',
-        'registered_sen_citizen',
         'ncsc_rrn_id_number',
         'osca_id_number',
+        'solo_parent_id_number',
         'registered_barangay_voter',
         'resident_id',
-    ];
-
-    /**
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'registered_sen_citizen' => 'boolean',
     ];
 
     public function getRouteKeyName(): string

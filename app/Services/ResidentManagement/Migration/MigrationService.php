@@ -6,6 +6,8 @@ use App\Models\Logs\Action;
 use App\Models\ResidentManagement\Demographic\Resident;
 use App\Models\ResidentManagement\Demographic\ResidentType;
 use App\Models\ResidentManagement\Migration\Migration;
+use App\Models\ResidentManagement\Migration\ReasonForLeaving;
+use App\Models\ResidentManagement\Migration\ReasonForTransfer;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Migration\MigrationRepositoryInterface;
@@ -17,17 +19,6 @@ use Illuminate\Validation\ValidationException;
 class MigrationService
 {
     use LogsAuditableFieldChanges;
-
-    /**
-     * @var list<string>
-     */
-    private const SKIP_FIELDS = [
-        'date_of_transfer_in_brgy',
-        'reason_for_leaving_id',
-        'will_return_to_previous_residence',
-        'reason_for_transfer_id',
-        'duration_of_stay',
-    ];
 
     public function __construct(
         protected MigrationRepositoryInterface $migrationRepository,
@@ -100,7 +91,8 @@ class MigrationService
     {
         $migration->loadMissing(['residentType', 'reasonForLeaving', 'reasonForTransfer']);
 
-        $stayMonths = MigrationClassifier::isNonMigrant((int) $migration->resident_type_id)
+        $nonMigrant = MigrationClassifier::isNonMigrant((int) $migration->resident_type_id);
+        $stayMonths = $nonMigrant
             ? null
             : MigrationClassifier::lengthOfStayMonths($migration->date_of_transfer_in_brgy);
 
@@ -115,13 +107,13 @@ class MigrationService
             'length_of_stay_label' => MigrationClassifier::lengthOfStayLabel($stayMonths),
             'resident_type_id' => $migration->resident_type_id,
             'resident_type' => $migration->residentType?->resident_type,
-            'date_of_transfer_in_brgy' => $migration->date_of_transfer_in_brgy?->format('Y-m-d'),
-            'reason_for_leaving_id' => $migration->reason_for_leaving_id,
-            'reason_for_leaving' => $migration->reasonForLeaving?->reason_for_leaving,
-            'will_return_to_previous_residence' => $migration->will_return_to_previous_residence,
-            'reason_for_transfer_id' => $migration->reason_for_transfer_id,
-            'reason_for_transfer' => $migration->reasonForTransfer?->reason_for_transfer,
-            'duration_of_stay' => $migration->duration_of_stay?->format('Y-m-d'),
+            'date_of_transfer_in_brgy' => $nonMigrant ? null : $migration->date_of_transfer_in_brgy?->format('Y-m-d'),
+            'reason_for_leaving_id' => $nonMigrant ? null : $migration->reason_for_leaving_id,
+            'reason_for_leaving' => $nonMigrant ? null : $migration->reasonForLeaving?->reason_for_leaving,
+            'will_return_to_previous_residence' => $nonMigrant ? null : $migration->will_return_to_previous_residence,
+            'reason_for_transfer_id' => $nonMigrant ? null : $migration->reason_for_transfer_id,
+            'reason_for_transfer' => $nonMigrant ? null : $migration->reasonForTransfer?->reason_for_transfer,
+            'duration_of_stay' => $nonMigrant ? null : $migration->duration_of_stay?->format('Y-m-d'),
         ];
     }
 
@@ -148,10 +140,11 @@ class MigrationService
         $residentTypeId = MigrationClassifier::classify($sameAddress, $stayMonths);
 
         if ($residentTypeId === ResidentType::NON_MIGRANT) {
-            foreach (self::SKIP_FIELDS as $field) {
-                $data[$field] = null;
-            }
-
+            $data['date_of_transfer_in_brgy'] = null;
+            $data['duration_of_stay'] = null;
+            $data['reason_for_leaving_id'] = ReasonForLeaving::ensureNotApplicableId();
+            $data['reason_for_transfer_id'] = ReasonForTransfer::ensureNotApplicableId();
+            $data['will_return_to_previous_residence'] = false;
             $data['resident_type_id'] = $residentTypeId;
 
             return $data;
@@ -199,7 +192,8 @@ class MigrationService
             $errors['date_of_transfer_in_brgy'] = 'Date of transfer is required for migrants and transients.';
         }
 
-        if ((int) ($merged['reason_for_leaving_id'] ?? 0) < 1) {
+        $leaving = ReasonForLeaving::query()->find((int) ($merged['reason_for_leaving_id'] ?? 0));
+        if ($leaving === null || $leaving->indicatesNotApplicable()) {
             $errors['reason_for_leaving_id'] = 'Reason for leaving is required for migrants and transients.';
         }
 
@@ -209,7 +203,8 @@ class MigrationService
             $errors['will_return_to_previous_residence'] = 'Indicate whether the resident plans to return to the previous residence.';
         }
 
-        if ((int) ($merged['reason_for_transfer_id'] ?? 0) < 1) {
+        $transfer = ReasonForTransfer::query()->find((int) ($merged['reason_for_transfer_id'] ?? 0));
+        if ($transfer === null || $transfer->indicatesNotApplicable()) {
             $errors['reason_for_transfer_id'] = 'Reason for transfer is required for migrants and transients.';
         }
 
@@ -225,7 +220,8 @@ class MigrationService
     {
         $migration->loadMissing(['residentType', 'reasonForLeaving', 'reasonForTransfer']);
 
-        $stayMonths = MigrationClassifier::isNonMigrant((int) $migration->resident_type_id)
+        $nonMigrant = MigrationClassifier::isNonMigrant((int) $migration->resident_type_id);
+        $stayMonths = $nonMigrant
             ? null
             : MigrationClassifier::lengthOfStayMonths($migration->date_of_transfer_in_brgy);
 
@@ -236,11 +232,11 @@ class MigrationService
             'previous residence 5yrs city' => (string) ($migration->previous_residence_5yrs_city_municipality ?? ''),
             'length of stay' => (string) (MigrationClassifier::lengthOfStayLabel($stayMonths) ?? ''),
             'resident type' => (string) ($migration->residentType?->resident_type ?? $migration->resident_type_id),
-            'date of transfer' => $migration->date_of_transfer_in_brgy?->format('Y-m-d') ?? '',
-            'reason for leaving' => (string) ($migration->reasonForLeaving?->reason_for_leaving ?? $migration->reason_for_leaving_id ?? ''),
-            'will return' => $this->yesNo($migration->will_return_to_previous_residence),
-            'reason for transfer' => (string) ($migration->reasonForTransfer?->reason_for_transfer ?? $migration->reason_for_transfer_id ?? ''),
-            'duration of stay' => $migration->duration_of_stay?->format('Y-m-d') ?? '',
+            'date of transfer' => $nonMigrant ? '' : ($migration->date_of_transfer_in_brgy?->format('Y-m-d') ?? ''),
+            'reason for leaving' => $nonMigrant ? '' : (string) ($migration->reasonForLeaving?->reason_for_leaving ?? $migration->reason_for_leaving_id ?? ''),
+            'will return' => $nonMigrant ? '' : $this->yesNo($migration->will_return_to_previous_residence),
+            'reason for transfer' => $nonMigrant ? '' : (string) ($migration->reasonForTransfer?->reason_for_transfer ?? $migration->reason_for_transfer_id ?? ''),
+            'duration of stay' => $nonMigrant ? '' : ($migration->duration_of_stay?->format('Y-m-d') ?? ''),
         ];
     }
 

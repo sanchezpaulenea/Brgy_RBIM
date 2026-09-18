@@ -4,7 +4,6 @@ namespace App\Http\Requests\HouseholdManagement\Concerns;
 
 use App\Models\HouseholdManagement\Household;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Validator;
 
 trait NormalizesHouseholdAddress
 {
@@ -46,44 +45,17 @@ trait NormalizesHouseholdAddress
         return (bool) preg_match('/^(n\/?a|n\.a\.?|not applicable)$/i', $value);
     }
 
-    protected function validateUniqueLotAndBlock(Validator $validator, ?Household $existing = null): void
+    protected function mergeBasementLevelFromAnswer(): void
     {
-        if ($validator->errors()->isNotEmpty()) {
+        if (! $this->exists('has_basement')) {
             return;
         }
 
-        [$houseLot, $blockNum] = $this->lotAndBlockValues($existing);
-
-        if (! is_string($houseLot) || ! is_string($blockNum) || $houseLot === '' || $blockNum === '') {
-            return;
+        if (! $this->boolean('has_basement')) {
+            $this->merge([
+                'number_of_basement_level' => 0,
+            ]);
         }
-
-        $query = Household::query()
-            ->where('house_lot', $houseLot)
-            ->where('block_num', $blockNum);
-
-        if ($existing !== null) {
-            $query->where('household_id', '!=', $existing->household_id);
-        }
-
-        if (! $query->exists()) {
-            return;
-        }
-
-        $message = 'A household with this house/lot and block number already exists.';
-        $validator->errors()->add('house_lot', $message);
-        $validator->errors()->add('block_num', $message);
-    }
-
-    /**
-     * @return array{0: mixed, 1: mixed}
-     */
-    protected function lotAndBlockValues(?Household $existing = null): array
-    {
-        $houseLot = $this->exists('house_lot') ? $this->input('house_lot') : $existing?->house_lot;
-        $blockNum = $this->exists('block_num') ? $this->input('block_num') : $existing?->block_num;
-
-        return [$houseLot, $blockNum];
     }
 
     protected function householdFromRoute(): ?Household

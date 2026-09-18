@@ -3,6 +3,7 @@
 namespace App\Services\ResidentManagement\Demographic;
 
 use App\Models\HouseholdManagement\Household;
+use App\Models\HouseholdManagement\HouseholdStatus;
 use App\Models\Logs\Action;
 use App\Models\ResidentManagement\Demographic\Resident;
 use App\Models\ResidentManagement\Demographic\ResidentStatus;
@@ -10,6 +11,7 @@ use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\HouseholdManagement\HouseholdRepositoryInterface;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Demographic\ResidentRepositoryInterface;
+use App\Services\HouseholdManagement\HouseholdServices;
 use App\Services\ResidentManagement\Ctc\CtcService;
 use App\Services\ResidentManagement\Economic\EconomicService;
 use App\Services\ResidentManagement\Education\EducationService;
@@ -27,6 +29,7 @@ class ResidentServices
     public function __construct(
         protected ResidentRepositoryInterface $residentRepository,
         protected HouseholdRepositoryInterface $householdRepository,
+        protected HouseholdServices $householdService,
         protected AuditLogRepositoryInterface $auditLogRepository,
         protected EducationService $educationService,
         protected EconomicService $economicService,
@@ -108,10 +111,49 @@ class ResidentServices
     {
         $this->assertHouseholdMoveAllowed($resident, $data);
 
+        $newHeadResidentId = array_key_exists('new_head_resident_id', $data)
+            ? $data['new_head_resident_id']
+            : null;
+        $formerHeadRelationshipId = array_key_exists('former_head_relationship_to_hh_id', $data)
+            ? $data['former_head_relationship_to_hh_id']
+            : null;
+
+        unset($data['new_head_resident_id'], $data['former_head_relationship_to_hh_id']);
+
         $previous = $this->residentAuditSnapshot($resident);
 
-        return DB::transaction(function () use ($performedBy, $resident, $data, $previous) {
+        return DB::transaction(function () use (
+            $performedBy,
+            $resident,
+            $data,
+            $previous,
+            $newHeadResidentId,
+            $formerHeadRelationshipId,
+        ) {
+            $requiresHeadReplacement = $this->requiresHouseholdHeadReplacement($resident, $data);
+
+            if ($requiresHeadReplacement) {
+                if ($newHeadResidentId === null || $formerHeadRelationshipId === null) {
+                    throw ValidationException::withMessages([
+                        'new_head_resident_id' => [
+                            'Select a new household head from the household members before changing this resident\'s status.',
+                        ],
+                    ]);
+                }
+
+                $data['relationship_to_hh_id'] = (int) $formerHeadRelationshipId;
+            }
+
             $updated = $this->residentRepository->update($resident, $data);
+
+            if ($requiresHeadReplacement) {
+                $this->householdService->reassignHead(
+                    $performedBy,
+                    $updated,
+                    (int) $newHeadResidentId,
+                    (int) $formerHeadRelationshipId,
+                );
+            }
 
             $this->logResidentFieldChanges($performedBy, $updated, $previous);
 
@@ -231,6 +273,32 @@ class ResidentServices
         }
 
         $this->requireHousehold($newHouseholdId);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function requiresHouseholdHeadReplacement(Resident $resident, array $data): bool
+    {
+        $resident->loadMissing('household');
+
+        $household = $resident->household;
+
+        if ($household === null) {
+            return false;
+        }
+
+        if ((int) $household->head_resident_id !== (int) $resident->resident_id) {
+            return false;
+        }
+
+        if ((int) $household->household_status_id !== HouseholdStatus::ACTIVE) {
+            return false;
+        }
+
+        $statusId = (int) ($data['resident_status_id'] ?? $resident->resident_status_id);
+
+        return ResidentStatus::requiresHouseholdHeadReplacement($statusId);
     }
 
     private function requireHousehold(int $householdId): Household

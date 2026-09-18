@@ -6,9 +6,16 @@ use App\Models\Audit\Action;
 use App\Models\Authentication\LoginStatus;
 use App\Models\BarangayPersonnel\PersonnelPosition;
 use App\Models\BarangayPersonnel\PersonnelStatus;
+use App\Models\HouseholdManagement\BuildingHouseType;
 use App\Models\HouseholdManagement\CensusStatus;
 use App\Models\HouseholdManagement\Clan;
+use App\Models\HouseholdManagement\ConstructionMaterialOuterWall;
+use App\Models\HouseholdManagement\FuelType;
 use App\Models\HouseholdManagement\HouseholdStatus;
+use App\Models\HouseholdManagement\KitchenGarbageDisposal;
+use App\Models\HouseholdManagement\OwnershipType;
+use App\Models\HouseholdManagement\ToiletFacilityType;
+use App\Models\HouseholdManagement\WaterSource;
 use App\Models\ResidentManagement\Demographic\MaritalStatus;
 use App\Models\ResidentManagement\Demographic\RelationshipToHouseholdHead;
 use App\Models\ResidentManagement\Demographic\ResidentStatus;
@@ -19,8 +26,8 @@ use App\Models\ResidentManagement\Economic\StatusOfWorkBusiness;
 use App\Models\ResidentManagement\Education\CurrentEnrollmentStatus;
 use App\Models\ResidentManagement\Education\HighestLvlOfEduc;
 use App\Models\ResidentManagement\Education\SchoolLvl;
-use App\Models\ResidentManagement\Health\Disability;
 use App\Models\ResidentManagement\Health\BirthAttendant;
+use App\Models\ResidentManagement\Health\Disability;
 use App\Models\ResidentManagement\Health\FacilityVisitedPast12Mos;
 use App\Models\ResidentManagement\Health\FacilityVisitReason;
 use App\Models\ResidentManagement\Health\FamilyPlanningMethod;
@@ -69,6 +76,13 @@ enum LookupType: string
     case ReasonForLeaving = 'reason-for-leaving';
     case ReasonForTransfer = 'reason-for-transfer';
     case SkillType = 'skill-type';
+    case OwnershipType = 'ownership-type';
+    case FuelType = 'fuel-type';
+    case WaterSource = 'water-source';
+    case KitchenGarbageDisposal = 'kitchen-garbage-disposal';
+    case ToiletFacilityType = 'toilet-facility-type';
+    case BuildingHouseType = 'building-house-type';
+    case ConstructionMaterialOuterWall = 'construction-material-outer-wall';
 
     /**
      * @return class-string<Model>
@@ -107,6 +121,13 @@ enum LookupType: string
             self::ReasonForLeaving => ReasonForLeaving::class,
             self::ReasonForTransfer => ReasonForTransfer::class,
             self::SkillType => SkillType::class,
+            self::OwnershipType => OwnershipType::class,
+            self::FuelType => FuelType::class,
+            self::WaterSource => WaterSource::class,
+            self::KitchenGarbageDisposal => KitchenGarbageDisposal::class,
+            self::ToiletFacilityType => ToiletFacilityType::class,
+            self::BuildingHouseType => BuildingHouseType::class,
+            self::ConstructionMaterialOuterWall => ConstructionMaterialOuterWall::class,
         };
     }
 
@@ -156,21 +177,37 @@ enum LookupType: string
             self::ReasonForLeaving,
             self::ReasonForTransfer,
             self::SkillType,
+            self::OwnershipType,
+            self::FuelType,
+            self::WaterSource,
+            self::KitchenGarbageDisposal,
+            self::ToiletFacilityType,
+            self::BuildingHouseType,
+            self::ConstructionMaterialOuterWall,
         ];
     }
 
     public function orderColumn(): string
     {
-        return $this->labelColumn() ?? match ($this) {
-            self::CensusStatus => 'status_name',
-            self::Clan => 'clan_name',
-            self::HouseholdStatus => 'household_status',
-            self::MaritalStatus => 'marital_status',
-            self::RelationshipToHouseholdHead => 'relationship_to_hh',
-            self::ResidentStatus => 'resident_status',
-            self::ResidentType => 'resident_type',
-            self::Sex => 'sex',
-            default => 'id',
+        return match ($this) {
+            self::OwnershipType,
+            self::FuelType,
+            self::WaterSource,
+            self::KitchenGarbageDisposal,
+            self::ToiletFacilityType,
+            self::BuildingHouseType,
+            self::ConstructionMaterialOuterWall => $this->idColumn() ?? 'id',
+            default => $this->labelColumn() ?? match ($this) {
+                self::CensusStatus => 'status_name',
+                self::Clan => 'clan_name',
+                self::HouseholdStatus => 'household_status',
+                self::MaritalStatus => 'marital_status',
+                self::RelationshipToHouseholdHead => 'relationship_to_hh',
+                self::ResidentStatus => 'resident_status',
+                self::ResidentType => 'resident_type',
+                self::Sex => 'sex',
+                default => 'id',
+            },
         };
     }
 
@@ -194,6 +231,13 @@ enum LookupType: string
             self::ReasonForLeaving => 'reason_for_leaving_id',
             self::ReasonForTransfer => 'reason_for_transfer_id',
             self::SkillType => 'skill_type_id',
+            self::OwnershipType => 'ownership_type_id',
+            self::FuelType => 'fuel_type_id',
+            self::WaterSource => 'water_source',
+            self::KitchenGarbageDisposal => 'kitchen_garbage_disposal_id',
+            self::ToiletFacilityType => 'toilet_facility_type_id',
+            self::BuildingHouseType => 'building_house_type_id',
+            self::ConstructionMaterialOuterWall => 'construction_material_outer_wall_id',
             default => null,
         };
     }
@@ -218,6 +262,13 @@ enum LookupType: string
             self::ReasonForLeaving => 'reason_for_leaving',
             self::ReasonForTransfer => 'reason_for_transfer',
             self::SkillType => 'skill_type',
+            self::OwnershipType => 'ownership_type',
+            self::FuelType => 'fuel_type',
+            self::WaterSource => 'water_source_id',
+            self::KitchenGarbageDisposal => 'kitchen_garbage_disposal',
+            self::ToiletFacilityType => 'toilet_facility_type',
+            self::BuildingHouseType => 'building_house_type',
+            self::ConstructionMaterialOuterWall => 'construction_material_outer_wall',
             default => null,
         };
     }

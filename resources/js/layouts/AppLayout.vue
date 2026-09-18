@@ -285,8 +285,8 @@ const isHouseholdRoute = computed(() => String(route.path).startsWith('/househol
 const isHouseholdViewRoute = computed(() => (
     route.name === 'households' || route.name === 'household-detail'
 ));
-const isHouseholdAssessmentRoute = computed(() => (
-    route.name === 'household-assessments' || route.name === 'household-assessment-detail'
+const isHouseholdPetCensusRoute = computed(() => (
+    route.name === 'household-pet-census'
 ));
 const isResidentRoute = computed(() => String(route.path).startsWith('/residents'));
 const isSettingsRoute = computed(() => String(route.path).startsWith('/settings'));
@@ -298,8 +298,8 @@ function isSidebarTabActive(tab) {
         return isHouseholdViewRoute.value;
     }
 
-    if (tab.name === 'household-assessments') {
-        return isHouseholdAssessmentRoute.value;
+    if (tab.name === 'household-pet-census') {
+        return isHouseholdPetCensusRoute.value;
     }
 
     if (tab.name === 'residents') {

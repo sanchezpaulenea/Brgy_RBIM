@@ -220,10 +220,14 @@ export function isFamilyPlanningNone(option) {
     return /\bnone\b/i.test(String(option.label ?? ''));
 }
 
-export function isNotApplicableSchoolLvl(option) {
+export function isNotApplicableLookup(option) {
     const text = String(option?.label ?? option ?? '').trim().toLowerCase();
 
     return /^(none|n\/a|n\.a\.?|na|not applicable)$/.test(text);
+}
+
+export function isNotApplicableSchoolLvl(option) {
+    return isNotApplicableLookup(option);
 }
 
 export function isNotApplicableHighestEduc(option) {

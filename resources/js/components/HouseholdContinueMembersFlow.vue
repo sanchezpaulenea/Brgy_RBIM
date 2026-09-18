@@ -5,7 +5,7 @@
                 Household registered
             </h2>
             <p class="mt-1 text-xs text-slate-500">
-                The household and head resident are saved. You can add more members now, or finish and encode this visit's assessment.
+                The household and head resident are saved. You can add more members now, or finish registration.
             </p>
             <p class="mt-4 text-sm text-slate-900">
                 {{ householdLabel }}

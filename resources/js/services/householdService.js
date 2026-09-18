@@ -44,6 +44,18 @@ export async function updateHousehold(id, payload) {
     return data.item;
 }
 
+export async function createHouseholdQuestions(householdId, payload) {
+    const { data } = await http.post(`/households/${householdId}/questions`, payload);
+
+    return data.item;
+}
+
+export async function updateHouseholdQuestions(questionsId, payload) {
+    const { data } = await http.patch(`/household-questions/${questionsId}`, payload);
+
+    return data.item;
+}
+
 export async function fetchAllHouseholdAssessments() {
     const { data } = await http.get('/household-assessments');
 

@@ -54,9 +54,17 @@ class HouseholdEncodingTest extends TestCase
         $response->assertUnauthorized();
     }
 
-    public function test_household_assessment_list_route_accepts_get(): void
+    public function test_household_questions_store_route_accepts_post(): void
     {
-        $response = $this->getJson('/api/v1/household-assessments');
+        $response = $this->postJson('/api/v1/households/1/questions', []);
+
+        $this->assertNotSame(405, $response->status());
+        $response->assertUnauthorized();
+    }
+
+    public function test_household_questions_update_route_accepts_patch(): void
+    {
+        $response = $this->patchJson('/api/v1/household-questions/1', []);
 
         $this->assertNotSame(405, $response->status());
         $response->assertUnauthorized();

@@ -20,10 +20,8 @@ class UpdateHouseholdRequest extends FormRequest
     {
         $this->mergeNormalizedAddressFields([
             'house_lot',
-            'block_num',
-            'building_name',
-            'unit_num',
         ]);
+        $this->mergeBasementLevelFromAnswer();
     }
 
     /**
@@ -35,9 +33,16 @@ class UpdateHouseholdRequest extends FormRequest
             'clan_id' => ['sometimes', 'integer', Rule::exists('clan', 'clan_id')],
             'street_id' => ['sometimes', 'integer', Rule::exists('street', 'street_id')],
             'house_lot' => ['sometimes', 'nullable', 'string', 'max:45'],
-            'block_num' => ['sometimes', 'nullable', 'string', 'max:45'],
-            'building_name' => ['sometimes', 'nullable', 'string', 'max:45'],
-            'unit_num' => ['sometimes', 'nullable', 'string', 'max:45'],
+            'number_of_house_story' => ['sometimes', 'required', 'integer', 'min:1', 'max:50'],
+            'has_basement' => ['sometimes', 'required', 'boolean'],
+            'number_of_basement_level' => [
+                'sometimes',
+                Rule::requiredIf(fn () => $this->exists('has_basement') && $this->boolean('has_basement')),
+                'nullable',
+                'integer',
+                'min:0',
+                'max:20',
+            ],
             'household_status_id' => [
                 'sometimes',
                 'integer',
@@ -57,6 +62,9 @@ class UpdateHouseholdRequest extends FormRequest
             'clan_id.exists' => 'The selected clan does not exist.',
             'street_id.exists' => 'The selected street does not exist.',
             'household_status_id.exists' => 'The selected household status does not exist.',
+            'number_of_house_story.min' => 'Number of house stories must be at least 1.',
+            'has_basement.required' => 'Please indicate whether the house has a basement.',
+            'number_of_basement_level.required' => 'Number of basement levels is required when the house has a basement.',
             'head_resident_id.prohibited' => 'The household head cannot be changed on this update.',
             'head.prohibited' => 'The household head cannot be changed on this update.',
         ];
@@ -74,9 +82,9 @@ class UpdateHouseholdRequest extends FormRequest
                     'clan_id',
                     'street_id',
                     'house_lot',
-                    'block_num',
-                    'building_name',
-                    'unit_num',
+                    'number_of_house_story',
+                    'has_basement',
+                    'number_of_basement_level',
                     'household_status_id',
                 ];
 
@@ -92,7 +100,18 @@ class UpdateHouseholdRequest extends FormRequest
                 );
             },
             function (Validator $validator): void {
-                $this->validateUniqueLotAndBlock($validator, $this->householdFromRoute());
+                if (! $this->exists('has_basement') || ! $this->boolean('has_basement')) {
+                    return;
+                }
+
+                $levels = $this->input('number_of_basement_level');
+
+                if (! is_numeric($levels) || (int) $levels < 1) {
+                    $validator->errors()->add(
+                        'number_of_basement_level',
+                        'Number of basement levels is required when the house has a basement.',
+                    );
+                }
             },
         ];
     }

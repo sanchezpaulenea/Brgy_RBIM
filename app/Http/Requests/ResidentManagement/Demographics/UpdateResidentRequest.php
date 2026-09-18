@@ -78,6 +78,18 @@ class UpdateResidentRequest extends FormRequest
                 Rule::exists('resident_status', 'resident_status_id'),
             ],
             'household_id' => ['sometimes', 'required', 'integer', Rule::exists('household', 'household_id')],
+            'new_head_resident_id' => [
+                'sometimes',
+                'required',
+                'integer',
+                Rule::exists('resident', 'resident_id'),
+            ],
+            'former_head_relationship_to_hh_id' => [
+                'required_with:new_head_resident_id',
+                'integer',
+                Rule::exists('relationship_to_hh', 'relationship_to_hh_id'),
+                Rule::notIn([RelationshipToHouseholdHead::HEAD]),
+            ],
         ];
     }
 
@@ -100,6 +112,10 @@ class UpdateResidentRequest extends FormRequest
             'clan_id.exists' => 'The selected clan does not exist.',
             'resident_status_id.exists' => 'The selected resident status does not exist.',
             'household_id.exists' => 'The selected household does not exist.',
+            'new_head_resident_id.required' => 'Select a new household head from the household members.',
+            'new_head_resident_id.exists' => 'The selected household member does not exist.',
+            'former_head_relationship_to_hh_id.required_with' => 'Select this resident\'s relationship to the new household head.',
+            'former_head_relationship_to_hh_id.not_in' => 'The former household head cannot remain recorded as Head.',
         ];
     }
 
@@ -129,6 +145,8 @@ class UpdateResidentRequest extends FormRequest
                     'clan_id',
                     'resident_status_id',
                     'household_id',
+                    'new_head_resident_id',
+                    'former_head_relationship_to_hh_id',
                 ];
 
                 foreach ($updatable as $field) {

@@ -6,6 +6,7 @@ use App\Http\Controllers\BarangayPersonnel\BarangayPersonnelController;
 use App\Http\Controllers\BarangayPersonnel\PersonnelController;
 use App\Http\Controllers\HouseholdManagament\HouseholdAssessmentController;
 use App\Http\Controllers\HouseholdManagament\HouseholdController;
+use App\Http\Controllers\HouseholdManagament\HouseholdQuestionsController;
 use App\Http\Controllers\HouseholdManagament\StreetController;
 use App\Http\Controllers\Logs\AuditLogController;
 use App\Http\Controllers\Logs\UserLogController;
@@ -55,6 +56,8 @@ Route::prefix('v1')->group(function () {
         Route::patch('household-assessments/{assessment}/status', [HouseholdAssessmentController::class, 'updateStatus'])->name('household-assessments.update-status');
         Route::get('households/{household}', [HouseholdController::class, 'show'])->name('households.show');
         Route::patch('households/{household}', [HouseholdController::class, 'update'])->name('households.update');
+        Route::post('households/{household}/questions', [HouseholdQuestionsController::class, 'store'])->name('households.questions.store');
+        Route::patch('household-questions/{householdQuestions}', [HouseholdQuestionsController::class, 'update'])->name('household-questions.update');
 
         Route::get('residents', [ResidentController::class, 'index'])->name('residents.index');
         Route::post('residents', [ResidentController::class, 'store'])->name('residents.store');
@@ -117,6 +120,13 @@ Route::prefix('v1')->group(function () {
         Route::get('reasons-for-leaving', [LookupController::class, 'index'])->defaults('lookup', 'reason-for-leaving')->name('reasons-for-leaving.index');
         Route::get('reasons-for-transfer', [LookupController::class, 'index'])->defaults('lookup', 'reason-for-transfer')->name('reasons-for-transfer.index');
         Route::get('skill-types', [LookupController::class, 'index'])->defaults('lookup', 'skill-type')->name('skill-types.index');
+        Route::get('ownership-types', [LookupController::class, 'index'])->defaults('lookup', 'ownership-type')->name('ownership-types.index');
+        Route::get('fuel-types', [LookupController::class, 'index'])->defaults('lookup', 'fuel-type')->name('fuel-types.index');
+        Route::get('water-sources', [LookupController::class, 'index'])->defaults('lookup', 'water-source')->name('water-sources.index');
+        Route::get('kitchen-garbage-disposals', [LookupController::class, 'index'])->defaults('lookup', 'kitchen-garbage-disposal')->name('kitchen-garbage-disposals.index');
+        Route::get('toilet-facility-types', [LookupController::class, 'index'])->defaults('lookup', 'toilet-facility-type')->name('toilet-facility-types.index');
+        Route::get('building-house-types', [LookupController::class, 'index'])->defaults('lookup', 'building-house-type')->name('building-house-types.index');
+        Route::get('construction-material-outer-walls', [LookupController::class, 'index'])->defaults('lookup', 'construction-material-outer-wall')->name('construction-material-outer-walls.index');
 
         Route::middleware('system.admin')->group(function () {
             Route::get('users/create-options', [UserController::class, 'createOptions'])->name('users.create-options');

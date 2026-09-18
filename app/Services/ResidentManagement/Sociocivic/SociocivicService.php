@@ -37,7 +37,7 @@ class SociocivicService
         }
 
         $data['resident_id'] = $resident->resident_id;
-        $data = $this->applyAgeThresholds($resident, $data);
+        $data = $this->persistableAttributes($resident, $data);
 
         return DB::transaction(function () use ($performedBy, $data) {
             $sociocivic = $this->sociocivicRepository->create($data);
@@ -66,11 +66,11 @@ class SociocivicService
         $sociocivic->loadMissing('resident');
         $this->assertEligible($sociocivic->resident);
         $previous = $this->auditSnapshot($sociocivic);
-        $data = $this->applyAgeThresholds($sociocivic->resident, array_merge($sociocivic->only([
+        $data = $this->persistableAttributes($sociocivic->resident, array_merge($sociocivic->only([
             'solo_parent_status_id',
-            'registered_sen_citizen',
             'ncsc_rrn_id_number',
             'osca_id_number',
+            'solo_parent_id_number',
             'registered_barangay_voter',
         ]), $data));
 
@@ -103,23 +103,39 @@ class SociocivicService
         ];
 
         $barangay = $this->storedVoterBarangay($sociocivic->registered_barangay_voter);
+        $isRegisteredSenior = $relevance['senior_citizen'] && $this->hasSeniorCitizenIds($sociocivic);
 
         return [
             'sociocivic_id' => $sociocivic->sociocivic_id,
             'resident_id' => $sociocivic->resident_id,
             'solo_parent_status_id' => $sociocivic->solo_parent_status_id,
             'solo_parent_status' => $sociocivic->soloParentStatus?->solo_parent_status,
-            'registered_sen_citizen' => (bool) $sociocivic->registered_sen_citizen,
-            'ncsc_rrn_id_number' => $relevance['senior_citizen'] && $sociocivic->registered_sen_citizen
+            'registered_sen_citizen' => $isRegisteredSenior,
+            'ncsc_rrn_id_number' => $isRegisteredSenior
                 ? $sociocivic->ncsc_rrn_id_number
                 : null,
-            'osca_id_number' => $relevance['senior_citizen'] && $sociocivic->registered_sen_citizen
+            'osca_id_number' => $isRegisteredSenior
                 ? $sociocivic->osca_id_number
+                : null,
+            'solo_parent_id_number' => $relevance['solo_parent']
+                ? $sociocivic->solo_parent_id_number
                 : null,
             'is_registered_barangay_voter' => $barangay !== null,
             'registered_barangay_voter' => $barangay,
             'field_relevance' => $relevance,
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function persistableAttributes(?Resident $resident, array $data): array
+    {
+        $data = $this->applyAgeThresholds($resident, $data);
+        unset($data['registered_sen_citizen']);
+
+        return $data;
     }
 
     /**
@@ -139,11 +155,9 @@ class SociocivicService
         }
 
         if (! $relevance['senior_citizen']) {
-            $data['registered_sen_citizen'] = false;
             $data['ncsc_rrn_id_number'] = null;
             $data['osca_id_number'] = null;
         } elseif (! filter_var($data['registered_sen_citizen'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
-            $data['registered_sen_citizen'] = false;
             $data['ncsc_rrn_id_number'] = null;
             $data['osca_id_number'] = null;
         }
@@ -152,10 +166,6 @@ class SociocivicService
             $data['registered_barangay_voter'] = null;
         } else {
             $data['registered_barangay_voter'] = $this->storedVoterBarangay($data['registered_barangay_voter'] ?? null);
-        }
-
-        if (! array_key_exists('registered_sen_citizen', $data) || $data['registered_sen_citizen'] === null) {
-            $data['registered_sen_citizen'] = false;
         }
 
         return $data;
@@ -176,6 +186,12 @@ class SociocivicService
         return $barangay;
     }
 
+    private function hasSeniorCitizenIds(Sociocivic $sociocivic): bool
+    {
+        return $sociocivic->ncsc_rrn_id_number !== null
+            || (is_string($sociocivic->osca_id_number) && trim($sociocivic->osca_id_number) !== '');
+    }
+
     private function assertEligible(?Resident $resident): void
     {
         if ($resident === null || ! $resident->canHaveSociocivic()) {
@@ -194,7 +210,7 @@ class SociocivicService
 
         return [
             'solo parent status' => (string) ($sociocivic->soloParentStatus?->solo_parent_status ?? $sociocivic->solo_parent_status_id),
-            'registered senior citizen' => $sociocivic->registered_sen_citizen ? 'Yes' : 'No',
+            'registered senior citizen' => $this->hasSeniorCitizenIds($sociocivic) ? 'Yes' : 'No',
             'ncsc-rrn' => (string) ($sociocivic->ncsc_rrn_id_number ?? ''),
             'osca id' => (string) ($sociocivic->osca_id_number ?? ''),
             'registered barangay voter' => (string) ($this->storedVoterBarangay($sociocivic->registered_barangay_voter) ?? ''),
