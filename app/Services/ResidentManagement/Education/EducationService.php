@@ -12,12 +12,14 @@ use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Education\EducationRepositoryInterface;
 use App\Services\ResidentManagement\Concerns\LogsAuditableFieldChanges;
+use App\Services\ResidentManagement\Concerns\SerializesResidentSectionWrites;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class EducationService
 {
     use LogsAuditableFieldChanges;
+    use SerializesResidentSectionWrites;
 
     public function __construct(
         protected EducationRepositoryInterface $educationRepository,
@@ -40,17 +42,17 @@ class EducationService
      */
     public function create(User $performedBy, Resident $resident, array $data): array
     {
-        if ($this->educationRepository->findByResidentId($resident->resident_id) !== null) {
-            throw ValidationException::withMessages([
-                'education' => ['An education record already exists for this resident.'],
-            ]);
-        }
-
         $data['resident_id'] = $resident->resident_id;
         $data = $this->applyAgeThresholds($resident, $data);
         $data = $this->applyEnrollmentRules($data);
 
-        return DB::transaction(function () use ($performedBy, $data) {
+        return $this->withResidentLock($resident->resident_id, function () use ($performedBy, $resident, $data) {
+            if ($this->educationRepository->findByResidentId($resident->resident_id) !== null) {
+                throw ValidationException::withMessages([
+                    'education' => ['An education record already exists for this resident.'],
+                ]);
+            }
+
             $education = $this->educationRepository->create($data);
 
             $this->auditLogRepository->log(

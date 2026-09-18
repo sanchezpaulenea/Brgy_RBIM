@@ -10,14 +10,24 @@ import {
     isFamilyPlanningNone,
     isNotApplicableSchoolLvl,
     lookupById,
+    NO_IMMUNIZATION_NOTE,
     notApplicableHighestEducId,
     notApplicableSchoolLvlId,
     resolveApplicableSections,
     sociocivicFieldRelevance,
+    SOLO_PARENT_STATUS_REGISTERED_ID,
     sourceOfIncomeSkipsWorkDetails,
     titleCaseWords,
 } from '@/utils/residentProfiling';
-import { ncscRrnValidationError, placeNameValidationError } from '@/utils/validation';
+import {
+    formatDecimalAmount,
+    formatSoloParentId,
+    monthlyIncomeValidationError,
+    ncscRrnValidationError,
+    placeNameValidationError,
+    pwdIdValidationError,
+    soloParentIdValidationError,
+} from '@/utils/validation';
 
 export const PROFILING_SECTION_ORDER = [
     'education',
@@ -80,6 +90,7 @@ export function emptySectionForm(key) {
         },
         sociocivic: {
             solo_parent_status_id: '',
+            solo_parent_id_number: '',
             registered_sen_citizen: '',
             ncsc_rrn_id_number: '',
             osca_id_number: '',
@@ -232,6 +243,19 @@ function nonSoloParentId(lookups) {
     return match?.id ?? 2;
 }
 
+/**
+ * Only a registered solo parent carries a Solo Parent ID.
+ */
+function isRegisteredSoloParent(statusId, lookups) {
+    const option = lookupById(lookups.soloParentStatus ?? [], statusId);
+
+    if (option) {
+        return /registered/i.test(String(option.label ?? '')) && !/non[- ]solo/i.test(String(option.label ?? ''));
+    }
+
+    return Number(statusId) === SOLO_PARENT_STATUS_REGISTERED_ID;
+}
+
 export function validateSectionForm(key, form, errors, { lookups = {}, resident = {}, location = {} } = {}) {
     Object.keys(errors).forEach((field) => {
         delete errors[field];
@@ -264,7 +288,14 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
     }
 
     if (key === 'economic') {
-        requiredInteger(form, errors, 'monthly_income', 'Monthly income is required.');
+        const incomeError = monthlyIncomeValidationError(form.monthly_income);
+
+        if (incomeError) {
+            errors.monthly_income = incomeError;
+        } else {
+            delete errors.monthly_income;
+        }
+
         requiredSelect(form, errors, 'source_of_income_id', 'Source of income is required.');
 
         if (!sourceOfIncomeSkipsWorkDetails(form.source_of_income_id, lookups.sourceOfIncome)) {
@@ -276,7 +307,12 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
     if (key === 'infant_health') {
         requiredSelect(form, errors, 'place_of_delivery_id', 'Place of delivery is required.');
         requiredSelect(form, errors, 'birth_attendant_id', 'Birth attendant is required.');
-        requiredText(form, errors, 'immunization', 'Immunization is required.');
+
+        if (String(form.immunization ?? '').trim().length > 45) {
+            errors.immunization = 'The immunization note may not be longer than 45 characters.';
+        } else {
+            delete errors.immunization;
+        }
     }
 
     if (key === 'health') {
@@ -297,12 +333,10 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
             errors.disability_id = 'Disability may not be longer than 45 characters.';
         }
 
-        const pwdId = String(form.pwd_id_number ?? '').trim();
+        const pwdIdError = pwdIdValidationError(form.pwd_id_number);
 
-        if (pwdId === '') {
-            delete errors.pwd_id_number;
-        } else if (!/^\d+$/.test(pwdId) || Number(pwdId) < 1) {
-            errors.pwd_id_number = 'PWD ID number must be a positive whole number.';
+        if (pwdIdError) {
+            errors.pwd_id_number = pwdIdError;
         } else {
             delete errors.pwd_id_number;
         }
@@ -318,6 +352,18 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
 
         if (relevance.solo_parent) {
             requiredSelect(form, errors, 'solo_parent_status_id', 'Solo parent status is required.');
+
+            if (isRegisteredSoloParent(form.solo_parent_status_id, lookups)) {
+                const soloParentIdError = soloParentIdValidationError(form.solo_parent_id_number);
+
+                if (soloParentIdError) {
+                    errors.solo_parent_id_number = soloParentIdError;
+                } else {
+                    delete errors.solo_parent_id_number;
+                }
+            } else {
+                delete errors.solo_parent_id_number;
+            }
         }
 
         if (relevance.senior_citizen) {
@@ -441,11 +487,16 @@ export function prepareSectionPayload(key, form, { lookups = {}, resident = {}, 
         }
     }
 
+    if (key === 'infant_health') {
+        payload.immunization = String(form.immunization ?? '').trim() || NO_IMMUNIZATION_NOTE;
+    }
+
     if (key === 'health') {
         payload.health_insurance_id = payload.health_insurance_id || 0;
         payload.facility_visited_past_12mos_id = payload.facility_visited_past_12mos_id || 0;
         payload.facility_visit_reason_id = payload.facility_visit_reason_id || 0;
-        payload.pwd_id_number = form.pwd_id_number ? Number(form.pwd_id_number) : 0;
+        // pwd_id_number is a 16-digit reference, not a quantity: keep leading zeros.
+        payload.pwd_id_number = String(form.pwd_id_number ?? '').replace(/\D/g, '') || null;
 
         if (form.disability_id) {
             payload.disability_id = Number(form.disability_id);
@@ -476,6 +527,11 @@ export function prepareSectionPayload(key, form, { lookups = {}, resident = {}, 
         if (!relevance.solo_parent) {
             payload.solo_parent_status_id = nonSoloParentId(lookups);
         }
+
+        payload.solo_parent_id_number = relevance.solo_parent
+            && isRegisteredSoloParent(payload.solo_parent_status_id, lookups)
+            ? formatSoloParentId(form.solo_parent_id_number) || null
+            : null;
 
         if (!relevance.senior_citizen) {
             payload.registered_sen_citizen = false;
@@ -514,7 +570,9 @@ export function prepareSectionPayload(key, form, { lookups = {}, resident = {}, 
     }
 
     if (key === 'economic' && payload.monthly_income !== null) {
-        payload.monthly_income = Number(payload.monthly_income);
+        // decimal(10,2) column: send a plain decimal string so trailing
+        // zeros and cents survive the round trip.
+        payload.monthly_income = formatDecimalAmount(payload.monthly_income);
     }
 
     if (key === 'women_health') {

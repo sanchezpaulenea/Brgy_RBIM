@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SoloParentStatus extends Model
 {
+    public const REGISTERED_SOLO_PARENT = 1;
+
     public const NON_SOLO_PARENT = 2;
 
     protected $table = 'solo_parent_status';

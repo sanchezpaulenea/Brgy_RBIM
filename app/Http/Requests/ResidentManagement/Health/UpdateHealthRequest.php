@@ -4,6 +4,7 @@ namespace App\Http\Requests\ResidentManagement\Health;
 
 use App\Http\Requests\Concerns\RequiresAtLeastOneField;
 use App\Http\Requests\Concerns\TitleCasesAttributes;
+use App\Rules\ValidPwdIdNumber;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -21,6 +22,10 @@ class UpdateHealthRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->mergeTitleCased(['disability']);
+
+        if ($this->exists('pwd_id_number')) {
+            $this->merge(['pwd_id_number' => ValidPwdIdNumber::normalize($this->input('pwd_id_number'))]);
+        }
     }
 
     /**
@@ -46,13 +51,7 @@ class UpdateHealthRequest extends FormRequest
                 Rule::exists('disability', 'disability_id'),
             ],
             'disability' => ['sometimes', 'required_without:disability_id', 'nullable', 'string', 'max:45'],
-            'pwd_id_number' => [
-                'sometimes',
-                'nullable',
-                'integer',
-                'min:0',
-                'max:2147483647',
-            ],
+            'pwd_id_number' => ['sometimes', 'nullable', 'string', new ValidPwdIdNumber],
         ];
     }
 
@@ -64,8 +63,6 @@ class UpdateHealthRequest extends FormRequest
         return [
             'disability_id.required_without' => 'Disability is required.',
             'disability.required_without' => 'Disability is required.',
-            'pwd_id_number.integer' => 'PWD ID number must be numeric.',
-            'pwd_id_number.min' => 'PWD ID number must be a whole number of 0 or greater.',
         ];
     }
 

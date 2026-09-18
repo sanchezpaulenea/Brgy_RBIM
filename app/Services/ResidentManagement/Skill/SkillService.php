@@ -9,12 +9,14 @@ use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Skill\SkillRepositoryInterface;
 use App\Services\ResidentManagement\Concerns\LogsAuditableFieldChanges;
+use App\Services\ResidentManagement\Concerns\SerializesResidentSectionWrites;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class SkillService
 {
     use LogsAuditableFieldChanges;
+    use SerializesResidentSectionWrites;
 
     public function __construct(
         protected SkillRepositoryInterface $skillRepository,
@@ -29,15 +31,15 @@ class SkillService
     {
         $this->assertEligible($resident);
 
-        if ($this->skillRepository->findByResidentId($resident->resident_id) !== null) {
-            throw ValidationException::withMessages([
-                'skills' => ['A skills development record already exists for this resident.'],
-            ]);
-        }
-
         $data['resident_id'] = $resident->resident_id;
 
-        return DB::transaction(function () use ($performedBy, $data) {
+        return $this->withResidentLock($resident->resident_id, function () use ($performedBy, $resident, $data) {
+            if ($this->skillRepository->findByResidentId($resident->resident_id) !== null) {
+                throw ValidationException::withMessages([
+                    'skills' => ['A skills development record already exists for this resident.'],
+                ]);
+            }
+
             $skillsDevelopment = $this->skillRepository->create($data);
 
             $this->auditLogRepository->log(

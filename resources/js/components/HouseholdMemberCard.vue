@@ -128,11 +128,10 @@
                 :options="nationalities"
                 :input-id="`${idPrefix}-nationality`"
                 label="Nationality"
-                placeholder="Search or type a nationality"
-                required
+                placeholder="Search or type a nationality (optional)"
                 :can-create="canCreateNationality"
                 :error="errors.nationality_id"
-                :hint="canCreateNationality ? 'Choose from the list, or type a new name and press Enter to add it.' : ''"
+                :hint="optionalLookupHint(canCreateNationality)"
                 @create="createNationality"
             />
             <div>
@@ -157,11 +156,10 @@
                 :options="religions"
                 :input-id="`${idPrefix}-religion`"
                 label="Religion"
-                placeholder="Search or type a religion"
-                required
+                placeholder="Search or type a religion (optional)"
                 :can-create="canCreateReligion"
                 :error="errors.religion_id"
-                :hint="canCreateReligion ? 'Choose from the list, or type a new name and press Enter to add it.' : ''"
+                :hint="optionalLookupHint(canCreateReligion)"
                 @create="createReligion"
             />
             <LookupCombobox
@@ -170,11 +168,10 @@
                 :options="ethnicities"
                 :input-id="`${idPrefix}-ethnicity`"
                 label="Ethnicity"
-                placeholder="Search or type an ethnicity"
-                required
+                placeholder="Search or type an ethnicity (optional)"
                 :can-create="canCreateEthnicity"
                 :error="errors.ethnicity_id"
-                :hint="canCreateEthnicity ? 'Choose from the list, or type a new name and press Enter to add it.' : ''"
+                :hint="optionalLookupHint(canCreateEthnicity)"
                 @create="createEthnicity"
             />
         </div>
@@ -333,6 +330,12 @@ const relationshipOptions = computed(() => {
 
     return props.relationships.filter((option) => Number(option.id) !== HEAD_RELATIONSHIP_ID);
 });
+
+function optionalLookupHint(canCreate) {
+    return canCreate
+        ? 'Optional. Choose from the list, or type a new name and press Enter to add it.'
+        : 'Optional. Leave blank if not specified.';
+}
 
 function patch(field, value) {
     form.value[field] = value;

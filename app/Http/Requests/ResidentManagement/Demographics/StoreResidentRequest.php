@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\ResidentManagement\Demographics;
 
+use App\Http\Requests\Concerns\MapsUnspecifiedLookups;
 use App\Models\ResidentManagement\Demographic\RelationshipToHouseholdHead;
+use App\Models\ResidentManagement\Demographic\Resident;
 use App\Rules\ValidPersonnelName;
 use App\Rules\ValidPlaceName;
 use Illuminate\Foundation\Http\FormRequest;
@@ -11,6 +13,8 @@ use Illuminate\Validation\Rule;
 
 class StoreResidentRequest extends FormRequest
 {
+    use MapsUnspecifiedLookups;
+
     public function authorize(): bool
     {
         return true;
@@ -27,6 +31,8 @@ class StoreResidentRequest extends FormRequest
             'birth_province' => $this->titleCasePlace($this->input('birth_province')),
             'birth_country' => $this->titleCasePlace($this->input('birth_country')),
         ]);
+
+        $this->mergeUnspecifiedLookups(Resident::OPTIONAL_LOOKUP_FIELDS, fillMissing: true);
     }
 
     /**
@@ -50,9 +56,9 @@ class StoreResidentRequest extends FormRequest
             'birth_city_municipality' => ['required', 'string', 'max:45', new ValidPlaceName('City / municipality of birth')],
             'birth_province' => ['required', 'string', 'max:45', new ValidPlaceName('Province of birth')],
             'birth_country' => ['required', 'string', 'max:45', new ValidPlaceName('Country of birth')],
-            'nationality_id' => ['required', 'integer', Rule::exists('nationality', 'nationality_id')],
-            'religion_id' => ['required', 'integer', Rule::exists('religion', 'religion_id')],
-            'ethnicity_id' => ['required', 'integer', Rule::exists('ethnicity', 'ethnicity_id')],
+            'nationality_id' => ['nullable', 'integer', Rule::exists('nationality', 'nationality_id')],
+            'religion_id' => ['nullable', 'integer', Rule::exists('religion', 'religion_id')],
+            'ethnicity_id' => ['nullable', 'integer', Rule::exists('ethnicity', 'ethnicity_id')],
             'marital_status_id' => ['required', 'integer', Rule::exists('marital_status', 'marital_status_id')],
             'clan_id' => ['sometimes', 'integer', Rule::exists('clan', 'clan_id')],
             'resident_status_id' => [
@@ -82,11 +88,8 @@ class StoreResidentRequest extends FormRequest
             'birth_city_municipality.required' => 'City / municipality of birth is required.',
             'birth_province.required' => 'Province of birth is required.',
             'birth_country.required' => 'Country of birth is required.',
-            'nationality_id.required' => 'Nationality is required.',
             'nationality_id.exists' => 'The selected nationality does not exist.',
-            'religion_id.required' => 'Religion is required.',
             'religion_id.exists' => 'The selected religion does not exist.',
-            'ethnicity_id.required' => 'Ethnicity is required.',
             'ethnicity_id.exists' => 'The selected ethnicity does not exist.',
             'marital_status_id.required' => 'Marital status is required.',
             'marital_status_id.exists' => 'The selected marital status does not exist.',

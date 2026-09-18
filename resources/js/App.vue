@@ -1,10 +1,12 @@
 <template>
     <RouterView />
+    <AppNotificationOverlay />
 </template>
 
 <script setup>
 import { RouterView } from 'vue-router';
 import router from '@/router';
+import AppNotificationOverlay from '@/components/AppNotificationOverlay.vue';
 import { useAuth } from '@/composables/useAuth';
 import { onMounted, onUnmounted, watch } from 'vue';
 

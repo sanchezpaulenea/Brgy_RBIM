@@ -60,7 +60,13 @@ export const PLACE_NAME_PATTERN = /^\p{L}[\p{L}\d .,'\-]*$/u;
 
 export const PLACE_NAME_MIN_LENGTH = 3;
 
-export const NCSC_RRN_PATTERN = /^\d{6}$/;
+export const NCSC_RRN_MIN_DIGITS = 4;
+
+export const NCSC_RRN_MAX_DIGITS = 12;
+
+export const NCSC_RRN_PATTERN = /^\d{4,12}$/;
+
+export const NCSC_RRN_ERROR = `NCSC-RRN must be a Registration Reference Number of ${NCSC_RRN_MIN_DIGITS} to ${NCSC_RRN_MAX_DIGITS} digits.`;
 
 export function ncscRrnValidationError(value, required = false) {
     const number = typeof value === 'string' || typeof value === 'number'
@@ -71,9 +77,125 @@ export function ncscRrnValidationError(value, required = false) {
         return required ? 'NCSC-RRN is required.' : '';
     }
 
-    return NCSC_RRN_PATTERN.test(number)
-        ? ''
-        : 'NCSC-RRN must be a 6-digit Registration Reference Number.';
+    return NCSC_RRN_PATTERN.test(number) ? '' : NCSC_RRN_ERROR;
+}
+
+export const PWD_ID_DIGITS = 16;
+
+export const PWD_ID_PATTERN = /^\d{16}$/;
+
+export const PWD_ID_ERROR = `PWD ID number must be exactly ${PWD_ID_DIGITS} digits.`;
+
+export function digitsOnly(value) {
+    return String(value ?? '').replace(/\D/g, '');
+}
+
+export function pwdIdValidationError(value, required = false) {
+    const number = digitsOnly(value);
+
+    if (!number) {
+        return required ? 'PWD ID number is required.' : '';
+    }
+
+    return PWD_ID_PATTERN.test(number) ? '' : PWD_ID_ERROR;
+}
+
+/**
+ * Solo Parent ID: a 10-digit PSGC code, the year and month of issuance, and a
+ * 6-digit registry count, held as PPPPPPPPPP-YYYY-MM-NNNNNN.
+ */
+export const SOLO_PARENT_ID_DIGITS = 22;
+
+export const SOLO_PARENT_ID_PATTERN = /^(\d{10})-(\d{4})-(\d{2})-(\d{6})$/;
+
+export const SOLO_PARENT_ID_PLACEHOLDER = '1234567890-2026-03-000042';
+
+export const SOLO_PARENT_ID_EARLIEST_YEAR = 2000;
+
+export const SOLO_PARENT_ID_ERROR = `Solo Parent ID must be a 10-digit PSGC code, the year and month of issuance, and a 6-digit registry count (e.g. ${SOLO_PARENT_ID_PLACEHOLDER}).`;
+
+export function formatSoloParentId(value) {
+    const digits = digitsOnly(value);
+
+    if (digits.length !== SOLO_PARENT_ID_DIGITS) {
+        return String(value ?? '').trim();
+    }
+
+    return [
+        digits.slice(0, 10),
+        digits.slice(10, 14),
+        digits.slice(14, 16),
+        digits.slice(16, 22),
+    ].join('-');
+}
+
+export function soloParentIdValidationError(value, required = false) {
+    const text = formatSoloParentId(value);
+
+    if (!text) {
+        return required ? 'Solo Parent ID is required.' : '';
+    }
+
+    const match = SOLO_PARENT_ID_PATTERN.exec(text);
+
+    if (!match) {
+        return SOLO_PARENT_ID_ERROR;
+    }
+
+    const [, , year, month] = match;
+
+    if (Number(month) < 1 || Number(month) > 12) {
+        return 'Solo Parent ID month of issuance must be between 01 and 12.';
+    }
+
+    const currentYear = new Date().getFullYear();
+
+    if (Number(year) < SOLO_PARENT_ID_EARLIEST_YEAR || Number(year) > currentYear) {
+        return `Solo Parent ID year of issuance must be between ${SOLO_PARENT_ID_EARLIEST_YEAR} and ${currentYear}.`;
+    }
+
+    return '';
+}
+
+export const MONTHLY_INCOME_MAX = 99999999.99;
+
+export const MONTHLY_INCOME_PATTERN = /^\d+(\.\d{1,2})?$/;
+
+/**
+ * Accepts amounts typed with thousands separators, e.g. "12,500.5".
+ */
+export function parseDecimalAmount(value) {
+    const text = String(value ?? '').trim().replace(/[,\s]/g, '');
+
+    return text === '' ? null : text;
+}
+
+export function formatDecimalAmount(value) {
+    const text = parseDecimalAmount(value);
+
+    if (text === null || !MONTHLY_INCOME_PATTERN.test(text)) {
+        return String(value ?? '').trim();
+    }
+
+    return Number(text).toFixed(2);
+}
+
+export function monthlyIncomeValidationError(value, required = true) {
+    const text = parseDecimalAmount(value);
+
+    if (text === null) {
+        return required ? 'Monthly income is required.' : '';
+    }
+
+    if (!MONTHLY_INCOME_PATTERN.test(text)) {
+        return 'Monthly income must be an amount with at most two decimal places, for example 12500.00.';
+    }
+
+    if (Number(text) > MONTHLY_INCOME_MAX) {
+        return `Monthly income may not be greater than ${MONTHLY_INCOME_MAX.toFixed(2)}.`;
+    }
+
+    return '';
 }
 
 /**

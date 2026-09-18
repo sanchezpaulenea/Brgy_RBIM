@@ -92,14 +92,16 @@
                 <input
                     :id="`${idPrefix}-monthly_income`"
                     v-model="form.monthly_income"
-                    type="number"
-                    min="0"
-                    step="0.01"
+                    type="text"
+                    inputmode="decimal"
+                    autocomplete="off"
                     placeholder="0.00"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.monthly_income }"
+                    @blur="form.monthly_income = formatDecimalAmount(form.monthly_income)"
                 >
                 <p v-if="errors.monthly_income" class="rbim-error">{{ errors.monthly_income }}</p>
+                <p v-else class="rbim-hint">Amount in pesos, up to two decimal places (e.g. 12500.00).</p>
             </div>
             <div>
                 <label class="rbim-label" :for="`${idPrefix}-source_of_income_id`">
@@ -116,6 +118,9 @@
                 </select>
                 <p v-if="errors.source_of_income_id" class="rbim-error">{{ errors.source_of_income_id }}</p>
             </div>
+            <p v-if="economicSkipsWorkDetails" class="sm:col-span-2 text-sm text-slate-500">
+                Status of work/business and place of work/business do not apply to this source of income and are skipped.
+            </p>
             <div v-if="economicShowsWorkDetails">
                 <label class="rbim-label" :for="`${idPrefix}-status_of_work_business_id`">
                     Status of Work/Business<span class="rbim-required" aria-hidden="true">*</span>
@@ -180,17 +185,22 @@
             </div>
             <div class="sm:col-span-2">
                 <label class="rbim-label" :for="`${idPrefix}-immunization`">
-                    Immunization<span class="rbim-required" aria-hidden="true">*</span>
+                    Immunization Note
                 </label>
                 <input
                     :id="`${idPrefix}-immunization`"
                     v-model="form.immunization"
                     type="text"
                     maxlength="45"
+                    :placeholder="NO_IMMUNIZATION_NOTE"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.immunization }"
+                    @blur="form.immunization = String(form.immunization ?? '').trim()"
                 >
                 <p v-if="errors.immunization" class="rbim-error">{{ errors.immunization }}</p>
+                <p v-else class="rbim-hint">
+                    List the immunizations the infant has received. Left blank, this is recorded as "{{ NO_IMMUNIZATION_NOTE }}".
+                </p>
             </div>
         </template>
 
@@ -260,14 +270,17 @@
                 <input
                     :id="`${idPrefix}-pwd_id_number`"
                     v-model="form.pwd_id_number"
-                    type="number"
-                    min="1"
-                    step="1"
+                    type="text"
                     inputmode="numeric"
-                    class="rbim-input"
+                    autocomplete="off"
+                    :maxlength="PWD_ID_DIGITS"
+                    :placeholder="'0'.repeat(PWD_ID_DIGITS)"
+                    class="rbim-input font-mono tracking-wider"
                     :class="{ 'rbim-input-error': errors.pwd_id_number }"
+                    @input="form.pwd_id_number = digitsOnly($event.target.value).slice(0, PWD_ID_DIGITS)"
                 >
                 <p v-if="errors.pwd_id_number" class="rbim-error">{{ errors.pwd_id_number }}</p>
+                <p v-else class="rbim-hint">{{ PWD_ID_DIGITS }} digits, numbers only. Leave blank if the resident has no PWD ID.</p>
             </div>
         </template>
 
@@ -367,6 +380,24 @@
                 </select>
                 <p v-if="errors.solo_parent_status_id" class="rbim-error">{{ errors.solo_parent_status_id }}</p>
             </div>
+            <div v-if="sociocivicRelevance.solo_parent && soloParentIsRegistered">
+                <label class="rbim-label" :for="`${idPrefix}-solo_parent_id_number`">
+                    Solo Parent ID<span class="rbim-required" aria-hidden="true">*</span>
+                </label>
+                <input
+                    :id="`${idPrefix}-solo_parent_id_number`"
+                    v-model="form.solo_parent_id_number"
+                    type="text"
+                    maxlength="25"
+                    autocomplete="off"
+                    :placeholder="SOLO_PARENT_ID_PLACEHOLDER"
+                    class="rbim-input font-mono"
+                    :class="{ 'rbim-input-error': errors.solo_parent_id_number }"
+                    @blur="form.solo_parent_id_number = formatSoloParentId(form.solo_parent_id_number)"
+                >
+                <p v-if="errors.solo_parent_id_number" class="rbim-error">{{ errors.solo_parent_id_number }}</p>
+                <p v-else class="rbim-hint">10-digit PSGC code, year and month of issuance, then a 6-digit registry count.</p>
+            </div>
             <div v-if="sociocivicRelevance.senior_citizen">
                 <label class="rbim-label" :for="`${idPrefix}-registered_sen_citizen`">
                     Registered Senior Citizen<span class="rbim-required" aria-hidden="true">*</span>
@@ -394,12 +425,15 @@
                         v-model="form.ncsc_rrn_id_number"
                         type="text"
                         inputmode="numeric"
-                        maxlength="6"
-                        placeholder="6-digit RRN"
-                        class="rbim-input"
+                        autocomplete="off"
+                        :maxlength="NCSC_RRN_MAX_DIGITS"
+                        :placeholder="`${NCSC_RRN_MIN_DIGITS}-${NCSC_RRN_MAX_DIGITS} digit RRN`"
+                        class="rbim-input font-mono"
                         :class="{ 'rbim-input-error': errors.ncsc_rrn_id_number }"
+                        @input="form.ncsc_rrn_id_number = digitsOnly($event.target.value).slice(0, NCSC_RRN_MAX_DIGITS)"
                     >
                     <p v-if="errors.ncsc_rrn_id_number" class="rbim-error">{{ errors.ncsc_rrn_id_number }}</p>
+                    <p v-else class="rbim-hint">{{ NCSC_RRN_MIN_DIGITS }} to {{ NCSC_RRN_MAX_DIGITS }} digits, numbers only.</p>
                 </div>
                 <div>
                     <label class="rbim-label" :for="`${idPrefix}-osca_id_number`">
@@ -535,7 +569,7 @@
                         v-model="form.date_of_transfer_in_brgy"
                         label="Date of Transfer into Barangay"
                         :input-id="`${idPrefix}-date_of_transfer_in_brgy`"
-                        placeholder="Select month and year"
+                        placeholder="MM/YYYY"
                         precision="month"
                         required
                         :max="todayIso"
@@ -548,7 +582,7 @@
                         v-model="form.duration_of_stay"
                         label="Until When Does the Resident Intend to Stay"
                         :input-id="`${idPrefix}-duration_of_stay`"
-                        placeholder="Select date"
+                        placeholder="MM/DD/YYYY"
                         :show-age="false"
                         :error="errors.duration_of_stay"
                     />
@@ -691,9 +725,20 @@ import {
     isNotApplicableLookup,
     isNotApplicableSchoolLvl,
     lookupById,
+    NO_IMMUNIZATION_NOTE,
     sociocivicFieldRelevance,
+    SOLO_PARENT_STATUS_REGISTERED_ID,
     sourceOfIncomeSkipsWorkDetails,
 } from '@/utils/residentProfiling';
+import {
+    digitsOnly,
+    formatDecimalAmount,
+    formatSoloParentId,
+    NCSC_RRN_MAX_DIGITS,
+    NCSC_RRN_MIN_DIGITS,
+    PWD_ID_DIGITS,
+    SOLO_PARENT_ID_PLACEHOLDER,
+} from '@/utils/validation';
 
 const props = defineProps({
     section: {
@@ -746,9 +791,13 @@ const migrantReasonsForTransfer = computed(() => (
     (props.lookups.reasonForTransfer ?? []).filter((option) => !isNotApplicableLookup(option))
 ));
 
+const economicSkipsWorkDetails = computed(() => (
+    Boolean(props.form.source_of_income_id)
+        && sourceOfIncomeSkipsWorkDetails(props.form.source_of_income_id, props.lookups.sourceOfIncome)
+));
+
 const economicShowsWorkDetails = computed(() => (
-    !sourceOfIncomeSkipsWorkDetails(props.form.source_of_income_id, props.lookups.sourceOfIncome)
-        && Boolean(props.form.source_of_income_id)
+    Boolean(props.form.source_of_income_id) && !economicSkipsWorkDetails.value
 ));
 
 const familyPlanningIsNone = computed(() => (
@@ -756,6 +805,18 @@ const familyPlanningIsNone = computed(() => (
 ));
 
 const sociocivicRelevance = computed(() => sociocivicFieldRelevance(props.resident));
+
+const soloParentIsRegistered = computed(() => {
+    const option = lookupById(props.lookups.soloParentStatus ?? [], props.form.solo_parent_status_id);
+
+    if (option) {
+        const label = String(option.label ?? '');
+
+        return /registered/i.test(label) && !/non[- ]solo/i.test(label);
+    }
+
+    return Number(props.form.solo_parent_status_id) === SOLO_PARENT_STATUS_REGISTERED_ID;
+});
 
 const migrationClassification = computed(() => classifyMigrationForm(props.form, props.location));
 

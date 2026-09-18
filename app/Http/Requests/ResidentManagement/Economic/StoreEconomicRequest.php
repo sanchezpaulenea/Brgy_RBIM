@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\ResidentManagement\Economic;
 
+use App\Http\Requests\Concerns\NormalizesMonthlyIncome;
 use App\Http\Requests\Concerns\TitleCasesAttributes;
+use App\Models\ResidentManagement\Economic\Economic;
 use App\Models\ResidentManagement\Economic\SourceOfIncome;
 use App\Rules\ValidPlaceName;
 use Illuminate\Foundation\Http\FormRequest;
@@ -10,6 +12,7 @@ use Illuminate\Validation\Rule;
 
 class StoreEconomicRequest extends FormRequest
 {
+    use NormalizesMonthlyIncome;
     use TitleCasesAttributes;
 
     public function authorize(): bool
@@ -20,6 +23,7 @@ class StoreEconomicRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->mergeTitleCased(['place_of_work_business']);
+        $this->mergeNormalizedMonthlyIncome();
     }
 
     /**
@@ -28,7 +32,13 @@ class StoreEconomicRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'monthly_income' => ['required', 'integer', 'min:0'],
+            'monthly_income' => [
+                'required',
+                'numeric',
+                'min:0',
+                'max:'.Economic::MAX_MONTHLY_INCOME,
+                'decimal:0,'.Economic::MONTHLY_INCOME_SCALE,
+            ],
             'source_of_income_id' => ['required', 'integer', Rule::exists('source_of_income', 'source_of_income_id')],
             'status_of_work_business_id' => [
                 Rule::excludeIf(fn () => $this->skipsWorkDetails()),
@@ -53,7 +63,9 @@ class StoreEconomicRequest extends FormRequest
     {
         return [
             'monthly_income.required' => 'Monthly income is required.',
-            'monthly_income.integer' => 'Monthly income must be numeric.',
+            'monthly_income.numeric' => 'Monthly income must be an amount, for example 12500.00.',
+            'monthly_income.decimal' => 'Monthly income may have at most two decimal places.',
+            'monthly_income.max' => 'Monthly income may not be greater than '.Economic::MAX_MONTHLY_INCOME.'.',
             'source_of_income_id.exists' => 'The selected source of income does not exist.',
             'status_of_work_business_id.exists' => 'The selected work / business status does not exist.',
             'status_of_work_business_id.required' => 'Status of work / business is required.',

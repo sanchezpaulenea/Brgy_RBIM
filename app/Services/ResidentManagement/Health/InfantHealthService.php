@@ -9,12 +9,14 @@ use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Health\InfantHealthRepositoryInterface;
 use App\Services\ResidentManagement\Concerns\LogsAuditableFieldChanges;
+use App\Services\ResidentManagement\Concerns\SerializesResidentSectionWrites;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class InfantHealthService
 {
     use LogsAuditableFieldChanges;
+    use SerializesResidentSectionWrites;
 
     public function __construct(
         protected InfantHealthRepositoryInterface $infantHealthRepository,
@@ -29,15 +31,16 @@ class InfantHealthService
     {
         $this->assertInfant($resident);
 
-        if ($this->infantHealthRepository->findByResidentId($resident->resident_id) !== null) {
-            throw ValidationException::withMessages([
-                'infant_health' => ['An infant health record already exists for this resident.'],
-            ]);
-        }
-
         $data['resident_id'] = $resident->resident_id;
+        $data['immunization'] = InfantHealth::normalizeImmunization($data['immunization'] ?? null);
 
-        return DB::transaction(function () use ($performedBy, $data) {
+        return $this->withResidentLock($resident->resident_id, function () use ($performedBy, $resident, $data) {
+            if ($this->infantHealthRepository->findByResidentId($resident->resident_id) !== null) {
+                throw ValidationException::withMessages([
+                    'infant_health' => ['An infant health record already exists for this resident.'],
+                ]);
+            }
+
             $infantHealth = $this->infantHealthRepository->create($data);
 
             $this->auditLogRepository->log(
@@ -65,6 +68,10 @@ class InfantHealthService
         $this->assertInfant($infantHealth->resident);
 
         $previous = $this->auditSnapshot($infantHealth);
+
+        if (array_key_exists('immunization', $data)) {
+            $data['immunization'] = InfantHealth::normalizeImmunization($data['immunization']);
+        }
 
         return DB::transaction(function () use ($performedBy, $infantHealth, $data, $previous) {
             $updated = $this->infantHealthRepository->update($infantHealth, $data);

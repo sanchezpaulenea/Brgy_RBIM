@@ -11,12 +11,14 @@ use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Health\HealthRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Health\WomenHealthRepositoryInterface;
 use App\Services\ResidentManagement\Concerns\LogsAuditableFieldChanges;
+use App\Services\ResidentManagement\Concerns\SerializesResidentSectionWrites;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class WomenHealthService
 {
     use LogsAuditableFieldChanges;
+    use SerializesResidentSectionWrites;
 
     public function __construct(
         protected WomenHealthRepositoryInterface $womenHealthRepository,
@@ -32,24 +34,25 @@ class WomenHealthService
     {
         $this->assertEligible($resident);
 
-        $health = $this->healthRepository->findByResidentId($resident->resident_id);
-
-        if ($health === null) {
-            throw ValidationException::withMessages([
-                'health_id' => ['A health record must exist before women\'s health can be recorded.'],
-            ]);
-        }
-
-        if ($this->womenHealthRepository->findByHealthId($health->health_id) !== null) {
-            throw ValidationException::withMessages([
-                'women_health' => ['A women\'s health record already exists for this resident.'],
-            ]);
-        }
-
-        $data['health_id'] = $health->health_id;
         $data = $this->applyFamilyPlanningRules($data);
 
-        return DB::transaction(function () use ($performedBy, $data) {
+        return $this->withResidentLock($resident->resident_id, function () use ($performedBy, $resident, $data) {
+            $health = $this->healthRepository->findByResidentId($resident->resident_id);
+
+            if ($health === null) {
+                throw ValidationException::withMessages([
+                    'health_id' => ['A health record must exist before women\'s health can be recorded.'],
+                ]);
+            }
+
+            if ($this->womenHealthRepository->findByHealthId($health->health_id) !== null) {
+                throw ValidationException::withMessages([
+                    'women_health' => ['A women\'s health record already exists for this resident.'],
+                ]);
+            }
+
+            $data['health_id'] = $health->health_id;
+
             $womenHealth = $this->womenHealthRepository->create($data);
 
             $this->auditLogRepository->log(

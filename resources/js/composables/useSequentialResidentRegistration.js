@@ -135,6 +135,13 @@ export function useSequentialResidentRegistration({
     }
 
     async function handleSaveMember() {
+        // Lookup creation and the duplicate-name prompt are awaited before
+        // `saving` flips, so the disabled state on the button alone would not
+        // stop a second submit.
+        if (saving.value) {
+            return;
+        }
+
         error.value = '';
         successMessage.value = '';
         Object.keys(memberErrors).forEach((key) => {

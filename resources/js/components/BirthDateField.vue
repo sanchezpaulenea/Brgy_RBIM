@@ -200,6 +200,10 @@ function daysInMonth(year, month) {
     return new Date(year, month, 0).getDate();
 }
 
+/**
+ * Encoders type dates in whatever shape is quickest, so `/`, `-`, `.`, and
+ * spaces are all accepted as separators, as is a run of bare digits.
+ */
 function parseTyped(value) {
     const text = String(value ?? '').trim();
 
@@ -207,30 +211,41 @@ function parseTyped(value) {
         return { empty: true };
     }
 
-    if (props.precision === 'month') {
-        const monthYear = /^(\d{1,2})\/(\d{4})$/.exec(text);
-        const isoMonth = /^(\d{4})-(\d{2})$/.exec(text);
+    const digits = text.replace(/\D/g, '');
+    const parts = text.split(/[^\d]+/).filter(Boolean);
 
-        if (monthYear) {
-            return fromParts(Number(monthYear[2]), Number(monthYear[1]), 1);
+    if (props.precision === 'month') {
+        // MM/YYYY
+        if (parts.length === 2 && parts[1].length === 4) {
+            return fromParts(Number(parts[1]), Number(parts[0]), 1);
         }
 
-        if (isoMonth) {
-            return fromParts(Number(isoMonth[1]), Number(isoMonth[2]), 1);
+        // YYYY-MM
+        if (parts.length === 2 && parts[0].length === 4) {
+            return fromParts(Number(parts[0]), Number(parts[1]), 1);
+        }
+
+        // MMYYYY
+        if (parts.length === 1 && digits.length === 6) {
+            return fromParts(Number(digits.slice(2)), Number(digits.slice(0, 2)), 1);
         }
 
         return { invalid: true };
     }
 
-    const slash = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(text);
-    const iso = parseIso(text);
-
-    if (slash) {
-        return fromParts(Number(slash[3]), Number(slash[1]), Number(slash[2]));
+    // MM/DD/YYYY
+    if (parts.length === 3 && parts[2].length === 4) {
+        return fromParts(Number(parts[2]), Number(parts[0]), Number(parts[1]));
     }
 
-    if (iso) {
-        return fromParts(iso.year, iso.month, iso.day);
+    // YYYY-MM-DD
+    if (parts.length === 3 && parts[0].length === 4) {
+        return fromParts(Number(parts[0]), Number(parts[1]), Number(parts[2]));
+    }
+
+    // MMDDYYYY
+    if (parts.length === 1 && digits.length === 8) {
+        return fromParts(Number(digits.slice(4)), Number(digits.slice(0, 2)), Number(digits.slice(2, 4)));
     }
 
     return { invalid: true };

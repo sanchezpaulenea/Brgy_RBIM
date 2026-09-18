@@ -161,13 +161,12 @@
             :options="nationalities"
             :input-id="`${idPrefix}-nationality`"
             label="Nationality"
-            placeholder="Search or type a nationality"
-            required
+            placeholder="Search or type a nationality (optional)"
             :can-create="canCreateNationality"
             :limit="lookupLimit"
             :preferred-ids="preferredLookupIds"
             :error="errors.nationality_id"
-            :hint="canCreateNationality ? 'Choose from the list, or type a new name and press Enter to add it.' : ''"
+            :hint="optionalLookupHint(canCreateNationality)"
             @create="createNationality"
         />
         <LookupCombobox
@@ -176,13 +175,12 @@
             :options="religions"
             :input-id="`${idPrefix}-religion`"
             label="Religion"
-            placeholder="Search or type a religion"
-            required
+            placeholder="Search or type a religion (optional)"
             :can-create="canCreateReligion"
             :limit="lookupLimit"
             :preferred-ids="preferredLookupIds"
             :error="errors.religion_id"
-            :hint="canCreateReligion ? 'Choose from the list, or type a new name and press Enter to add it.' : ''"
+            :hint="optionalLookupHint(canCreateReligion)"
             @create="createReligion"
         />
         <LookupCombobox
@@ -191,13 +189,12 @@
             :options="ethnicities"
             :input-id="`${idPrefix}-ethnicity`"
             label="Ethnicity"
-            placeholder="Search or type an ethnicity"
-            required
+            placeholder="Search or type an ethnicity (optional)"
             :can-create="canCreateEthnicity"
             :limit="lookupLimit"
             :preferred-ids="preferredLookupIds"
             :error="errors.ethnicity_id"
-            :hint="canCreateEthnicity ? 'Choose from the list, or type a new name and press Enter to add it.' : ''"
+            :hint="optionalLookupHint(canCreateEthnicity)"
             @create="createEthnicity"
         />
         <div>
@@ -296,6 +293,12 @@ const { hasPermission } = useAuth();
 const canCreateNationality = computed(() => hasPermission('nationality.create'));
 const canCreateReligion = computed(() => hasPermission('religion.create'));
 const canCreateEthnicity = computed(() => hasPermission('ethnicity.create'));
+
+function optionalLookupHint(canCreate) {
+    return canCreate
+        ? 'Optional. Choose from the list, or type a new name and press Enter to add it.'
+        : 'Optional. Leave blank if not specified.';
+}
 
 function patch(field, value) {
     form.value[field] = value;

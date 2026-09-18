@@ -9,12 +9,14 @@ use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Ctc\CtcRepositoryInterface;
 use App\Services\ResidentManagement\Concerns\LogsAuditableFieldChanges;
+use App\Services\ResidentManagement\Concerns\SerializesResidentSectionWrites;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class CtcService
 {
     use LogsAuditableFieldChanges;
+    use SerializesResidentSectionWrites;
 
     public function __construct(
         protected CtcRepositoryInterface $ctcRepository,
@@ -29,16 +31,16 @@ class CtcService
     {
         $this->assertAdult($resident);
 
-        if ($this->ctcRepository->findByResidentId($resident->resident_id) !== null) {
-            throw ValidationException::withMessages([
-                'ctc' => ['A community tax certificate record already exists for this resident.'],
-            ]);
-        }
-
         $data['resident_id'] = $resident->resident_id;
         $data = $this->applyIssuedHereSkip($data);
 
-        return DB::transaction(function () use ($performedBy, $data) {
+        return $this->withResidentLock($resident->resident_id, function () use ($performedBy, $resident, $data) {
+            if ($this->ctcRepository->findByResidentId($resident->resident_id) !== null) {
+                throw ValidationException::withMessages([
+                    'ctc' => ['A community tax certificate record already exists for this resident.'],
+                ]);
+            }
+
             $ctc = $this->ctcRepository->create($data);
 
             $this->auditLogRepository->log(

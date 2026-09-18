@@ -10,12 +10,14 @@ use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Sociocivic\SociocivicRepositoryInterface;
 use App\Services\ResidentManagement\Concerns\LogsAuditableFieldChanges;
+use App\Services\ResidentManagement\Concerns\SerializesResidentSectionWrites;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class SociocivicService
 {
     use LogsAuditableFieldChanges;
+    use SerializesResidentSectionWrites;
 
     public function __construct(
         protected SociocivicRepositoryInterface $sociocivicRepository,
@@ -30,16 +32,16 @@ class SociocivicService
     {
         $this->assertEligible($resident);
 
-        if ($this->sociocivicRepository->findByResidentId($resident->resident_id) !== null) {
-            throw ValidationException::withMessages([
-                'sociocivic' => ['A sociocivic record already exists for this resident.'],
-            ]);
-        }
-
         $data['resident_id'] = $resident->resident_id;
         $data = $this->persistableAttributes($resident, $data);
 
-        return DB::transaction(function () use ($performedBy, $data) {
+        return $this->withResidentLock($resident->resident_id, function () use ($performedBy, $resident, $data) {
+            if ($this->sociocivicRepository->findByResidentId($resident->resident_id) !== null) {
+                throw ValidationException::withMessages([
+                    'sociocivic' => ['A sociocivic record already exists for this resident.'],
+                ]);
+            }
+
             $sociocivic = $this->sociocivicRepository->create($data);
 
             $this->auditLogRepository->log(
@@ -154,6 +156,11 @@ class SociocivicService
             $data['solo_parent_status_id'] = SoloParentStatus::NON_SOLO_PARENT;
         }
 
+        // Only a registered solo parent carries a Solo Parent ID.
+        if ((int) ($data['solo_parent_status_id'] ?? 0) !== SoloParentStatus::REGISTERED_SOLO_PARENT) {
+            $data['solo_parent_id_number'] = null;
+        }
+
         if (! $relevance['senior_citizen']) {
             $data['ncsc_rrn_id_number'] = null;
             $data['osca_id_number'] = null;
@@ -213,6 +220,7 @@ class SociocivicService
             'registered senior citizen' => $this->hasSeniorCitizenIds($sociocivic) ? 'Yes' : 'No',
             'ncsc-rrn' => (string) ($sociocivic->ncsc_rrn_id_number ?? ''),
             'osca id' => (string) ($sociocivic->osca_id_number ?? ''),
+            'solo parent id' => (string) ($sociocivic->solo_parent_id_number ?? ''),
             'registered barangay voter' => (string) ($this->storedVoterBarangay($sociocivic->registered_barangay_voter) ?? ''),
         ];
     }

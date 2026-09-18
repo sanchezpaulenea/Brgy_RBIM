@@ -12,6 +12,7 @@ use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Migration\MigrationRepositoryInterface;
 use App\Services\ResidentManagement\Concerns\LogsAuditableFieldChanges;
+use App\Services\ResidentManagement\Concerns\SerializesResidentSectionWrites;
 use App\Services\SystemSetting\SystemSettingService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -19,6 +20,7 @@ use Illuminate\Validation\ValidationException;
 class MigrationService
 {
     use LogsAuditableFieldChanges;
+    use SerializesResidentSectionWrites;
 
     public function __construct(
         protected MigrationRepositoryInterface $migrationRepository,
@@ -32,16 +34,16 @@ class MigrationService
      */
     public function create(User $performedBy, Resident $resident, array $data): array
     {
-        if ($this->migrationRepository->findByResidentId($resident->resident_id) !== null) {
-            throw ValidationException::withMessages([
-                'migration' => ['A migration record already exists for this resident.'],
-            ]);
-        }
-
         $data = $this->applyBusinessRules($data);
         $data['resident_id'] = $resident->resident_id;
 
-        return DB::transaction(function () use ($performedBy, $data) {
+        return $this->withResidentLock($resident->resident_id, function () use ($performedBy, $resident, $data) {
+            if ($this->migrationRepository->findByResidentId($resident->resident_id) !== null) {
+                throw ValidationException::withMessages([
+                    'migration' => ['A migration record already exists for this resident.'],
+                ]);
+            }
+
             $migration = $this->migrationRepository->create($data);
 
             $this->auditLogRepository->log(

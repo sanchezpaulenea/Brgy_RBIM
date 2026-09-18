@@ -28,7 +28,7 @@ class StoreInfantHealthRequest extends FormRequest
         return [
             'place_of_delivery_id' => ['required', 'integer', Rule::exists('place_of_delivery', 'place_of_delivery_id')],
             'birth_attendant_id' => ['required', 'integer', Rule::exists('birth_attendant', 'birth_attendant_id')],
-            'immunization' => ['required', 'string', 'max:45'],
+            'immunization' => ['nullable', 'string', 'max:45'],
         ];
     }
 
@@ -40,7 +40,7 @@ class StoreInfantHealthRequest extends FormRequest
         return [
             'place_of_delivery_id.exists' => 'The selected place of delivery does not exist.',
             'birth_attendant_id.exists' => 'The selected birth attendant does not exist.',
-            'immunization.required' => 'Immunization is required.',
+            'immunization.max' => 'The immunization note may not be longer than 45 characters.',
         ];
     }
 }

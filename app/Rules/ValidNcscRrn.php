@@ -7,7 +7,13 @@ use Illuminate\Contracts\Validation\ValidationRule;
 
 class ValidNcscRrn implements ValidationRule
 {
-    public const PATTERN = '/^\d{6}$/';
+    public const MIN_DIGITS = 4;
+
+    public const MAX_DIGITS = 12;
+
+    public const PATTERN = '/^\d{4,12}$/';
+
+    public const MESSAGE = 'NCSC-RRN must be a Registration Reference Number of 4 to 12 digits.';
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
@@ -16,13 +22,13 @@ class ValidNcscRrn implements ValidationRule
         }
 
         if (! is_string($value) && ! is_numeric($value)) {
-            $fail('NCSC-RRN must be a 6-digit Registration Reference Number.');
+            $fail(self::MESSAGE);
 
             return;
         }
 
         if (preg_match(self::PATTERN, trim((string) $value)) !== 1) {
-            $fail('NCSC-RRN must be a 6-digit Registration Reference Number.');
+            $fail(self::MESSAGE);
         }
     }
 }

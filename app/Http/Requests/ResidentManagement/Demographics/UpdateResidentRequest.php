@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\ResidentManagement\Demographics;
 
+use App\Http\Requests\Concerns\MapsUnspecifiedLookups;
 use App\Models\ResidentManagement\Demographic\RelationshipToHouseholdHead;
+use App\Models\ResidentManagement\Demographic\Resident;
 use App\Rules\ValidPersonnelName;
 use App\Rules\ValidPlaceName;
 use Illuminate\Foundation\Http\FormRequest;
@@ -12,6 +14,8 @@ use Illuminate\Validation\Validator;
 
 class UpdateResidentRequest extends FormRequest
 {
+    use MapsUnspecifiedLookups;
+
     public function authorize(): bool
     {
         return true;
@@ -36,6 +40,8 @@ class UpdateResidentRequest extends FormRequest
         if ($merge !== []) {
             $this->merge($merge);
         }
+
+        $this->mergeUnspecifiedLookups(Resident::OPTIONAL_LOOKUP_FIELDS);
     }
 
     /**
@@ -66,9 +72,9 @@ class UpdateResidentRequest extends FormRequest
             ],
             'birth_province' => ['sometimes', 'required', 'string', 'max:45', new ValidPlaceName('Province of birth')],
             'birth_country' => ['sometimes', 'required', 'string', 'max:45', new ValidPlaceName('Country of birth')],
-            'nationality_id' => ['sometimes', 'required', 'integer', Rule::exists('nationality', 'nationality_id')],
-            'religion_id' => ['sometimes', 'required', 'integer', Rule::exists('religion', 'religion_id')],
-            'ethnicity_id' => ['sometimes', 'required', 'integer', Rule::exists('ethnicity', 'ethnicity_id')],
+            'nationality_id' => ['sometimes', 'nullable', 'integer', Rule::exists('nationality', 'nationality_id')],
+            'religion_id' => ['sometimes', 'nullable', 'integer', Rule::exists('religion', 'religion_id')],
+            'ethnicity_id' => ['sometimes', 'nullable', 'integer', Rule::exists('ethnicity', 'ethnicity_id')],
             'marital_status_id' => ['sometimes', 'required', 'integer', Rule::exists('marital_status', 'marital_status_id')],
             'clan_id' => ['sometimes', 'required', 'integer', Rule::exists('clan', 'clan_id')],
             'resident_status_id' => [

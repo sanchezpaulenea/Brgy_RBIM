@@ -1,4 +1,14 @@
 import http from '@/services/http';
+import { LOOKUP_UNSPECIFIED_ID } from '@/utils/residentForm';
+
+/**
+ * Lookup tables carry a "Not Applicable" row at id 0 so that optional answers
+ * can satisfy their NOT NULL foreign keys. It is a storage placeholder, not a
+ * choice, so it never reaches a dropdown.
+ */
+function selectable(items) {
+    return (items ?? []).filter((item) => Number(item.id) !== LOOKUP_UNSPECIFIED_ID);
+}
 
 export async function fetchPersonnelPositions() {
     const { data } = await http.get('/personnel-positions');
@@ -25,7 +35,7 @@ export async function createDisability(payload) {
 export async function fetchLookup(slug) {
     const { data } = await http.get(`/lookups/${slug}`);
 
-    return data.items;
+    return selectable(data.items);
 }
 
 export async function fetchStreets() {
@@ -47,7 +57,7 @@ export async function deleteStreet(id) {
 export async function fetchNationalities() {
     const { data } = await http.get('/nationalities');
 
-    return data.items;
+    return selectable(data.items);
 }
 
 export async function createNationality(payload) {
@@ -63,7 +73,7 @@ export async function deleteNationality(id) {
 export async function fetchEthnicities() {
     const { data } = await http.get('/ethnicities');
 
-    return data.items;
+    return selectable(data.items);
 }
 
 export async function createEthnicity(payload) {
@@ -79,7 +89,7 @@ export async function deleteEthnicity(id) {
 export async function fetchReligions() {
     const { data } = await http.get('/religions');
 
-    return data.items;
+    return selectable(data.items);
 }
 
 export async function createReligion(payload) {

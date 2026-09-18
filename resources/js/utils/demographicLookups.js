@@ -1,6 +1,6 @@
 import { extractErrorMessage } from '@/services/http';
 import * as lookupService from '@/services/lookupService';
-import { toId } from '@/utils/residentForm';
+import { LOOKUP_UNSPECIFIED_ID, toId } from '@/utils/residentForm';
 
 export const REGISTER_HOUSEHOLD_LOOKUP_IDS = [1, 2, 3, 4, 5];
 export const REGISTER_HOUSEHOLD_LOOKUP_LIMIT = 5;
@@ -12,6 +12,8 @@ export async function ensureLookupId({
     canCreate = false,
     create,
     requiredMessage,
+    unknownMessage = requiredMessage,
+    optional = false,
 }) {
     const existingId = toId(id);
 
@@ -22,6 +24,10 @@ export async function ensureLookupId({
     const term = String(name ?? '').trim();
 
     if (!term) {
+        if (optional) {
+            return LOOKUP_UNSPECIFIED_ID;
+        }
+
         throw new Error(requiredMessage);
     }
 
@@ -33,8 +39,10 @@ export async function ensureLookupId({
         return toId(existing.id);
     }
 
+    // Something was typed that is not on the list. Report it rather than
+    // silently discarding it, even when the field is optional.
     if (!canCreate || typeof create !== 'function') {
-        throw new Error(requiredMessage);
+        throw new Error(unknownMessage);
     }
 
     const created = await create(term);
@@ -84,7 +92,8 @@ export async function ensureResidentDemographicLookups(form, {
                 nationalities,
                 await lookupService.createNationality({ nationality: name }),
             ),
-            requiredMessage: 'Nationality is required.',
+            optional: true,
+            unknownMessage: 'Choose a nationality from the list, or leave it blank.',
         });
     } catch (error) {
         errors.nationality_id = error.response
@@ -102,7 +111,8 @@ export async function ensureResidentDemographicLookups(form, {
                 religions,
                 await lookupService.createReligion({ religion: name }),
             ),
-            requiredMessage: 'Religion is required.',
+            optional: true,
+            unknownMessage: 'Choose a religion from the list, or leave it blank.',
         });
     } catch (error) {
         errors.religion_id = error.response
@@ -120,7 +130,8 @@ export async function ensureResidentDemographicLookups(form, {
                 ethnicities,
                 await lookupService.createEthnicity({ ethnicity: name }),
             ),
-            requiredMessage: 'Ethnicity is required.',
+            optional: true,
+            unknownMessage: 'Choose an ethnicity from the list, or leave it blank.',
         });
     } catch (error) {
         errors.ethnicity_id = error.response

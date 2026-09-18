@@ -3,6 +3,7 @@
 namespace App\Http\Requests\ResidentManagement\Health;
 
 use App\Http\Requests\Concerns\TitleCasesAttributes;
+use App\Rules\ValidPwdIdNumber;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -18,6 +19,10 @@ class StoreHealthRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->mergeTitleCased(['disability']);
+
+        if ($this->exists('pwd_id_number')) {
+            $this->merge(['pwd_id_number' => ValidPwdIdNumber::normalize($this->input('pwd_id_number'))]);
+        }
     }
 
     /**
@@ -42,7 +47,7 @@ class StoreHealthRequest extends FormRequest
                 Rule::exists('disability', 'disability_id'),
             ],
             'disability' => ['required_without:disability_id', 'nullable', 'string', 'max:45'],
-            'pwd_id_number' => ['nullable', 'integer', 'min:0', 'max:2147483647'],
+            'pwd_id_number' => ['nullable', 'string', new ValidPwdIdNumber],
         ];
     }
 
@@ -57,8 +62,6 @@ class StoreHealthRequest extends FormRequest
             'facility_visit_reason_id.exists' => 'The selected visit reason does not exist.',
             'disability_id.required_without' => 'Disability is required.',
             'disability.required_without' => 'Disability is required.',
-            'pwd_id_number.integer' => 'PWD ID number must be numeric.',
-            'pwd_id_number.min' => 'PWD ID number must be a whole number of 0 or greater.',
         ];
     }
 

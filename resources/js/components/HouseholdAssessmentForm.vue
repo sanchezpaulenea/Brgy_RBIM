@@ -43,7 +43,7 @@
                     v-model="form.next_visit_date"
                     input-id="assessment_next_visit_date"
                     label="Next Visit Date"
-                    placeholder="Select next visit date"
+                    placeholder="MM/DD/YYYY"
                     :min="today"
                     required
                     :show-age="false"

@@ -20,6 +20,21 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Resident extends Model
 {
+    /**
+     * Nationality, religion, and ethnicity are optional answers. Their columns
+     * are INT NOT NULL behind a foreign key, so a blank answer is recorded as
+     * the lookup table's "Not Applicable" row at id 0.
+     *
+     * @var list<string>
+     */
+    public const OPTIONAL_LOOKUP_FIELDS = [
+        'nationality_id',
+        'religion_id',
+        'ethnicity_id',
+    ];
+
+    public const LOOKUP_UNSPECIFIED = 0;
+
     protected $table = 'resident';
 
     protected $primaryKey = 'resident_id';

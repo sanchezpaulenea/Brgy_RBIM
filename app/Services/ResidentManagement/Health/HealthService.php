@@ -7,15 +7,18 @@ use App\Models\ResidentManagement\Demographic\Resident;
 use App\Models\ResidentManagement\Health\Disability;
 use App\Models\ResidentManagement\Health\Health;
 use App\Models\UserManagement\User;
+use App\Rules\ValidPwdIdNumber;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Health\HealthRepositoryInterface;
 use App\Services\ResidentManagement\Concerns\LogsAuditableFieldChanges;
+use App\Services\ResidentManagement\Concerns\SerializesResidentSectionWrites;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class HealthService
 {
     use LogsAuditableFieldChanges;
+    use SerializesResidentSectionWrites;
 
     public function __construct(
         protected HealthRepositoryInterface $healthRepository,
@@ -28,17 +31,17 @@ class HealthService
      */
     public function create(User $performedBy, Resident $resident, array $data): array
     {
-        if ($this->healthRepository->findByResidentId($resident->resident_id) !== null) {
-            throw ValidationException::withMessages([
-                'health' => ['A health record already exists for this resident.'],
-            ]);
-        }
-
         $data['resident_id'] = $resident->resident_id;
         $data = $this->applyOptionalLookupIds($data, fillMissing: true);
         $data = $this->applyOptionalPwdId($data, fillMissing: true);
 
-        return DB::transaction(function () use ($performedBy, $data) {
+        return $this->withResidentLock($resident->resident_id, function () use ($performedBy, $resident, $data) {
+            if ($this->healthRepository->findByResidentId($resident->resident_id) !== null) {
+                throw ValidationException::withMessages([
+                    'health' => ['A health record already exists for this resident.'],
+                ]);
+            }
+
             $data = $this->mapDisabilityToId($data, required: true);
             $health = $this->healthRepository->create($data);
 
@@ -113,9 +116,7 @@ class HealthService
                 : $health->facilityVisitReason?->facility_visit_reason,
             'disability_id' => $health->disability_id,
             'disability' => $health->disabilityType?->disability,
-            'pwd_id_number' => $health->pwd_id_number === Health::PWD_ID_NOT_APPLICABLE
-                ? null
-                : $health->pwd_id_number,
+            'pwd_id_number' => $health->pwd_id_number,
         ];
     }
 
@@ -150,8 +151,8 @@ class HealthService
     }
 
     /**
-     * PWD ID is optional. Empty values are stored as 0 because the column
-     * is INT NOT NULL.
+     * PWD ID is optional and health.pwd_id_number is nullable, so a resident
+     * without one is stored as NULL.
      *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
@@ -160,15 +161,13 @@ class HealthService
     {
         if (! array_key_exists('pwd_id_number', $data)) {
             if ($fillMissing) {
-                $data['pwd_id_number'] = Health::PWD_ID_NOT_APPLICABLE;
+                $data['pwd_id_number'] = null;
             }
 
             return $data;
         }
 
-        if ($data['pwd_id_number'] === null || $data['pwd_id_number'] === '') {
-            $data['pwd_id_number'] = Health::PWD_ID_NOT_APPLICABLE;
-        }
+        $data['pwd_id_number'] = ValidPwdIdNumber::normalize($data['pwd_id_number']);
 
         return $data;
     }
@@ -240,9 +239,7 @@ class HealthService
                 ? 'N/A'
                 : (string) ($health->facilityVisitReason?->facility_visit_reason ?? $health->facility_visit_reason_id),
             'disability' => (string) ($health->disabilityType?->disability ?? ''),
-            'pwd id number' => $health->pwd_id_number === Health::PWD_ID_NOT_APPLICABLE
-                ? 'N/A'
-                : (string) $health->pwd_id_number,
+            'pwd id number' => (string) ($health->pwd_id_number ?? 'N/A'),
         ];
     }
 }

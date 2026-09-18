@@ -6,6 +6,13 @@ export const ENROLLMENT_NOT_ENROLLED_ID = 3;
 export const ECONOMIC_STATUS_NOT_APPLICABLE = 0;
 export const SOURCE_OF_INCOME_SKIP_WORK_IDS = [3, 4, 5];
 export const NON_SOLO_PARENT_STATUS_ID = 2;
+export const SOLO_PARENT_STATUS_REGISTERED_ID = 1;
+
+/**
+ * infant_health.immunization is NOT NULL, so an infant with no immunizations
+ * on record is stored with this note. Mirrors InfantHealth::NO_IMMUNIZATION.
+ */
+export const NO_IMMUNIZATION_NOTE = 'None';
 
 /**
  * Mirrors Resident::ageInMonths() — whole months since date of birth.

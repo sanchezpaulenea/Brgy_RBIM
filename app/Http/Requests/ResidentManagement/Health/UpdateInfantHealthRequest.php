@@ -41,7 +41,19 @@ class UpdateInfantHealthRequest extends FormRequest
                 'integer',
                 Rule::exists('birth_attendant', 'birth_attendant_id'),
             ],
-            'immunization' => ['sometimes', 'required', 'string', 'max:45'],
+            'immunization' => ['sometimes', 'nullable', 'string', 'max:45'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'place_of_delivery_id.exists' => 'The selected place of delivery does not exist.',
+            'birth_attendant_id.exists' => 'The selected birth attendant does not exist.',
+            'immunization.max' => 'The immunization note may not be longer than 45 characters.',
         ];
     }
 

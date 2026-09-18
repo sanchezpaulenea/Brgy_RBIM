@@ -5,6 +5,7 @@ namespace App\Http\Requests\ResidentManagement\Sociocivic;
 use App\Http\Requests\Concerns\TitleCasesAttributes;
 use App\Rules\ValidNcscRrn;
 use App\Rules\ValidPlaceName;
+use App\Rules\ValidSoloParentIdNumber;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -24,10 +25,17 @@ class StoreSociocivicRequest extends FormRequest
             'registered_barangay_voter',
             'ncsc_rrn_id_number',
             'osca_id_number',
+            'solo_parent_id_number',
         ]);
 
         if ($this->exists('ncsc_rrn_id_number') && is_string($this->input('ncsc_rrn_id_number'))) {
             $this->merge(['ncsc_rrn_id_number' => trim($this->input('ncsc_rrn_id_number'))]);
+        }
+
+        if ($this->exists('solo_parent_id_number')) {
+            $this->merge([
+                'solo_parent_id_number' => ValidSoloParentIdNumber::normalize($this->input('solo_parent_id_number')),
+            ]);
         }
     }
 
@@ -45,6 +53,7 @@ class StoreSociocivicRequest extends FormRequest
             'registered_sen_citizen' => ['nullable', 'boolean'],
             'ncsc_rrn_id_number' => ['nullable', 'string', 'max:45', new ValidNcscRrn],
             'osca_id_number' => ['nullable', 'string', 'max:45'],
+            'solo_parent_id_number' => ['nullable', 'string', 'max:45', new ValidSoloParentIdNumber],
             'registered_barangay_voter' => [
                 'nullable',
                 'string',

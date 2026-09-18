@@ -11,18 +11,11 @@ use Illuminate\Support\Str;
 class Health extends Model
 {
     /**
-     * Sentinel stored when an optional health lookup (Q26–Q28) is left blank.
-     * Those FKs were dropped so 0 can be persisted without a lookup row.
+     * Stored when an optional health lookup (Q26–Q28) is left blank. Those
+     * columns are INT NOT NULL behind a foreign key, so each lookup table
+     * carries a matching "Not Applicable" row at id 0.
      */
     public const LOOKUP_NOT_APPLICABLE = 0;
-
-    /**
-     * Sentinel stored when the resident has no PWD ID.
-     *
-     * health.pwd_id_number is INT NOT NULL with no DEFAULT, so NULL cannot
-     * be persisted without a schema change. 0 = not applicable / no PWD ID.
-     */
-    public const PWD_ID_NOT_APPLICABLE = 0;
 
     protected $table = 'health';
 

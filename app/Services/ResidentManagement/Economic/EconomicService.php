@@ -10,12 +10,14 @@ use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Economic\EconomicRepositoryInterface;
 use App\Services\ResidentManagement\Concerns\LogsAuditableFieldChanges;
+use App\Services\ResidentManagement\Concerns\SerializesResidentSectionWrites;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class EconomicService
 {
     use LogsAuditableFieldChanges;
+    use SerializesResidentSectionWrites;
 
     public function __construct(
         protected EconomicRepositoryInterface $economicRepository,
@@ -28,16 +30,16 @@ class EconomicService
      */
     public function create(User $performedBy, Resident $resident, array $data): array
     {
-        if ($this->economicRepository->findByResidentId($resident->resident_id) !== null) {
-            throw ValidationException::withMessages([
-                'economic' => ['An economic record already exists for this resident.'],
-            ]);
-        }
-
         $data['resident_id'] = $resident->resident_id;
         $data = $this->applyWorkDetailRules($data);
 
-        return DB::transaction(function () use ($performedBy, $data) {
+        return $this->withResidentLock($resident->resident_id, function () use ($performedBy, $resident, $data) {
+            if ($this->economicRepository->findByResidentId($resident->resident_id) !== null) {
+                throw ValidationException::withMessages([
+                    'economic' => ['An economic record already exists for this resident.'],
+                ]);
+            }
+
             $economic = $this->economicRepository->create($data);
 
             $this->auditLogRepository->log(
@@ -126,8 +128,9 @@ class EconomicService
     }
 
     /**
-     * Remittance, investments, and others skip Q17–Q18.
-     * status_of_work_business_id is INT NOT NULL, so 0 is stored as N/A.
+     * Remittance, investments, and others skip Q17–Q18. status_of_work_business_id
+     * is INT NOT NULL behind a foreign key, so N/A is stored as the lookup
+     * table's id-0 row rather than as NULL.
      *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>

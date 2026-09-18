@@ -269,94 +269,27 @@
                     </template>
 
                     <template v-else-if="editing === 'economic'">
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <div>
-                                <label class="rbim-label">Monthly Income<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <input
-                                    v-model="editForm.monthly_income"
-                                    type="number"
-                                    min="0"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.monthly_income }"
-                                >
-                                <p v-if="editErrors.monthly_income" class="rbim-error">{{ editErrors.monthly_income }}</p>
-                            </div>
-                            <div>
-                                <label class="rbim-label">Source of Income<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <select
-                                    v-model="editForm.source_of_income_id"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.source_of_income_id }"
-                                >
-                                    <option value="">Select</option>
-                                    <option v-for="option in lookups.sourceOfIncome" :key="option.id" :value="option.id">{{ option.label }}</option>
-                                </select>
-                                <p v-if="editErrors.source_of_income_id" class="rbim-error">{{ editErrors.source_of_income_id }}</p>
-                            </div>
-                            <div v-if="economicShowsWorkDetails">
-                                <label class="rbim-label">Status of Work / Business<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <select
-                                    v-model="editForm.status_of_work_business_id"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.status_of_work_business_id }"
-                                >
-                                    <option value="">Select</option>
-                                    <option v-for="option in lookups.statusOfWorkBusiness" :key="option.id" :value="option.id">{{ option.label }}</option>
-                                </select>
-                                <p v-if="editErrors.status_of_work_business_id" class="rbim-error">{{ editErrors.status_of_work_business_id }}</p>
-                            </div>
-                            <div v-if="economicShowsWorkDetails">
-                                <label class="rbim-label">Place of Work / Business<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <input
-                                    v-model="editForm.place_of_work_business"
-                                    type="text"
-                                    maxlength="45"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.place_of_work_business }"
-                                >
-                                <p v-if="editErrors.place_of_work_business" class="rbim-error">{{ editErrors.place_of_work_business }}</p>
-                            </div>
-                        </div>
+                        <ResidentProfilingSectionFields
+                            section="economic"
+                            :form="editForm"
+                            :errors="editErrors"
+                            :lookups="lookups"
+                            :resident="resident"
+                            :location="location"
+                            id-prefix="resident-edit-economic"
+                        />
                     </template>
 
                     <template v-else-if="editing === 'infant_health'">
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <div>
-                                <label class="rbim-label">Place of Delivery<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <select
-                                    v-model="editForm.place_of_delivery_id"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.place_of_delivery_id }"
-                                >
-                                    <option value="">Select</option>
-                                    <option v-for="option in lookups.placeOfDelivery" :key="option.id" :value="option.id">{{ option.label }}</option>
-                                </select>
-                                <p v-if="editErrors.place_of_delivery_id" class="rbim-error">{{ editErrors.place_of_delivery_id }}</p>
-                            </div>
-                            <div>
-                                <label class="rbim-label">Birth Attendant<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <select
-                                    v-model="editForm.birth_attendant_id"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.birth_attendant_id }"
-                                >
-                                    <option value="">Select</option>
-                                    <option v-for="option in lookups.birthAttendant" :key="option.id" :value="option.id">{{ option.label }}</option>
-                                </select>
-                                <p v-if="editErrors.birth_attendant_id" class="rbim-error">{{ editErrors.birth_attendant_id }}</p>
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label class="rbim-label">Immunization<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <input
-                                    v-model="editForm.immunization"
-                                    type="text"
-                                    maxlength="45"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.immunization }"
-                                >
-                                <p v-if="editErrors.immunization" class="rbim-error">{{ editErrors.immunization }}</p>
-                            </div>
-                        </div>
+                        <ResidentProfilingSectionFields
+                            section="infant_health"
+                            :form="editForm"
+                            :errors="editErrors"
+                            :lookups="lookups"
+                            :resident="resident"
+                            :location="location"
+                            id-prefix="resident-edit-infant-health"
+                        />
                     </template>
 
                     <template v-else-if="editing === 'health'">
@@ -439,84 +372,15 @@
                     </template>
 
                     <template v-else-if="editing === 'sociocivic'">
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <div v-if="sociocivicRelevance.solo_parent">
-                                <label class="rbim-label">Solo Parent Status<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <select
-                                    v-model="editForm.solo_parent_status_id"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.solo_parent_status_id }"
-                                >
-                                    <option value="">Select</option>
-                                    <option v-for="option in lookups.soloParentStatus" :key="option.id" :value="option.id">{{ option.label }}</option>
-                                </select>
-                                <p v-if="editErrors.solo_parent_status_id" class="rbim-error">{{ editErrors.solo_parent_status_id }}</p>
-                            </div>
-                            <div v-if="sociocivicRelevance.senior_citizen">
-                                <label class="rbim-label">Registered Senior Citizen<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <select
-                                    :value="editBooleanSelectValue(editForm.registered_sen_citizen)"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.registered_sen_citizen }"
-                                    @change="editForm.registered_sen_citizen = parseEditBoolean($event.target.value)"
-                                >
-                                    <option value="">Select</option>
-                                    <option value="true">Yes</option>
-                                    <option value="false">No</option>
-                                </select>
-                                <p v-if="editErrors.registered_sen_citizen" class="rbim-error">{{ editErrors.registered_sen_citizen }}</p>
-                            </div>
-                            <template v-if="sociocivicRelevance.senior_citizen && editForm.registered_sen_citizen === true">
-                                <div>
-                                    <label class="rbim-label">NCSC-RRN</label>
-                                    <input
-                                        v-model="editForm.ncsc_rrn_id_number"
-                                        type="text"
-                                        inputmode="numeric"
-                                        maxlength="6"
-                                        placeholder="6-digit RRN"
-                                        class="rbim-input"
-                                        :class="{ 'rbim-input-error': editErrors.ncsc_rrn_id_number }"
-                                    >
-                                    <p v-if="editErrors.ncsc_rrn_id_number" class="rbim-error">{{ editErrors.ncsc_rrn_id_number }}</p>
-                                </div>
-                                <div>
-                                    <label class="rbim-label">OSCA ID Number</label>
-                                    <input
-                                        v-model="editForm.osca_id_number"
-                                        type="text"
-                                        maxlength="45"
-                                        class="rbim-input"
-                                        :class="{ 'rbim-input-error': editErrors.osca_id_number }"
-                                    >
-                                    <p v-if="editErrors.osca_id_number" class="rbim-error">{{ editErrors.osca_id_number }}</p>
-                                </div>
-                            </template>
-                            <div v-if="sociocivicRelevance.barangay_voter">
-                                <label class="rbim-label">Registered Barangay Voter<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <select
-                                    v-model="editForm.is_registered_barangay_voter"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.is_registered_barangay_voter }"
-                                >
-                                    <option value="">Select</option>
-                                    <option value="Yes">Yes</option>
-                                    <option value="No">No</option>
-                                </select>
-                                <p v-if="editErrors.is_registered_barangay_voter" class="rbim-error">{{ editErrors.is_registered_barangay_voter }}</p>
-                            </div>
-                            <div v-if="sociocivicRelevance.barangay_voter && editForm.is_registered_barangay_voter === 'Yes'">
-                                <label class="rbim-label">Barangay Where Registered<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <input
-                                    v-model="editForm.registered_barangay_voter"
-                                    type="text"
-                                    maxlength="45"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.registered_barangay_voter }"
-                                >
-                                <p v-if="editErrors.registered_barangay_voter" class="rbim-error">{{ editErrors.registered_barangay_voter }}</p>
-                            </div>
-                        </div>
+                        <ResidentProfilingSectionFields
+                            section="sociocivic"
+                            :form="editForm"
+                            :errors="editErrors"
+                            :lookups="lookups"
+                            :resident="resident"
+                            :location="location"
+                            id-prefix="resident-edit-sociocivic"
+                        />
                     </template>
 
                     <template v-else-if="editing === 'migration'">
@@ -595,7 +459,7 @@
                                         v-model="editForm.date_of_transfer_in_brgy"
                                         label="Date of Transfer into Barangay"
                                         input-id="migration-transfer-date"
-                                        placeholder="Select month and year"
+                                        placeholder="MM/YYYY"
                                         precision="month"
                                         required
                                         :max="todayIso"
@@ -608,7 +472,7 @@
                                         v-model="editForm.duration_of_stay"
                                         label="Until When Does the Resident Intend to Stay"
                                         input-id="migration-duration-of-stay"
-                                        placeholder="Select date"
+                                        placeholder="MM/DD/YYYY"
                                         :show-age="false"
                                         :error="editErrors.duration_of_stay"
                                     />
@@ -786,6 +650,7 @@ import {
     sourceOfIncomeSkipsWorkDetails,
 } from '@/utils/residentProfiling';
 import { prepareSectionPayload, validateSectionForm } from '@/utils/residentSectionForm';
+import { formatDecimalAmount } from '@/utils/validation';
 
 const route = useRoute();
 const { residentTabs } = useSectionTabs();
@@ -878,16 +743,9 @@ const migrantReasonsForTransfer = computed(() => (
     (lookups.reasonForTransfer ?? []).filter((option) => !isNotApplicableLookup(option))
 ));
 
-const economicShowsWorkDetails = computed(() => (
-    !sourceOfIncomeSkipsWorkDetails(editForm.source_of_income_id, lookups.sourceOfIncome)
-        && Boolean(editForm.source_of_income_id)
-));
-
 const familyPlanningIsNone = computed(() => (
     isFamilyPlanningNone(lookupById(lookups.familyPlanningMethod, editForm.family_planning_method_id))
 ));
-
-const sociocivicRelevance = computed(() => sociocivicFieldRelevance(resident.value));
 
 const migrationClassification = computed(() => classifyMigrationForm(editForm, location));
 
@@ -1097,7 +955,12 @@ function displayEconomic(record) {
     }
 
     const fields = [
-        { label: 'Monthly Income', value: record.monthly_income ?? '—' },
+        {
+            label: 'Monthly Income',
+            value: record.monthly_income === undefined || record.monthly_income === null
+                ? '—'
+                : formatDecimalAmount(record.monthly_income),
+        },
         { label: 'Source of Income', value: record.source_of_income || '—' },
     ];
 
@@ -1171,6 +1034,10 @@ function displaySociocivic(record) {
 
     if (relevance.solo_parent) {
         fields.push({ label: 'Solo Parent Status', value: record.solo_parent_status || '—' });
+
+        if (record.solo_parent_id_number) {
+            fields.push({ label: 'Solo Parent ID', value: record.solo_parent_id_number });
+        }
     }
 
     if (relevance.senior_citizen) {
@@ -1307,7 +1174,9 @@ function startSectionEdit(key) {
             place_of_school_city_municipality: record.place_of_school_city_municipality || '',
         },
         economic: {
-            monthly_income: record.monthly_income ?? '',
+            monthly_income: record.monthly_income === undefined || record.monthly_income === null
+                ? ''
+                : formatDecimalAmount(record.monthly_income),
             source_of_income_id: record.source_of_income_id || '',
             status_of_work_business_id: record.status_of_work_business_id || '',
             place_of_work_business: record.place_of_work_business || '',
@@ -1334,6 +1203,7 @@ function startSectionEdit(key) {
         },
         sociocivic: {
             solo_parent_status_id: record.solo_parent_status_id || '',
+            solo_parent_id_number: record.solo_parent_id_number || '',
             registered_sen_citizen: record.registered_sen_citizen === true || record.registered_sen_citizen === false
                 ? record.registered_sen_citizen
                 : '',
@@ -1492,6 +1362,12 @@ function askConfirm({ title, message, confirmLabel = 'Continue', variant = 'prim
 }
 
 async function handleSave() {
+    // The confirmation dialog below is awaited before `saving` flips, so the
+    // disabled state on the button alone would not stop a second submit.
+    if (saving.value) {
+        return;
+    }
+
     Object.keys(editErrors).forEach((key) => {
         delete editErrors[key];
     });

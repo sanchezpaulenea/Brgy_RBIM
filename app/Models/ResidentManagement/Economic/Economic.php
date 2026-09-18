@@ -9,16 +9,29 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Economic extends Model
 {
     /**
-     * Sentinel stored when Q17 is skipped (remittance / investments / others).
-     * The FK was dropped so 0 can be persisted without a lookup row.
+     * Stored when Q17 is skipped (remittance / investments / others).
+     * status_of_work_business_id is INT NOT NULL behind a foreign key, so the
+     * lookup table carries a matching "Not Applicable" row at id 0.
      */
     public const STATUS_NOT_APPLICABLE = 0;
+
+    /** monthly_income is decimal(10,2). */
+    public const MAX_MONTHLY_INCOME = '99999999.99';
+
+    public const MONTHLY_INCOME_SCALE = 2;
 
     protected $table = 'economic';
 
     protected $primaryKey = 'economic_id';
 
     public $timestamps = false;
+
+    protected function casts(): array
+    {
+        return [
+            'monthly_income' => 'decimal:'.self::MONTHLY_INCOME_SCALE,
+        ];
+    }
 
     protected $fillable = [
         'monthly_income',

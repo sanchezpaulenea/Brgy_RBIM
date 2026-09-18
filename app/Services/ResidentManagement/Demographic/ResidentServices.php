@@ -85,7 +85,9 @@ class ResidentServices
         $data['clan_id'] = $data['clan_id'] ?? $household->clan_id;
         $data['resident_status_id'] = $data['resident_status_id'] ?? ResidentStatus::ACTIVE;
 
-        return DB::transaction(function () use ($performedBy, $data) {
+        return DB::transaction(function () use ($performedBy, $data, $household) {
+            $this->assertNotAlreadyRegistered($household, $data);
+
             $resident = $this->residentRepository->create($data);
 
             $this->auditLogRepository->log(
@@ -312,6 +314,34 @@ class ResidentServices
         }
 
         return $household;
+    }
+
+    /**
+     * A double-clicked Save fires two identical registrations. Locking the
+     * household row makes the second request wait for the first to commit, so
+     * it sees the resident that was just inserted instead of duplicating them.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function assertNotAlreadyRegistered(Household $household, array $data): void
+    {
+        DB::table('household')
+            ->where('household_id', $household->household_id)
+            ->lockForUpdate()
+            ->first();
+
+        $exists = Resident::query()
+            ->where('household_id', $household->household_id)
+            ->whereRaw('LOWER(last_name) = ?', [mb_strtolower(trim((string) ($data['last_name'] ?? '')))])
+            ->whereRaw('LOWER(first_name) = ?', [mb_strtolower(trim((string) ($data['first_name'] ?? '')))])
+            ->where('date_of_birth', $data['date_of_birth'] ?? null)
+            ->exists();
+
+        if ($exists) {
+            throw ValidationException::withMessages([
+                'resident' => ['This resident is already registered in this household.'],
+            ]);
+        }
     }
 
     /**
