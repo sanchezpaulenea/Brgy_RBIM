@@ -259,6 +259,14 @@ function fromParts(year, month, day) {
     return { iso: toIso({ year, month, day }) };
 }
 
+function isSelectable(iso) {
+    if (!iso) {
+        return true;
+    }
+
+    return iso >= minIso.value && iso <= maxIso.value;
+}
+
 function commit(iso) {
     if (iso !== props.modelValue) {
         emit('update:modelValue', iso);
@@ -278,7 +286,7 @@ function onTypedInput() {
         return;
     }
 
-    if (parsed.iso) {
+    if (parsed.iso && isSelectable(parsed.iso)) {
         commit(parsed.iso);
     }
 }
@@ -294,7 +302,7 @@ function onBlur() {
         return;
     }
 
-    if (parsed.iso) {
+    if (parsed.iso && isSelectable(parsed.iso)) {
         commit(parsed.iso);
 
         return;
@@ -312,7 +320,11 @@ function onPickerChange(event) {
         return;
     }
 
-    commit(props.precision === 'month' ? `${value}-01` : value);
+    const iso = props.precision === 'month' ? `${value}-01` : value;
+
+    if (isSelectable(iso)) {
+        commit(iso);
+    }
 }
 
 watch(() => props.modelValue, (value) => {

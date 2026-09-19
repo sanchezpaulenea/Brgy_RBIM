@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.3
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Sep 16, 2026 at 04:08 PM
--- Server version: 9.1.0
--- PHP Version: 8.3.14
+-- Generation Time: Sep 19, 2026 at 04:46 PM
+-- Server version: 8.0.46
+-- PHP Version: 8.3.28
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `v3_rbim`
+-- Database: `brgy_rbim`
 --
 
 -- --------------------------------------------------------
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS `audit_log` (
   PRIMARY KEY (`audit_id`),
   KEY `action` (`action_id`),
   KEY `audit_user` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `audit_log`
@@ -87,7 +87,23 @@ INSERT INTO `audit_log` (`audit_id`, `user_id`, `action_id`, `record_id`, `descr
 (10, 1, 1, 3, 'Create barangay personnel', NULL, 'Rullan, Deborah', '2026-08-31 19:29:32', 'record', 'barangay_personnel'),
 (11, 1, 1, 7, 'Assign role to user', NULL, '1', '2026-08-31 19:29:46', 'assignment', 'user role'),
 (12, 1, 1, 3, 'Create user account', NULL, 'deborah', '2026-08-31 19:29:46', 'account', 'user'),
-(13, 3, 2, 3, 'User changed password', '[REDACTED]', '[REDACTED]', '2026-08-31 19:30:16', 'password', 'user');
+(13, 3, 2, 3, 'User changed password', '[REDACTED]', '[REDACTED]', '2026-08-31 19:30:16', 'password', 'user'),
+(14, 1, 2, 1, 'Session ended because the account was signed in on another device.', NULL, 'concurrent_login', '2026-09-19 00:59:55', 'session', 'user_log'),
+(22, 1, 1, 4, 'Create economic', NULL, '4321.00', '2026-09-19 01:32:02', 'record', 'economic'),
+(23, 1, 1, 6, 'Create economic', NULL, '4321.00', '2026-09-19 01:32:35', 'record', 'economic'),
+(24, 1, 1, 5, 'Create economic', NULL, '4321.00', '2026-09-19 01:32:35', 'record', 'economic'),
+(25, 1, 1, 7, 'Create economic', NULL, '4321.00', '2026-09-19 01:32:56', 'record', 'economic'),
+(26, 2, 2, 6, 'Session ended because the account was signed in on another device.', NULL, 'concurrent_login', '2026-09-19 01:40:41', 'session', 'user_log'),
+(27, 2, 1, 5, 'Create household', NULL, 'Pogi, Victor Hehe', '2026-09-19 01:54:42', 'household', 'household'),
+(28, 2, 1, 11, 'Create resident', NULL, 'Pogi, Victor Hehe', '2026-09-19 01:54:42', 'record', 'resident'),
+(29, 2, 1, 8, 'Create economic', NULL, '0.00', '2026-09-19 02:00:49', 'record', 'economic'),
+(30, 2, 1, 12, 'Create resident', NULL, 'Pogi, Anak Ni Vic', '2026-09-19 02:09:05', 'record', 'resident'),
+(31, 2, 1, 4, 'Create health', NULL, 'GSIS', '2026-09-19 02:12:50', 'record', 'health'),
+(32, 2, 1, 1, 'Create education', NULL, 'College level', '2026-09-19 02:14:34', 'record', 'education'),
+(34, 2, 1, 3, 'Create infant health', NULL, 'None', '2026-09-19 02:17:47', 'record', 'infant_health'),
+(37, 2, 1, 14, 'Create resident', NULL, 'Gummy, Bear', '2026-09-20 00:44:53', 'record', 'resident'),
+(38, 2, 1, 6, 'Create household', NULL, 'Gomez, Flor', '2026-09-20 00:45:37', 'household', 'household'),
+(39, 2, 1, 15, 'Create resident', NULL, 'Gomez, Flor', '2026-09-20 00:45:37', 'record', 'resident');
 
 -- --------------------------------------------------------
 
@@ -360,7 +376,14 @@ CREATE TABLE IF NOT EXISTS `economic` (
   KEY `resident_economic` (`resident_id`),
   KEY `source_of_income` (`source_of_income_id`),
   KEY `status_of_work_business` (`status_of_work_business_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `economic`
+--
+
+INSERT INTO `economic` (`economic_id`, `monthly_income`, `source_of_income_id`, `status_of_work_business_id`, `place_of_work_business`, `resident_id`) VALUES
+(8, 0.00, 5, 0, NULL, 11);
 
 -- --------------------------------------------------------
 
@@ -382,6 +405,13 @@ CREATE TABLE IF NOT EXISTS `education` (
   KEY `resident_education` (`resident_id`),
   KEY `school_lvl` (`school_lvl_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `education`
+--
+
+INSERT INTO `education` (`education_id`, `resident_id`, `highest_lvl_of_educ_id`, `current_enrollement_status_id`, `school_lvl_id`, `place_of_school_brgy`, `place_of_school_city_municipality`) VALUES
+(1, 12, 12, 2, 6, 'Omsim', 'Omsim');
 
 -- --------------------------------------------------------
 
@@ -405,6 +435,7 @@ INSERT INTO `ethnicity` (`ethnicity_id`, `ethnicity`) VALUES
 (4, 'Ibaloi'),
 (2, 'Ilocano'),
 (3, 'Kankanaey'),
+(0, 'Not Applicable'),
 (1, 'Tagalog');
 
 -- --------------------------------------------------------
@@ -425,6 +456,7 @@ CREATE TABLE IF NOT EXISTS `facility_visited_past_12mos` (
 --
 
 INSERT INTO `facility_visited_past_12mos` (`facility_visited_past_12mos_id`, `facility_visited_past_12mos`) VALUES
+(0, 'Not Applicable'),
 (1, 'Government hospital'),
 (2, 'RHU/Health center'),
 (3, 'Brgy. Health Station'),
@@ -451,6 +483,7 @@ CREATE TABLE IF NOT EXISTS `facility_visit_reason` (
 --
 
 INSERT INTO `facility_visit_reason` (`facility_visit_reason_id`, `facility_visit_reason`) VALUES
+(0, 'Not Applicable'),
 (1, 'Sick/Injured'),
 (2, 'Prenatal/Postnatal'),
 (3, 'Gave birth'),
@@ -477,6 +510,7 @@ CREATE TABLE IF NOT EXISTS `family_planning_method` (
 --
 
 INSERT INTO `family_planning_method` (`family_planning_method_id`, `family_planning_method`) VALUES
+(0, 'None'),
 (1, 'Female sterilization/Ligation'),
 (2, 'Male sterilization/vasectomy'),
 (3, 'IUD'),
@@ -544,7 +578,7 @@ CREATE TABLE IF NOT EXISTS `health` (
   `facility_visited_past_12mos_id` int NOT NULL,
   `facility_visit_reason_id` int NOT NULL,
   `disability_id` int NOT NULL,
-  `pwd_id_number` int DEFAULT NULL,
+  `pwd_id_number` varchar(45) DEFAULT NULL,
   `resident_id` int NOT NULL,
   PRIMARY KEY (`health_id`),
   KEY `disability` (`disability_id`),
@@ -552,7 +586,14 @@ CREATE TABLE IF NOT EXISTS `health` (
   KEY `facility_visit_reason` (`facility_visit_reason_id`),
   KEY `health_insurance` (`health_insurance_id`),
   KEY `resident_health` (`resident_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `health`
+--
+
+INSERT INTO `health` (`health_id`, `health_insurance_id`, `facility_visited_past_12mos_id`, `facility_visit_reason_id`, `disability_id`, `pwd_id_number`, `resident_id`) VALUES
+(4, 5, 6, 5, 2, '1234567890123458', 12);
 
 -- --------------------------------------------------------
 
@@ -572,6 +613,7 @@ CREATE TABLE IF NOT EXISTS `health_insurance` (
 --
 
 INSERT INTO `health_insurance` (`health_insurance_id`, `health_insurance`) VALUES
+(0, 'Not Applicable'),
 (1, 'PhilHealth paying member'),
 (2, 'PhilHealth dependent of paying member'),
 (3, 'PhilHealth indigent member'),
@@ -635,7 +677,7 @@ CREATE TABLE IF NOT EXISTS `household` (
   KEY `house_clan` (`clan_id`),
   KEY `house_status` (`household_status_id`),
   KEY `house_head` (`head_resident_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `household`
@@ -643,7 +685,9 @@ CREATE TABLE IF NOT EXISTS `household` (
 
 INSERT INTO `household` (`household_id`, `clan_id`, `head_resident_id`, `street_id`, `number_of_house_story`, `number_of_basement_level`, `house_lot`, `registration_date`, `household_status_id`) VALUES
 (1, 1, 1, 1, 1, 0, 'Lot 15', '2026-08-15 18:21:34', 1),
-(2, 2, 2, 2, 1, 0, 'Lot 4', '2026-08-15 18:25:41', 1);
+(2, 2, 2, 2, 1, 0, 'Lot 4', '2026-08-15 18:25:41', 1),
+(5, 6, 11, 3, 1, 0, 'Jan Sa GIlid', '2026-09-19 01:54:42', 1),
+(6, 6, 15, 1, 1, 2, NULL, '2026-09-20 00:45:37', 1);
 
 -- --------------------------------------------------------
 
@@ -719,7 +763,14 @@ CREATE TABLE IF NOT EXISTS `infant_health` (
   KEY `birth_attendant` (`birth_attendant_id`),
   KEY `place_of_delivery` (`place_of_delivery_id`),
   KEY `resident_infant_health` (`resident_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `infant_health`
+--
+
+INSERT INTO `infant_health` (`infant_health_id`, `place_of_delivery_id`, `birth_attendant_id`, `immunization`, `resident_id`) VALUES
+(3, 2, 1, 'None', 5);
 
 -- --------------------------------------------------------
 
@@ -862,7 +913,8 @@ INSERT INTO `nationality` (`nationality_id`, `nationality`) VALUES
 (4, 'Chinese'),
 (1, 'Filipino'),
 (3, 'Japanese'),
-(2, 'Korean');
+(2, 'Korean'),
+(0, 'Not Applicable');
 
 -- --------------------------------------------------------
 
@@ -925,8 +977,8 @@ INSERT INTO `permission` (`permission_id`, `permission`) VALUES
 (23, 'household.create'),
 (24, 'household.update'),
 (22, 'household.view'),
+(39, 'householdassessment.updatestatus'),
 (26, 'householdquestion.create'),
-(39, 'householdquestion.update'),
 (25, 'householdquestion.view'),
 (47, 'infanthealth.create'),
 (48, 'infanthealth.update'),
@@ -1192,6 +1244,7 @@ CREATE TABLE IF NOT EXISTS `religion` (
 INSERT INTO `religion` (`religion_id`, `religion`) VALUES
 (3, 'Born Again'),
 (2, 'Iglesia ni Cristo'),
+(0, 'Not Applicable'),
 (1, 'Roman Catholic');
 
 -- --------------------------------------------------------
@@ -1230,7 +1283,7 @@ CREATE TABLE IF NOT EXISTS `resident` (
   KEY `ethnicity` (`ethnicity_id`),
   KEY `religion` (`religion_id`),
   KEY `household_resident` (`household_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `resident`
@@ -1242,7 +1295,11 @@ INSERT INTO `resident` (`resident_id`, `last_name`, `first_name`, `middle_name`,
 (3, 'Dela Cruz', 'Jay', NULL, NULL, 3, 1, '2011-08-04', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 1, 2, 1, 2),
 (5, 'Dela Cruz', 'May', NULL, NULL, 4, 2, '2026-01-01', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 1, 2, 1, 2),
 (6, 'Dela Cruz', 'Pia', NULL, NULL, 4, 2, '2016-04-13', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 1, 2, 1, 2),
-(7, 'Dela Cruz', 'Jim', NULL, NULL, 11, 1, '2016-04-13', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 4, 2, 1, 2);
+(7, 'Dela Cruz', 'Jim', NULL, NULL, 11, 1, '2016-04-13', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 4, 2, 1, 2),
+(11, 'Pogi', 'Victor', 'Hehe', NULL, 1, 1, '2004-10-28', 'Omsim', 'Abra', 'Philippines', 1, 1, 2, 2, 6, 1, 5),
+(12, 'Pogi', 'Anak Ni', 'Vic', NULL, 11, 1, '2018-10-28', 'Omsim', 'Abra', 'Philippines', 0, 0, 0, 1, 6, 1, 5),
+(14, 'Gummy', 'Bear', NULL, NULL, 19, 1, '1970-06-05', 'Baler', 'Aurora', 'Philippines', 0, 0, 0, 2, 6, 1, 5),
+(15, 'Gomez', 'Flor', NULL, NULL, 1, 2, '1950-09-16', 'Baguio', 'Basco', 'Philippines', 0, 0, 0, 2, 6, 1, 6);
 
 --
 -- Triggers `resident`
@@ -1617,7 +1674,7 @@ DROP TABLE IF EXISTS `sociocivic`;
 CREATE TABLE IF NOT EXISTS `sociocivic` (
   `sociocivic_id` int NOT NULL AUTO_INCREMENT,
   `solo_parent_status_id` int NOT NULL,
-  `ncsc_rrn_id_number` int DEFAULT NULL,
+  `ncsc_rrn_id_number` varchar(45) DEFAULT NULL,
   `osca_id_number` varchar(45) DEFAULT NULL,
   `solo_parent_id_number` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `registered_barangay_voter` varchar(45) DEFAULT NULL,
@@ -1625,7 +1682,7 @@ CREATE TABLE IF NOT EXISTS `sociocivic` (
   PRIMARY KEY (`sociocivic_id`),
   KEY `resident_sociocivic` (`resident_id`),
   KEY `solo_parent_status` (`solo_parent_status_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -1667,6 +1724,7 @@ CREATE TABLE IF NOT EXISTS `source_of_fp_method` (
 --
 
 INSERT INTO `source_of_fp_method` (`source_of_fp_method_id`, `source_of_fp_method`) VALUES
+(0, 'Not Applicable'),
 (1, 'Government hospital'),
 (2, 'RHU/Health center'),
 (3, 'Brgy. Health Station'),
@@ -1715,6 +1773,7 @@ CREATE TABLE IF NOT EXISTS `status_of_work_business` (
 --
 
 INSERT INTO `status_of_work_business` (`status_of_work_business_id`, `status_of_work_business`) VALUES
+(0, 'Not Applicable'),
 (1, 'Permanent Work'),
 (2, 'Casual Work'),
 (3, 'Contractual Work'),
@@ -1856,19 +1915,24 @@ CREATE TABLE IF NOT EXISTS `user_log` (
   PRIMARY KEY (`user_log_id`),
   KEY `user_log` (`user_id`),
   KEY `login_status` (`login_status_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `user_log`
 --
 
 INSERT INTO `user_log` (`user_log_id`, `user_id`, `login_time`, `logout_time`, `login_status_id`, `ip_address`, `device`) VALUES
-(1, 1, '2026-08-31 19:24:57', '2026-08-31 19:24:57', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(1, 1, '2026-08-31 19:24:57', '2026-09-19 00:59:55', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (2, 1, '2026-08-31 19:25:07', '2026-08-31 19:29:50', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (3, 3, '2026-08-31 19:29:59', '2026-08-31 19:30:16', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (4, 3, '2026-08-31 19:30:26', '2026-08-31 19:30:38', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (5, 2, '2026-08-31 19:30:44', '2026-08-31 19:30:44', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(6, 2, '2026-08-31 19:30:47', '2026-08-31 19:30:47', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
+(6, 2, '2026-08-31 19:30:47', '2026-09-19 01:40:41', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(7, 1, '2026-09-19 00:59:55', '2026-09-19 01:39:33', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(8, 2, '2026-09-19 01:39:41', '2026-09-19 01:39:41', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(9, 2, '2026-09-19 01:39:55', '2026-09-19 01:39:55', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(10, 2, '2026-09-19 01:40:03', '2026-09-19 01:40:03', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(11, 2, '2026-09-19 01:40:41', '2026-09-19 01:40:41', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
 
 -- --------------------------------------------------------
 

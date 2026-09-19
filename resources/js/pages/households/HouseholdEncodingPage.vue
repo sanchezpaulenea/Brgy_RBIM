@@ -85,7 +85,7 @@ import { useAuth } from '@/composables/useAuth';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
-import { ageFromDateOfBirth, personDisplayName } from '@/utils/format';
+import { ageFromDateOfBirth, personDisplayName, todayDate } from '@/utils/format';
 import {
     applyLookupCreated,
     ensureResidentDemographicLookups,
@@ -379,6 +379,8 @@ function validateMembers() {
 
         if (!member.date_of_birth) {
             errors.date_of_birth = 'Date of birth is required.';
+        } else if (member.date_of_birth > todayDate()) {
+            errors.date_of_birth = 'Date of birth cannot be in the future.';
         } else if (member.isHead) {
             const age = ageFromDateOfBirth(member.date_of_birth);
 

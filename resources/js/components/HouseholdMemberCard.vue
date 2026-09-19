@@ -307,7 +307,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['remove', 'lookup-created', 'lookup-error']);
-
 const maxBirthDate = computed(() => (
     form.value.isHead ? dateYearsAgo(HOUSEHOLD_HEAD_MIN_AGE) : todayDate()
 ));
