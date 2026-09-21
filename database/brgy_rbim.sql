@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.3
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Sep 19, 2026 at 04:46 PM
--- Server version: 8.0.46
--- PHP Version: 8.3.28
+-- Generation Time: Sep 21, 2026 at 11:54 PM
+-- Server version: 9.1.0
+-- PHP Version: 8.3.14
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `brgy_rbim`
+-- Database: `v3_rbim`
 --
 
 -- --------------------------------------------------------
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS `audit_log` (
   PRIMARY KEY (`audit_id`),
   KEY `action` (`action_id`),
   KEY `audit_user` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `audit_log`
@@ -87,23 +87,7 @@ INSERT INTO `audit_log` (`audit_id`, `user_id`, `action_id`, `record_id`, `descr
 (10, 1, 1, 3, 'Create barangay personnel', NULL, 'Rullan, Deborah', '2026-08-31 19:29:32', 'record', 'barangay_personnel'),
 (11, 1, 1, 7, 'Assign role to user', NULL, '1', '2026-08-31 19:29:46', 'assignment', 'user role'),
 (12, 1, 1, 3, 'Create user account', NULL, 'deborah', '2026-08-31 19:29:46', 'account', 'user'),
-(13, 3, 2, 3, 'User changed password', '[REDACTED]', '[REDACTED]', '2026-08-31 19:30:16', 'password', 'user'),
-(14, 1, 2, 1, 'Session ended because the account was signed in on another device.', NULL, 'concurrent_login', '2026-09-19 00:59:55', 'session', 'user_log'),
-(22, 1, 1, 4, 'Create economic', NULL, '4321.00', '2026-09-19 01:32:02', 'record', 'economic'),
-(23, 1, 1, 6, 'Create economic', NULL, '4321.00', '2026-09-19 01:32:35', 'record', 'economic'),
-(24, 1, 1, 5, 'Create economic', NULL, '4321.00', '2026-09-19 01:32:35', 'record', 'economic'),
-(25, 1, 1, 7, 'Create economic', NULL, '4321.00', '2026-09-19 01:32:56', 'record', 'economic'),
-(26, 2, 2, 6, 'Session ended because the account was signed in on another device.', NULL, 'concurrent_login', '2026-09-19 01:40:41', 'session', 'user_log'),
-(27, 2, 1, 5, 'Create household', NULL, 'Pogi, Victor Hehe', '2026-09-19 01:54:42', 'household', 'household'),
-(28, 2, 1, 11, 'Create resident', NULL, 'Pogi, Victor Hehe', '2026-09-19 01:54:42', 'record', 'resident'),
-(29, 2, 1, 8, 'Create economic', NULL, '0.00', '2026-09-19 02:00:49', 'record', 'economic'),
-(30, 2, 1, 12, 'Create resident', NULL, 'Pogi, Anak Ni Vic', '2026-09-19 02:09:05', 'record', 'resident'),
-(31, 2, 1, 4, 'Create health', NULL, 'GSIS', '2026-09-19 02:12:50', 'record', 'health'),
-(32, 2, 1, 1, 'Create education', NULL, 'College level', '2026-09-19 02:14:34', 'record', 'education'),
-(34, 2, 1, 3, 'Create infant health', NULL, 'None', '2026-09-19 02:17:47', 'record', 'infant_health'),
-(37, 2, 1, 14, 'Create resident', NULL, 'Gummy, Bear', '2026-09-20 00:44:53', 'record', 'resident'),
-(38, 2, 1, 6, 'Create household', NULL, 'Gomez, Flor', '2026-09-20 00:45:37', 'household', 'household'),
-(39, 2, 1, 15, 'Create resident', NULL, 'Gomez, Flor', '2026-09-20 00:45:37', 'record', 'resident');
+(13, 3, 2, 3, 'User changed password', '[REDACTED]', '[REDACTED]', '2026-08-31 19:30:16', 'password', 'user');
 
 -- --------------------------------------------------------
 
@@ -171,6 +155,19 @@ INSERT INTO `birth_attendant` (`birth_attendant_id`, `birth_attendant`) VALUES
 (2, 'Nurse'),
 (3, 'Midwife'),
 (4, 'Hilot');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `breed`
+--
+
+DROP TABLE IF EXISTS `breed`;
+CREATE TABLE IF NOT EXISTS `breed` (
+  `breed_id` int NOT NULL AUTO_INCREMENT,
+  `breed` varchar(45) NOT NULL,
+  PRIMARY KEY (`breed_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -345,7 +342,7 @@ CREATE TABLE IF NOT EXISTS `disability` (
   `disability_id` int NOT NULL AUTO_INCREMENT,
   `disability` varchar(45) NOT NULL,
   PRIMARY KEY (`disability_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `disability`
@@ -356,7 +353,8 @@ INSERT INTO `disability` (`disability_id`, `disability`) VALUES
 (2, 'Physical'),
 (3, 'Deaf'),
 (4, 'Speech/Language Impairment'),
-(5, 'Psychosocial');
+(5, 'Psychosocial'),
+(6, 'None');
 
 -- --------------------------------------------------------
 
@@ -376,14 +374,7 @@ CREATE TABLE IF NOT EXISTS `economic` (
   KEY `resident_economic` (`resident_id`),
   KEY `source_of_income` (`source_of_income_id`),
   KEY `status_of_work_business` (`status_of_work_business_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `economic`
---
-
-INSERT INTO `economic` (`economic_id`, `monthly_income`, `source_of_income_id`, `status_of_work_business_id`, `place_of_work_business`, `resident_id`) VALUES
-(8, 0.00, 5, 0, NULL, 11);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -405,13 +396,6 @@ CREATE TABLE IF NOT EXISTS `education` (
   KEY `resident_education` (`resident_id`),
   KEY `school_lvl` (`school_lvl_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `education`
---
-
-INSERT INTO `education` (`education_id`, `resident_id`, `highest_lvl_of_educ_id`, `current_enrollement_status_id`, `school_lvl_id`, `place_of_school_brgy`, `place_of_school_city_municipality`) VALUES
-(1, 12, 12, 2, 6, 'Omsim', 'Omsim');
 
 -- --------------------------------------------------------
 
@@ -435,7 +419,6 @@ INSERT INTO `ethnicity` (`ethnicity_id`, `ethnicity`) VALUES
 (4, 'Ibaloi'),
 (2, 'Ilocano'),
 (3, 'Kankanaey'),
-(0, 'Not Applicable'),
 (1, 'Tagalog');
 
 -- --------------------------------------------------------
@@ -449,21 +432,21 @@ CREATE TABLE IF NOT EXISTS `facility_visited_past_12mos` (
   `facility_visited_past_12mos_id` int NOT NULL AUTO_INCREMENT,
   `facility_visited_past_12mos` varchar(45) NOT NULL,
   PRIMARY KEY (`facility_visited_past_12mos_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `facility_visited_past_12mos`
 --
 
 INSERT INTO `facility_visited_past_12mos` (`facility_visited_past_12mos_id`, `facility_visited_past_12mos`) VALUES
-(0, 'Not Applicable'),
 (1, 'Government hospital'),
 (2, 'RHU/Health center'),
 (3, 'Brgy. Health Station'),
 (4, 'Private hospital'),
 (5, 'Private clinic'),
 (6, 'Pharmacy'),
-(7, 'Hilot/Herbalist');
+(7, 'Hilot/Herbalist'),
+(8, 'None');
 
 -- --------------------------------------------------------
 
@@ -476,21 +459,21 @@ CREATE TABLE IF NOT EXISTS `facility_visit_reason` (
   `facility_visit_reason_id` int NOT NULL AUTO_INCREMENT,
   `facility_visit_reason` varchar(45) NOT NULL,
   PRIMARY KEY (`facility_visit_reason_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `facility_visit_reason`
 --
 
 INSERT INTO `facility_visit_reason` (`facility_visit_reason_id`, `facility_visit_reason`) VALUES
-(0, 'Not Applicable'),
 (1, 'Sick/Injured'),
 (2, 'Prenatal/Postnatal'),
 (3, 'Gave birth'),
 (4, 'Dental'),
 (5, 'Medical check-up'),
 (6, 'Medical requirement'),
-(7, 'NHTS/CCT/4PS requirement');
+(7, 'NHTS/CCT/4PS requirement'),
+(8, 'Not Applicable');
 
 -- --------------------------------------------------------
 
@@ -503,14 +486,13 @@ CREATE TABLE IF NOT EXISTS `family_planning_method` (
   `family_planning_method_id` int NOT NULL AUTO_INCREMENT,
   `family_planning_method` varchar(45) NOT NULL,
   PRIMARY KEY (`family_planning_method_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `family_planning_method`
 --
 
 INSERT INTO `family_planning_method` (`family_planning_method_id`, `family_planning_method`) VALUES
-(0, 'None'),
 (1, 'Female sterilization/Ligation'),
 (2, 'Male sterilization/vasectomy'),
 (3, 'IUD'),
@@ -520,7 +502,8 @@ INSERT INTO `family_planning_method` (`family_planning_method_id`, `family_plann
 (7, 'Condom'),
 (8, 'Modern natural FP'),
 (9, 'Lactational Amenorrhea Method (LAM)'),
-(10, 'Traditional');
+(10, 'Traditional'),
+(11, 'None');
 
 -- --------------------------------------------------------
 
@@ -549,7 +532,7 @@ CREATE TABLE IF NOT EXISTS `fuel_type` (
   `fuel_type_id` int NOT NULL AUTO_INCREMENT,
   `fuel_type` varchar(45) NOT NULL,
   PRIMARY KEY (`fuel_type_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `fuel_type`
@@ -560,10 +543,7 @@ INSERT INTO `fuel_type` (`fuel_type_id`, `fuel_type`) VALUES
 (2, 'Liquefied petroleum gas (LGP)'),
 (3, 'Kerosene (gaas)'),
 (4, 'Electricity'),
-(5, 'Others'),
-(6, 'None'),
-(7, 'Wood'),
-(8, 'Charcoal');
+(5, 'Others');
 
 -- --------------------------------------------------------
 
@@ -578,7 +558,7 @@ CREATE TABLE IF NOT EXISTS `health` (
   `facility_visited_past_12mos_id` int NOT NULL,
   `facility_visit_reason_id` int NOT NULL,
   `disability_id` int NOT NULL,
-  `pwd_id_number` varchar(45) DEFAULT NULL,
+  `pwd_id_number` int DEFAULT NULL,
   `resident_id` int NOT NULL,
   PRIMARY KEY (`health_id`),
   KEY `disability` (`disability_id`),
@@ -586,14 +566,7 @@ CREATE TABLE IF NOT EXISTS `health` (
   KEY `facility_visit_reason` (`facility_visit_reason_id`),
   KEY `health_insurance` (`health_insurance_id`),
   KEY `resident_health` (`resident_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `health`
---
-
-INSERT INTO `health` (`health_id`, `health_insurance_id`, `facility_visited_past_12mos_id`, `facility_visit_reason_id`, `disability_id`, `pwd_id_number`, `resident_id`) VALUES
-(4, 5, 6, 5, 2, '1234567890123458', 12);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -606,21 +579,21 @@ CREATE TABLE IF NOT EXISTS `health_insurance` (
   `health_insurance_id` int NOT NULL AUTO_INCREMENT,
   `health_insurance` varchar(45) NOT NULL,
   PRIMARY KEY (`health_insurance_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `health_insurance`
 --
 
 INSERT INTO `health_insurance` (`health_insurance_id`, `health_insurance`) VALUES
-(0, 'Not Applicable'),
 (1, 'PhilHealth paying member'),
 (2, 'PhilHealth dependent of paying member'),
 (3, 'PhilHealth indigent member'),
 (4, 'PhilHealth dependent of indigent member'),
 (5, 'GSIS'),
 (6, 'SSS'),
-(7, 'Private/HMO');
+(7, 'Private/HMO'),
+(8, 'None');
 
 -- --------------------------------------------------------
 
@@ -673,11 +646,12 @@ CREATE TABLE IF NOT EXISTS `household` (
   `registration_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `household_status_id` int NOT NULL DEFAULT '1',
   PRIMARY KEY (`household_id`),
+  UNIQUE KEY `uq_address` (`street_id`,`house_lot`),
   KEY `house_street` (`street_id`),
   KEY `house_clan` (`clan_id`),
   KEY `house_status` (`household_status_id`),
   KEY `house_head` (`head_resident_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `household`
@@ -685,9 +659,7 @@ CREATE TABLE IF NOT EXISTS `household` (
 
 INSERT INTO `household` (`household_id`, `clan_id`, `head_resident_id`, `street_id`, `number_of_house_story`, `number_of_basement_level`, `house_lot`, `registration_date`, `household_status_id`) VALUES
 (1, 1, 1, 1, 1, 0, 'Lot 15', '2026-08-15 18:21:34', 1),
-(2, 2, 2, 2, 1, 0, 'Lot 4', '2026-08-15 18:25:41', 1),
-(5, 6, 11, 3, 1, 0, 'Jan Sa GIlid', '2026-09-19 01:54:42', 1),
-(6, 6, 15, 1, 1, 2, NULL, '2026-09-20 00:45:37', 1);
+(2, 2, 2, 2, 1, 0, 'Lot 4', '2026-08-15 18:25:41', 1);
 
 -- --------------------------------------------------------
 
@@ -708,8 +680,6 @@ CREATE TABLE IF NOT EXISTS `household_questions` (
   `toilet_facility_type_id` int NOT NULL,
   `type_of_building_house_id` int NOT NULL,
   `construction_material_outer_wall_id` int NOT NULL,
-  `female_hhm_died_past_12mos` tinyint(1) NOT NULL,
-  `child_hhm_died_past_12mos` tinyint(1) NOT NULL,
   `household_id` int NOT NULL,
   PRIMARY KEY (`household_questions_id`),
   KEY `ownership_type_unit` (`ownership_of_housing_unit_id`),
@@ -749,6 +719,30 @@ INSERT INTO `household_status` (`household_status_id`, `household_status`) VALUE
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `immunization`
+--
+
+DROP TABLE IF EXISTS `immunization`;
+CREATE TABLE IF NOT EXISTS `immunization` (
+  `immunization_id` int NOT NULL AUTO_INCREMENT,
+  `immunization` varchar(45) NOT NULL,
+  PRIMARY KEY (`immunization_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `immunization`
+--
+
+INSERT INTO `immunization` (`immunization_id`, `immunization`) VALUES
+(1, 'None'),
+(2, 'BCG Vaccine'),
+(3, 'Hepatitis B (HepB)'),
+(4, 'Influenza (Flu)'),
+(5, 'MMR (Measles, Mumps, Rubella)');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `infant_health`
 --
 
@@ -757,20 +751,14 @@ CREATE TABLE IF NOT EXISTS `infant_health` (
   `infant_health_id` int NOT NULL AUTO_INCREMENT,
   `place_of_delivery_id` int NOT NULL,
   `birth_attendant_id` int NOT NULL,
-  `immunization` varchar(45) NOT NULL,
+  `immunization_id` int NOT NULL,
   `resident_id` int NOT NULL,
   PRIMARY KEY (`infant_health_id`),
   KEY `birth_attendant` (`birth_attendant_id`),
   KEY `place_of_delivery` (`place_of_delivery_id`),
-  KEY `resident_infant_health` (`resident_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `infant_health`
---
-
-INSERT INTO `infant_health` (`infant_health_id`, `place_of_delivery_id`, `birth_attendant_id`, `immunization`, `resident_id`) VALUES
-(3, 2, 1, 'None', 5);
+  KEY `resident_infant_health` (`resident_id`),
+  KEY `immunization` (`immunization_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -800,7 +788,7 @@ CREATE TABLE IF NOT EXISTS `kitchen_garbage_disposal` (
   `kitchen_garbage_disposal_id` int NOT NULL AUTO_INCREMENT,
   `kitchen_garbage_disposal` varchar(45) NOT NULL,
   PRIMARY KEY (`kitchen_garbage_disposal_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `kitchen_garbage_disposal`
@@ -812,8 +800,7 @@ INSERT INTO `kitchen_garbage_disposal` (`kitchen_garbage_disposal_id`, `kitchen_
 (3, 'Composting'),
 (4, 'Burning'),
 (5, 'Dumping individual pit (not burned)'),
-(6, 'Picked-up by garbage truck'),
-(7, 'Others');
+(6, 'Picked-up by garbage truck');
 
 -- --------------------------------------------------------
 
@@ -913,8 +900,7 @@ INSERT INTO `nationality` (`nationality_id`, `nationality`) VALUES
 (4, 'Chinese'),
 (1, 'Filipino'),
 (3, 'Japanese'),
-(2, 'Korean'),
-(0, 'Not Applicable');
+(2, 'Korean');
 
 -- --------------------------------------------------------
 
@@ -977,8 +963,8 @@ INSERT INTO `permission` (`permission_id`, `permission`) VALUES
 (23, 'household.create'),
 (24, 'household.update'),
 (22, 'household.view'),
-(39, 'householdassessment.updatestatus'),
 (26, 'householdquestion.create'),
+(39, 'householdquestion.update'),
 (25, 'householdquestion.view'),
 (47, 'infanthealth.create'),
 (48, 'infanthealth.update'),
@@ -1071,6 +1057,29 @@ INSERT INTO `personnel_status` (`personnel_status_id`, `personnel_status`) VALUE
 (3, 'Resigned'),
 (4, 'Retired'),
 (5, 'On Leave');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `pet_census`
+--
+
+DROP TABLE IF EXISTS `pet_census`;
+CREATE TABLE IF NOT EXISTS `pet_census` (
+  `pet_census_id` int NOT NULL AUTO_INCREMENT,
+  `household_id` int NOT NULL,
+  `specie_id` int NOT NULL,
+  `breed_id` int NOT NULL,
+  `sex_id` int NOT NULL,
+  `pet_date_of_birth` date NOT NULL,
+  `is_spay_neuter` tinyint(1) NOT NULL,
+  `rabies_vaccination_date` date DEFAULT NULL,
+  PRIMARY KEY (`pet_census_id`),
+  KEY `house_pet` (`household_id`),
+  KEY `specie` (`specie_id`),
+  KEY `breed` (`breed_id`),
+  KEY `pet_sex` (`sex_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -1244,7 +1253,6 @@ CREATE TABLE IF NOT EXISTS `religion` (
 INSERT INTO `religion` (`religion_id`, `religion`) VALUES
 (3, 'Born Again'),
 (2, 'Iglesia ni Cristo'),
-(0, 'Not Applicable'),
 (1, 'Roman Catholic');
 
 -- --------------------------------------------------------
@@ -1283,7 +1291,7 @@ CREATE TABLE IF NOT EXISTS `resident` (
   KEY `ethnicity` (`ethnicity_id`),
   KEY `religion` (`religion_id`),
   KEY `household_resident` (`household_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `resident`
@@ -1295,11 +1303,7 @@ INSERT INTO `resident` (`resident_id`, `last_name`, `first_name`, `middle_name`,
 (3, 'Dela Cruz', 'Jay', NULL, NULL, 3, 1, '2011-08-04', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 1, 2, 1, 2),
 (5, 'Dela Cruz', 'May', NULL, NULL, 4, 2, '2026-01-01', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 1, 2, 1, 2),
 (6, 'Dela Cruz', 'Pia', NULL, NULL, 4, 2, '2016-04-13', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 1, 2, 1, 2),
-(7, 'Dela Cruz', 'Jim', NULL, NULL, 11, 1, '2016-04-13', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 4, 2, 1, 2),
-(11, 'Pogi', 'Victor', 'Hehe', NULL, 1, 1, '2004-10-28', 'Omsim', 'Abra', 'Philippines', 1, 1, 2, 2, 6, 1, 5),
-(12, 'Pogi', 'Anak Ni', 'Vic', NULL, 11, 1, '2018-10-28', 'Omsim', 'Abra', 'Philippines', 0, 0, 0, 1, 6, 1, 5),
-(14, 'Gummy', 'Bear', NULL, NULL, 19, 1, '1970-06-05', 'Baler', 'Aurora', 'Philippines', 0, 0, 0, 2, 6, 1, 5),
-(15, 'Gomez', 'Flor', NULL, NULL, 1, 2, '1950-09-16', 'Baguio', 'Basco', 'Philippines', 0, 0, 0, 2, 6, 1, 6);
+(7, 'Dela Cruz', 'Jim', NULL, NULL, 11, 1, '2016-04-13', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 4, 2, 1, 2);
 
 --
 -- Triggers `resident`
@@ -1407,7 +1411,7 @@ CREATE TABLE IF NOT EXISTS `role_permission` (
   PRIMARY KEY (`role_permission_id`),
   UNIQUE KEY `uq_permission_assignment` (`role_id`,`permission_id`),
   KEY `permission_role` (`permission_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=158 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=157 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `role_permission`
@@ -1574,7 +1578,7 @@ CREATE TABLE IF NOT EXISTS `school_lvl` (
   `school_lvl_id` int NOT NULL AUTO_INCREMENT,
   `school_lvl` varchar(45) NOT NULL,
   PRIMARY KEY (`school_lvl_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `school_lvl`
@@ -1586,7 +1590,8 @@ INSERT INTO `school_lvl` (`school_lvl_id`, `school_lvl`) VALUES
 (3, 'Junior High School'),
 (4, 'Senior High School'),
 (5, 'Vocational/Technical'),
-(6, 'College/University');
+(6, 'College/University'),
+(7, 'Not Applicable');
 
 -- --------------------------------------------------------
 
@@ -1674,7 +1679,7 @@ DROP TABLE IF EXISTS `sociocivic`;
 CREATE TABLE IF NOT EXISTS `sociocivic` (
   `sociocivic_id` int NOT NULL AUTO_INCREMENT,
   `solo_parent_status_id` int NOT NULL,
-  `ncsc_rrn_id_number` varchar(45) DEFAULT NULL,
+  `ncsc_rrn_id_number` int DEFAULT NULL,
   `osca_id_number` varchar(45) DEFAULT NULL,
   `solo_parent_id_number` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `registered_barangay_voter` varchar(45) DEFAULT NULL,
@@ -1682,7 +1687,7 @@ CREATE TABLE IF NOT EXISTS `sociocivic` (
   PRIMARY KEY (`sociocivic_id`),
   KEY `resident_sociocivic` (`resident_id`),
   KEY `solo_parent_status` (`solo_parent_status_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -1717,19 +1722,19 @@ CREATE TABLE IF NOT EXISTS `source_of_fp_method` (
   `source_of_fp_method_id` int NOT NULL AUTO_INCREMENT,
   `source_of_fp_method` varchar(45) NOT NULL,
   PRIMARY KEY (`source_of_fp_method_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `source_of_fp_method`
 --
 
 INSERT INTO `source_of_fp_method` (`source_of_fp_method_id`, `source_of_fp_method`) VALUES
-(0, 'Not Applicable'),
 (1, 'Government hospital'),
 (2, 'RHU/Health center'),
 (3, 'Brgy. Health Station'),
 (4, 'Private hospital'),
-(5, 'Pharmacy');
+(5, 'Pharmacy'),
+(6, 'Not Applicable');
 
 -- --------------------------------------------------------
 
@@ -1758,6 +1763,19 @@ INSERT INTO `source_of_income` (`source_of_income_id`, `source_of_income`) VALUE
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `specie`
+--
+
+DROP TABLE IF EXISTS `specie`;
+CREATE TABLE IF NOT EXISTS `specie` (
+  `specie_id` int NOT NULL AUTO_INCREMENT,
+  `specie` varchar(45) NOT NULL,
+  PRIMARY KEY (`specie_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `status_of_work_business`
 --
 
@@ -1766,20 +1784,20 @@ CREATE TABLE IF NOT EXISTS `status_of_work_business` (
   `status_of_work_business_id` int NOT NULL AUTO_INCREMENT,
   `status_of_work_business` varchar(45) NOT NULL,
   PRIMARY KEY (`status_of_work_business_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `status_of_work_business`
 --
 
 INSERT INTO `status_of_work_business` (`status_of_work_business_id`, `status_of_work_business`) VALUES
-(0, 'Not Applicable'),
 (1, 'Permanent Work'),
 (2, 'Casual Work'),
 (3, 'Contractual Work'),
 (4, 'Individually Owned Business'),
 (5, 'Shared/Partnership Business'),
-(6, 'Corporate Business');
+(6, 'Corporate Business'),
+(7, 'Not Applicable');
 
 -- --------------------------------------------------------
 
@@ -1851,7 +1869,7 @@ CREATE TABLE IF NOT EXISTS `toilet_facility_type` (
   `toilet_facility_type_id` int NOT NULL AUTO_INCREMENT,
   `toilet_facility_type` varchar(45) NOT NULL,
   PRIMARY KEY (`toilet_facility_type_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `toilet_facility_type`
@@ -1864,8 +1882,7 @@ INSERT INTO `toilet_facility_type` (`toilet_facility_type_id`, `toilet_facility_
 (4, 'Water sealed, other depository, exclusive'),
 (5, 'Water sealed, sewer septic tank, shared'),
 (6, 'Water sealed, sewer septic tank, exclusive'),
-(7, 'Others'),
-(8, 'None');
+(7, 'Others');
 
 -- --------------------------------------------------------
 
@@ -1915,24 +1932,19 @@ CREATE TABLE IF NOT EXISTS `user_log` (
   PRIMARY KEY (`user_log_id`),
   KEY `user_log` (`user_id`),
   KEY `login_status` (`login_status_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `user_log`
 --
 
 INSERT INTO `user_log` (`user_log_id`, `user_id`, `login_time`, `logout_time`, `login_status_id`, `ip_address`, `device`) VALUES
-(1, 1, '2026-08-31 19:24:57', '2026-09-19 00:59:55', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(1, 1, '2026-08-31 19:24:57', '2026-08-31 19:24:57', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (2, 1, '2026-08-31 19:25:07', '2026-08-31 19:29:50', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (3, 3, '2026-08-31 19:29:59', '2026-08-31 19:30:16', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (4, 3, '2026-08-31 19:30:26', '2026-08-31 19:30:38', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (5, 2, '2026-08-31 19:30:44', '2026-08-31 19:30:44', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(6, 2, '2026-08-31 19:30:47', '2026-09-19 01:40:41', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(7, 1, '2026-09-19 00:59:55', '2026-09-19 01:39:33', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(8, 2, '2026-09-19 01:39:41', '2026-09-19 01:39:41', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(9, 2, '2026-09-19 01:39:55', '2026-09-19 01:39:55', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(10, 2, '2026-09-19 01:40:03', '2026-09-19 01:40:03', 2, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(11, 2, '2026-09-19 01:40:41', '2026-09-19 01:40:41', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
+(6, 2, '2026-08-31 19:30:47', '2026-08-31 19:30:47', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
 
 -- --------------------------------------------------------
 
@@ -2141,6 +2153,7 @@ ALTER TABLE `household_questions`
 --
 ALTER TABLE `infant_health`
   ADD CONSTRAINT `birth_attendant` FOREIGN KEY (`birth_attendant_id`) REFERENCES `birth_attendant` (`birth_attendant_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `immunization` FOREIGN KEY (`immunization_id`) REFERENCES `immunization` (`immunization_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `place_of_delivery` FOREIGN KEY (`place_of_delivery_id`) REFERENCES `place_of_delivery` (`place_of_delivery_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `resident_infant_health` FOREIGN KEY (`resident_id`) REFERENCES `resident` (`resident_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
@@ -2157,6 +2170,15 @@ ALTER TABLE `migration`
   ADD CONSTRAINT `reason_for_leaving` FOREIGN KEY (`reason_for_leaving_id`) REFERENCES `reason_for_leaving` (`reason_for_leaving_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `reason_for_transfer` FOREIGN KEY (`reason_for_transfer_id`) REFERENCES `reason_for_transfer` (`reason_for_transfer_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `resident_type` FOREIGN KEY (`resident_type_id`) REFERENCES `resident_type` (`resident_type_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `pet_census`
+--
+ALTER TABLE `pet_census`
+  ADD CONSTRAINT `breed` FOREIGN KEY (`breed_id`) REFERENCES `breed` (`breed_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `house_pet` FOREIGN KEY (`household_id`) REFERENCES `household` (`household_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `pet_sex` FOREIGN KEY (`sex_id`) REFERENCES `sex` (`sex_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `specie` FOREIGN KEY (`specie_id`) REFERENCES `specie` (`specie_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 --
 -- Constraints for table `primary_need`
