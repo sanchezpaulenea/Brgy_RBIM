@@ -133,6 +133,7 @@ class ResidentServices
             $formerHeadRelationshipId,
         ) {
             $requiresHeadReplacement = $this->requiresHouseholdHeadReplacement($resident, $data);
+            $householdToDeactivate = $this->householdToDeactivate($resident, $data);
 
             if ($requiresHeadReplacement) {
                 if ($newHeadResidentId === null || $formerHeadRelationshipId === null) {
@@ -155,6 +156,12 @@ class ResidentServices
                     (int) $newHeadResidentId,
                     (int) $formerHeadRelationshipId,
                 );
+            }
+
+            if ($householdToDeactivate !== null) {
+                $this->householdService->updateHousehold($performedBy, $householdToDeactivate, [
+                    'household_status_id' => HouseholdStatus::INACTIVE,
+                ]);
             }
 
             $this->logResidentFieldChanges($performedBy, $updated, $previous);
@@ -318,6 +325,37 @@ class ResidentServices
         }
 
         return $this->residentRepository->countByHousehold((int) $resident->household_id) === 1;
+    }
+
+    /**
+     * household.head_resident_id cannot be cleared, so a household whose only
+     * resident has just been recorded as deceased is marked inactive instead.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function householdToDeactivate(Resident $resident, array $data): ?Household
+    {
+        if (! array_key_exists('resident_status_id', $data)) {
+            return null;
+        }
+
+        if ((int) $resident->resident_status_id === ResidentStatus::DECEASED) {
+            return null;
+        }
+
+        if (! $this->isSoloResidentRecordedAsDeceased($resident, (int) $data['resident_status_id'])) {
+            return null;
+        }
+
+        $resident->loadMissing('household');
+
+        $household = $resident->household;
+
+        if ($household === null || (int) $household->household_status_id !== HouseholdStatus::ACTIVE) {
+            return null;
+        }
+
+        return $household;
     }
 
     private function requireHousehold(int $householdId): Household

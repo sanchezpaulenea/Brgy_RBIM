@@ -1426,7 +1426,7 @@ async function handleSave() {
             const residentName = resident.value.full_name || 'This resident';
             const allowed = await askConfirm({
                 title: 'Record resident as deceased',
-                message: `${residentName} is the only member of this household. Saving will record them as deceased and leave the household without an active head. Continue?`,
+                message: `${residentName} is the only member of this household. Saving will record them as deceased and set the household to Inactive. Continue?`,
                 confirmLabel: 'Save',
                 variant: 'danger',
             });
