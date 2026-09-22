@@ -634,6 +634,7 @@ import {
     applyValidationErrors,
     eligibleHouseholdHeadCandidates,
     residentStatusRequiresHeadReplacement,
+    toOptionalLookupId,
 } from '@/utils/residentForm';
 import { classifyMigrationForm, formatMonthYear } from '@/utils/migration';
 import { ageFromDateOfBirth } from '@/utils/format';
@@ -1332,8 +1333,14 @@ function onHeadAssignmentCancelled() {
 
 function toPayload(form) {
     const payload = {};
+    const optionalLookupFields = ['nationality_id', 'religion_id', 'ethnicity_id'];
 
     Object.entries(form).forEach(([key, value]) => {
+        if (optionalLookupFields.includes(key)) {
+            payload[key] = toOptionalLookupId(value);
+            return;
+        }
+
         if (value === '') {
             payload[key] = null;
             return;

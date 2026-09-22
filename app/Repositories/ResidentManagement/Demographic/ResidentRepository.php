@@ -5,6 +5,7 @@ namespace App\Repositories\ResidentManagement\Demographic;
 use App\Models\ResidentManagement\Demographic\Resident;
 use App\Repositories\Interfaces\ResidentManagement\Demographic\ResidentRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class ResidentRepository implements ResidentRepositoryInterface
 {
@@ -143,9 +144,11 @@ class ResidentRepository implements ResidentRepositoryInterface
      */
     public function create(array $attributes): Resident
     {
-        $resident = Resident::create($attributes);
+        return $this->writeAllowingUnspecifiedLookups($attributes, function () use ($attributes) {
+            $resident = Resident::create($attributes);
 
-        return $resident->load($this->defaultRelations());
+            return $resident->load($this->defaultRelations());
+        });
     }
 
     /**
@@ -153,10 +156,72 @@ class ResidentRepository implements ResidentRepositoryInterface
      */
     public function update(Resident $resident, array $attributes): Resident
     {
-        $resident->fill($attributes);
-        $resident->save();
+        return $this->writeAllowingUnspecifiedLookups($attributes, function () use ($resident, $attributes) {
+            $resident->fill($attributes);
+            $resident->save();
 
-        return $resident->fresh($this->defaultRelations()) ?? $resident;
+            return $resident->fresh($this->defaultRelations()) ?? $resident;
+        });
+    }
+
+    /**
+     * Nationality, religion, and ethnicity may be stored as 0 when the encoder
+     * leaves them blank. Those lookup tables have no id 0, so MySQL rejects the
+     * write unless foreign-key checks are off for this statement only.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @param  callable(): Resident  $write
+     */
+    private function writeAllowingUnspecifiedLookups(array $attributes, callable $write): Resident
+    {
+        if (! $this->hasUnspecifiedOptionalLookup($attributes)) {
+            return $write();
+        }
+
+        $this->disableForeignKeyChecks();
+
+        try {
+            return $write();
+        } finally {
+            $this->enableForeignKeyChecks();
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function hasUnspecifiedOptionalLookup(array $attributes): bool
+    {
+        foreach (Resident::OPTIONAL_LOOKUP_FIELDS as $field) {
+            if (array_key_exists($field, $attributes) && (int) $attributes[$field] === Resident::LOOKUP_UNSPECIFIED) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function disableForeignKeyChecks(): void
+    {
+        if (! $this->usesMysql()) {
+            return;
+        }
+
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+    }
+
+    private function enableForeignKeyChecks(): void
+    {
+        if (! $this->usesMysql()) {
+            return;
+        }
+
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+    }
+
+    private function usesMysql(): bool
+    {
+        return in_array(DB::getDriverName(), ['mysql', 'mariadb'], true);
     }
 
     /**

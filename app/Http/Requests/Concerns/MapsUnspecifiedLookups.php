@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Concerns;
 
+use Illuminate\Validation\Rule;
+
 trait MapsUnspecifiedLookups
 {
     /**
@@ -34,5 +36,22 @@ trait MapsUnspecifiedLookups
         if ($merge !== []) {
             $this->merge($merge);
         }
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    protected function unspecifiedLookupRule(string $table, string $column, ?string $inputKey = null): array
+    {
+        $key = $inputKey ?? $column;
+
+        return [
+            'nullable',
+            'integer',
+            Rule::when(
+                fn () => (int) $this->input($key) > 0,
+                [Rule::exists($table, $column)],
+            ),
+        ];
     }
 }

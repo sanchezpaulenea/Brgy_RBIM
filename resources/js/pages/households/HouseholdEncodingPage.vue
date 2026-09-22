@@ -90,7 +90,7 @@ import {
     applyLookupCreated,
     ensureResidentDemographicLookups,
 } from '@/utils/demographicLookups';
-import { HOUSEHOLD_HEAD_MIN_AGE, optionalAddressText, toId } from '@/utils/residentForm';
+import { HOUSEHOLD_HEAD_MIN_AGE, optionalAddressText, toId, toOptionalLookupId } from '@/utils/residentForm';
 import { personnelNameValidationError } from '@/utils/validation';
 
 const HEAD_RELATIONSHIP_ID = 1;
@@ -495,9 +495,9 @@ function residentPayload(member) {
         birth_city_municipality: member.birth_city_municipality.trim(),
         birth_province: member.birth_province.trim(),
         birth_country: member.birth_country.trim(),
-        nationality_id: toId(member.nationality_id),
-        religion_id: toId(member.religion_id),
-        ethnicity_id: toId(member.ethnicity_id),
+        nationality_id: toOptionalLookupId(member.nationality_id),
+        religion_id: toOptionalLookupId(member.religion_id),
+        ethnicity_id: toOptionalLookupId(member.ethnicity_id),
         marital_status_id: toId(member.marital_status_id),
         clan_id: toId(identification.clan_id),
     };

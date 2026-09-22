@@ -56,9 +56,9 @@ class StoreResidentRequest extends FormRequest
             'birth_city_municipality' => ['required', 'string', 'max:45', new ValidPlaceName('City / municipality of birth')],
             'birth_province' => ['required', 'string', 'max:45', new ValidPlaceName('Province of birth')],
             'birth_country' => ['required', 'string', 'max:45', new ValidPlaceName('Country of birth')],
-            'nationality_id' => ['nullable', 'integer', Rule::exists('nationality', 'nationality_id')],
-            'religion_id' => ['nullable', 'integer', Rule::exists('religion', 'religion_id')],
-            'ethnicity_id' => ['nullable', 'integer', Rule::exists('ethnicity', 'ethnicity_id')],
+            'nationality_id' => $this->unspecifiedLookupRule('nationality', 'nationality_id'),
+            'religion_id' => $this->unspecifiedLookupRule('religion', 'religion_id'),
+            'ethnicity_id' => $this->unspecifiedLookupRule('ethnicity', 'ethnicity_id'),
             'marital_status_id' => ['required', 'integer', Rule::exists('marital_status', 'marital_status_id')],
             'clan_id' => ['sometimes', 'integer', Rule::exists('clan', 'clan_id')],
             'resident_status_id' => [

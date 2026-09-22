@@ -72,9 +72,9 @@ class UpdateResidentRequest extends FormRequest
             ],
             'birth_province' => ['sometimes', 'required', 'string', 'max:45', new ValidPlaceName('Province of birth')],
             'birth_country' => ['sometimes', 'required', 'string', 'max:45', new ValidPlaceName('Country of birth')],
-            'nationality_id' => ['sometimes', 'nullable', 'integer', Rule::exists('nationality', 'nationality_id')],
-            'religion_id' => ['sometimes', 'nullable', 'integer', Rule::exists('religion', 'religion_id')],
-            'ethnicity_id' => ['sometimes', 'nullable', 'integer', Rule::exists('ethnicity', 'ethnicity_id')],
+            'nationality_id' => array_merge(['sometimes'], $this->unspecifiedLookupRule('nationality', 'nationality_id')),
+            'religion_id' => array_merge(['sometimes'], $this->unspecifiedLookupRule('religion', 'religion_id')),
+            'ethnicity_id' => array_merge(['sometimes'], $this->unspecifiedLookupRule('ethnicity', 'ethnicity_id')),
             'marital_status_id' => ['sometimes', 'required', 'integer', Rule::exists('marital_status', 'marital_status_id')],
             'clan_id' => ['sometimes', 'required', 'integer', Rule::exists('clan', 'clan_id')],
             'resident_status_id' => [

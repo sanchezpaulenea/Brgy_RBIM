@@ -225,23 +225,9 @@ export function validateResidentForm(form, errors, { requireRelationship = true,
         delete errors.birth_country;
     }
 
-    if (!toId(form.nationality_id) && !String(form.nationality_name ?? '').trim()) {
-        errors.nationality_id = 'Nationality is required.';
-    } else {
-        delete errors.nationality_id;
-    }
-
-    if (!toId(form.religion_id) && !String(form.religion_name ?? '').trim()) {
-        errors.religion_id = 'Religion is required.';
-    } else {
-        delete errors.religion_id;
-    }
-
-    if (!toId(form.ethnicity_id) && !String(form.ethnicity_name ?? '').trim()) {
-        errors.ethnicity_id = 'Ethnicity is required.';
-    } else {
-        delete errors.ethnicity_id;
-    }
+    delete errors.nationality_id;
+    delete errors.religion_id;
+    delete errors.ethnicity_id;
 
     if (!toId(form.marital_status_id)) {
         errors.marital_status_id = 'Marital status is required.';
@@ -264,9 +250,9 @@ export function residentPayload(form) {
         birth_city_municipality: String(form.birth_city_municipality ?? '').trim(),
         birth_province: String(form.birth_province ?? '').trim(),
         birth_country: String(form.birth_country ?? '').trim(),
-        nationality_id: toId(form.nationality_id),
-        religion_id: toId(form.religion_id),
-        ethnicity_id: toId(form.ethnicity_id),
+        nationality_id: toOptionalLookupId(form.nationality_id),
+        religion_id: toOptionalLookupId(form.religion_id),
+        ethnicity_id: toOptionalLookupId(form.ethnicity_id),
         marital_status_id: toId(form.marital_status_id),
     };
 }

@@ -85,6 +85,12 @@ class ResidentServices
         $data['clan_id'] = $data['clan_id'] ?? $household->clan_id;
         $data['resident_status_id'] = $data['resident_status_id'] ?? ResidentStatus::ACTIVE;
 
+        foreach (Resident::OPTIONAL_LOOKUP_FIELDS as $field) {
+            if (! array_key_exists($field, $data) || $data[$field] === null || $data[$field] === '') {
+                $data[$field] = Resident::LOOKUP_UNSPECIFIED;
+            }
+        }
+
         return DB::transaction(function () use ($performedBy, $data, $household) {
             $this->assertNotAlreadyRegistered($household, $data);
 

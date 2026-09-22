@@ -93,7 +93,8 @@ export async function ensureResidentDemographicLookups(form, {
                 await lookupService.createNationality({ nationality: name }),
             ),
             requiredMessage: 'Nationality is required.',
-            unknownMessage: 'Choose a nationality from the list, or type a new name.',
+            unknownMessage: 'Choose a nationality from the list, type a new name, or leave this blank.',
+            optional: true,
         });
     } catch (error) {
         errors.nationality_id = error.response
@@ -112,7 +113,8 @@ export async function ensureResidentDemographicLookups(form, {
                 await lookupService.createReligion({ religion: name }),
             ),
             requiredMessage: 'Religion is required.',
-            unknownMessage: 'Choose a religion from the list, or type a new name.',
+            unknownMessage: 'Choose a religion from the list, type a new name, or leave this blank.',
+            optional: true,
         });
     } catch (error) {
         errors.religion_id = error.response
@@ -131,7 +133,8 @@ export async function ensureResidentDemographicLookups(form, {
                 await lookupService.createEthnicity({ ethnicity: name }),
             ),
             requiredMessage: 'Ethnicity is required.',
-            unknownMessage: 'Choose an ethnicity from the list, or type a new name.',
+            unknownMessage: 'Choose an ethnicity from the list, type a new name, or leave this blank.',
+            optional: true,
         });
     } catch (error) {
         errors.ethnicity_id = error.response
