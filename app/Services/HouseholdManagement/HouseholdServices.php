@@ -297,6 +297,8 @@ class HouseholdServices
             'questions.commonDiseases',
             'questions.primaryNeeds',
             'questions.intendToStay',
+            'questions.femaleDeaths',
+            'questions.childDeaths.sex',
         ]);
 
         $payload = [

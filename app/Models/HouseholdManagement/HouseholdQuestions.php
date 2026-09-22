@@ -5,6 +5,7 @@ namespace App\Models\HouseholdManagement;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class HouseholdQuestions extends Model
@@ -26,8 +27,6 @@ class HouseholdQuestions extends Model
         'toilet_facility_type_id',
         'type_of_building_house_id',
         'construction_material_outer_wall_id',
-        'female_hhm_died_past_12mos',
-        'child_hhm_died_past_12mos',
         'household_id',
     ];
 
@@ -36,8 +35,6 @@ class HouseholdQuestions extends Model
      */
     protected $casts = [
         'perform_garbage_seggragation' => 'boolean',
-        'female_hhm_died_past_12mos' => 'boolean',
-        'child_hhm_died_past_12mos' => 'boolean',
     ];
 
     public function getRouteKeyName(): string
@@ -157,5 +154,21 @@ class HouseholdQuestions extends Model
     public function intendToStay(): HasOne
     {
         return $this->hasOne(IntendToStay5yrsFromNow::class, 'household_question_id', 'household_questions_id');
+    }
+
+    /**
+     * @return HasMany<FemaleHhmDied, $this>
+     */
+    public function femaleDeaths(): HasMany
+    {
+        return $this->hasMany(FemaleHhmDied::class, 'household_question_id', 'household_questions_id');
+    }
+
+    /**
+     * @return HasMany<ChildHhmDied, $this>
+     */
+    public function childDeaths(): HasMany
+    {
+        return $this->hasMany(ChildHhmDied::class, 'household_question_id', 'household_questions_id');
     }
 }

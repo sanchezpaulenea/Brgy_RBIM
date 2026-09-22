@@ -25,6 +25,8 @@ class HouseholdQuestionsRepository implements HouseholdQuestionsRepositoryInterf
             'commonDiseases',
             'primaryNeeds',
             'intendToStay',
+            'femaleDeaths',
+            'childDeaths.sex',
         ];
     }
 

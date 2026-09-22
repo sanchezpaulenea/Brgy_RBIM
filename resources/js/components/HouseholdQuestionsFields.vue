@@ -2,7 +2,7 @@
     <div class="space-y-4">
         <div>
             <label :for="`${idPrefix}-ownership_of_housing_unit_id`" class="rbim-label">
-                Q45. Do you own or amortize this housing unit occupied by your household or do you rent it, do you occupy it rent-free with consent of owner or rent-free without consent of owner?<span class="rbim-required" aria-hidden="true">*</span>
+                Q1. Do you own or amortize this housing unit occupied by your household or do you rent it, do you occupy it rent-free with consent of owner or rent-free without consent of owner?<span class="rbim-required" aria-hidden="true">*</span>
             </label>
             <select
                 :id="`${idPrefix}-ownership_of_housing_unit_id`"
@@ -18,7 +18,7 @@
 
         <div>
             <label :for="`${idPrefix}-ownership_of_lot_id`" class="rbim-label">
-                Q46. Do you own or amortize this lot occupied by your household or do you rent it, do you occupy it rent-free with consent of owner or rent-free without consent of owner?<span class="rbim-required" aria-hidden="true">*</span>
+                Q2. Do you own or amortize this lot occupied by your household or do you rent it, do you occupy it rent-free with consent of owner or rent-free without consent of owner?<span class="rbim-required" aria-hidden="true">*</span>
             </label>
             <select
                 :id="`${idPrefix}-ownership_of_lot_id`"
@@ -34,7 +34,7 @@
 
         <div>
             <label :for="`${idPrefix}-fuel_type_for_lighting_id`" class="rbim-label">
-                Q47. What type of fuel does this household use for lighting?<span class="rbim-required" aria-hidden="true">*</span>
+                Q3. What type of fuel does this household use for lighting?<span class="rbim-required" aria-hidden="true">*</span>
             </label>
             <select
                 :id="`${idPrefix}-fuel_type_for_lighting_id`"
@@ -50,7 +50,7 @@
 
         <div>
             <label :for="`${idPrefix}-fuel_type_for_cooking_id`" class="rbim-label">
-                Q48. What kind of fuel does this household use most of the time for cooking?<span class="rbim-required" aria-hidden="true">*</span>
+                Q4. What kind of fuel does this household use most of the time for cooking?<span class="rbim-required" aria-hidden="true">*</span>
             </label>
             <select
                 :id="`${idPrefix}-fuel_type_for_cooking_id`"
@@ -66,7 +66,7 @@
 
         <div>
             <label :for="`${idPrefix}-main_source_drinking_water_id`" class="rbim-label">
-                Q49. What is the household's main source of drinking water?<span class="rbim-required" aria-hidden="true">*</span>
+                Q5. What is the household's main source of drinking water?<span class="rbim-required" aria-hidden="true">*</span>
             </label>
             <select
                 :id="`${idPrefix}-main_source_drinking_water_id`"
@@ -82,7 +82,7 @@
 
         <div>
             <label :for="`${idPrefix}-kitchen_garbage_disposal_id`" class="rbim-label">
-                Q50a. How does your household usually dispose of your kitchen garbage such as leftover food, peeling of fruits and vegetables, fish and chicken entrails, and others?<span class="rbim-required" aria-hidden="true">*</span>
+                Q6a. How does your household usually dispose of your kitchen garbage such as leftover food, peeling of fruits and vegetables, fish and chicken entrails, and others?<span class="rbim-required" aria-hidden="true">*</span>
             </label>
             <select
                 :id="`${idPrefix}-kitchen_garbage_disposal_id`"
@@ -98,7 +98,7 @@
 
         <div>
             <label :for="`${idPrefix}-perform_garbage_seggragation`" class="rbim-label">
-                Q50b. Do you segregate your garbage?<span class="rbim-required" aria-hidden="true">*</span>
+                Q6b. Do you segregate your garbage?<span class="rbim-required" aria-hidden="true">*</span>
             </label>
             <select
                 :id="`${idPrefix}-perform_garbage_seggragation`"
@@ -116,7 +116,7 @@
 
         <div>
             <label :for="`${idPrefix}-toilet_facility_type_id`" class="rbim-label">
-                Q51. What type of toilet facility does this household use?<span class="rbim-required" aria-hidden="true">*</span>
+                Q7. What type of toilet facility does this household use?<span class="rbim-required" aria-hidden="true">*</span>
             </label>
             <select
                 :id="`${idPrefix}-toilet_facility_type_id`"
@@ -132,7 +132,7 @@
 
         <div>
             <label :for="`${idPrefix}-type_of_building_house_id`" class="rbim-label">
-                Q52. Type of building/house<span class="rbim-required" aria-hidden="true">*</span>
+                Q8. Type of building/house<span class="rbim-required" aria-hidden="true">*</span>
             </label>
             <select
                 :id="`${idPrefix}-type_of_building_house_id`"
@@ -149,7 +149,7 @@
 
         <div>
             <label :for="`${idPrefix}-construction_material_outer_wall_id`" class="rbim-label">
-                Q53. Construction materials of the outer wall<span class="rbim-required" aria-hidden="true">*</span>
+                Q9. Construction materials of the outer wall<span class="rbim-required" aria-hidden="true">*</span>
             </label>
             <select
                 :id="`${idPrefix}-construction_material_outer_wall_id`"
@@ -166,42 +166,139 @@
 
         <div>
             <label :for="`${idPrefix}-female_hhm_died_past_12mos`" class="rbim-label">
-                Q54. Do you have any female HH member who died in the past 12 months?<span class="rbim-required" aria-hidden="true">*</span>
+                Q10. Do you have any female HH member who died in the past 12 months?<span class="rbim-required" aria-hidden="true">*</span>
             </label>
             <select
                 :id="`${idPrefix}-female_hhm_died_past_12mos`"
                 :value="booleanSelectValue(form.female_hhm_died_past_12mos)"
                 class="rbim-input"
                 :class="{ 'rbim-input-error': errors.female_hhm_died_past_12mos }"
-                @change="form.female_hhm_died_past_12mos = parseBooleanSelect($event.target.value)"
+                @change="onFemaleDiedChange($event.target.value)"
             >
                 <option value="">Select</option>
                 <option value="true">Yes</option>
                 <option value="false">No</option>
             </select>
             <p v-if="errors.female_hhm_died_past_12mos" class="rbim-error">{{ errors.female_hhm_died_past_12mos }}</p>
+            <p v-if="errors.female_deaths" class="rbim-error">{{ errors.female_deaths }}</p>
+            <div v-if="isYes(form.female_hhm_died_past_12mos)" class="mt-3 space-y-3">
+                <div
+                    v-for="(death, index) in form.female_deaths"
+                    :key="`female-death-${index}`"
+                    class="grid gap-3 sm:grid-cols-2"
+                >
+                    <div>
+                        <label :for="`${idPrefix}-female_deaths_${index}_age`" class="rbim-label">Age</label>
+                        <input
+                            :id="`${idPrefix}-female_deaths_${index}_age`"
+                            v-model="death.age"
+                            type="number"
+                            min="0"
+                            max="120"
+                            class="rbim-input"
+                            :class="{ 'rbim-input-error': errors[`female_deaths.${index}.age`] }"
+                        >
+                        <p v-if="errors[`female_deaths.${index}.age`]" class="rbim-error">{{ errors[`female_deaths.${index}.age`] }}</p>
+                    </div>
+                    <div>
+                        <label :for="`${idPrefix}-female_deaths_${index}_cause`" class="rbim-label">Cause of death</label>
+                        <input
+                            :id="`${idPrefix}-female_deaths_${index}_cause`"
+                            v-model="death.cause_of_death"
+                            type="text"
+                            maxlength="45"
+                            class="rbim-input"
+                            :class="{ 'rbim-input-error': errors[`female_deaths.${index}.cause_of_death`] }"
+                        >
+                        <p v-if="errors[`female_deaths.${index}.cause_of_death`]" class="rbim-error">{{ errors[`female_deaths.${index}.cause_of_death`] }}</p>
+                    </div>
+                    <div v-if="form.female_deaths.length > 1" class="sm:col-span-2">
+                        <button type="button" class="text-sm text-slate-600 underline" @click="removeFemaleDeath(index)">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+                <button type="button" class="text-sm font-medium text-brand" @click="addFemaleDeath">
+                    Add another female household member
+                </button>
+            </div>
         </div>
 
         <div>
             <label :for="`${idPrefix}-child_hhm_died_past_12mos`" class="rbim-label">
-                Q55. Do you have a child HH member below 5 years old who died in the past 12 months?<span class="rbim-required" aria-hidden="true">*</span>
+                Q11. Do you have a child HH member below 5 years old who died in the past 12 months?<span class="rbim-required" aria-hidden="true">*</span>
             </label>
             <select
                 :id="`${idPrefix}-child_hhm_died_past_12mos`"
                 :value="booleanSelectValue(form.child_hhm_died_past_12mos)"
                 class="rbim-input"
                 :class="{ 'rbim-input-error': errors.child_hhm_died_past_12mos }"
-                @change="form.child_hhm_died_past_12mos = parseBooleanSelect($event.target.value)"
+                @change="onChildDiedChange($event.target.value)"
             >
                 <option value="">Select</option>
                 <option value="true">Yes</option>
                 <option value="false">No</option>
             </select>
             <p v-if="errors.child_hhm_died_past_12mos" class="rbim-error">{{ errors.child_hhm_died_past_12mos }}</p>
+            <p v-if="errors.child_deaths" class="rbim-error">{{ errors.child_deaths }}</p>
+            <div v-if="isYes(form.child_hhm_died_past_12mos)" class="mt-3 space-y-3">
+                <div
+                    v-for="(death, index) in form.child_deaths"
+                    :key="`child-death-${index}`"
+                    class="grid gap-3 sm:grid-cols-3"
+                >
+                    <div>
+                        <label :for="`${idPrefix}-child_deaths_${index}_age`" class="rbim-label">Age</label>
+                        <input
+                            :id="`${idPrefix}-child_deaths_${index}_age`"
+                            v-model="death.age"
+                            type="number"
+                            min="0"
+                            max="4"
+                            class="rbim-input"
+                            :class="{ 'rbim-input-error': errors[`child_deaths.${index}.age`] }"
+                        >
+                        <p v-if="errors[`child_deaths.${index}.age`]" class="rbim-error">{{ errors[`child_deaths.${index}.age`] }}</p>
+                    </div>
+                    <div>
+                        <label :for="`${idPrefix}-child_deaths_${index}_sex`" class="rbim-label">Sex</label>
+                        <select
+                            :id="`${idPrefix}-child_deaths_${index}_sex`"
+                            v-model="death.sex_id"
+                            class="rbim-input"
+                            :class="{ 'rbim-input-error': errors[`child_deaths.${index}.sex_id`] }"
+                        >
+                            <option value="">Select sex</option>
+                            <option v-for="option in (lookups.sex ?? [])" :key="option.id" :value="option.id">{{ option.label }}</option>
+                        </select>
+                        <p v-if="errors[`child_deaths.${index}.sex_id`]" class="rbim-error">{{ errors[`child_deaths.${index}.sex_id`] }}</p>
+                    </div>
+                    <div>
+                        <label :for="`${idPrefix}-child_deaths_${index}_cause`" class="rbim-label">Cause of death</label>
+                        <input
+                            :id="`${idPrefix}-child_deaths_${index}_cause`"
+                            v-model="death.cause_of_death"
+                            type="text"
+                            maxlength="45"
+                            class="rbim-input"
+                            :class="{ 'rbim-input-error': errors[`child_deaths.${index}.cause_of_death`] }"
+                        >
+                        <p v-if="errors[`child_deaths.${index}.cause_of_death`]" class="rbim-error">{{ errors[`child_deaths.${index}.cause_of_death`] }}</p>
+                    </div>
+                    <div v-if="form.child_deaths.length > 1" class="sm:col-span-3">
+                        <button type="button" class="text-sm text-slate-600 underline" @click="removeChildDeath(index)">
+                            Remove
+                        </button>
+                    </div>
+                </div>
+                <button type="button" class="text-sm font-medium text-brand" @click="addChildDeath">
+                    Add another child household member
+                </button>
+            </div>
         </div>
 
         <div>
-            <p class="rbim-label">Q56. What are the common diseases that causes death in this barangay?</p>
+            <p class="rbim-label">Q12. What are the common diseases that causes death in this barangay?</p>
             <div class="mt-2 grid gap-2 sm:grid-cols-3">
                 <input
                     v-for="index in 3"
@@ -218,7 +315,7 @@
         </div>
 
         <div>
-            <p class="rbim-label">Q57. What do you think are the primary needs of this barangay?</p>
+            <p class="rbim-label">Q13. What do you think are the primary needs of this barangay?</p>
             <div class="mt-2 grid gap-2 sm:grid-cols-3">
                 <input
                     v-for="index in 3"
@@ -236,7 +333,7 @@
 
         <div>
             <p class="rbim-label">
-                Q58. Where does your household intend to stay five years from now?<span class="rbim-required" aria-hidden="true">*</span>
+                Q14. Where does your household intend to stay five years from now?<span class="rbim-required" aria-hidden="true">*</span>
             </p>
             <div class="mt-2 grid gap-4 sm:grid-cols-3">
                 <div>
@@ -281,9 +378,14 @@
 </template>
 
 <script setup>
-import { booleanSelectValue, parseBooleanSelect } from '@/utils/householdQuestions';
+import {
+    booleanSelectValue,
+    emptyChildDeath,
+    emptyFemaleDeath,
+    parseBooleanSelect,
+} from '@/utils/householdQuestions';
 
-defineProps({
+const props = defineProps({
     form: {
         type: Object,
         required: true,
@@ -301,4 +403,48 @@ defineProps({
         default: 'household-questions',
     },
 });
+
+function isYes(value) {
+    return value === true || value === 'true';
+}
+
+function onFemaleDiedChange(value) {
+    props.form.female_hhm_died_past_12mos = parseBooleanSelect(value);
+
+    if (isYes(props.form.female_hhm_died_past_12mos) && !(props.form.female_deaths ?? []).length) {
+        props.form.female_deaths = [emptyFemaleDeath()];
+    }
+
+    if (!isYes(props.form.female_hhm_died_past_12mos)) {
+        props.form.female_deaths = [];
+    }
+}
+
+function onChildDiedChange(value) {
+    props.form.child_hhm_died_past_12mos = parseBooleanSelect(value);
+
+    if (isYes(props.form.child_hhm_died_past_12mos) && !(props.form.child_deaths ?? []).length) {
+        props.form.child_deaths = [emptyChildDeath()];
+    }
+
+    if (!isYes(props.form.child_hhm_died_past_12mos)) {
+        props.form.child_deaths = [];
+    }
+}
+
+function addFemaleDeath() {
+    props.form.female_deaths.push(emptyFemaleDeath());
+}
+
+function removeFemaleDeath(index) {
+    props.form.female_deaths.splice(index, 1);
+}
+
+function addChildDeath() {
+    props.form.child_deaths.push(emptyChildDeath());
+}
+
+function removeChildDeath(index) {
+    props.form.child_deaths.splice(index, 1);
+}
 </script>

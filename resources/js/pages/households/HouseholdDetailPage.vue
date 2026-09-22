@@ -293,6 +293,7 @@ import {
     householdQuestionsFromRecord,
     householdQuestionsPayload,
     validateHouseholdQuestions,
+    deathListLabel,
     yesNoLabel,
 } from '@/utils/householdQuestions';
 
@@ -357,22 +358,22 @@ function joinList(values) {
 
 function questionDisplayFields(questions) {
     return [
-        { label: 'Q45 Ownership of Housing Unit', value: questions.ownership_of_housing_unit || '—' },
-        { label: 'Q46 Ownership of Lot', value: questions.ownership_of_lot || '—' },
-        { label: 'Q47 Fuel for Lighting', value: questions.fuel_type_for_lighting || '—' },
-        { label: 'Q48 Fuel for Cooking', value: questions.fuel_type_for_cooking || '—' },
-        { label: 'Q49 Main Source of Drinking Water', value: questions.main_source_drinking_water || '—' },
-        { label: 'Q50a Kitchen Garbage Disposal', value: questions.kitchen_garbage_disposal || '—' },
-        { label: 'Q50b Segregate Garbage', value: yesNoLabel(questions.perform_garbage_seggragation) },
-        { label: 'Q51 Toilet Facility', value: questions.toilet_facility_type || '—' },
-        { label: 'Q52 Type of Building/House', value: questions.type_of_building_house || '—' },
-        { label: 'Q53 Construction Materials of the Outer Wall', value: questions.construction_material_outer_wall || '—' },
-        { label: 'Q54 Female Household Member Died in the Past 12 Months', value: yesNoLabel(questions.female_hhm_died_past_12mos) },
-        { label: 'Q55 Child Below 5 Died in the Past 12 Months', value: yesNoLabel(questions.child_hhm_died_past_12mos) },
-        { label: 'Q56 Common Diseases That Cause Death in this Barangay', value: joinList(questions.common_diseases) },
-        { label: 'Q57 Primary Needs of this Barangay', value: joinList(questions.primary_needs) },
+        { label: 'Q1 Ownership of Housing Unit', value: questions.ownership_of_housing_unit || '—' },
+        { label: 'Q2 Ownership of Lot', value: questions.ownership_of_lot || '—' },
+        { label: 'Q3 Fuel for Lighting', value: questions.fuel_type_for_lighting || '—' },
+        { label: 'Q4 Fuel for Cooking', value: questions.fuel_type_for_cooking || '—' },
+        { label: 'Q5 Main Source of Drinking Water', value: questions.main_source_drinking_water || '—' },
+        { label: 'Q6a Kitchen Garbage Disposal', value: questions.kitchen_garbage_disposal || '—' },
+        { label: 'Q6b Segregate Garbage', value: yesNoLabel(questions.perform_garbage_seggragation) },
+        { label: 'Q7 Toilet Facility', value: questions.toilet_facility_type || '—' },
+        { label: 'Q8 Type of Building/House', value: questions.type_of_building_house || '—' },
+        { label: 'Q9 Construction Materials of the Outer Wall', value: questions.construction_material_outer_wall || '—' },
+        { label: 'Q10 Female Household Member Died in the Past 12 Months', value: deathListLabel(questions.female_hhm_died_past_12mos, questions.female_deaths) },
+        { label: 'Q11 Child Below 5 Died in the Past 12 Months', value: deathListLabel(questions.child_hhm_died_past_12mos, questions.child_deaths, { includeSex: true }) },
+        { label: 'Q12 Common Diseases That Cause Death in this Barangay', value: joinList(questions.common_diseases) },
+        { label: 'Q13 Primary Needs of this Barangay', value: joinList(questions.primary_needs) },
         {
-            label: 'Q58 Intended Stay Five Years From Now',
+            label: 'Q14 Intended Stay Five Years From Now',
             value: [questions.intend_to_stay_brgy, questions.intend_to_stay_municipality, questions.intend_to_stay_province]
                 .filter(Boolean)
                 .join(', ') || '—',

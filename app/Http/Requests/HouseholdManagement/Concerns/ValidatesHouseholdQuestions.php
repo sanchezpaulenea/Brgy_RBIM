@@ -30,6 +30,18 @@ trait ValidatesHouseholdQuestions
                 'primary_needs' => $this->normalizedNamedList($this->input('primary_needs')),
             ]);
         }
+
+        if ($this->exists('female_deaths')) {
+            $this->merge([
+                'female_deaths' => $this->normalizedDeathList($this->input('female_deaths'), ['age', 'cause_of_death']),
+            ]);
+        }
+
+        if ($this->exists('child_deaths')) {
+            $this->merge([
+                'child_deaths' => $this->normalizedDeathList($this->input('child_deaths'), ['age', 'cause_of_death', 'sex_id']),
+            ]);
+        }
     }
 
     /**
@@ -87,7 +99,42 @@ trait ValidatesHouseholdQuestions
                 Rule::exists('construction_material_outer_wall', 'construction_material_outer_wall_id'),
             ],
             'female_hhm_died_past_12mos' => [$presence, 'boolean'],
+            'female_deaths' => [
+                Rule::requiredIf(fn () => $this->boolean('female_hhm_died_past_12mos')),
+                'array',
+            ],
+            'female_deaths.*.age' => [
+                Rule::requiredIf(fn () => $this->boolean('female_hhm_died_past_12mos')),
+                'integer',
+                'min:0',
+                'max:120',
+            ],
+            'female_deaths.*.cause_of_death' => [
+                Rule::requiredIf(fn () => $this->boolean('female_hhm_died_past_12mos')),
+                'string',
+                'max:45',
+            ],
             'child_hhm_died_past_12mos' => [$presence, 'boolean'],
+            'child_deaths' => [
+                Rule::requiredIf(fn () => $this->boolean('child_hhm_died_past_12mos')),
+                'array',
+            ],
+            'child_deaths.*.age' => [
+                Rule::requiredIf(fn () => $this->boolean('child_hhm_died_past_12mos')),
+                'integer',
+                'min:0',
+                'max:4',
+            ],
+            'child_deaths.*.sex_id' => [
+                Rule::requiredIf(fn () => $this->boolean('child_hhm_died_past_12mos')),
+                'integer',
+                Rule::exists('sex', 'sex_id'),
+            ],
+            'child_deaths.*.cause_of_death' => [
+                Rule::requiredIf(fn () => $this->boolean('child_hhm_died_past_12mos')),
+                'string',
+                'max:45',
+            ],
             'common_diseases' => ['sometimes', 'array', 'max:3'],
             'common_diseases.*' => ['nullable', 'string', 'max:45'],
             'primary_needs' => ['sometimes', 'array', 'max:3'],
@@ -130,7 +177,16 @@ trait ValidatesHouseholdQuestions
             'type_of_building_house_id.required' => 'Type of building/house is required.',
             'construction_material_outer_wall_id.required' => 'Construction material of the outer wall is required.',
             'female_hhm_died_past_12mos.required' => 'Please indicate whether a female household member died in the past 12 months.',
+            'female_deaths.required' => 'Add the age and cause of death for each female household member who died.',
+            'female_deaths.*.age.required' => 'Age of the deceased female household member is required.',
+            'female_deaths.*.cause_of_death.required' => 'Cause of death is required.',
             'child_hhm_died_past_12mos.required' => 'Please indicate whether a child household member below 5 years old died in the past 12 months.',
+            'child_deaths.required' => 'Add the age, sex, and cause of death for each child household member who died.',
+            'child_deaths.*.age.required' => 'Age of the deceased child household member is required.',
+            'child_deaths.*.age.max' => 'The child must be below 5 years old.',
+            'child_deaths.*.sex_id.required' => 'Sex of the deceased child household member is required.',
+            'child_deaths.*.sex_id.exists' => 'The selected sex does not exist.',
+            'child_deaths.*.cause_of_death.required' => 'Cause of death is required.',
             'intend_to_stay_brgy.required' => 'Intended barangay of stay is required.',
             'intend_to_stay_municipality.required' => 'Intended municipality of stay is required.',
             'intend_to_stay_province.required' => 'Intended province of stay is required.',
@@ -187,5 +243,42 @@ trait ValidatesHouseholdQuestions
         }
 
         return array_values(array_unique($normalized));
+    }
+
+    /**
+     * @param  list<string>  $fields
+     * @return list<array<string, mixed>>
+     */
+    private function normalizedDeathList(mixed $values, array $fields): array
+    {
+        if (! is_array($values)) {
+            return [];
+        }
+
+        $normalized = [];
+
+        foreach ($values as $value) {
+            if (! is_array($value)) {
+                continue;
+            }
+
+            $row = [];
+
+            foreach ($fields as $field) {
+                $item = $value[$field] ?? null;
+
+                if ($field === 'cause_of_death') {
+                    $row[$field] = $this->titleCaseValue($item);
+
+                    continue;
+                }
+
+                $row[$field] = $item;
+            }
+
+            $normalized[] = $row;
+        }
+
+        return $normalized;
     }
 }

@@ -75,7 +75,15 @@ class HouseholdQuestionsService
                 $this->persistableAttributes($data),
             );
 
-            $this->syncRelatedRecords($updated, $data, array_key_exists('common_diseases', $data), array_key_exists('primary_needs', $data), $this->hasIntendToStayInput($data));
+            $this->syncRelatedRecords(
+                $updated,
+                $data,
+                array_key_exists('common_diseases', $data),
+                array_key_exists('primary_needs', $data),
+                $this->hasIntendToStayInput($data),
+                $this->hasFemaleDeathInput($data),
+                $this->hasChildDeathInput($data),
+            );
 
             $fresh = $this->householdQuestionsRepository->findById($updated->household_questions_id) ?? $updated;
 
@@ -110,6 +118,8 @@ class HouseholdQuestionsService
             'commonDiseases',
             'primaryNeeds',
             'intendToStay',
+            'femaleDeaths',
+            'childDeaths.sex',
         ]);
 
         return [
@@ -134,8 +144,26 @@ class HouseholdQuestionsService
             'type_of_building_house' => $questions->typeOfBuildingHouse?->building_house_type,
             'construction_material_outer_wall_id' => $questions->construction_material_outer_wall_id,
             'construction_material_outer_wall' => $questions->constructionMaterialOuterWall?->construction_material_outer_wall,
-            'female_hhm_died_past_12mos' => $questions->female_hhm_died_past_12mos,
-            'child_hhm_died_past_12mos' => $questions->child_hhm_died_past_12mos,
+            'female_hhm_died_past_12mos' => $questions->femaleDeaths->isNotEmpty(),
+            'female_deaths' => $questions->femaleDeaths
+                ->map(fn ($death) => [
+                    'female_hhm_died_id' => $death->female_hhm_died_id,
+                    'age' => $death->age,
+                    'cause_of_death' => $death->cause_of_death,
+                ])
+                ->values()
+                ->all(),
+            'child_hhm_died_past_12mos' => $questions->childDeaths->isNotEmpty(),
+            'child_deaths' => $questions->childDeaths
+                ->map(fn ($death) => [
+                    'child_hhm_died_id' => $death->child_hhm_died_id,
+                    'age' => $death->age,
+                    'cause_of_death' => $death->cause_of_death,
+                    'sex_id' => $death->sex_id,
+                    'sex' => $death->sex?->sex,
+                ])
+                ->values()
+                ->all(),
             'common_diseases' => $questions->commonDiseases
                 ->pluck('common_disease')
                 ->filter()
@@ -169,8 +197,6 @@ class HouseholdQuestionsService
             'toilet_facility_type_id',
             'type_of_building_house_id',
             'construction_material_outer_wall_id',
-            'female_hhm_died_past_12mos',
-            'child_hhm_died_past_12mos',
         ]));
 
         if ($householdId !== null) {
@@ -189,6 +215,8 @@ class HouseholdQuestionsService
         bool $syncDiseases = true,
         bool $syncNeeds = true,
         bool $syncIntendToStay = true,
+        bool $syncFemaleDeaths = true,
+        bool $syncChildDeaths = true,
     ): void {
         if ($syncDiseases) {
             $questions->commonDiseases()->sync(
@@ -220,6 +248,84 @@ class HouseholdQuestionsService
                 ],
             );
         }
+
+        if ($syncFemaleDeaths) {
+            $this->syncFemaleDeaths($questions, $data);
+        }
+
+        if ($syncChildDeaths) {
+            $this->syncChildDeaths($questions, $data);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function syncFemaleDeaths(HouseholdQuestions $questions, array $data): void
+    {
+        $questions->femaleDeaths()->delete();
+
+        if (! $this->answeredYes($data['female_hhm_died_past_12mos'] ?? null)) {
+            return;
+        }
+
+        foreach ($data['female_deaths'] ?? [] as $death) {
+            if (! is_array($death)) {
+                continue;
+            }
+
+            $questions->femaleDeaths()->create([
+                'age' => (int) $death['age'],
+                'cause_of_death' => $death['cause_of_death'],
+            ]);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function syncChildDeaths(HouseholdQuestions $questions, array $data): void
+    {
+        $questions->childDeaths()->delete();
+
+        if (! $this->answeredYes($data['child_hhm_died_past_12mos'] ?? null)) {
+            return;
+        }
+
+        foreach ($data['child_deaths'] ?? [] as $death) {
+            if (! is_array($death)) {
+                continue;
+            }
+
+            $questions->childDeaths()->create([
+                'age' => (int) $death['age'],
+                'cause_of_death' => $death['cause_of_death'],
+                'sex_id' => (int) $death['sex_id'],
+            ]);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function hasFemaleDeathInput(array $data): bool
+    {
+        return array_key_exists('female_hhm_died_past_12mos', $data)
+            || array_key_exists('female_deaths', $data);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function hasChildDeathInput(array $data): bool
+    {
+        return array_key_exists('child_hhm_died_past_12mos', $data)
+            || array_key_exists('child_deaths', $data);
+    }
+
+    private function answeredYes(mixed $value): bool
+    {
+        return $value === true || $value === 1 || $value === '1' || $value === 'true';
     }
 
     /**
@@ -290,8 +396,8 @@ class HouseholdQuestionsService
             'toilet facility' => (string) ($formatted['toilet_facility_type'] ?? ''),
             'building type' => (string) ($formatted['type_of_building_house'] ?? ''),
             'outer wall' => (string) ($formatted['construction_material_outer_wall'] ?? ''),
-            'female death past 12 months' => $this->yesNo($formatted['female_hhm_died_past_12mos'] ?? null),
-            'child death past 12 months' => $this->yesNo($formatted['child_hhm_died_past_12mos'] ?? null),
+            'female death past 12 months' => $this->deathAuditLabel($formatted['female_deaths'] ?? []),
+            'child death past 12 months' => $this->deathAuditLabel($formatted['child_deaths'] ?? [], includeSex: true),
             'common diseases' => implode(', ', $formatted['common_diseases'] ?? []),
             'primary needs' => implode(', ', $formatted['primary_needs'] ?? []),
             'intend to stay' => trim(implode(', ', array_filter([
@@ -309,5 +415,27 @@ class HouseholdQuestionsService
         }
 
         return $value ? 'Yes' : 'No';
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $deaths
+     */
+    private function deathAuditLabel(array $deaths, bool $includeSex = false): string
+    {
+        if ($deaths === []) {
+            return 'No';
+        }
+
+        $details = array_map(function (array $death) use ($includeSex): string {
+            $parts = array_filter([
+                $includeSex ? ($death['sex'] ?? null) : null,
+                isset($death['age']) ? $death['age'].' yrs' : null,
+                $death['cause_of_death'] ?? null,
+            ]);
+
+            return implode(', ', $parts);
+        }, $deaths);
+
+        return 'Yes — '.implode('; ', array_filter($details));
     }
 }
