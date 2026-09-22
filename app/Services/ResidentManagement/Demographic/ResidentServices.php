@@ -300,7 +300,24 @@ class ResidentServices
 
         $statusId = (int) ($data['resident_status_id'] ?? $resident->resident_status_id);
 
-        return ResidentStatus::requiresHouseholdHeadReplacement($statusId);
+        if (! ResidentStatus::requiresHouseholdHeadReplacement($statusId)) {
+            return false;
+        }
+
+        return ! $this->isSoloResidentRecordedAsDeceased($resident, $statusId);
+    }
+
+    /**
+     * A solo-living resident has nobody to hand the household over to, so the
+     * head pointer stays on them and the status change is saved as-is.
+     */
+    private function isSoloResidentRecordedAsDeceased(Resident $resident, int $statusId): bool
+    {
+        if ($statusId !== ResidentStatus::DECEASED) {
+            return false;
+        }
+
+        return $this->residentRepository->countByHousehold((int) $resident->household_id) === 1;
     }
 
     private function requireHousehold(int $householdId): Household

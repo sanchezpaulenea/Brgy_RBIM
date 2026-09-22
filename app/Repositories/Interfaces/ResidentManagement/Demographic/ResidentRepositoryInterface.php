@@ -23,6 +23,8 @@ interface ResidentRepositoryInterface
 
     public function findById(int $residentId): ?Resident;
 
+    public function countByHousehold(int $householdId): int;
+
     /**
      * @param  array<string, mixed>  $attributes
      */

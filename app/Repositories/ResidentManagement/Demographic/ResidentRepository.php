@@ -131,6 +131,13 @@ class ResidentRepository implements ResidentRepositoryInterface
             ->first();
     }
 
+    public function countByHousehold(int $householdId): int
+    {
+        return Resident::query()
+            ->where('household_id', $householdId)
+            ->count();
+    }
+
     /**
      * @param  array<string, mixed>  $attributes
      */

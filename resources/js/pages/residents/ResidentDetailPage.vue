@@ -629,6 +629,7 @@ import * as residentService from '@/services/residentService';
 import {
     HOUSEHOLD_HEAD_MIN_AGE,
     HOUSEHOLD_STATUS_ACTIVE,
+    RESIDENT_STATUS,
     applyValidationErrors,
     eligibleHouseholdHeadCandidates,
     residentStatusRequiresHeadReplacement,
@@ -723,6 +724,11 @@ const relationshipOptions = computed(() => {
 
 const headCandidates = computed(() => (
     eligibleHouseholdHeadCandidates(householdForHead.value?.residents, resident.value?.resident_id)
+));
+
+const soloResidentDeceased = computed(() => (
+    Number(editForm.resident_status_id) === RESIDENT_STATUS.DECEASED
+    && (householdForHead.value?.residents?.length ?? 0) === 1
 ));
 
 const educationRelevance = computed(() => educationFieldRelevance(resident.value));
@@ -1292,6 +1298,12 @@ async function onResidentStatusChange() {
             return;
         }
 
+        if (soloResidentDeceased.value) {
+            headReplacement.value = null;
+
+            return;
+        }
+
         assigningHead.value = true;
     } catch (err) {
         editForm.resident_status_id = originalResidentStatusId.value;
@@ -1400,8 +1412,26 @@ async function handleSave() {
                 return;
             }
 
-            if (!headReplacement.value && Number(householdForHead.value?.household_status_id) === HOUSEHOLD_STATUS_ACTIVE) {
+            if (
+                !headReplacement.value
+                && !soloResidentDeceased.value
+                && Number(householdForHead.value?.household_status_id) === HOUSEHOLD_STATUS_ACTIVE
+            ) {
                 editErrors.new_head_resident_id = 'Select a new household head from the household members before changing this resident\'s status.';
+                return;
+            }
+        }
+
+        if (soloResidentDeceased.value) {
+            const residentName = resident.value.full_name || 'This resident';
+            const allowed = await askConfirm({
+                title: 'Record resident as deceased',
+                message: `${residentName} is the only member of this household. Saving will record them as deceased and leave the household without an active head. Continue?`,
+                confirmLabel: 'Save',
+                variant: 'danger',
+            });
+
+            if (!allowed) {
                 return;
             }
         }
