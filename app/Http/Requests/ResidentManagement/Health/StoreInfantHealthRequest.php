@@ -17,7 +17,7 @@ class StoreInfantHealthRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->mergeTitleCased(['immunization']);
+        $this->mergeTitleCased(['place_of_delivery', 'birth_attendant', 'immunization']);
     }
 
     /**
@@ -26,9 +26,27 @@ class StoreInfantHealthRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'place_of_delivery_id' => ['required', 'integer', Rule::exists('place_of_delivery', 'place_of_delivery_id')],
-            'birth_attendant_id' => ['required', 'integer', Rule::exists('birth_attendant', 'birth_attendant_id')],
-            'immunization' => ['nullable', 'string', 'max:45'],
+            'place_of_delivery_id' => [
+                'required_without:place_of_delivery',
+                'nullable',
+                'integer',
+                Rule::exists('place_of_delivery', 'place_of_delivery_id'),
+            ],
+            'place_of_delivery' => ['required_without:place_of_delivery_id', 'nullable', 'string', 'max:45'],
+            'birth_attendant_id' => [
+                'required_without:birth_attendant',
+                'nullable',
+                'integer',
+                Rule::exists('birth_attendant', 'birth_attendant_id'),
+            ],
+            'birth_attendant' => ['required_without:birth_attendant_id', 'nullable', 'string', 'max:45'],
+            'immunization_id' => [
+                'required_without:immunization',
+                'nullable',
+                'integer',
+                Rule::exists('immunization', 'immunization_id'),
+            ],
+            'immunization' => ['required_without:immunization_id', 'nullable', 'string', 'max:45'],
         ];
     }
 
@@ -38,9 +56,12 @@ class StoreInfantHealthRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'place_of_delivery_id.exists' => 'The selected place of delivery does not exist.',
-            'birth_attendant_id.exists' => 'The selected birth attendant does not exist.',
-            'immunization.max' => 'The immunization note may not be longer than 45 characters.',
+            'place_of_delivery_id.required_without' => 'Place of delivery is required.',
+            'place_of_delivery.required_without' => 'Place of delivery is required.',
+            'birth_attendant_id.required_without' => 'Birth attendant is required.',
+            'birth_attendant.required_without' => 'Birth attendant is required.',
+            'immunization_id.required_without' => 'Immunization is required.',
+            'immunization.required_without' => 'Immunization is required.',
         ];
     }
 }

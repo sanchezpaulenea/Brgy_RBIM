@@ -5,11 +5,14 @@ namespace App\Services\ResidentManagement\Health;
 use App\Models\Logs\Action;
 use App\Models\ResidentManagement\Demographic\Resident;
 use App\Models\ResidentManagement\Health\Disability;
+use App\Models\ResidentManagement\Health\FacilityVisitedPast12Mos;
+use App\Models\ResidentManagement\Health\FacilityVisitReason;
 use App\Models\ResidentManagement\Health\Health;
+use App\Models\ResidentManagement\Health\HealthInsurance;
 use App\Models\UserManagement\User;
-use App\Rules\ValidPwdIdNumber;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Health\HealthRepositoryInterface;
+use App\Rules\ValidPwdIdNumber;
 use App\Services\ResidentManagement\Concerns\LogsAuditableFieldChanges;
 use App\Services\ResidentManagement\Concerns\SerializesResidentSectionWrites;
 use Illuminate\Support\Facades\DB;
@@ -32,8 +35,7 @@ class HealthService
     public function create(User $performedBy, Resident $resident, array $data): array
     {
         $data['resident_id'] = $resident->resident_id;
-        $data = $this->applyOptionalLookupIds($data, fillMissing: true);
-        $data = $this->applyOptionalPwdId($data, fillMissing: true);
+        $data = $this->applyHealthRules($data, fillMissing: true);
 
         return $this->withResidentLock($resident->resident_id, function () use ($performedBy, $resident, $data) {
             if ($this->healthRepository->findByResidentId($resident->resident_id) !== null) {
@@ -42,7 +44,6 @@ class HealthService
                 ]);
             }
 
-            $data = $this->mapDisabilityToId($data, required: true);
             $health = $this->healthRepository->create($data);
 
             $this->auditLogRepository->log(
@@ -67,11 +68,15 @@ class HealthService
     public function update(User $performedBy, Health $health, array $data): array
     {
         $previous = $this->auditSnapshot($health);
-        $data = $this->applyOptionalLookupIds($data);
-        $data = $this->applyOptionalPwdId($data);
+        $data = $this->applyHealthRules(array_merge($health->only([
+            'health_insurance_id',
+            'facility_visited_past_12mos_id',
+            'facility_visit_reason_id',
+            'disability_id',
+            'pwd_id_number',
+        ]), $data));
 
         return DB::transaction(function () use ($performedBy, $health, $data, $previous) {
-            $data = $this->mapDisabilityToId($data);
             $updated = $this->healthRepository->update($health, $data);
 
             $this->logFieldChanges(
@@ -99,61 +104,110 @@ class HealthService
             'disabilityType',
         ]);
 
+        $facilityIsNone = $health->facilityVisitedPast12Mos?->indicatesNone() ?? false;
+
         return [
             'health_id' => $health->health_id,
             'resident_id' => $health->resident_id,
-            'health_insurance_id' => $this->nullableLookupId($health->health_insurance_id),
-            'health_insurance' => $health->health_insurance_id === Health::LOOKUP_NOT_APPLICABLE
-                ? null
-                : $health->healthInsurance?->health_insurance,
-            'facility_visited_past_12mos_id' => $this->nullableLookupId($health->facility_visited_past_12mos_id),
-            'facility_visited_past_12mos' => $health->facility_visited_past_12mos_id === Health::LOOKUP_NOT_APPLICABLE
-                ? null
-                : $health->facilityVisitedPast12Mos?->facility_visited_past_12mos,
-            'facility_visit_reason_id' => $this->nullableLookupId($health->facility_visit_reason_id),
-            'facility_visit_reason' => $health->facility_visit_reason_id === Health::LOOKUP_NOT_APPLICABLE
-                ? null
-                : $health->facilityVisitReason?->facility_visit_reason,
+            'health_insurance_id' => $health->health_insurance_id,
+            'health_insurance' => $health->healthInsurance?->health_insurance,
+            'facility_visited_past_12mos_id' => $health->facility_visited_past_12mos_id,
+            'facility_visited_past_12mos' => $health->facilityVisitedPast12Mos?->facility_visited_past_12mos,
+            'facility_visit_reason_id' => $facilityIsNone ? null : $health->facility_visit_reason_id,
+            'facility_visit_reason' => $facilityIsNone ? null : $health->facilityVisitReason?->facility_visit_reason,
             'disability_id' => $health->disability_id,
             'disability' => $health->disabilityType?->disability,
-            'pwd_id_number' => $health->pwd_id_number,
+            'pwd_id_number' => Health::indicatesDisability($health->disabilityType?->disability)
+                ? $health->pwd_id_number
+                : null,
         ];
     }
 
     /**
-     * Q26–Q28 are optional. Empty values are stored as 0 because the columns
-     * are INT NOT NULL.
-     *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    private function applyOptionalLookupIds(array $data, bool $fillMissing = false): array
+    private function applyHealthRules(array $data, bool $fillMissing = false): array
     {
-        foreach ([
-            'health_insurance_id',
-            'facility_visited_past_12mos_id',
-            'facility_visit_reason_id',
-        ] as $field) {
-            if (! array_key_exists($field, $data)) {
-                if ($fillMissing) {
-                    $data[$field] = Health::LOOKUP_NOT_APPLICABLE;
-                }
+        $data = $this->mapLabeledLookup($data, 'health_insurance_id', 'health_insurance', HealthInsurance::class, $fillMissing);
+        $data = $this->mapLabeledLookup($data, 'facility_visited_past_12mos_id', 'facility_visited_past_12mos', FacilityVisitedPast12Mos::class, $fillMissing);
+        $data = $this->mapLabeledLookup($data, 'facility_visit_reason_id', 'facility_visit_reason', FacilityVisitReason::class, false);
+        $data = $this->mapDisabilityToId($data, required: $fillMissing);
+        $data = $this->applyFacilityVisitReason($data);
+        $data = $this->applyOptionalPwdId($data, $fillMissing);
 
-                continue;
-            }
-
-            if ($data[$field] === null || $data[$field] === '') {
-                $data[$field] = Health::LOOKUP_NOT_APPLICABLE;
-            }
+        if (! Health::indicatesDisability(
+            Disability::query()->find((int) ($data['disability_id'] ?? 0))?->disability
+        )) {
+            $data['pwd_id_number'] = null;
         }
 
         return $data;
     }
 
     /**
-     * PWD ID is optional and health.pwd_id_number is nullable, so a resident
-     * without one is stored as NULL.
-     *
+     * @param  array<string, mixed>  $data
+     * @param  class-string<HealthInsurance|FacilityVisitedPast12Mos|FacilityVisitReason>  $modelClass
+     * @return array<string, mixed>
+     */
+    private function mapLabeledLookup(
+        array $data,
+        string $idField,
+        string $labelField,
+        string $modelClass,
+        bool $required,
+    ): array {
+        if (array_key_exists($idField, $data) && (int) $data[$idField] > 0) {
+            unset($data[$labelField]);
+
+            return $data;
+        }
+
+        $label = is_string($data[$labelField] ?? null) ? trim($data[$labelField]) : '';
+
+        if ($label !== '') {
+            $data[$idField] = $modelClass::findOrCreateByLabel($label)->getKey();
+            unset($data[$labelField]);
+
+            return $data;
+        }
+
+        unset($data[$labelField]);
+
+        if ($required) {
+            throw ValidationException::withMessages([
+                $idField => [str_replace('_', ' ', $labelField).' is required.'],
+            ]);
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function applyFacilityVisitReason(array $data): array
+    {
+        $facility = FacilityVisitedPast12Mos::query()
+            ->find((int) ($data['facility_visited_past_12mos_id'] ?? 0));
+
+        if ($facility?->indicatesNone()) {
+            $notApplicableId = FacilityVisitReason::notApplicableId();
+
+            if ($notApplicableId === null) {
+                throw ValidationException::withMessages([
+                    'facility_visit_reason_id' => ['The Not Applicable facility visit reason lookup is missing.'],
+                ]);
+            }
+
+            $data['facility_visit_reason_id'] = $notApplicableId;
+        }
+
+        return $data;
+    }
+
+    /**
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
@@ -172,17 +226,7 @@ class HealthService
         return $data;
     }
 
-    private function nullableLookupId(mixed $id): ?int
-    {
-        $value = (int) $id;
-
-        return $value === Health::LOOKUP_NOT_APPLICABLE ? null : $value;
-    }
-
     /**
-     * health.disability_id is a required FK. Accept either a selected
-     * disability_id or a typed label (reuse existing, otherwise create).
-     *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
@@ -229,13 +273,9 @@ class HealthService
         ]);
 
         return [
-            'health insurance' => $health->health_insurance_id === Health::LOOKUP_NOT_APPLICABLE
-                ? 'N/A'
-                : (string) ($health->healthInsurance?->health_insurance ?? $health->health_insurance_id),
-            'facility visited' => $health->facility_visited_past_12mos_id === Health::LOOKUP_NOT_APPLICABLE
-                ? 'N/A'
-                : (string) ($health->facilityVisitedPast12Mos?->facility_visited_past_12mos ?? $health->facility_visited_past_12mos_id),
-            'visit reason' => $health->facility_visit_reason_id === Health::LOOKUP_NOT_APPLICABLE
+            'health insurance' => (string) ($health->healthInsurance?->health_insurance ?? $health->health_insurance_id),
+            'facility visited' => (string) ($health->facilityVisitedPast12Mos?->facility_visited_past_12mos ?? $health->facility_visited_past_12mos_id),
+            'visit reason' => $health->facilityVisitedPast12Mos?->indicatesNone()
                 ? 'N/A'
                 : (string) ($health->facilityVisitReason?->facility_visit_reason ?? $health->facility_visit_reason_id),
             'disability' => (string) ($health->disabilityType?->disability ?? ''),

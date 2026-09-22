@@ -2,11 +2,14 @@
 
 namespace App\Models\ResidentManagement\Health;
 
+use App\Models\Concerns\ResolvesLookupSentinel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SourceOfFPMethod extends Model
 {
+    use ResolvesLookupSentinel;
+
     protected $table = 'source_of_fp_method';
 
     protected $primaryKey = 'source_of_fp_method_id';

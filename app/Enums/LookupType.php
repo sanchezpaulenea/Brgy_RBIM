@@ -32,6 +32,7 @@ use App\Models\ResidentManagement\Health\FacilityVisitedPast12Mos;
 use App\Models\ResidentManagement\Health\FacilityVisitReason;
 use App\Models\ResidentManagement\Health\FamilyPlanningMethod;
 use App\Models\ResidentManagement\Health\HealthInsurance;
+use App\Models\ResidentManagement\Health\Immunization;
 use App\Models\ResidentManagement\Health\PlaceOfDelivery;
 use App\Models\ResidentManagement\Health\SourceOfFPMethod;
 use App\Models\ResidentManagement\Migration\ReasonForLeaving;
@@ -66,6 +67,7 @@ enum LookupType: string
     case StatusOfWorkBusiness = 'status-of-work-business';
     case PlaceOfDelivery = 'place-of-delivery';
     case BirthAttendant = 'birth-attendant';
+    case Immunization = 'immunization';
     case HealthInsurance = 'health-insurance';
     case FacilityVisitedPast12Mos = 'facility-visited-past-12mos';
     case FacilityVisitReason = 'facility-visit-reason';
@@ -111,6 +113,7 @@ enum LookupType: string
             self::StatusOfWorkBusiness => StatusOfWorkBusiness::class,
             self::PlaceOfDelivery => PlaceOfDelivery::class,
             self::BirthAttendant => BirthAttendant::class,
+            self::Immunization => Immunization::class,
             self::HealthInsurance => HealthInsurance::class,
             self::FacilityVisitedPast12Mos => FacilityVisitedPast12Mos::class,
             self::FacilityVisitReason => FacilityVisitReason::class,
@@ -167,6 +170,7 @@ enum LookupType: string
             self::StatusOfWorkBusiness,
             self::PlaceOfDelivery,
             self::BirthAttendant,
+            self::Immunization,
             self::HealthInsurance,
             self::FacilityVisitedPast12Mos,
             self::FacilityVisitReason,
@@ -221,6 +225,7 @@ enum LookupType: string
             self::StatusOfWorkBusiness => 'status_of_work_business_id',
             self::PlaceOfDelivery => 'place_of_delivery_id',
             self::BirthAttendant => 'birth_attendant_id',
+            self::Immunization => 'immunization_id',
             self::HealthInsurance => 'health_insurance_id',
             self::FacilityVisitedPast12Mos => 'facility_visited_past_12mos_id',
             self::FacilityVisitReason => 'facility_visit_reason_id',
@@ -252,6 +257,7 @@ enum LookupType: string
             self::StatusOfWorkBusiness => 'status_of_work_business',
             self::PlaceOfDelivery => 'place_of_delivery',
             self::BirthAttendant => 'birth_attendant',
+            self::Immunization => 'immunization',
             self::HealthInsurance => 'health_insurance',
             self::FacilityVisitedPast12Mos => 'facility_visited_past_12mos',
             self::FacilityVisitReason => 'facility_visit_reason',

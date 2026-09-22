@@ -4,7 +4,10 @@ namespace App\Services\ResidentManagement\Health;
 
 use App\Models\Logs\Action;
 use App\Models\ResidentManagement\Demographic\Resident;
+use App\Models\ResidentManagement\Health\BirthAttendant;
+use App\Models\ResidentManagement\Health\Immunization;
 use App\Models\ResidentManagement\Health\InfantHealth;
+use App\Models\ResidentManagement\Health\PlaceOfDelivery;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Health\InfantHealthRepositoryInterface;
@@ -32,7 +35,7 @@ class InfantHealthService
         $this->assertInfant($resident);
 
         $data['resident_id'] = $resident->resident_id;
-        $data['immunization'] = InfantHealth::normalizeImmunization($data['immunization'] ?? null);
+        $data = $this->mapLookupLabels($data, required: true);
 
         return $this->withResidentLock($resident->resident_id, function () use ($performedBy, $resident, $data) {
             if ($this->infantHealthRepository->findByResidentId($resident->resident_id) !== null) {
@@ -49,7 +52,7 @@ class InfantHealthService
                 recordId: $infantHealth->infant_health_id,
                 description: 'Create infant health',
                 oldValue: null,
-                newValue: (string) $infantHealth->immunization,
+                newValue: (string) ($infantHealth->immunization?->immunization ?? $infantHealth->immunization_id),
                 target: 'record',
                 entity: 'infant_health',
             );
@@ -68,10 +71,7 @@ class InfantHealthService
         $this->assertInfant($infantHealth->resident);
 
         $previous = $this->auditSnapshot($infantHealth);
-
-        if (array_key_exists('immunization', $data)) {
-            $data['immunization'] = InfantHealth::normalizeImmunization($data['immunization']);
-        }
+        $data = $this->mapLookupLabels($data);
 
         return DB::transaction(function () use ($performedBy, $infantHealth, $data, $previous) {
             $updated = $this->infantHealthRepository->update($infantHealth, $data);
@@ -94,7 +94,7 @@ class InfantHealthService
      */
     public function formatRecord(InfantHealth $infantHealth): array
     {
-        $infantHealth->loadMissing(['placeOfDelivery', 'birthAttendant']);
+        $infantHealth->loadMissing(['placeOfDelivery', 'birthAttendant', 'immunization']);
 
         return [
             'infant_health_id' => $infantHealth->infant_health_id,
@@ -103,8 +103,77 @@ class InfantHealthService
             'place_of_delivery' => $infantHealth->placeOfDelivery?->place_of_delivery,
             'birth_attendant_id' => $infantHealth->birth_attendant_id,
             'birth_attendant' => $infantHealth->birthAttendant?->birth_attendant,
-            'immunization' => $infantHealth->immunization,
+            'immunization_id' => $infantHealth->immunization_id,
+            'immunization' => $infantHealth->immunization?->immunization,
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function mapLookupLabels(array $data, bool $required = false): array
+    {
+        $data = $this->mapLabeledLookup(
+            $data,
+            'place_of_delivery_id',
+            'place_of_delivery',
+            PlaceOfDelivery::class,
+            required: $required,
+        );
+        $data = $this->mapLabeledLookup(
+            $data,
+            'birth_attendant_id',
+            'birth_attendant',
+            BirthAttendant::class,
+            required: $required,
+        );
+
+        return $this->mapLabeledLookup(
+            $data,
+            'immunization_id',
+            'immunization',
+            Immunization::class,
+            required: $required,
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  class-string<PlaceOfDelivery|BirthAttendant|Immunization>  $modelClass
+     * @return array<string, mixed>
+     */
+    private function mapLabeledLookup(
+        array $data,
+        string $idField,
+        string $labelField,
+        string $modelClass,
+        bool $required = false,
+    ): array {
+        if (array_key_exists($idField, $data) && (int) $data[$idField] > 0) {
+            unset($data[$labelField]);
+
+            return $data;
+        }
+
+        if (! $required && ! array_key_exists($labelField, $data)) {
+            unset($data[$labelField]);
+
+            return $data;
+        }
+
+        $label = is_string($data[$labelField] ?? null) ? trim($data[$labelField]) : '';
+
+        if ($label === '') {
+            throw ValidationException::withMessages([
+                $idField => [str_replace('_', ' ', $labelField).' is required.'],
+            ]);
+        }
+
+        $data[$idField] = $modelClass::findOrCreateByLabel($label)->getKey();
+        unset($data[$labelField]);
+
+        return $data;
     }
 
     private function assertInfant(?Resident $resident): void
@@ -121,12 +190,12 @@ class InfantHealthService
      */
     private function auditSnapshot(InfantHealth $infantHealth): array
     {
-        $infantHealth->loadMissing(['placeOfDelivery', 'birthAttendant']);
+        $infantHealth->loadMissing(['placeOfDelivery', 'birthAttendant', 'immunization']);
 
         return [
             'place of delivery' => (string) ($infantHealth->placeOfDelivery?->place_of_delivery ?? $infantHealth->place_of_delivery_id),
             'birth attendant' => (string) ($infantHealth->birthAttendant?->birth_attendant ?? $infantHealth->birth_attendant_id),
-            'immunization' => (string) $infantHealth->immunization,
+            'immunization' => (string) ($infantHealth->immunization?->immunization ?? $infantHealth->immunization_id),
         ];
     }
 }

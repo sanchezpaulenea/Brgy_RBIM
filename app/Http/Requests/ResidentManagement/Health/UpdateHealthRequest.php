@@ -21,7 +21,12 @@ class UpdateHealthRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->mergeTitleCased(['disability']);
+        $this->mergeTitleCased([
+            'disability',
+            'health_insurance',
+            'facility_visited_past_12mos',
+            'facility_visit_reason',
+        ]);
 
         if ($this->exists('pwd_id_number')) {
             $this->merge(['pwd_id_number' => ValidPwdIdNumber::normalize($this->input('pwd_id_number'))]);
@@ -34,15 +39,29 @@ class UpdateHealthRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'health_insurance_id' => $this->optionalLookupRule('health_insurance', 'health_insurance_id'),
-            'facility_visited_past_12mos_id' => $this->optionalLookupRule(
-                'facility_visited_past_12mos',
-                'facility_visited_past_12mos_id',
-            ),
-            'facility_visit_reason_id' => $this->optionalLookupRule(
-                'facility_visit_reason',
-                'facility_visit_reason_id',
-            ),
+            'health_insurance_id' => [
+                'sometimes',
+                'required_without:health_insurance',
+                'nullable',
+                'integer',
+                Rule::exists('health_insurance', 'health_insurance_id'),
+            ],
+            'health_insurance' => ['sometimes', 'required_without:health_insurance_id', 'nullable', 'string', 'max:45'],
+            'facility_visited_past_12mos_id' => [
+                'sometimes',
+                'required_without:facility_visited_past_12mos',
+                'nullable',
+                'integer',
+                Rule::exists('facility_visited_past_12mos', 'facility_visited_past_12mos_id'),
+            ],
+            'facility_visited_past_12mos' => ['sometimes', 'required_without:facility_visited_past_12mos_id', 'nullable', 'string', 'max:45'],
+            'facility_visit_reason_id' => [
+                'sometimes',
+                'nullable',
+                'integer',
+                Rule::exists('facility_visit_reason', 'facility_visit_reason_id'),
+            ],
+            'facility_visit_reason' => ['sometimes', 'nullable', 'string', 'max:45'],
             'disability_id' => [
                 'sometimes',
                 'required_without:disability',
@@ -72,30 +91,16 @@ class UpdateHealthRequest extends FormRequest
             function (Validator $validator): void {
                 $this->requireAtLeastOne($validator, [
                     'health_insurance_id',
+                    'health_insurance',
                     'facility_visited_past_12mos_id',
+                    'facility_visited_past_12mos',
                     'facility_visit_reason_id',
+                    'facility_visit_reason',
                     'disability_id',
                     'disability',
                     'pwd_id_number',
                 ], 'health', 'Provide at least one health field to update.');
             },
-        ];
-    }
-
-    /**
-     * @return array<int, mixed>
-     */
-    private function optionalLookupRule(string $table, string $column): array
-    {
-        return [
-            'sometimes',
-            'nullable',
-            'integer',
-            'min:0',
-            Rule::when(
-                fn () => (int) $this->input($column) > 0,
-                [Rule::exists($table, $column)],
-            ),
         ];
     }
 }

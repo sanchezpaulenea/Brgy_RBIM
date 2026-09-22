@@ -7,31 +7,31 @@ use App\Models\Concerns\ResolvesLookupSentinel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class FacilityVisitedPast12Mos extends Model
+class Immunization extends Model
 {
     use FindsOrCreatesLookupByLabel;
     use ResolvesLookupSentinel;
 
-    protected $table = 'facility_visited_past_12mos';
+    protected $table = 'immunization';
 
-    protected $primaryKey = 'facility_visited_past_12mos_id';
+    protected $primaryKey = 'immunization_id';
 
     public $timestamps = false;
 
     protected $fillable = [
-        'facility_visited_past_12mos',
+        'immunization',
     ];
 
     public function getRouteKeyName(): string
     {
-        return 'facility_visited_past_12mos_id';
+        return 'immunization_id';
     }
 
     /**
-     * @return HasMany<Health, $this>
+     * @return HasMany<InfantHealth, $this>
      */
-    public function healthRecords(): HasMany
+    public function infantHealthRecords(): HasMany
     {
-        return $this->hasMany(Health::class, 'facility_visited_past_12mos_id', 'facility_visited_past_12mos_id');
+        return $this->hasMany(InfantHealth::class, 'immunization_id', 'immunization_id');
     }
 }

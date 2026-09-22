@@ -2,11 +2,14 @@
 
 namespace App\Models\ResidentManagement\Health;
 
+use App\Models\Concerns\FindsOrCreatesLookupByLabel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class BirthAttendant extends Model
 {
+    use FindsOrCreatesLookupByLabel;
+
     protected $table = 'birth_attendant';
 
     protected $primaryKey = 'birth_attendant_id';

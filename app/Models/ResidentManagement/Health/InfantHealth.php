@@ -5,16 +5,9 @@ namespace App\Models\ResidentManagement\Health;
 use App\Models\ResidentManagement\Demographic\Resident;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Str;
 
 class InfantHealth extends Model
 {
-    /**
-     * infant_health.immunization is VARCHAR(45) NOT NULL, so an infant with no
-     * immunizations on record is stored with this note rather than left blank.
-     */
-    public const NO_IMMUNIZATION = 'None';
-
     protected $table = 'infant_health';
 
     protected $primaryKey = 'infant_health_id';
@@ -24,20 +17,13 @@ class InfantHealth extends Model
     protected $fillable = [
         'place_of_delivery_id',
         'birth_attendant_id',
-        'immunization',
+        'immunization_id',
         'resident_id',
     ];
 
     public function getRouteKeyName(): string
     {
         return 'infant_health_id';
-    }
-
-    public static function normalizeImmunization(mixed $value): string
-    {
-        $note = is_string($value) ? Str::of($value)->squish()->toString() : '';
-
-        return $note === '' ? self::NO_IMMUNIZATION : $note;
     }
 
     /**
@@ -62,5 +48,13 @@ class InfantHealth extends Model
     public function birthAttendant(): BelongsTo
     {
         return $this->belongsTo(BirthAttendant::class, 'birth_attendant_id', 'birth_attendant_id');
+    }
+
+    /**
+     * @return BelongsTo<Immunization, $this>
+     */
+    public function immunization(): BelongsTo
+    {
+        return $this->belongsTo(Immunization::class, 'immunization_id', 'immunization_id');
     }
 }

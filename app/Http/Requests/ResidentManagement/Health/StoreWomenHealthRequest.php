@@ -20,10 +20,11 @@ class StoreWomenHealthRequest extends FormRequest
         return [
             'number_pregnancies' => ['required', 'integer', 'min:0'],
             'living_children' => ['required', 'integer', 'min:0'],
-            'family_planning_method_id' => $this->optionalLookupRule(
-                'family_planning_method',
-                'family_planning_method_id',
-            ),
+            'family_planning_method_id' => [
+                'required',
+                'integer',
+                Rule::exists('family_planning_method', 'family_planning_method_id'),
+            ],
             'source_of_fp_method_id' => $this->optionalLookupRule(
                 'source_of_fp_method',
                 'source_of_fp_method_id',
@@ -42,6 +43,7 @@ class StoreWomenHealthRequest extends FormRequest
             'number_pregnancies.integer' => 'Number of pregnancies must be numeric.',
             'living_children.required' => 'Living children is required.',
             'living_children.integer' => 'Living children must be numeric.',
+            'family_planning_method_id.required' => 'Family planning method is required.',
             'family_planning_method_id.exists' => 'The selected family planning method does not exist.',
             'source_of_fp_method_id.exists' => 'The selected source of family planning method does not exist.',
         ];

@@ -2,11 +2,14 @@
 
 namespace App\Models\ResidentManagement\Economic;
 
+use App\Models\Concerns\ResolvesLookupSentinel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class StatusOfWorkBusiness extends Model
 {
+    use ResolvesLookupSentinel;
+
     protected $table = 'status_of_work_business';
 
     protected $primaryKey = 'status_of_work_business_id';

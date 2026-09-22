@@ -166,13 +166,13 @@ class EducationService
     {
         $id = SchoolLvl::notApplicableId();
 
-        if ($id !== null) {
-            return $id;
+        if ($id === null) {
+            throw ValidationException::withMessages([
+                'school_lvl_id' => ['The Not Applicable school level lookup is missing.'],
+            ]);
         }
 
-        return (int) SchoolLvl::query()->create([
-            'school_lvl' => SchoolLvl::NOT_APPLICABLE,
-        ])->school_lvl_id;
+        return $id;
     }
 
     /**

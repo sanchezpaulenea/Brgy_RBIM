@@ -20,6 +20,7 @@ use App\Http\Controllers\ResidentManagement\Economic\EconomicController;
 use App\Http\Controllers\ResidentManagement\Education\EducationController;
 use App\Http\Controllers\ResidentManagement\Health\DisabilityController;
 use App\Http\Controllers\ResidentManagement\Health\HealthController;
+use App\Http\Controllers\ResidentManagement\Health\HealthLookupWriteController;
 use App\Http\Controllers\ResidentManagement\Health\InfantHealthController;
 use App\Http\Controllers\ResidentManagement\Health\WomenHealthController;
 use App\Http\Controllers\ResidentManagement\Migration\MigrationController;
@@ -73,6 +74,12 @@ Route::prefix('v1')->group(function () {
         Route::post('residents/{resident}/health', [HealthController::class, 'store'])->name('residents.health.store');
         Route::patch('health-records/{health}', [HealthController::class, 'update'])->name('health-records.update');
         Route::post('disabilities', [DisabilityController::class, 'store'])->name('disabilities.store');
+        Route::post('places-of-delivery', [HealthLookupWriteController::class, 'store'])->defaults('lookup', 'place-of-delivery')->name('places-of-delivery.store');
+        Route::post('birth-attendants', [HealthLookupWriteController::class, 'store'])->defaults('lookup', 'birth-attendant')->name('birth-attendants.store');
+        Route::post('immunizations', [HealthLookupWriteController::class, 'store'])->defaults('lookup', 'immunization')->name('immunizations.store');
+        Route::post('health-insurances', [HealthLookupWriteController::class, 'store'])->defaults('lookup', 'health-insurance')->name('health-insurances.store');
+        Route::post('facilities-visited-past-12mos', [HealthLookupWriteController::class, 'store'])->defaults('lookup', 'facility-visited-past-12mos')->name('facilities-visited-past-12mos.store');
+        Route::post('facility-visit-reasons', [HealthLookupWriteController::class, 'store'])->defaults('lookup', 'facility-visit-reason')->name('facility-visit-reasons.store');
         Route::post('residents/{resident}/women-health', [WomenHealthController::class, 'store'])->name('residents.women-health.store');
         Route::patch('women-health/{womenHealth}', [WomenHealthController::class, 'update'])->name('women-health.update');
         Route::post('residents/{resident}/sociocivic', [SociocivicController::class, 'store'])->name('residents.sociocivic.store');
@@ -110,6 +117,7 @@ Route::prefix('v1')->group(function () {
         Route::get('statuses-of-work-business', [LookupController::class, 'index'])->defaults('lookup', 'status-of-work-business')->name('statuses-of-work-business.index');
         Route::get('places-of-delivery', [LookupController::class, 'index'])->defaults('lookup', 'place-of-delivery')->name('places-of-delivery.index');
         Route::get('birth-attendants', [LookupController::class, 'index'])->defaults('lookup', 'birth-attendant')->name('birth-attendants.index');
+        Route::get('immunizations', [LookupController::class, 'index'])->defaults('lookup', 'immunization')->name('immunizations.index');
         Route::get('health-insurances', [LookupController::class, 'index'])->defaults('lookup', 'health-insurance')->name('health-insurances.index');
         Route::get('facilities-visited-past-12mos', [LookupController::class, 'index'])->defaults('lookup', 'facility-visited-past-12mos')->name('facilities-visited-past-12mos.index');
         Route::get('facility-visit-reasons', [LookupController::class, 'index'])->defaults('lookup', 'facility-visit-reason')->name('facility-visit-reasons.index');

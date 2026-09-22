@@ -329,7 +329,7 @@
                                 <p v-if="editErrors.living_children" class="rbim-error">{{ editErrors.living_children }}</p>
                             </div>
                             <div>
-                                <label class="rbim-label">Family Planning Method</label>
+                                <label class="rbim-label">Family Planning Method<span class="rbim-required" aria-hidden="true">*</span></label>
                                 <select
                                     v-model="editForm.family_planning_method_id"
                                     class="rbim-input"
@@ -386,7 +386,7 @@
                     <template v-else-if="editing === 'migration'">
                         <p class="text-sm text-slate-500">
                             Current household address: {{ location.barangay || '—' }}, {{ location.city || '—' }}.
-                            Resident type is identified by comparing previous residence 6 months ago with this address.
+                            Resident type is identified by comparing previous residence 5 years ago and 6 months ago with this address.
                         </p>
                         <div class="grid gap-4 sm:grid-cols-2">
                             <div>
@@ -462,6 +462,7 @@
                                         placeholder="MM/YYYY"
                                         precision="month"
                                         required
+                                        :min="migrationClassification.transferDateMin"
                                         :max="todayIso"
                                         :show-age="false"
                                         :error="editErrors.date_of_transfer_in_brgy"
@@ -691,6 +692,7 @@ const lookups = reactive({
     statusOfWorkBusiness: [],
     placeOfDelivery: [],
     birthAttendant: [],
+    immunization: [],
     healthInsurance: [],
     facilityVisited: [],
     facilityVisitReason: [],
@@ -1189,13 +1191,19 @@ function startSectionEdit(key) {
         },
         infant_health: {
             place_of_delivery_id: record.place_of_delivery_id || '',
+            place_of_delivery_name: record.place_of_delivery || '',
             birth_attendant_id: record.birth_attendant_id || '',
-            immunization: record.immunization || '',
+            birth_attendant_name: record.birth_attendant || '',
+            immunization_id: record.immunization_id || '',
+            immunization_name: record.immunization || '',
         },
         health: {
             health_insurance_id: record.health_insurance_id || '',
+            health_insurance_name: record.health_insurance || '',
             facility_visited_past_12mos_id: record.facility_visited_past_12mos_id || '',
+            facility_visited_name: record.facility_visited_past_12mos || '',
             facility_visit_reason_id: record.facility_visit_reason_id || '',
+            facility_visit_reason_name: record.facility_visit_reason || '',
             disability_id: record.disability_id || '',
             disability_name: record.disability || '',
             pwd_id_number: record.pwd_id_number || '',
@@ -1561,6 +1569,7 @@ async function loadLookups() {
         statusOfWorkBusiness,
         placeOfDelivery,
         birthAttendant,
+        immunization,
         healthInsurance,
         facilityVisited,
         facilityVisitReason,
@@ -1587,6 +1596,7 @@ async function loadLookups() {
         lookupService.fetchLookup('status-of-work-business'),
         lookupService.fetchLookup('place-of-delivery'),
         lookupService.fetchLookup('birth-attendant'),
+        lookupService.fetchLookup('immunization'),
         lookupService.fetchLookup('health-insurance'),
         lookupService.fetchLookup('facility-visited-past-12mos'),
         lookupService.fetchLookup('facility-visit-reason'),
@@ -1614,6 +1624,7 @@ async function loadLookups() {
     lookups.statusOfWorkBusiness = statusOfWorkBusiness;
     lookups.placeOfDelivery = placeOfDelivery;
     lookups.birthAttendant = birthAttendant;
+    lookups.immunization = immunization;
     lookups.healthInsurance = healthInsurance;
     lookups.facilityVisited = facilityVisited;
     lookups.facilityVisitReason = facilityVisitReason;

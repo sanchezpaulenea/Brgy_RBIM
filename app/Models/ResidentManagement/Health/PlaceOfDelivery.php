@@ -2,11 +2,14 @@
 
 namespace App\Models\ResidentManagement\Health;
 
+use App\Models\Concerns\FindsOrCreatesLookupByLabel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PlaceOfDelivery extends Model
 {
+    use FindsOrCreatesLookupByLabel;
+
     protected $table = 'place_of_delivery';
 
     protected $primaryKey = 'place_of_delivery_id';

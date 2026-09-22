@@ -10,13 +10,6 @@ use Illuminate\Support\Str;
 
 class Health extends Model
 {
-    /**
-     * Stored when an optional health lookup (Q26–Q28) is left blank. Those
-     * columns are INT NOT NULL behind a foreign key, so each lookup table
-     * carries a matching "Not Applicable" row at id 0.
-     */
-    public const LOOKUP_NOT_APPLICABLE = 0;
-
     protected $table = 'health';
 
     protected $primaryKey = 'health_id';

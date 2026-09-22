@@ -6,6 +6,7 @@ use App\Models\Logs\Action;
 use App\Models\ResidentManagement\Demographic\Resident;
 use App\Models\ResidentManagement\Economic\Economic;
 use App\Models\ResidentManagement\Economic\SourceOfIncome;
+use App\Models\ResidentManagement\Economic\StatusOfWorkBusiness;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Economic\EconomicRepositoryInterface;
@@ -100,10 +101,10 @@ class EconomicService
             'monthly_income' => $economic->monthly_income,
             'source_of_income_id' => $economic->source_of_income_id,
             'source_of_income' => $economic->sourceOfIncome?->source_of_income,
-            'status_of_work_business_id' => $economic->status_of_work_business_id === Economic::STATUS_NOT_APPLICABLE
+            'status_of_work_business_id' => $economic->statusOfWorkBusiness?->indicatesNotApplicable()
                 ? null
                 : $economic->status_of_work_business_id,
-            'status_of_work_business' => $economic->status_of_work_business_id === Economic::STATUS_NOT_APPLICABLE
+            'status_of_work_business' => $economic->statusOfWorkBusiness?->indicatesNotApplicable()
                 ? null
                 : $economic->statusOfWorkBusiness?->status_of_work_business,
             'place_of_work_business' => $economic->place_of_work_business,
@@ -120,7 +121,7 @@ class EconomicService
         return [
             'monthly income' => (string) $economic->monthly_income,
             'source of income' => (string) ($economic->sourceOfIncome?->source_of_income ?? $economic->source_of_income_id),
-            'status of work' => $economic->status_of_work_business_id === Economic::STATUS_NOT_APPLICABLE
+            'status of work' => $economic->statusOfWorkBusiness?->indicatesNotApplicable()
                 ? 'N/A'
                 : (string) ($economic->statusOfWorkBusiness?->status_of_work_business ?? $economic->status_of_work_business_id),
             'place of work' => (string) ($economic->place_of_work_business ?? ''),
@@ -130,7 +131,7 @@ class EconomicService
     /**
      * Remittance, investments, and others skip Q17–Q18. status_of_work_business_id
      * is INT NOT NULL behind a foreign key, so N/A is stored as the lookup
-     * table's id-0 row rather than as NULL.
+     * table's existing "Not Applicable" row.
      *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
@@ -141,7 +142,15 @@ class EconomicService
             return $data;
         }
 
-        $data['status_of_work_business_id'] = Economic::STATUS_NOT_APPLICABLE;
+        $notApplicableId = StatusOfWorkBusiness::notApplicableId();
+
+        if ($notApplicableId === null) {
+            throw ValidationException::withMessages([
+                'status_of_work_business_id' => ['The Not Applicable work / business status lookup is missing.'],
+            ]);
+        }
+
+        $data['status_of_work_business_id'] = $notApplicableId;
         $data['place_of_work_business'] = null;
 
         return $data;

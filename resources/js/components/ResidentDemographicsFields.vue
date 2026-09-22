@@ -161,12 +161,12 @@
             :options="nationalities"
             :input-id="`${idPrefix}-nationality`"
             label="Nationality"
-            placeholder="Search or type a nationality (optional)"
+            placeholder="Search or type a nationality"
             :can-create="canCreateNationality"
             :limit="lookupLimit"
             :preferred-ids="preferredLookupIds"
             :error="errors.nationality_id"
-            :hint="optionalLookupHint(canCreateNationality)"
+            :hint="lookupHint(canCreateNationality)"
             @create="createNationality"
         />
         <LookupCombobox
@@ -175,12 +175,12 @@
             :options="religions"
             :input-id="`${idPrefix}-religion`"
             label="Religion"
-            placeholder="Search or type a religion (optional)"
+            placeholder="Search or type a religion"
             :can-create="canCreateReligion"
             :limit="lookupLimit"
             :preferred-ids="preferredLookupIds"
             :error="errors.religion_id"
-            :hint="optionalLookupHint(canCreateReligion)"
+            :hint="lookupHint(canCreateReligion)"
             @create="createReligion"
         />
         <LookupCombobox
@@ -189,12 +189,12 @@
             :options="ethnicities"
             :input-id="`${idPrefix}-ethnicity`"
             label="Ethnicity"
-            placeholder="Search or type an ethnicity (optional)"
+            placeholder="Search or type an ethnicity"
             :can-create="canCreateEthnicity"
             :limit="lookupLimit"
             :preferred-ids="preferredLookupIds"
             :error="errors.ethnicity_id"
-            :hint="optionalLookupHint(canCreateEthnicity)"
+            :hint="lookupHint(canCreateEthnicity)"
             @create="createEthnicity"
         />
         <div>
@@ -294,10 +294,10 @@ const canCreateNationality = computed(() => hasPermission('nationality.create'))
 const canCreateReligion = computed(() => hasPermission('religion.create'));
 const canCreateEthnicity = computed(() => hasPermission('ethnicity.create'));
 
-function optionalLookupHint(canCreate) {
+function lookupHint(canCreate) {
     return canCreate
-        ? 'Optional. Choose from the list, or type a new name and press Enter to add it.'
-        : 'Optional. Leave blank if not specified.';
+        ? 'Choose from the list, or type a new name and press Enter to add it.'
+        : 'Choose from the list.';
 }
 
 function patch(field, value) {

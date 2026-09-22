@@ -128,10 +128,10 @@
                 :options="nationalities"
                 :input-id="`${idPrefix}-nationality`"
                 label="Nationality"
-                placeholder="Search or type a nationality (optional)"
+                placeholder="Search or type a nationality"
                 :can-create="canCreateNationality"
                 :error="errors.nationality_id"
-                :hint="optionalLookupHint(canCreateNationality)"
+                :hint="lookupHint(canCreateNationality)"
                 @create="createNationality"
             />
             <div>
@@ -156,10 +156,10 @@
                 :options="religions"
                 :input-id="`${idPrefix}-religion`"
                 label="Religion"
-                placeholder="Search or type a religion (optional)"
+                placeholder="Search or type a religion"
                 :can-create="canCreateReligion"
                 :error="errors.religion_id"
-                :hint="optionalLookupHint(canCreateReligion)"
+                :hint="lookupHint(canCreateReligion)"
                 @create="createReligion"
             />
             <LookupCombobox
@@ -168,10 +168,10 @@
                 :options="ethnicities"
                 :input-id="`${idPrefix}-ethnicity`"
                 label="Ethnicity"
-                placeholder="Search or type an ethnicity (optional)"
+                placeholder="Search or type an ethnicity"
                 :can-create="canCreateEthnicity"
                 :error="errors.ethnicity_id"
-                :hint="optionalLookupHint(canCreateEthnicity)"
+                :hint="lookupHint(canCreateEthnicity)"
                 @create="createEthnicity"
             />
         </div>
@@ -330,10 +330,10 @@ const relationshipOptions = computed(() => {
     return props.relationships.filter((option) => Number(option.id) !== HEAD_RELATIONSHIP_ID);
 });
 
-function optionalLookupHint(canCreate) {
+function lookupHint(canCreate) {
     return canCreate
-        ? 'Optional. Choose from the list, or type a new name and press Enter to add it.'
-        : 'Optional. Leave blank if not specified.';
+        ? 'Choose from the list, or type a new name and press Enter to add it.'
+        : 'Choose from the list.';
 }
 
 function patch(field, value) {

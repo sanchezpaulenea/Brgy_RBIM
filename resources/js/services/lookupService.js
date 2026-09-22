@@ -32,6 +32,42 @@ export async function createDisability(payload) {
     return data.item;
 }
 
+export async function createPlaceOfDelivery(payload) {
+    const { data } = await http.post('/places-of-delivery', payload);
+
+    return data.item;
+}
+
+export async function createBirthAttendant(payload) {
+    const { data } = await http.post('/birth-attendants', payload);
+
+    return data.item;
+}
+
+export async function createImmunization(payload) {
+    const { data } = await http.post('/immunizations', payload);
+
+    return data.item;
+}
+
+export async function createHealthInsurance(payload) {
+    const { data } = await http.post('/health-insurances', payload);
+
+    return data.item;
+}
+
+export async function createFacilityVisited(payload) {
+    const { data } = await http.post('/facilities-visited-past-12mos', payload);
+
+    return data.item;
+}
+
+export async function createFacilityVisitReason(payload) {
+    const { data } = await http.post('/facility-visit-reasons', payload);
+
+    return data.item;
+}
+
 export async function fetchLookup(slug) {
     const { data } = await http.get(`/lookups/${slug}`);
 

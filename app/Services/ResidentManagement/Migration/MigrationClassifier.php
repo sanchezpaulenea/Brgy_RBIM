@@ -86,13 +86,12 @@ class MigrationClassifier
     }
 
     /**
-     * Non-migrant when previous and current city match, and barangay
-     * matches whenever both sides provided it. Otherwise migrant at 6
-     * months of stay, transient below that.
+     * Non-migrant when both previous residences match the current one.
+     * Otherwise migrant at 6 months of stay, transient below that.
      */
-    public static function classify(bool $sameAddress, ?int $stayMonths): int
+    public static function classify(bool $sameSixMonthsAgo, bool $sameFiveYearsAgo, ?int $stayMonths): int
     {
-        if ($sameAddress) {
+        if ($sameSixMonthsAgo && $sameFiveYearsAgo) {
             return ResidentType::NON_MIGRANT;
         }
 
@@ -101,6 +100,13 @@ class MigrationClassifier
         }
 
         return ResidentType::TRANSIENT;
+    }
+
+    public static function earliestTransferDateWhenSixMonthsDiffers(?CarbonInterface $asOf = null): Carbon
+    {
+        $asOf ??= Carbon::now();
+
+        return $asOf->copy()->startOfMonth()->subMonths(self::MIGRANT_THRESHOLD_MONTHS);
     }
 
     public static function isNonMigrant(int $residentTypeId): bool

@@ -18,7 +18,7 @@ class MigrationClassifierTest extends TestCase
         $this->assertTrue($same);
         $this->assertSame(
             ResidentType::NON_MIGRANT,
-            MigrationClassifier::classify($same, 2),
+            MigrationClassifier::classify($same, true, 2),
         );
     }
 
@@ -40,11 +40,11 @@ class MigrationClassifierTest extends TestCase
     {
         $this->assertSame(
             ResidentType::MIGRANT,
-            MigrationClassifier::classify(false, 6),
+            MigrationClassifier::classify(false, true, 6),
         );
         $this->assertSame(
             ResidentType::MIGRANT,
-            MigrationClassifier::classify(false, 18),
+            MigrationClassifier::classify(false, false, 18),
         );
     }
 
@@ -52,15 +52,15 @@ class MigrationClassifierTest extends TestCase
     {
         $this->assertSame(
             ResidentType::TRANSIENT,
-            MigrationClassifier::classify(false, 0),
+            MigrationClassifier::classify(false, true, 0),
         );
         $this->assertSame(
             ResidentType::TRANSIENT,
-            MigrationClassifier::classify(false, 5),
+            MigrationClassifier::classify(false, false, 5),
         );
         $this->assertSame(
             ResidentType::TRANSIENT,
-            MigrationClassifier::classify(false, null),
+            MigrationClassifier::classify(true, false, null),
         );
     }
 

@@ -153,103 +153,91 @@
         </template>
 
         <template v-else-if="section === 'infant_health'">
-            <div>
-                <label class="rbim-label" :for="`${idPrefix}-place_of_delivery_id`">
-                    Place of Delivery<span class="rbim-required" aria-hidden="true">*</span>
-                </label>
-                <select
-                    :id="`${idPrefix}-place_of_delivery_id`"
-                    v-model="form.place_of_delivery_id"
-                    class="rbim-input"
-                    :class="{ 'rbim-input-error': errors.place_of_delivery_id }"
-                >
-                    <option value="">Select place of delivery</option>
-                    <option v-for="option in lookups.placeOfDelivery" :key="option.id" :value="option.id">{{ option.label }}</option>
-                </select>
-                <p v-if="errors.place_of_delivery_id" class="rbim-error">{{ errors.place_of_delivery_id }}</p>
-            </div>
-            <div>
-                <label class="rbim-label" :for="`${idPrefix}-birth_attendant_id`">
-                    Birth Attendant<span class="rbim-required" aria-hidden="true">*</span>
-                </label>
-                <select
-                    :id="`${idPrefix}-birth_attendant_id`"
-                    v-model="form.birth_attendant_id"
-                    class="rbim-input"
-                    :class="{ 'rbim-input-error': errors.birth_attendant_id }"
-                >
-                    <option value="">Select birth attendant</option>
-                    <option v-for="option in lookups.birthAttendant" :key="option.id" :value="option.id">{{ option.label }}</option>
-                </select>
-                <p v-if="errors.birth_attendant_id" class="rbim-error">{{ errors.birth_attendant_id }}</p>
-            </div>
-            <div class="sm:col-span-2">
-                <label class="rbim-label" :for="`${idPrefix}-immunization`">
-                    Immunization Note
-                </label>
-                <input
-                    :id="`${idPrefix}-immunization`"
-                    v-model="form.immunization"
-                    type="text"
-                    maxlength="45"
-                    :placeholder="NO_IMMUNIZATION_NOTE"
-                    class="rbim-input"
-                    :class="{ 'rbim-input-error': errors.immunization }"
-                    @blur="form.immunization = String(form.immunization ?? '').trim()"
-                >
-                <p v-if="errors.immunization" class="rbim-error">{{ errors.immunization }}</p>
-                <p v-else class="rbim-hint">
-                    List the immunizations the infant has received. Left blank, this is recorded as "{{ NO_IMMUNIZATION_NOTE }}".
-                </p>
-            </div>
+            <LookupCombobox
+                v-model="form.place_of_delivery_id"
+                v-model:query="form.place_of_delivery_name"
+                :options="lookups.placeOfDelivery ?? []"
+                :input-id="`${idPrefix}-place_of_delivery`"
+                label="Place of Delivery"
+                placeholder="Search or type a place of delivery"
+                required
+                can-create
+                :limit="5"
+                :error="errors.place_of_delivery_id || errors.place_of_delivery"
+                hint="Choose from the list, or type a new name and press Enter to add it."
+                @create="(name) => createLookup('placeOfDelivery', () => lookupService.createPlaceOfDelivery({ place_of_delivery: name }), 'place_of_delivery_id', 'place_of_delivery_name', 'place_of_delivery_id')"
+            />
+            <LookupCombobox
+                v-model="form.birth_attendant_id"
+                v-model:query="form.birth_attendant_name"
+                :options="lookups.birthAttendant ?? []"
+                :input-id="`${idPrefix}-birth_attendant`"
+                label="Birth Attendant"
+                placeholder="Search or type a birth attendant"
+                required
+                can-create
+                :limit="5"
+                :error="errors.birth_attendant_id || errors.birth_attendant"
+                hint="Choose from the list, or type a new name and press Enter to add it."
+                @create="(name) => createLookup('birthAttendant', () => lookupService.createBirthAttendant({ birth_attendant: name }), 'birth_attendant_id', 'birth_attendant_name', 'birth_attendant_id')"
+            />
+            <LookupCombobox
+                v-model="form.immunization_id"
+                v-model:query="form.immunization_name"
+                :options="lookups.immunization ?? []"
+                :input-id="`${idPrefix}-immunization`"
+                label="Immunization"
+                placeholder="Search or type a vaccine"
+                required
+                can-create
+                :limit="5"
+                :error="errors.immunization_id || errors.immunization"
+                hint="Write the vaccine last received by the infant."
+                @create="(name) => createLookup('immunization', () => lookupService.createImmunization({ immunization: name }), 'immunization_id', 'immunization_name', 'immunization_id')"
+            />
         </template>
 
         <template v-else-if="section === 'health'">
-            <div>
-                <label class="rbim-label" :for="`${idPrefix}-health_insurance_id`">
-                    Health Insurance
-                </label>
-                <select
-                    :id="`${idPrefix}-health_insurance_id`"
-                    v-model="form.health_insurance_id"
-                    class="rbim-input"
-                    :class="{ 'rbim-input-error': errors.health_insurance_id }"
-                >
-                    <option value="">Select health insurance</option>
-                    <option v-for="option in lookups.healthInsurance" :key="option.id" :value="option.id">{{ option.label }}</option>
-                </select>
-                <p v-if="errors.health_insurance_id" class="rbim-error">{{ errors.health_insurance_id }}</p>
-            </div>
-            <div>
-                <label class="rbim-label" :for="`${idPrefix}-facility_visited_past_12mos_id`">
-                    Facility Visited Past 12 Months
-                </label>
-                <select
-                    :id="`${idPrefix}-facility_visited_past_12mos_id`"
-                    v-model="form.facility_visited_past_12mos_id"
-                    class="rbim-input"
-                    :class="{ 'rbim-input-error': errors.facility_visited_past_12mos_id }"
-                >
-                    <option value="">Select facility visited</option>
-                    <option v-for="option in lookups.facilityVisited" :key="option.id" :value="option.id">{{ option.label }}</option>
-                </select>
-                <p v-if="errors.facility_visited_past_12mos_id" class="rbim-error">{{ errors.facility_visited_past_12mos_id }}</p>
-            </div>
-            <div>
-                <label class="rbim-label" :for="`${idPrefix}-facility_visit_reason_id`">
-                    Facility Visit Reason
-                </label>
-                <select
-                    :id="`${idPrefix}-facility_visit_reason_id`"
-                    v-model="form.facility_visit_reason_id"
-                    class="rbim-input"
-                    :class="{ 'rbim-input-error': errors.facility_visit_reason_id }"
-                >
-                    <option value="">Select visit reason</option>
-                    <option v-for="option in lookups.facilityVisitReason" :key="option.id" :value="option.id">{{ option.label }}</option>
-                </select>
-                <p v-if="errors.facility_visit_reason_id" class="rbim-error">{{ errors.facility_visit_reason_id }}</p>
-            </div>
+            <LookupCombobox
+                v-model="form.health_insurance_id"
+                v-model:query="form.health_insurance_name"
+                :options="lookups.healthInsurance ?? []"
+                :input-id="`${idPrefix}-health_insurance`"
+                label="Health Insurance"
+                placeholder="Search or type a health insurance"
+                required
+                can-create
+                :error="errors.health_insurance_id || errors.health_insurance"
+                hint="Choose from the list, or type a new name and press Enter to add it."
+                @create="(name) => createLookup('healthInsurance', () => lookupService.createHealthInsurance({ health_insurance: name }), 'health_insurance_id', 'health_insurance_name', 'health_insurance_id')"
+            />
+            <LookupCombobox
+                v-model="form.facility_visited_past_12mos_id"
+                v-model:query="form.facility_visited_name"
+                :options="lookups.facilityVisited ?? []"
+                :input-id="`${idPrefix}-facility_visited`"
+                label="Facility Visited Past 12 Months"
+                placeholder="Search or type a facility"
+                required
+                can-create
+                :error="errors.facility_visited_past_12mos_id || errors.facility_visited_past_12mos"
+                hint="Choose from the list, or type a new name and press Enter to add it."
+                @create="(name) => createLookup('facilityVisited', () => lookupService.createFacilityVisited({ facility_visited_past_12mos: name }), 'facility_visited_past_12mos_id', 'facility_visited_name', 'facility_visited_past_12mos_id')"
+            />
+            <LookupCombobox
+                v-if="!facilityVisitedIsNone"
+                v-model="form.facility_visit_reason_id"
+                v-model:query="form.facility_visit_reason_name"
+                :options="lookups.facilityVisitReason ?? []"
+                :input-id="`${idPrefix}-facility_visit_reason`"
+                label="Facility Visit Reason"
+                placeholder="Search or type a visit reason"
+                required
+                can-create
+                :error="errors.facility_visit_reason_id || errors.facility_visit_reason"
+                hint="Choose from the list, or type a new name and press Enter to add it."
+                @create="(name) => createLookup('facilityVisitReason', () => lookupService.createFacilityVisitReason({ facility_visit_reason: name }), 'facility_visit_reason_id', 'facility_visit_reason_name', 'facility_visit_reason_id')"
+            />
             <LookupCombobox
                 v-model="form.disability_id"
                 v-model:query="form.disability_name"
@@ -263,7 +251,7 @@
                 hint="Choose from the list, or type a new name and press Enter to add it."
                 @create="createDisability"
             />
-            <div>
+            <div v-if="showsPwdId">
                 <label class="rbim-label" :for="`${idPrefix}-pwd_id_number`">
                     PWD ID Number
                 </label>
@@ -315,7 +303,7 @@
             </div>
             <div>
                 <label class="rbim-label" :for="`${idPrefix}-family_planning_method_id`">
-                    Family Planning Method
+                    Family Planning Method<span class="rbim-required" aria-hidden="true">*</span>
                 </label>
                 <select
                     :id="`${idPrefix}-family_planning_method_id`"
@@ -418,7 +406,7 @@
             <template v-if="sociocivicRelevance.senior_citizen && form.registered_sen_citizen === true">
                 <div>
                     <label class="rbim-label" :for="`${idPrefix}-ncsc_rrn_id_number`">
-                        NCSC-RRN
+                        NCSC-RRN<span class="rbim-required" aria-hidden="true">*</span>
                     </label>
                     <input
                         :id="`${idPrefix}-ncsc_rrn_id_number`"
@@ -485,7 +473,7 @@
         <template v-else-if="section === 'migration'">
             <p class="sm:col-span-2 text-sm text-slate-500">
                 Current household address: {{ location.barangay || '—' }}, {{ location.city || '—' }}.
-                Resident type is identified by comparing previous residence 6 months ago with this address.
+                Resident type is identified by comparing previous residence 5 years ago and 6 months ago with this address.
             </p>
             <div>
                 <label class="rbim-label" :for="`${idPrefix}-previous_residence_6mos_brgy`">
@@ -572,6 +560,7 @@
                         placeholder="MM/YYYY"
                         precision="month"
                         required
+                        :min="migrationClassification.transferDateMin"
                         :max="todayIso"
                         :show-age="false"
                         :error="errors.date_of_transfer_in_brgy"
@@ -720,14 +709,14 @@ import * as lookupService from '@/services/lookupService';
 import { classifyMigrationForm } from '@/utils/migration';
 import {
     educationFieldRelevance,
+    hasDisability,
     isEnrollmentStatusEnrolled,
     isFamilyPlanningNone,
     isNotApplicableLookup,
     isNotApplicableSchoolLvl,
+    isRegisteredSoloParent,
     lookupById,
-    NO_IMMUNIZATION_NOTE,
     sociocivicFieldRelevance,
-    SOLO_PARENT_STATUS_REGISTERED_ID,
     sourceOfIncomeSkipsWorkDetails,
 } from '@/utils/residentProfiling';
 import {
@@ -804,19 +793,23 @@ const familyPlanningIsNone = computed(() => (
     isFamilyPlanningNone(lookupById(props.lookups.familyPlanningMethod, props.form.family_planning_method_id))
 ));
 
+const facilityVisitedIsNone = computed(() => (
+    isNotApplicableLookup(lookupById(props.lookups.facilityVisited ?? [], props.form.facility_visited_past_12mos_id))
+));
+
+const showsPwdId = computed(() => (
+    hasDisability(
+        lookupById(props.lookups.disability ?? [], props.form.disability_id)?.label
+            ?? props.form.disability_name
+            ?? '',
+    )
+));
+
 const sociocivicRelevance = computed(() => sociocivicFieldRelevance(props.resident));
 
-const soloParentIsRegistered = computed(() => {
-    const option = lookupById(props.lookups.soloParentStatus ?? [], props.form.solo_parent_status_id);
-
-    if (option) {
-        const label = String(option.label ?? '');
-
-        return /registered/i.test(label) && !/non[- ]solo/i.test(label);
-    }
-
-    return Number(props.form.solo_parent_status_id) === SOLO_PARENT_STATUS_REGISTERED_ID;
-});
+const soloParentIsRegistered = computed(() => (
+    isRegisteredSoloParent(props.form.solo_parent_status_id, props.lookups.soloParentStatus ?? [])
+));
 
 const migrationClassification = computed(() => classifyMigrationForm(props.form, props.location));
 
@@ -844,24 +837,34 @@ function parseBoolean(value) {
     return '';
 }
 
-async function createDisability(name) {
+async function createLookup(listKey, createFn, idField, nameField, errorField) {
     try {
-        const item = await lookupService.createDisability({ disability: name });
+        const item = await createFn();
 
-        if (!Array.isArray(props.lookups.disability)) {
-            props.lookups.disability = [];
+        if (!Array.isArray(props.lookups[listKey])) {
+            props.lookups[listKey] = [];
         }
 
-        if (!props.lookups.disability.some((option) => Number(option.id) === Number(item.id))) {
-            props.lookups.disability.push(item);
+        if (!props.lookups[listKey].some((option) => Number(option.id) === Number(item.id))) {
+            props.lookups[listKey].push(item);
         }
 
-        props.form.disability_id = item.id;
-        props.form.disability_name = item.label;
-        delete props.errors.disability_id;
-        delete props.errors.disability;
+        props.form[idField] = item.id;
+        props.form[nameField] = item.label;
+        delete props.errors[errorField];
+        delete props.errors[idField];
     } catch (err) {
-        props.errors.disability_id = extractErrorMessage(err, 'Unable to add this disability.');
+        props.errors[errorField] = extractErrorMessage(err, 'Unable to add this value.');
     }
+}
+
+async function createDisability(name) {
+    return createLookup(
+        'disability',
+        () => lookupService.createDisability({ disability: name }),
+        'disability_id',
+        'disability_name',
+        'disability_id',
+    );
 }
 </script>

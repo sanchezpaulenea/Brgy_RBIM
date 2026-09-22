@@ -190,6 +190,7 @@ class ResidentRepository implements ResidentRepositoryInterface
             'economic.statusOfWorkBusiness',
             'infantHealth.placeOfDelivery',
             'infantHealth.birthAttendant',
+            'infantHealth.immunization',
             'health.healthInsurance',
             'health.facilityVisitedPast12Mos',
             'health.facilityVisitReason',

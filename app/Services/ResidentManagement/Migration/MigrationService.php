@@ -129,17 +129,23 @@ class MigrationService
 
         $merged = $this->mergedAttributes($data, $existing);
         $location = $this->systemSettingService->locationProfile();
-        $sameAddress = MigrationClassifier::sameAsCurrentResidence(
+        $sameSixMonthsAgo = MigrationClassifier::sameAsCurrentResidence(
             $merged['previous_residence_6mos_brgy'] ?? null,
             $merged['previous_residence_6mos_city_municipality'] ?? null,
             $location['barangay'],
             $location['city'],
         );
+        $sameFiveYearsAgo = MigrationClassifier::sameAsCurrentResidence(
+            $merged['previous_residence_5yrs_brgy'] ?? null,
+            $merged['previous_residence_5yrs_city_municipality'] ?? null,
+            $location['barangay'],
+            $location['city'],
+        );
 
-        $stayMonths = $sameAddress
+        $stayMonths = ($sameSixMonthsAgo && $sameFiveYearsAgo)
             ? null
             : MigrationClassifier::lengthOfStayMonths($merged['date_of_transfer_in_brgy'] ?? null);
-        $residentTypeId = MigrationClassifier::classify($sameAddress, $stayMonths);
+        $residentTypeId = MigrationClassifier::classify($sameSixMonthsAgo, $sameFiveYearsAgo, $stayMonths);
 
         if ($residentTypeId === ResidentType::NON_MIGRANT) {
             $data['date_of_transfer_in_brgy'] = null;
@@ -150,6 +156,10 @@ class MigrationService
             $data['resident_type_id'] = $residentTypeId;
 
             return $data;
+        }
+
+        if (! $sameSixMonthsAgo) {
+            $this->assertTransferDateWithinSixMonths($merged['date_of_transfer_in_brgy'] ?? null);
         }
 
         $this->assertMigrantFields($merged);
@@ -212,6 +222,23 @@ class MigrationService
 
         if ($errors !== []) {
             throw ValidationException::withMessages($errors);
+        }
+    }
+
+    private function assertTransferDateWithinSixMonths(mixed $transferDate): void
+    {
+        $parsed = MigrationClassifier::parseTransferDate($transferDate);
+
+        if ($parsed === null) {
+            return;
+        }
+
+        if ($parsed->lt(MigrationClassifier::earliestTransferDateWhenSixMonthsDiffers())) {
+            throw ValidationException::withMessages([
+                'date_of_transfer_in_brgy' => [
+                    'When the previous residence 6 months ago differs from the current residence, date of transfer cannot be more than 6 months ago.',
+                ],
+            ]);
         }
     }
 

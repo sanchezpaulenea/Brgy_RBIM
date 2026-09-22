@@ -3,19 +3,20 @@ import { todayDate } from '@/utils/format';
 import { classifyMigrationForm } from '@/utils/migration';
 import { toId } from '@/utils/residentForm';
 import {
-    ECONOMIC_STATUS_NOT_APPLICABLE,
     ENROLLMENT_NOT_ENROLLED_ID,
     educationFieldRelevance,
+    hasDisability,
     isEnrollmentStatusEnrolled,
     isFamilyPlanningNone,
+    isNotApplicableLookup,
     isNotApplicableSchoolLvl,
+    isRegisteredSoloParent,
     lookupById,
-    NO_IMMUNIZATION_NOTE,
     notApplicableHighestEducId,
+    notApplicableLookupId,
     notApplicableSchoolLvlId,
     resolveApplicableSections,
     sociocivicFieldRelevance,
-    SOLO_PARENT_STATUS_REGISTERED_ID,
     sourceOfIncomeSkipsWorkDetails,
     titleCaseWords,
 } from '@/utils/residentProfiling';
@@ -70,13 +71,19 @@ export function emptySectionForm(key) {
         },
         infant_health: {
             place_of_delivery_id: '',
+            place_of_delivery_name: '',
             birth_attendant_id: '',
-            immunization: '',
+            birth_attendant_name: '',
+            immunization_id: '',
+            immunization_name: '',
         },
         health: {
             health_insurance_id: '',
+            health_insurance_name: '',
             facility_visited_past_12mos_id: '',
+            facility_visited_name: '',
             facility_visit_reason_id: '',
+            facility_visit_reason_name: '',
             disability_id: '',
             disability_name: '',
             pwd_id_number: '',
@@ -155,6 +162,15 @@ export function sectionRecordId(key, record) {
     };
 
     return toId(ids[key]);
+}
+
+function requireCombobox(form, errors, idField, nameField, message) {
+    if (toId(form[idField]) || String(form[nameField] ?? '').trim()) {
+        delete errors[idField];
+        return;
+    }
+
+    errors[idField] = message;
 }
 
 function requiredSelect(form, errors, field, message) {
@@ -243,19 +259,6 @@ function nonSoloParentId(lookups) {
     return match?.id ?? 2;
 }
 
-/**
- * Only a registered solo parent carries a Solo Parent ID.
- */
-function isRegisteredSoloParent(statusId, lookups) {
-    const option = lookupById(lookups.soloParentStatus ?? [], statusId);
-
-    if (option) {
-        return /registered/i.test(String(option.label ?? '')) && !/non[- ]solo/i.test(String(option.label ?? ''));
-    }
-
-    return Number(statusId) === SOLO_PARENT_STATUS_REGISTERED_ID;
-}
-
 export function validateSectionForm(key, form, errors, { lookups = {}, resident = {}, location = {} } = {}) {
     Object.keys(errors).forEach((field) => {
         delete errors[field];
@@ -305,17 +308,24 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
     }
 
     if (key === 'infant_health') {
-        requiredSelect(form, errors, 'place_of_delivery_id', 'Place of delivery is required.');
-        requiredSelect(form, errors, 'birth_attendant_id', 'Birth attendant is required.');
-
-        if (String(form.immunization ?? '').trim().length > 45) {
-            errors.immunization = 'The immunization note may not be longer than 45 characters.';
-        } else {
-            delete errors.immunization;
-        }
+        requireCombobox(form, errors, 'place_of_delivery_id', 'place_of_delivery_name', 'Place of delivery is required.');
+        requireCombobox(form, errors, 'birth_attendant_id', 'birth_attendant_name', 'Birth attendant is required.');
+        requireCombobox(form, errors, 'immunization_id', 'immunization_name', 'Immunization is required.');
     }
 
     if (key === 'health') {
+        requireCombobox(form, errors, 'health_insurance_id', 'health_insurance_name', 'Health insurance is required.');
+        requireCombobox(form, errors, 'facility_visited_past_12mos_id', 'facility_visited_name', 'Facility visited past 12 months is required.');
+
+        const facilityOption = lookupById(lookups.facilityVisited ?? [], form.facility_visited_past_12mos_id);
+        const facilityIsNone = isNotApplicableLookup(facilityOption);
+
+        if (!facilityIsNone) {
+            requireCombobox(form, errors, 'facility_visit_reason_id', 'facility_visit_reason_name', 'Facility visit reason is required.');
+        } else {
+            delete errors.facility_visit_reason_id;
+        }
+
         const disabilityLabel = String(
             lookupById(lookups.disability ?? [], form.disability_id)?.label
                 ?? form.disability_name
@@ -333,10 +343,14 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
             errors.disability_id = 'Disability may not be longer than 45 characters.';
         }
 
-        const pwdIdError = pwdIdValidationError(form.pwd_id_number);
+        if (hasDisability(disabilityLabel)) {
+            const pwdIdError = pwdIdValidationError(form.pwd_id_number);
 
-        if (pwdIdError) {
-            errors.pwd_id_number = pwdIdError;
+            if (pwdIdError) {
+                errors.pwd_id_number = pwdIdError;
+            } else {
+                delete errors.pwd_id_number;
+            }
         } else {
             delete errors.pwd_id_number;
         }
@@ -345,6 +359,11 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
     if (key === 'women_health') {
         requiredInteger(form, errors, 'number_pregnancies', 'Number of pregnancies is required.');
         requiredInteger(form, errors, 'living_children', 'Living children is required.');
+        requiredSelect(form, errors, 'family_planning_method_id', 'Family planning method is required.');
+
+        if (!isFamilyPlanningNone(lookupById(lookups.familyPlanningMethod, form.family_planning_method_id))) {
+            requiredSelect(form, errors, 'source_of_fp_method_id', 'Source of family planning method is required.');
+        }
     }
 
     if (key === 'sociocivic') {
@@ -353,7 +372,7 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
         if (relevance.solo_parent) {
             requiredSelect(form, errors, 'solo_parent_status_id', 'Solo parent status is required.');
 
-            if (isRegisteredSoloParent(form.solo_parent_status_id, lookups)) {
+            if (isRegisteredSoloParent(form.solo_parent_status_id, lookups.soloParentStatus ?? [])) {
                 const soloParentIdError = soloParentIdValidationError(form.solo_parent_id_number);
 
                 if (soloParentIdError) {
@@ -370,7 +389,7 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
             requiredBoolean(form, errors, 'registered_sen_citizen', 'Registered senior citizen is required.');
 
             if (form.registered_sen_citizen === true) {
-                const ncscError = ncscRrnValidationError(form.ncsc_rrn_id_number, false);
+                const ncscError = ncscRrnValidationError(form.ncsc_rrn_id_number, true);
 
                 if (ncscError) {
                     errors.ncsc_rrn_id_number = ncscError;
@@ -414,6 +433,8 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
                 errors.date_of_transfer_in_brgy = 'Date of transfer is required for migrants and transients.';
             } else if (String(form.date_of_transfer_in_brgy) > todayDate()) {
                 errors.date_of_transfer_in_brgy = 'Date of transfer cannot be in the future.';
+            } else if (classification.transferDateMin && String(form.date_of_transfer_in_brgy) < classification.transferDateMin) {
+                errors.date_of_transfer_in_brgy = 'When the previous residence 6 months ago differs, date of transfer cannot be more than 6 months ago.';
             } else {
                 delete errors.date_of_transfer_in_brgy;
             }
@@ -443,6 +464,24 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
     }
 
     return Object.keys(errors).length === 0;
+}
+
+function assignComboboxPayload(payload, form, idField, nameField, labelField) {
+    if (toId(form[idField])) {
+        payload[idField] = Number(form[idField]);
+        delete payload[labelField];
+        delete payload[nameField];
+        return;
+    }
+
+    const typed = String(form[nameField] ?? form[labelField] ?? '').trim();
+
+    if (typed) {
+        payload[labelField] = typed;
+        delete payload[idField];
+    }
+
+    delete payload[nameField];
 }
 
 function toPayloadValue(value) {
@@ -482,41 +521,63 @@ export function prepareSectionPayload(key, form, { lookups = {}, resident = {}, 
 
     if (key === 'economic') {
         if (sourceOfIncomeSkipsWorkDetails(form.source_of_income_id, lookups.sourceOfIncome)) {
-            payload.status_of_work_business_id = ECONOMIC_STATUS_NOT_APPLICABLE;
+            payload.status_of_work_business_id = notApplicableLookupId(lookups.statusOfWorkBusiness);
             payload.place_of_work_business = null;
         }
     }
 
     if (key === 'infant_health') {
-        payload.immunization = String(form.immunization ?? '').trim() || NO_IMMUNIZATION_NOTE;
+        assignComboboxPayload(payload, form, 'place_of_delivery_id', 'place_of_delivery_name', 'place_of_delivery');
+        assignComboboxPayload(payload, form, 'birth_attendant_id', 'birth_attendant_name', 'birth_attendant');
+        assignComboboxPayload(payload, form, 'immunization_id', 'immunization_name', 'immunization');
     }
 
     if (key === 'health') {
-        payload.health_insurance_id = payload.health_insurance_id || 0;
-        payload.facility_visited_past_12mos_id = payload.facility_visited_past_12mos_id || 0;
-        payload.facility_visit_reason_id = payload.facility_visit_reason_id || 0;
+        assignComboboxPayload(payload, form, 'health_insurance_id', 'health_insurance_name', 'health_insurance');
+        assignComboboxPayload(payload, form, 'facility_visited_past_12mos_id', 'facility_visited_name', 'facility_visited_past_12mos');
+
+        const facilityOption = lookupById(lookups.facilityVisited ?? [], form.facility_visited_past_12mos_id);
+
+        if (isNotApplicableLookup(facilityOption)) {
+            payload.facility_visit_reason_id = notApplicableLookupId(lookups.facilityVisitReason);
+            delete payload.facility_visit_reason;
+        } else {
+            assignComboboxPayload(payload, form, 'facility_visit_reason_id', 'facility_visit_reason_name', 'facility_visit_reason');
+        }
+
         // pwd_id_number is a 16-digit reference, not a quantity: keep leading zeros.
-        payload.pwd_id_number = String(form.pwd_id_number ?? '').replace(/\D/g, '') || null;
+        const disabilityLabel = String(
+            lookupById(lookups.disability ?? [], form.disability_id)?.label
+                ?? form.disability_name
+                ?? form.disability
+                ?? '',
+        ).trim();
+        payload.pwd_id_number = hasDisability(disabilityLabel)
+            ? String(form.pwd_id_number ?? '').replace(/\D/g, '') || null
+            : null;
 
         if (form.disability_id) {
             payload.disability_id = Number(form.disability_id);
             delete payload.disability;
-        } else if (String(form.disability_name ?? form.disability ?? '').trim()) {
-            payload.disability = String(form.disability_name ?? form.disability).trim();
+        } else if (disabilityLabel) {
+            payload.disability = disabilityLabel;
             delete payload.disability_id;
         }
 
         delete payload.disability_name;
+        delete payload.health_insurance_name;
+        delete payload.facility_visited_name;
+        delete payload.facility_visit_reason_name;
     }
 
     if (key === 'women_health') {
         if (isFamilyPlanningNone(lookupById(lookups.familyPlanningMethod, form.family_planning_method_id))) {
-            payload.family_planning_method_id = 0;
-            payload.source_of_fp_method_id = 0;
+            payload.family_planning_method_id = Number(form.family_planning_method_id);
+            payload.source_of_fp_method_id = notApplicableLookupId(lookups.sourceOfFpMethod);
             payload.have_intention_to_use_fp = false;
         } else {
             payload.family_planning_method_id = Number(form.family_planning_method_id);
-            payload.source_of_fp_method_id = form.source_of_fp_method_id ? Number(form.source_of_fp_method_id) : 0;
+            payload.source_of_fp_method_id = form.source_of_fp_method_id ? Number(form.source_of_fp_method_id) : null;
             payload.have_intention_to_use_fp = form.have_intention_to_use_fp === true;
         }
     }
@@ -529,7 +590,7 @@ export function prepareSectionPayload(key, form, { lookups = {}, resident = {}, 
         }
 
         payload.solo_parent_id_number = relevance.solo_parent
-            && isRegisteredSoloParent(payload.solo_parent_status_id, lookups)
+            && isRegisteredSoloParent(payload.solo_parent_status_id, lookups.soloParentStatus ?? [])
             ? formatSoloParentId(form.solo_parent_id_number) || null
             : null;
 
@@ -559,9 +620,9 @@ export function prepareSectionPayload(key, form, { lookups = {}, resident = {}, 
 
     if (key === 'migration' && classifyMigrationForm(form, location).nonMigrant) {
         payload.date_of_transfer_in_brgy = null;
-        payload.reason_for_leaving_id = null;
-        payload.will_return_to_previous_residence = null;
-        payload.reason_for_transfer_id = null;
+        payload.reason_for_leaving_id = notApplicableLookupId(lookups.reasonForLeaving);
+        payload.will_return_to_previous_residence = false;
+        payload.reason_for_transfer_id = notApplicableLookupId(lookups.reasonForTransfer);
         payload.duration_of_stay = null;
     }
 

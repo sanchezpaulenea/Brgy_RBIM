@@ -2,11 +2,16 @@
 
 namespace App\Models\ResidentManagement\Health;
 
+use App\Models\Concerns\FindsOrCreatesLookupByLabel;
+use App\Models\Concerns\ResolvesLookupSentinel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class FacilityVisitReason extends Model
 {
+    use FindsOrCreatesLookupByLabel;
+    use ResolvesLookupSentinel;
+
     protected $table = 'facility_visit_reason';
 
     protected $primaryKey = 'facility_visit_reason_id';

@@ -5,6 +5,7 @@ namespace App\Services\ResidentManagement\Health;
 use App\Models\Logs\Action;
 use App\Models\ResidentManagement\Demographic\Resident;
 use App\Models\ResidentManagement\Health\FamilyPlanningMethod;
+use App\Models\ResidentManagement\Health\SourceOfFPMethod;
 use App\Models\ResidentManagement\Health\WomenHealth;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
@@ -118,24 +119,23 @@ class WomenHealthService
             'resident_id' => $womenHealth->health?->resident_id,
             'number_pregnancies' => $womenHealth->number_pregnancies,
             'living_children' => $womenHealth->living_children,
-            'family_planning_method_id' => $this->nullableLookupId($womenHealth->family_planning_method_id),
-            'family_planning_method' => $womenHealth->family_planning_method_id === WomenHealth::LOOKUP_NOT_APPLICABLE
+            'family_planning_method_id' => $womenHealth->family_planning_method_id,
+            'family_planning_method' => $womenHealth->familyPlanningMethod?->family_planning_method,
+            'source_of_fp_method_id' => $womenHealth->familyPlanningMethod?->indicatesNone()
                 ? null
-                : $womenHealth->familyPlanningMethod?->family_planning_method,
-            'source_of_fp_method_id' => $this->nullableLookupId($womenHealth->source_of_fp_method_id),
-            'source_of_fp_method' => $womenHealth->source_of_fp_method_id === WomenHealth::LOOKUP_NOT_APPLICABLE
+                : $womenHealth->source_of_fp_method_id,
+            'source_of_fp_method' => $womenHealth->familyPlanningMethod?->indicatesNone()
                 ? null
                 : $womenHealth->sourceOfFpMethod?->source_of_fp_method,
-            'have_intention_to_use_fp' => $womenHealth->family_planning_method_id === WomenHealth::LOOKUP_NOT_APPLICABLE
-                || ($womenHealth->familyPlanningMethod?->indicatesNone() ?? false)
+            'have_intention_to_use_fp' => $womenHealth->familyPlanningMethod?->indicatesNone()
                 ? null
                 : (bool) $womenHealth->have_intention_to_use_fp,
         ];
     }
 
     /**
-     * Q23 is optional. Empty or "None" skips Q24–Q25. INT NOT NULL lookup
-     * columns store 0; intention stores false.
+     * "None" skips Q24–Q25. source_of_fp_method_id is INT NOT NULL, so the
+     * existing "Not Applicable" lookup row is stored.
      *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
@@ -147,19 +147,25 @@ class WomenHealthService
             ? FamilyPlanningMethod::query()->where('family_planning_method_id', $methodId)->first()
             : null;
 
-        if ($methodId === 0 || $method?->indicatesNone()) {
-            $data['family_planning_method_id'] = WomenHealth::LOOKUP_NOT_APPLICABLE;
-            $data['source_of_fp_method_id'] = WomenHealth::LOOKUP_NOT_APPLICABLE;
+        if ($method === null) {
+            throw ValidationException::withMessages([
+                'family_planning_method_id' => ['Family planning method is required.'],
+            ]);
+        }
+
+        if ($method->indicatesNone()) {
+            $notApplicableId = SourceOfFPMethod::notApplicableId();
+
+            if ($notApplicableId === null) {
+                throw ValidationException::withMessages([
+                    'source_of_fp_method_id' => ['The Not Applicable source of family planning method lookup is missing.'],
+                ]);
+            }
+
+            $data['source_of_fp_method_id'] = $notApplicableId;
             $data['have_intention_to_use_fp'] = false;
 
             return $data;
-        }
-
-        if (! array_key_exists('source_of_fp_method_id', $data)
-            || $data['source_of_fp_method_id'] === null
-            || $data['source_of_fp_method_id'] === ''
-        ) {
-            $data['source_of_fp_method_id'] = WomenHealth::LOOKUP_NOT_APPLICABLE;
         }
 
         if (! array_key_exists('have_intention_to_use_fp', $data)
@@ -170,13 +176,6 @@ class WomenHealthService
         }
 
         return $data;
-    }
-
-    private function nullableLookupId(mixed $id): ?int
-    {
-        $value = (int) $id;
-
-        return $value === WomenHealth::LOOKUP_NOT_APPLICABLE ? null : $value;
     }
 
     private function assertEligible(?Resident $resident): void
@@ -198,14 +197,11 @@ class WomenHealthService
         return [
             'number of pregnancies' => (string) $womenHealth->number_pregnancies,
             'living children' => (string) $womenHealth->living_children,
-            'family planning method' => $womenHealth->family_planning_method_id === WomenHealth::LOOKUP_NOT_APPLICABLE
-                ? 'N/A'
-                : (string) ($womenHealth->familyPlanningMethod?->family_planning_method ?? $womenHealth->family_planning_method_id),
-            'source of fp method' => $womenHealth->source_of_fp_method_id === WomenHealth::LOOKUP_NOT_APPLICABLE
+            'family planning method' => (string) ($womenHealth->familyPlanningMethod?->family_planning_method ?? $womenHealth->family_planning_method_id),
+            'source of fp method' => $womenHealth->familyPlanningMethod?->indicatesNone()
                 ? 'N/A'
                 : (string) ($womenHealth->sourceOfFpMethod?->source_of_fp_method ?? $womenHealth->source_of_fp_method_id),
-            'intention to use fp' => $womenHealth->family_planning_method_id === WomenHealth::LOOKUP_NOT_APPLICABLE
-                || ($womenHealth->familyPlanningMethod?->indicatesNone() ?? false)
+            'intention to use fp' => $womenHealth->familyPlanningMethod?->indicatesNone()
                 ? 'N/A'
                 : ($womenHealth->have_intention_to_use_fp ? 'Yes' : 'No'),
         ];

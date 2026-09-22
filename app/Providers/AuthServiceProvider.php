@@ -44,6 +44,7 @@ use App\Models\ResidentManagement\Health\FacilityVisitReason;
 use App\Models\ResidentManagement\Health\FamilyPlanningMethod;
 use App\Models\ResidentManagement\Health\Health;
 use App\Models\ResidentManagement\Health\HealthInsurance;
+use App\Models\ResidentManagement\Health\Immunization;
 use App\Models\ResidentManagement\Health\InfantHealth;
 use App\Models\ResidentManagement\Health\PlaceOfDelivery;
 use App\Models\ResidentManagement\Health\SourceOfFPMethod;
@@ -75,6 +76,7 @@ use App\Policies\ResidentManagement\Demographic\ResidentPolicy;
 use App\Policies\ResidentManagement\Economic\EconomicPolicy;
 use App\Policies\ResidentManagement\Education\EducationPolicy;
 use App\Policies\ResidentManagement\Health\DisabilityPolicy;
+use App\Policies\ResidentManagement\Health\HealthLookupWritePolicy;
 use App\Policies\ResidentManagement\Health\HealthPolicy;
 use App\Policies\ResidentManagement\Health\InfantHealthPolicy;
 use App\Policies\ResidentManagement\Health\WomenHealthPolicy;
@@ -134,11 +136,12 @@ class AuthServiceProvider extends ServiceProvider
         SchoolLvl::class => ReferenceLookupPolicy::class,
         SourceOfIncome::class => ReferenceLookupPolicy::class,
         StatusOfWorkBusiness::class => ReferenceLookupPolicy::class,
-        PlaceOfDelivery::class => ReferenceLookupPolicy::class,
-        BirthAttendant::class => ReferenceLookupPolicy::class,
-        HealthInsurance::class => ReferenceLookupPolicy::class,
-        FacilityVisitedPast12Mos::class => ReferenceLookupPolicy::class,
-        FacilityVisitReason::class => ReferenceLookupPolicy::class,
+        PlaceOfDelivery::class => HealthLookupWritePolicy::class,
+        BirthAttendant::class => HealthLookupWritePolicy::class,
+        Immunization::class => HealthLookupWritePolicy::class,
+        HealthInsurance::class => HealthLookupWritePolicy::class,
+        FacilityVisitedPast12Mos::class => HealthLookupWritePolicy::class,
+        FacilityVisitReason::class => HealthLookupWritePolicy::class,
         Disability::class => DisabilityPolicy::class,
         FamilyPlanningMethod::class => ReferenceLookupPolicy::class,
         SourceOfFPMethod::class => ReferenceLookupPolicy::class,

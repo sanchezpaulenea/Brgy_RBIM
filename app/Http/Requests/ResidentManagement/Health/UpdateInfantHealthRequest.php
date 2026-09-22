@@ -20,7 +20,7 @@ class UpdateInfantHealthRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->mergeTitleCased(['immunization']);
+        $this->mergeTitleCased(['place_of_delivery', 'birth_attendant', 'immunization']);
     }
 
     /**
@@ -31,29 +31,28 @@ class UpdateInfantHealthRequest extends FormRequest
         return [
             'place_of_delivery_id' => [
                 'sometimes',
-                'required',
+                'required_without:place_of_delivery',
+                'nullable',
                 'integer',
                 Rule::exists('place_of_delivery', 'place_of_delivery_id'),
             ],
+            'place_of_delivery' => ['sometimes', 'required_without:place_of_delivery_id', 'nullable', 'string', 'max:45'],
             'birth_attendant_id' => [
                 'sometimes',
-                'required',
+                'required_without:birth_attendant',
+                'nullable',
                 'integer',
                 Rule::exists('birth_attendant', 'birth_attendant_id'),
             ],
-            'immunization' => ['sometimes', 'nullable', 'string', 'max:45'],
-        ];
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public function messages(): array
-    {
-        return [
-            'place_of_delivery_id.exists' => 'The selected place of delivery does not exist.',
-            'birth_attendant_id.exists' => 'The selected birth attendant does not exist.',
-            'immunization.max' => 'The immunization note may not be longer than 45 characters.',
+            'birth_attendant' => ['sometimes', 'required_without:birth_attendant_id', 'nullable', 'string', 'max:45'],
+            'immunization_id' => [
+                'sometimes',
+                'required_without:immunization',
+                'nullable',
+                'integer',
+                Rule::exists('immunization', 'immunization_id'),
+            ],
+            'immunization' => ['sometimes', 'required_without:immunization_id', 'nullable', 'string', 'max:45'],
         ];
     }
 
@@ -63,7 +62,10 @@ class UpdateInfantHealthRequest extends FormRequest
             function (Validator $validator): void {
                 $this->requireAtLeastOne($validator, [
                     'place_of_delivery_id',
+                    'place_of_delivery',
                     'birth_attendant_id',
+                    'birth_attendant',
+                    'immunization_id',
                     'immunization',
                 ], 'infant_health', 'Provide at least one infant health field to update.');
             },

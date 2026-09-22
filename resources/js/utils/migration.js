@@ -73,11 +73,21 @@ export function lengthOfStayLabel(months) {
 export function classifyResidentType({
     previousBrgy,
     previousCity,
+    previousFiveYearBrgy,
+    previousFiveYearCity,
     currentBrgy,
     currentCity,
     transferDate,
 }) {
-    if (sameAsCurrentResidence(previousBrgy, previousCity, currentBrgy, currentCity)) {
+    const sameSixMonths = sameAsCurrentResidence(previousBrgy, previousCity, currentBrgy, currentCity);
+    const sameFiveYears = sameAsCurrentResidence(
+        previousFiveYearBrgy ?? previousBrgy,
+        previousFiveYearCity ?? previousCity,
+        currentBrgy,
+        currentCity,
+    );
+
+    if (sameSixMonths && sameFiveYears) {
         return NON_MIGRANT_TYPE_ID;
     }
 
@@ -88,6 +98,14 @@ export function classifyResidentType({
     }
 
     return TRANSIENT_TYPE_ID;
+}
+
+export function monthsAgoIso(months, asOf = new Date()) {
+    const date = new Date(asOf.getFullYear(), asOf.getMonth() - months, 1);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+
+    return `${year}-${month}-01`;
 }
 
 export function residentTypeLabel(typeId) {
@@ -117,9 +135,23 @@ export function formatMonthYear(isoDate) {
 }
 
 export function classifyMigrationForm(form, location = {}) {
+    const sameSixMonths = sameAsCurrentResidence(
+        form?.previous_residence_6mos_brgy,
+        form?.previous_residence_6mos_city_municipality,
+        location?.barangay,
+        location?.city,
+    );
+    const sameFiveYears = sameAsCurrentResidence(
+        form?.previous_residence_5yrs_brgy,
+        form?.previous_residence_5yrs_city_municipality,
+        location?.barangay,
+        location?.city,
+    );
     const typeId = classifyResidentType({
         previousBrgy: form?.previous_residence_6mos_brgy,
         previousCity: form?.previous_residence_6mos_city_municipality,
+        previousFiveYearBrgy: form?.previous_residence_5yrs_brgy,
+        previousFiveYearCity: form?.previous_residence_5yrs_city_municipality,
         currentBrgy: location?.barangay,
         currentCity: location?.city,
         transferDate: form?.date_of_transfer_in_brgy,
@@ -131,7 +163,10 @@ export function classifyMigrationForm(form, location = {}) {
         typeId,
         typeLabel: residentTypeLabel(typeId),
         nonMigrant,
+        sixMonthsDiffers: !sameSixMonths,
+        fiveYearsDiffers: !sameFiveYears,
         stayMonths: months,
         stayLabel: lengthOfStayLabel(months),
+        transferDateMin: !sameSixMonths ? monthsAgoIso(MIGRANT_THRESHOLD_MONTHS) : '',
     };
 }

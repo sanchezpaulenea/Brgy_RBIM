@@ -16,6 +16,7 @@ class InfantHealthRepository implements InfantHealthRepositoryInterface
         return [
             'placeOfDelivery',
             'birthAttendant',
+            'immunization',
         ];
     }
 
