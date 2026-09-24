@@ -71,34 +71,33 @@
     <section v-else class="space-y-4">
         <h3 class="text-sm font-semibold text-slate-900">Pet Census</h3>
         <p v-if="formError" class="text-sm text-red-700">{{ formError }}</p>
-        <div>
-            <label for="edit_has_pets" class="rbim-label">Does the household have any pet/s?</label>
-            <select id="edit_has_pets" v-model="hasPets" class="rbim-input" :disabled="savedCount > 0" @change="onEditHasPets">
-                <option value="false">No</option>
-                <option value="true">Yes</option>
-            </select>
-            <p v-if="savedCount > 0" class="rbim-hint">This household already has saved pets.</p>
-        </div>
-        <div v-if="hasPets === 'true'" class="max-w-xs">
-            <label for="edit_pet_count" class="rbim-label">Number of pets</label>
+        <div class="max-w-xs">
+            <label class="rbim-label" for="detail_pet_total">Number of pets</label>
             <input
-                id="edit_pet_count"
-                v-model.number="petCount"
-                type="number"
-                :min="Math.max(savedCount, 1)"
-                max="30"
-                step="1"
-                class="rbim-input"
-                @change="resizePets"
+                id="detail_pet_total"
+                :value="pets.length"
+                type="text"
+                readonly
+                class="rbim-input max-w-24"
             >
-            <p v-if="savedCount > 0" class="rbim-hint">Saved pets stay on the record. Increase the count to add another pet.</p>
+            <p class="rbim-hint">Updates when pet rows are added or removed below.</p>
         </div>
         <section
             v-for="(pet, index) in pets"
             :key="pet.pet_census_id || `new-${index}`"
             class="space-y-4 rounded-lg border border-slate-200 p-4"
         >
-            <h4 class="text-sm font-semibold text-slate-900">Pet {{ index + 1 }}</h4>
+            <div class="flex items-center justify-between gap-2">
+                <h4 class="text-sm font-semibold text-slate-900">Pet {{ index + 1 }}</h4>
+                <button
+                    v-if="!pet.pet_census_id"
+                    type="button"
+                    class="text-sm font-medium text-red-700 hover:underline"
+                    @click="removeUnsavedPet(index)"
+                >
+                    Remove
+                </button>
+            </div>
             <HouseholdPetFields
                 :pet="pet"
                 :errors="petErrors[index]"
@@ -107,6 +106,9 @@
                 :can-create="canCreate"
             />
         </section>
+        <button type="button" class="rbim-btn-outline" :disabled="pets.length >= 30" @click="addPet">
+            Add pet
+        </button>
     </section>
 </template>
 
@@ -195,23 +197,24 @@ function loadExisting(records) {
     petErrors.value = blankErrors(pets.value.length);
 }
 
-function onEditHasPets() {
-    if (savedCount.value > 0) {
-        hasPets.value = 'true';
+function addPet() {
+    if (pets.value.length >= 30) {
         return;
     }
 
-    if (hasPets.value === 'true' && pets.value.length === 0) {
-        petCount.value = 1;
-        pets.value = [emptyPetForm()];
-        petErrors.value = [{}];
+    hasPets.value = 'true';
+    pets.value.push(emptyPetForm());
+    petErrors.value.push({});
+}
+
+function removeUnsavedPet(index) {
+    if (pets.value[index]?.pet_census_id) {
+        return;
     }
 
-    if (hasPets.value === 'false') {
-        pets.value = [];
-        petErrors.value = [];
-        petCount.value = 1;
-    }
+    pets.value.splice(index, 1);
+    petErrors.value.splice(index, 1);
+    hasPets.value = pets.value.length ? 'true' : 'false';
 }
 
 function validateAll() {
@@ -226,6 +229,24 @@ function validateAll() {
     }
 
     if (hasPets.value !== 'true') {
+        return valid;
+    }
+
+    if (props.mode === 'edit') {
+        pets.value.forEach((pet, index) => {
+            if (!petErrors.value[index]) {
+                petErrors.value[index] = {};
+            }
+
+            if (!validatePetForm(pet, petErrors.value[index])) {
+                valid = false;
+            }
+        });
+
+        if (!valid) {
+            formError.value = 'Complete every pet before saving.';
+        }
+
         return valid;
     }
 

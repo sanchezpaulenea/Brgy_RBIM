@@ -83,6 +83,9 @@
                     </dl>
 
                     <h3 class="mt-8 text-sm font-semibold text-slate-900">Pet Census</h3>
+                    <p class="mt-2 text-sm text-slate-900">
+                        Number of pets: {{ household.pets?.length ?? 0 }}
+                    </p>
                     <p v-if="!household.pets?.length" class="mt-2 text-sm text-slate-500">
                         No pets recorded for this household.
                     </p>
