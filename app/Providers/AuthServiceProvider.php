@@ -11,7 +11,10 @@ use App\Models\HouseholdManagement\ConstructionMaterialOuterWall;
 use App\Models\HouseholdManagement\FuelType;
 use App\Models\HouseholdManagement\Household;
 use App\Models\HouseholdManagement\HouseholdAssessment;
+use App\Models\HouseholdManagement\Breed;
 use App\Models\HouseholdManagement\HouseholdQuestions;
+use App\Models\HouseholdManagement\PetCensus;
+use App\Models\HouseholdManagement\Specie;
 use App\Models\HouseholdManagement\HouseholdStatus;
 use App\Models\HouseholdManagement\KitchenGarbageDisposal;
 use App\Models\HouseholdManagement\OwnershipType;
@@ -64,6 +67,8 @@ use App\Policies\BarangayPersonnel\PersonnelPolicy;
 use App\Policies\HouseholdManagement\HouseholdAssessmentPolicy;
 use App\Policies\HouseholdManagement\HouseholdPolicy;
 use App\Policies\HouseholdManagement\HouseholdQuestionsPolicy;
+use App\Policies\HouseholdManagement\PetCensusPolicy;
+use App\Policies\HouseholdManagement\PetLookupWritePolicy;
 use App\Policies\HouseholdManagement\StreetPolicy;
 use App\Policies\Logs\AuditLogPolicy;
 use App\Policies\Logs\UserLogPolicy;
@@ -109,6 +114,9 @@ class AuthServiceProvider extends ServiceProvider
         Household::class => HouseholdPolicy::class,
         HouseholdAssessment::class => HouseholdAssessmentPolicy::class,
         HouseholdQuestions::class => HouseholdQuestionsPolicy::class,
+        PetCensus::class => PetCensusPolicy::class,
+        Specie::class => PetLookupWritePolicy::class,
+        Breed::class => PetLookupWritePolicy::class,
         Street::class => StreetPolicy::class,
         Resident::class => ResidentPolicy::class,
         Nationality::class => NationalityPolicy::class,
@@ -121,7 +129,7 @@ class AuthServiceProvider extends ServiceProvider
         RelationshipToHouseholdHead::class => ReferenceLookupPolicy::class,
         ResidentStatus::class => ReferenceLookupPolicy::class,
         ResidentType::class => ReferenceLookupPolicy::class,
-        Sex::class => ReferenceLookupPolicy::class,
+        Sex::class => PetLookupWritePolicy::class,
         Education::class => EducationPolicy::class,
         Economic::class => EconomicPolicy::class,
         InfantHealth::class => InfantHealthPolicy::class,

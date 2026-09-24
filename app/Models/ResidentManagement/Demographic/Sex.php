@@ -2,11 +2,14 @@
 
 namespace App\Models\ResidentManagement\Demographic;
 
+use App\Models\Concerns\FindsOrCreatesLookupByLabel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Sex extends Model
 {
+    use FindsOrCreatesLookupByLabel;
+
     public const MALE = 1;
 
     public const FEMALE = 2;

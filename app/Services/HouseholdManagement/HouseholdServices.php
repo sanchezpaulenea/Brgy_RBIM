@@ -23,6 +23,7 @@ class HouseholdServices
         protected ResidentRepositoryInterface $residentRepository,
         protected AuditLogRepositoryInterface $auditLogRepository,
         protected HouseholdQuestionsService $householdQuestionsService,
+        protected PetCensusService $petCensusService,
     ) {}
 
     /**
@@ -299,6 +300,9 @@ class HouseholdServices
             'questions.intendToStay',
             'questions.femaleDeaths',
             'questions.childDeaths.sex',
+            'pets.specie',
+            'pets.breed',
+            'pets.sex',
         ]);
 
         $payload = [
@@ -318,6 +322,10 @@ class HouseholdServices
             'questions' => $household->questions !== null
                 ? $this->householdQuestionsService->formatRecord($household->questions)
                 : null,
+            'pets' => $household->pets
+                ->map(fn ($pet) => $this->petCensusService->formatRecord($pet))
+                ->values()
+                ->all(),
         ];
 
         if ($includeResidents) {

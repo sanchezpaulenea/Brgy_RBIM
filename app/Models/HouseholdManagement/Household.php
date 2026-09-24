@@ -89,4 +89,12 @@ class Household extends Model
         return $this->hasOne(HouseholdQuestions::class, 'household_id', 'household_id')
             ->latestOfMany('household_questions_id');
     }
+
+    /**
+     * @return HasMany<PetCensus, $this>
+     */
+    public function pets(): HasMany
+    {
+        return $this->hasMany(PetCensus::class, 'household_id', 'household_id');
+    }
 }

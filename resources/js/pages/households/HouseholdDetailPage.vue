@@ -81,6 +81,46 @@
                             <dd class="mt-1 text-sm text-slate-900">{{ field.value }}</dd>
                         </div>
                     </dl>
+
+                    <h3 class="mt-8 text-sm font-semibold text-slate-900">Pet Census</h3>
+                    <p v-if="!household.pets?.length" class="mt-2 text-sm text-slate-500">
+                        No pets recorded for this household.
+                    </p>
+                    <div v-else class="mt-4 space-y-4">
+                        <dl
+                            v-for="(pet, index) in household.pets"
+                            :key="pet.pet_census_id"
+                            class="grid gap-4 rounded-lg border border-slate-200 p-4 sm:grid-cols-2 lg:grid-cols-3"
+                        >
+                            <div class="sm:col-span-2 lg:col-span-3">
+                                <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Pet {{ index + 1 }}</dt>
+                            </div>
+                            <div>
+                                <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Specie</dt>
+                                <dd class="mt-1 text-sm text-slate-900">{{ pet.specie || '—' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Breed</dt>
+                                <dd class="mt-1 text-sm text-slate-900">{{ pet.breed || '—' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Sex</dt>
+                                <dd class="mt-1 text-sm text-slate-900">{{ pet.sex || '—' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Pet date of birth</dt>
+                                <dd class="mt-1 text-sm text-slate-900">{{ formatDate(pet.pet_date_of_birth) }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Is spay/neuter</dt>
+                                <dd class="mt-1 text-sm text-slate-900">{{ yesNoLabel(pet.is_spay_neuter) }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Rabies vaccination date</dt>
+                                <dd class="mt-1 text-sm text-slate-900">{{ pet.rabies_vaccination_date ? formatDate(pet.rabies_vaccination_date) : '—' }}</dd>
+                            </div>
+                        </dl>
+                    </div>
                 </article>
 
                 <div class="rbim-card overflow-hidden">
@@ -248,6 +288,13 @@
                             id-prefix="detail-questions"
                         />
                     </section>
+                    <HouseholdPetCensusForm
+                        ref="petForm"
+                        mode="edit"
+                        :household-id="household.household_id"
+                        :existing-pets="household.pets || []"
+                        :can-create="canUpdate"
+                    />
                     <div class="flex justify-end gap-2">
                         <button type="button" class="rbim-btn-outline" @click="cancelEdit">
                             Cancel
@@ -277,6 +324,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import HouseholdPetCensusForm from '@/components/HouseholdPetCensusForm.vue';
 import HouseholdQuestionsFields from '@/components/HouseholdQuestionsFields.vue';
 import PageTabs from '@/components/PageTabs.vue';
 import { useAuth } from '@/composables/useAuth';
@@ -284,7 +332,7 @@ import { useSectionTabs } from '@/composables/useSectionTabs';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
-import { ageFromDateOfBirth, formatDateTime } from '@/utils/format';
+import { ageFromDateOfBirth, formatDate, formatDateTime } from '@/utils/format';
 import { applyValidationErrors, householdStructureFromRecord, householdStructurePayload, optionalAddressText, toId, validateHouseholdStructure } from '@/utils/residentForm';
 import {
     emptyHouseholdQuestionLookups,
@@ -314,6 +362,7 @@ const successMessage = ref('');
 const editForm = reactive(emptyEditForm());
 const editErrors = reactive({});
 const questionForm = reactive(emptyHouseholdQuestionsForm());
+const petForm = ref(null);
 const questionErrors = reactive({});
 const confirm = reactive({
     open: false,
@@ -477,7 +526,9 @@ async function handleUpdate() {
     validateHouseholdStructure(editForm, editErrors);
     validateHouseholdQuestions(questionForm, questionErrors);
 
-    if (Object.keys(editErrors).length || Object.keys(questionErrors).length) {
+    const petsValid = petForm.value?.validateAll?.() !== false;
+
+    if (Object.keys(editErrors).length || Object.keys(questionErrors).length || !petsValid) {
         return;
     }
 
@@ -511,6 +562,8 @@ async function handleUpdate() {
         } else {
             await householdService.createHouseholdQuestions(route.params.id, questionsPayload);
         }
+
+        await petForm.value?.save?.();
         successMessage.value = 'Household updated successfully.';
         cancelEdit();
         await loadHousehold();

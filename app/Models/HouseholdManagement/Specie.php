@@ -2,33 +2,34 @@
 
 namespace App\Models\HouseholdManagement;
 
+use App\Models\Concerns\FindsOrCreatesLookupByLabel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class CensusStatus extends Model
+class Specie extends Model
 {
-    public const COMPLETED = 1;
+    use FindsOrCreatesLookupByLabel;
 
-    public const CALLBACK = 2;
+    protected $table = 'specie';
 
-    public const REFUSED = 3;
-
-    protected $table = 'census_status';
-
-    protected $primaryKey = 'census_status_id';
+    protected $primaryKey = 'specie_id';
 
     public $timestamps = false;
 
     protected $fillable = [
-        'status_code',
-        'status_name',
+        'specie',
     ];
 
-    /**
-     * @return HasMany<HouseholdAssessment, $this>
-     */
-    public function assessments(): HasMany
+    public function getRouteKeyName(): string
     {
-        return $this->hasMany(HouseholdAssessment::class, 'census_status_id', 'census_status_id');
+        return 'specie_id';
+    }
+
+    /**
+     * @return HasMany<PetCensus, $this>
+     */
+    public function pets(): HasMany
+    {
+        return $this->hasMany(PetCensus::class, 'specie_id', 'specie_id');
     }
 }

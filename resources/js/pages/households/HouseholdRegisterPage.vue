@@ -38,6 +38,13 @@
                 @skip="questionsComplete = true"
             />
 
+            <HouseholdPetCensusForm
+                v-else-if="createdHousehold && !petsComplete"
+                :household-id="createdHousehold.household_id"
+                :can-create="hasPermission('household.create') || hasPermission('household.update')"
+                @finished="petsComplete = true"
+            />
+
             <HouseholdContinueMembersFlow
                 v-else-if="createdHousehold"
                 :household="createdHousehold"
@@ -215,6 +222,7 @@ import { useRouter } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import HouseholdContinueMembersFlow from '@/components/HouseholdContinueMembersFlow.vue';
+import HouseholdPetCensusForm from '@/components/HouseholdPetCensusForm.vue';
 import HouseholdQuestionsForm from '@/components/HouseholdQuestionsForm.vue';
 import PageTabs from '@/components/PageTabs.vue';
 import ResidentDemographicsFields from '@/components/ResidentDemographicsFields.vue';
@@ -274,6 +282,7 @@ const createdHousehold = ref(null);
 const loadingHeadProfile = ref(false);
 const headSectionsComplete = ref(false);
 const questionsComplete = ref(false);
+const petsComplete = ref(false);
 
 const clans = ref([]);
 const streets = ref([]);

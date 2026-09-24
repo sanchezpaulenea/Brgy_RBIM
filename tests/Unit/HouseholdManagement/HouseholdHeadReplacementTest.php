@@ -12,6 +12,7 @@ use App\Repositories\Interfaces\HouseholdManagement\HouseholdRepositoryInterface
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Demographic\ResidentRepositoryInterface;
 use App\Services\HouseholdManagement\HouseholdQuestionsService;
+use App\Services\HouseholdManagement\PetCensusService;
 use App\Services\HouseholdManagement\HouseholdServices;
 use Illuminate\Validation\ValidationException;
 use Mockery;
@@ -68,6 +69,7 @@ class HouseholdHeadReplacementTest extends TestCase
             $residentRepository,
             $auditLogRepository,
             Mockery::mock(HouseholdQuestionsService::class),
+            Mockery::mock(PetCensusService::class),
         );
 
         $user = new User;
@@ -107,6 +109,7 @@ class HouseholdHeadReplacementTest extends TestCase
             $residentRepository,
             Mockery::mock(AuditLogRepositoryInterface::class),
             Mockery::mock(HouseholdQuestionsService::class),
+            Mockery::mock(PetCensusService::class),
         );
 
         $user = new User;

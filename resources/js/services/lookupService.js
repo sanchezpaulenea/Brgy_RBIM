@@ -138,6 +138,24 @@ export async function deleteReligion(id) {
     await http.delete(`/religions/${id}`);
 }
 
+export async function createSpecie(payload) {
+    const { data } = await http.post('/species', payload);
+
+    return data.item;
+}
+
+export async function createBreed(payload) {
+    const { data } = await http.post('/breeds', payload);
+
+    return data.item;
+}
+
+export async function createSex(payload) {
+    const { data } = await http.post('/sexes', payload);
+
+    return data.item;
+}
+
 export async function fetchUserStatuses() {
     const { data } = await http.get('/user-statuses');
 

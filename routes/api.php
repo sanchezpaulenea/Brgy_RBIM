@@ -7,6 +7,8 @@ use App\Http\Controllers\BarangayPersonnel\PersonnelController;
 use App\Http\Controllers\HouseholdManagament\HouseholdAssessmentController;
 use App\Http\Controllers\HouseholdManagament\HouseholdController;
 use App\Http\Controllers\HouseholdManagament\HouseholdQuestionsController;
+use App\Http\Controllers\HouseholdManagament\PetCensusController;
+use App\Http\Controllers\HouseholdManagament\PetLookupWriteController;
 use App\Http\Controllers\HouseholdManagament\StreetController;
 use App\Http\Controllers\Logs\AuditLogController;
 use App\Http\Controllers\Logs\UserLogController;
@@ -59,6 +61,11 @@ Route::prefix('v1')->group(function () {
         Route::patch('households/{household}', [HouseholdController::class, 'update'])->name('households.update');
         Route::post('households/{household}/questions', [HouseholdQuestionsController::class, 'store'])->name('households.questions.store');
         Route::patch('household-questions/{householdQuestions}', [HouseholdQuestionsController::class, 'update'])->name('household-questions.update');
+        Route::post('households/{household}/pets', [PetCensusController::class, 'store'])->name('households.pets.store');
+        Route::patch('pet-census/{petCensus}', [PetCensusController::class, 'update'])->name('pet-census.update');
+        Route::post('species', [PetLookupWriteController::class, 'store'])->defaults('lookup', 'specie')->name('species.store');
+        Route::post('breeds', [PetLookupWriteController::class, 'store'])->defaults('lookup', 'breed')->name('breeds.store');
+        Route::post('sexes', [PetLookupWriteController::class, 'store'])->defaults('lookup', 'sex')->name('sexes.store');
 
         Route::get('residents', [ResidentController::class, 'index'])->name('residents.index');
         Route::post('residents', [ResidentController::class, 'store'])->name('residents.store');

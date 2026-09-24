@@ -13,7 +13,7 @@
             :aria-expanded="open"
             :placeholder="placeholder"
             :disabled="disabled"
-            maxlength="45"
+            :maxlength="maxLength"
             class="rbim-input"
             :class="{ 'rbim-input-error': error }"
             @focus="open = true"
@@ -104,6 +104,10 @@ const props = defineProps({
     preferredIds: {
         type: Array,
         default: () => [],
+    },
+    maxLength: {
+        type: Number,
+        default: 45,
     },
 });
 
