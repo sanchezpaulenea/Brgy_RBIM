@@ -87,6 +87,7 @@ use App\Policies\ResidentManagement\Health\InfantHealthPolicy;
 use App\Policies\ResidentManagement\Health\WomenHealthPolicy;
 use App\Policies\ResidentManagement\Migration\MigrationPolicy;
 use App\Policies\ResidentManagement\Skill\SkillPolicy;
+use App\Policies\ResidentManagement\Skill\SkillTypeWritePolicy;
 use App\Policies\ResidentManagement\Sociocivic\SociocivicPolicy;
 use App\Policies\SystemSetting\SystemSettingPolicy;
 use App\Policies\UserManagement\UserPolicy;
@@ -156,7 +157,7 @@ class AuthServiceProvider extends ServiceProvider
         SoloParentStatus::class => ReferenceLookupPolicy::class,
         ReasonForLeaving::class => ReferenceLookupPolicy::class,
         ReasonForTransfer::class => ReferenceLookupPolicy::class,
-        SkillType::class => ReferenceLookupPolicy::class,
+        SkillType::class => SkillTypeWritePolicy::class,
         OwnershipType::class => ReferenceLookupPolicy::class,
         FuelType::class => ReferenceLookupPolicy::class,
         WaterSource::class => ReferenceLookupPolicy::class,

@@ -127,15 +127,13 @@ class WomenHealthService
             'source_of_fp_method' => $womenHealth->familyPlanningMethod?->indicatesNone()
                 ? null
                 : $womenHealth->sourceOfFpMethod?->source_of_fp_method,
-            'have_intention_to_use_fp' => $womenHealth->familyPlanningMethod?->indicatesNone()
-                ? null
-                : (bool) $womenHealth->have_intention_to_use_fp,
+            'have_intention_to_use_fp' => (bool) $womenHealth->have_intention_to_use_fp,
         ];
     }
 
     /**
-     * "None" skips Q24–Q25. source_of_fp_method_id is INT NOT NULL, so the
-     * existing "Not Applicable" lookup row is stored.
+     * "None" skips Source of FP. That column is INT NOT NULL, so the existing
+     * "Not Applicable" lookup row is stored. Intention to use FP is stored as answered.
      *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
@@ -163,16 +161,15 @@ class WomenHealthService
             }
 
             $data['source_of_fp_method_id'] = $notApplicableId;
-            $data['have_intention_to_use_fp'] = false;
-
-            return $data;
         }
 
         if (! array_key_exists('have_intention_to_use_fp', $data)
             || $data['have_intention_to_use_fp'] === null
             || $data['have_intention_to_use_fp'] === ''
         ) {
-            $data['have_intention_to_use_fp'] = false;
+            throw ValidationException::withMessages([
+                'have_intention_to_use_fp' => ['Intention to use family planning is required.'],
+            ]);
         }
 
         return $data;
@@ -201,9 +198,7 @@ class WomenHealthService
             'source of fp method' => $womenHealth->familyPlanningMethod?->indicatesNone()
                 ? 'N/A'
                 : (string) ($womenHealth->sourceOfFpMethod?->source_of_fp_method ?? $womenHealth->source_of_fp_method_id),
-            'intention to use fp' => $womenHealth->familyPlanningMethod?->indicatesNone()
-                ? 'N/A'
-                : ($womenHealth->have_intention_to_use_fp ? 'Yes' : 'No'),
+            'intention to use fp' => $womenHealth->have_intention_to_use_fp ? 'Yes' : 'No',
         ];
     }
 }

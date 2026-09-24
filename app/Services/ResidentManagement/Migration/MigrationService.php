@@ -168,6 +168,7 @@ class MigrationService
         $data['date_of_transfer_in_brgy'] = MigrationClassifier::normalizeTransferDate(
             $merged['date_of_transfer_in_brgy'] ?? null,
         );
+        $data['duration_of_stay'] = $this->normalizeMonthDate($merged['duration_of_stay'] ?? null);
 
         return $data;
     }
@@ -265,8 +266,19 @@ class MigrationService
             'reason for leaving' => $nonMigrant ? '' : (string) ($migration->reasonForLeaving?->reason_for_leaving ?? $migration->reason_for_leaving_id ?? ''),
             'will return' => $nonMigrant ? '' : $this->yesNo($migration->will_return_to_previous_residence),
             'reason for transfer' => $nonMigrant ? '' : (string) ($migration->reasonForTransfer?->reason_for_transfer ?? $migration->reason_for_transfer_id ?? ''),
-            'duration of stay' => $nonMigrant ? '' : ($migration->duration_of_stay?->format('Y-m-d') ?? ''),
+            'duration of stay' => $nonMigrant ? '' : ($migration->duration_of_stay?->format('m/Y') ?? ''),
         ];
+    }
+
+    private function normalizeMonthDate(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $normalized = MigrationClassifier::normalizeTransferDate($value);
+
+        return is_string($normalized) && $normalized !== '' ? $normalized : null;
     }
 
     private function yesNo(mixed $value): string

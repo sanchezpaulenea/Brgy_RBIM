@@ -29,7 +29,7 @@ class StoreWomenHealthRequest extends FormRequest
                 'source_of_fp_method',
                 'source_of_fp_method_id',
             ),
-            'have_intention_to_use_fp' => ['nullable', 'boolean'],
+            'have_intention_to_use_fp' => ['required', 'boolean'],
         ];
     }
 
@@ -46,6 +46,7 @@ class StoreWomenHealthRequest extends FormRequest
             'family_planning_method_id.required' => 'Family planning method is required.',
             'family_planning_method_id.exists' => 'The selected family planning method does not exist.',
             'source_of_fp_method_id.exists' => 'The selected source of family planning method does not exist.',
+            'have_intention_to_use_fp.required' => 'Intention to use family planning is required.',
         ];
     }
 

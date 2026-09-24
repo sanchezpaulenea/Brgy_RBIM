@@ -150,6 +150,12 @@ export async function createBreed(payload) {
     return data.item;
 }
 
+export async function createSkillType(payload) {
+    const { data } = await http.post('/skill-types', payload);
+
+    return data.item;
+}
+
 export async function createSex(payload) {
     const { data } = await http.post('/sexes', payload);
 

@@ -20,7 +20,7 @@ class UpdateSkillRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->mergeTitleCased(['skills_development_training']);
+        $this->mergeTitleCased(['skills_development_training', 'skill_type']);
     }
 
     /**
@@ -30,7 +30,8 @@ class UpdateSkillRequest extends FormRequest
     {
         return [
             'skills_development_training' => ['sometimes', 'required', 'string', 'max:45'],
-            'skill_type_id' => ['sometimes', 'required', 'integer', Rule::exists('skill_type', 'skill_type_id')],
+            'skill_type_id' => ['sometimes', 'nullable', 'integer', Rule::exists('skill_type', 'skill_type_id')],
+            'skill_type' => ['sometimes', 'nullable', 'string', 'max:45'],
         ];
     }
 
@@ -40,7 +41,7 @@ class UpdateSkillRequest extends FormRequest
             function (Validator $validator): void {
                 $this->requireAtLeastOne(
                     $validator,
-                    ['skills_development_training', 'skill_type_id'],
+                    ['skills_development_training', 'skill_type_id', 'skill_type'],
                     'skills',
                     'Provide at least one skills development field to update.',
                 );

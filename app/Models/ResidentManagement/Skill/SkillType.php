@@ -2,11 +2,14 @@
 
 namespace App\Models\ResidentManagement\Skill;
 
+use App\Models\Concerns\FindsOrCreatesLookupByLabel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SkillType extends Model
 {
+    use FindsOrCreatesLookupByLabel;
+
     protected $table = 'skill_type';
 
     protected $primaryKey = 'skill_type_id';

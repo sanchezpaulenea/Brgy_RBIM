@@ -353,21 +353,21 @@
                                     </select>
                                     <p v-if="editErrors.source_of_fp_method_id" class="rbim-error">{{ editErrors.source_of_fp_method_id }}</p>
                                 </div>
-                                <div>
-                                    <label class="rbim-label">Intention to Use Family Planning</label>
-                                    <select
-                                        :value="editForm.have_intention_to_use_fp === true ? 'true' : editForm.have_intention_to_use_fp === false ? 'false' : ''"
-                                        class="rbim-input"
-                                        :class="{ 'rbim-input-error': editErrors.have_intention_to_use_fp }"
-                                        @change="editForm.have_intention_to_use_fp = $event.target.value === '' ? '' : $event.target.value === 'true'"
-                                    >
-                                        <option value="">Select</option>
-                                        <option value="true">Yes</option>
-                                        <option value="false">No</option>
-                                    </select>
-                                    <p v-if="editErrors.have_intention_to_use_fp" class="rbim-error">{{ editErrors.have_intention_to_use_fp }}</p>
-                                </div>
                             </template>
+                            <div>
+                                <label class="rbim-label">Intention to Use Family Planning<span class="rbim-required" aria-hidden="true">*</span></label>
+                                <select
+                                    :value="editForm.have_intention_to_use_fp === true ? 'true' : editForm.have_intention_to_use_fp === false ? 'false' : ''"
+                                    class="rbim-input"
+                                    :class="{ 'rbim-input-error': editErrors.have_intention_to_use_fp }"
+                                    @change="editForm.have_intention_to_use_fp = $event.target.value === '' ? '' : $event.target.value === 'true'"
+                                >
+                                    <option value="">Select</option>
+                                    <option value="true">Yes</option>
+                                    <option value="false">No</option>
+                                </select>
+                                <p v-if="editErrors.have_intention_to_use_fp" class="rbim-error">{{ editErrors.have_intention_to_use_fp }}</p>
+                            </div>
                         </div>
                     </template>
 
@@ -473,7 +473,9 @@
                                         v-model="editForm.duration_of_stay"
                                         label="Until When Does the Resident Intend to Stay"
                                         input-id="migration-duration-of-stay"
-                                        placeholder="MM/DD/YYYY"
+                                        placeholder="MM/YYYY"
+                                        precision="month"
+                                        :max="intendStayMax"
                                         :show-age="false"
                                         :error="editErrors.duration_of_stay"
                                     />
@@ -568,18 +570,20 @@
                                 >
                                 <p v-if="editErrors.skills_development_training" class="rbim-error">{{ editErrors.skills_development_training }}</p>
                             </div>
-                            <div>
-                                <label class="rbim-label">Skill Type<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <select
-                                    v-model="editForm.skill_type_id"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.skill_type_id }"
-                                >
-                                    <option value="">Select</option>
-                                    <option v-for="option in lookups.skillType" :key="option.id" :value="option.id">{{ option.label }}</option>
-                                </select>
-                                <p v-if="editErrors.skill_type_id" class="rbim-error">{{ editErrors.skill_type_id }}</p>
-                            </div>
+                            <LookupCombobox
+                                v-model="editForm.skill_type_id"
+                                v-model:query="editForm.skill_type_name"
+                                :options="lookups.skillType"
+                                input-id="skill-type"
+                                label="Skill Type"
+                                placeholder="Search or type a skill type"
+                                required
+                                can-create
+                                :limit="5"
+                                :error="editErrors.skill_type_id || editErrors.skill_type"
+                                hint="Choose from the list, or type a new name and press Enter to add it."
+                                @create="createSkillType"
+                            />
                         </div>
                     </template>
 
@@ -617,6 +621,7 @@ import { useRoute } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AssignHouseholdHeadDialog from '@/components/AssignHouseholdHeadDialog.vue';
 import BirthDateField from '@/components/BirthDateField.vue';
+import LookupCombobox from '@/components/LookupCombobox.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import PageTabs from '@/components/PageTabs.vue';
 import ResidentDemographicsFields from '@/components/ResidentDemographicsFields.vue';
@@ -675,6 +680,7 @@ const activeSection = ref('');
 const editForm = reactive({});
 const editErrors = reactive({});
 const todayIso = new Date().toISOString().slice(0, 10);
+const intendStayMax = `${new Date().getFullYear() + 30}-12-01`;
 const location = reactive({
     barangay: '',
     city: '',
@@ -1002,13 +1008,21 @@ function displayHealth(record) {
         return [];
     }
 
-    return [
+    const fields = [
         { label: 'Health Insurance', value: record.health_insurance || '—' },
         { label: 'Facility Visited Past 12 Months', value: record.facility_visited_past_12mos || '—' },
-        { label: 'Facility Visit Reason', value: record.facility_visit_reason || '—' },
+    ];
+
+    if (!isNotApplicableLookup(record.facility_visited_past_12mos)) {
+        fields.push({ label: 'Facility Visit Reason', value: record.facility_visit_reason || '—' });
+    }
+
+    fields.push(
         { label: 'Disability', value: record.disability || '—' },
         { label: 'PWD ID Number', value: record.pwd_id_number || '—' },
-    ];
+    );
+
+    return fields;
 }
 
 function displayWomenHealth(record) {
@@ -1026,11 +1040,10 @@ function displayWomenHealth(record) {
         id: record.family_planning_method_id,
         label: record.family_planning_method,
     })) {
-        fields.push(
-            { label: 'Source of Family Planning Method', value: record.source_of_fp_method || '—' },
-            { label: 'Intention to Use Family Planning', value: yesNo(record.have_intention_to_use_fp) },
-        );
+        fields.push({ label: 'Source of Family Planning Method', value: record.source_of_fp_method || '—' });
     }
+
+    fields.push({ label: 'Intention to Use Family Planning', value: yesNo(record.have_intention_to_use_fp) });
 
     return fields;
 }
@@ -1098,7 +1111,7 @@ function displayMigration(record) {
         { label: 'Reason for Leaving', value: record.reason_for_leaving || '—' },
         { label: 'Plan to Return to Previous Residence', value: yesNo(record.will_return_to_previous_residence) },
         { label: 'Reason for Transfer', value: record.reason_for_transfer || '—' },
-        { label: 'Intended Stay Until', value: record.duration_of_stay || '—' },
+        { label: 'Intended Stay Until', value: formatMonthYear(record.duration_of_stay) || '—' },
     );
 
     return fields;
@@ -1172,6 +1185,23 @@ function startDemographicsEdit() {
     editing.value = 'demographics';
 }
 
+async function createSkillType(name) {
+    try {
+        const item = await lookupService.createSkillType({ skill_type: name });
+
+        if (!lookups.skillType.some((option) => Number(option.id) === Number(item.id))) {
+            lookups.skillType.push(item);
+        }
+
+        editForm.skill_type_id = item.id;
+        editForm.skill_type_name = item.label;
+        delete editErrors.skill_type_id;
+        delete editErrors.skill_type;
+    } catch (err) {
+        editErrors.skill_type_id = extractErrorMessage(err, 'Unable to add this skill type.');
+    }
+}
+
 function startSectionEdit(key) {
     const record = resident.value?.[key] || {};
     const voter = sociocivicVoterFormState(record);
@@ -1216,7 +1246,9 @@ function startSectionEdit(key) {
             living_children: record.living_children ?? '',
             family_planning_method_id: record.family_planning_method_id || '',
             source_of_fp_method_id: record.source_of_fp_method_id || '',
-            have_intention_to_use_fp: record.have_intention_to_use_fp ?? false,
+            have_intention_to_use_fp: record.have_intention_to_use_fp === true || record.have_intention_to_use_fp === false
+                ? record.have_intention_to_use_fp
+                : '',
         },
         sociocivic: {
             solo_parent_status_id: record.solo_parent_status_id || '',
@@ -1253,6 +1285,7 @@ function startSectionEdit(key) {
         skills: {
             skills_development_training: record.skills_development_training || '',
             skill_type_id: record.skill_type_id || '',
+            skill_type_name: record.skill_type || '',
         },
     };
 

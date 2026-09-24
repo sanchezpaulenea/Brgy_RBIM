@@ -5,6 +5,7 @@ namespace App\Services\ResidentManagement\Skill;
 use App\Models\Logs\Action;
 use App\Models\ResidentManagement\Demographic\Resident;
 use App\Models\ResidentManagement\Skill\SkillsDevelopment;
+use App\Models\ResidentManagement\Skill\SkillType;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Skill\SkillRepositoryInterface;
@@ -31,6 +32,7 @@ class SkillService
     {
         $this->assertEligible($resident);
 
+        $data = $this->resolveSkillType($data);
         $data['resident_id'] = $resident->resident_id;
 
         return $this->withResidentLock($resident->resident_id, function () use ($performedBy, $resident, $data) {
@@ -66,6 +68,7 @@ class SkillService
         $skillsDevelopment->loadMissing('resident');
         $this->assertEligible($skillsDevelopment->resident);
 
+        $data = $this->resolveSkillType($data);
         $previous = $this->auditSnapshot($skillsDevelopment);
 
         return DB::transaction(function () use ($performedBy, $skillsDevelopment, $data, $previous) {
@@ -85,8 +88,31 @@ class SkillService
     }
 
     /**
+     * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
+    private function resolveSkillType(array $data): array
+    {
+        if ((int) ($data['skill_type_id'] ?? 0) > 0) {
+            unset($data['skill_type']);
+
+            return $data;
+        }
+
+        $label = is_string($data['skill_type'] ?? null) ? trim($data['skill_type']) : '';
+
+        if ($label === '') {
+            unset($data['skill_type']);
+
+            return $data;
+        }
+
+        $data['skill_type_id'] = SkillType::findOrCreateByLabel($label)->skill_type_id;
+        unset($data['skill_type']);
+
+        return $data;
+    }
+
     public function formatRecord(SkillsDevelopment $skillsDevelopment): array
     {
         $skillsDevelopment->loadMissing('skillType');

@@ -27,6 +27,7 @@ use App\Http\Controllers\ResidentManagement\Health\InfantHealthController;
 use App\Http\Controllers\ResidentManagement\Health\WomenHealthController;
 use App\Http\Controllers\ResidentManagement\Migration\MigrationController;
 use App\Http\Controllers\ResidentManagement\Skill\SkillController;
+use App\Http\Controllers\ResidentManagement\Skill\SkillTypeController;
 use App\Http\Controllers\ResidentManagement\Sociocivic\SociocivicController;
 use App\Http\Controllers\SystemSetting\SystemSettingController;
 use App\Http\Controllers\UserManagement\RolePermissionController;
@@ -97,6 +98,7 @@ Route::prefix('v1')->group(function () {
         Route::patch('ctcs/{ctc}', [CtcController::class, 'update'])->name('ctcs.update');
         Route::post('residents/{resident}/skills', [SkillController::class, 'store'])->name('residents.skills.store');
         Route::patch('skills/{skillsDevelopment}', [SkillController::class, 'update'])->name('skills.update');
+        Route::post('skill-types', [SkillTypeController::class, 'store'])->name('skill-types.store');
 
         Route::get('streets', [StreetController::class, 'index'])->name('streets.index');
         Route::post('streets', [StreetController::class, 'store'])->name('streets.store');

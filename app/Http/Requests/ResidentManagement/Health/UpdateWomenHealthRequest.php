@@ -32,7 +32,7 @@ class UpdateWomenHealthRequest extends FormRequest
                 'source_of_fp_method',
                 'source_of_fp_method_id',
             ),
-            'have_intention_to_use_fp' => ['sometimes', 'nullable', 'boolean'],
+            'have_intention_to_use_fp' => ['sometimes', 'required', 'boolean'],
         ];
     }
 

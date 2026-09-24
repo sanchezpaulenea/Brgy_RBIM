@@ -122,6 +122,7 @@ export function emptySectionForm(key) {
         skills: {
             skills_development_training: '',
             skill_type_id: '',
+            skill_type_name: '',
         },
     };
 
@@ -360,9 +361,12 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
         requiredInteger(form, errors, 'number_pregnancies', 'Number of pregnancies is required.');
         requiredInteger(form, errors, 'living_children', 'Living children is required.');
         requiredSelect(form, errors, 'family_planning_method_id', 'Family planning method is required.');
+        requiredBoolean(form, errors, 'have_intention_to_use_fp', 'Intention to use family planning is required.');
 
         if (!isFamilyPlanningNone(lookupById(lookups.familyPlanningMethod, form.family_planning_method_id))) {
             requiredSelect(form, errors, 'source_of_fp_method_id', 'Source of family planning method is required.');
+        } else {
+            delete errors.source_of_fp_method_id;
         }
     }
 
@@ -460,7 +464,7 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
 
     if (key === 'skills') {
         requiredText(form, errors, 'skills_development_training', 'Skills development training is required.');
-        requiredSelect(form, errors, 'skill_type_id', 'Skill type is required.');
+        requireCombobox(form, errors, 'skill_type_id', 'skill_type_name', 'Skill type is required.');
     }
 
     return Object.keys(errors).length === 0;
@@ -571,14 +575,13 @@ export function prepareSectionPayload(key, form, { lookups = {}, resident = {}, 
     }
 
     if (key === 'women_health') {
+        payload.family_planning_method_id = Number(form.family_planning_method_id);
+        payload.have_intention_to_use_fp = form.have_intention_to_use_fp === true;
+
         if (isFamilyPlanningNone(lookupById(lookups.familyPlanningMethod, form.family_planning_method_id))) {
-            payload.family_planning_method_id = Number(form.family_planning_method_id);
             payload.source_of_fp_method_id = notApplicableLookupId(lookups.sourceOfFpMethod);
-            payload.have_intention_to_use_fp = false;
         } else {
-            payload.family_planning_method_id = Number(form.family_planning_method_id);
             payload.source_of_fp_method_id = form.source_of_fp_method_id ? Number(form.source_of_fp_method_id) : null;
-            payload.have_intention_to_use_fp = form.have_intention_to_use_fp === true;
         }
     }
 
@@ -626,8 +629,12 @@ export function prepareSectionPayload(key, form, { lookups = {}, resident = {}, 
         payload.duration_of_stay = null;
     }
 
-    if (key === 'skills' && payload.skills_development_training) {
-        payload.skills_development_training = titleCaseWords(payload.skills_development_training);
+    if (key === 'skills') {
+        if (payload.skills_development_training) {
+            payload.skills_development_training = titleCaseWords(payload.skills_development_training);
+        }
+
+        assignComboboxPayload(payload, form, 'skill_type_id', 'skill_type_name', 'skill_type');
     }
 
     if (key === 'economic' && payload.monthly_income !== null) {

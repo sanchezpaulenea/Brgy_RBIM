@@ -207,6 +207,7 @@
                 placeholder="Search or type a health insurance"
                 required
                 can-create
+                :limit="5"
                 :error="errors.health_insurance_id || errors.health_insurance"
                 hint="Choose from the list, or type a new name and press Enter to add it."
                 @create="(name) => createLookup('healthInsurance', () => lookupService.createHealthInsurance({ health_insurance: name }), 'health_insurance_id', 'health_insurance_name', 'health_insurance_id')"
@@ -220,6 +221,7 @@
                 placeholder="Search or type a facility"
                 required
                 can-create
+                :limit="5"
                 :error="errors.facility_visited_past_12mos_id || errors.facility_visited_past_12mos"
                 hint="Choose from the list, or type a new name and press Enter to add it."
                 @create="(name) => createLookup('facilityVisited', () => lookupService.createFacilityVisited({ facility_visited_past_12mos: name }), 'facility_visited_past_12mos_id', 'facility_visited_name', 'facility_visited_past_12mos_id')"
@@ -234,6 +236,7 @@
                 placeholder="Search or type a visit reason"
                 required
                 can-create
+                :limit="5"
                 :error="errors.facility_visit_reason_id || errors.facility_visit_reason"
                 hint="Choose from the list, or type a new name and press Enter to add it."
                 @create="(name) => createLookup('facilityVisitReason', () => lookupService.createFacilityVisitReason({ facility_visit_reason: name }), 'facility_visit_reason_id', 'facility_visit_reason_name', 'facility_visit_reason_id')"
@@ -247,6 +250,7 @@
                 placeholder="Search or type a disability"
                 required
                 can-create
+                :limit="5"
                 :error="errors.disability_id || errors.disability"
                 hint="Choose from the list, or type a new name and press Enter to add it."
                 @create="createDisability"
@@ -332,24 +336,24 @@
                     </select>
                     <p v-if="errors.source_of_fp_method_id" class="rbim-error">{{ errors.source_of_fp_method_id }}</p>
                 </div>
-                <div>
-                    <label class="rbim-label" :for="`${idPrefix}-have_intention_to_use_fp`">
-                        Intention to Use Family Planning
-                    </label>
-                    <select
-                        :id="`${idPrefix}-have_intention_to_use_fp`"
-                        :value="booleanSelectValue(form.have_intention_to_use_fp)"
-                        class="rbim-input"
-                        :class="{ 'rbim-input-error': errors.have_intention_to_use_fp }"
-                        @change="form.have_intention_to_use_fp = parseBoolean($event.target.value)"
-                    >
-                        <option value="">Select intention</option>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
-                    </select>
-                    <p v-if="errors.have_intention_to_use_fp" class="rbim-error">{{ errors.have_intention_to_use_fp }}</p>
-                </div>
             </template>
+            <div>
+                <label class="rbim-label" :for="`${idPrefix}-have_intention_to_use_fp`">
+                    Intention to Use Family Planning<span class="rbim-required" aria-hidden="true">*</span>
+                </label>
+                <select
+                    :id="`${idPrefix}-have_intention_to_use_fp`"
+                    :value="booleanSelectValue(form.have_intention_to_use_fp)"
+                    class="rbim-input"
+                    :class="{ 'rbim-input-error': errors.have_intention_to_use_fp }"
+                    @change="form.have_intention_to_use_fp = parseBoolean($event.target.value)"
+                >
+                    <option value="">Select intention</option>
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                </select>
+                <p v-if="errors.have_intention_to_use_fp" class="rbim-error">{{ errors.have_intention_to_use_fp }}</p>
+            </div>
         </template>
 
         <template v-else-if="section === 'sociocivic'">
@@ -571,7 +575,9 @@
                         v-model="form.duration_of_stay"
                         label="Until When Does the Resident Intend to Stay"
                         :input-id="`${idPrefix}-duration_of_stay`"
-                        placeholder="MM/DD/YYYY"
+                        placeholder="MM/YYYY"
+                        precision="month"
+                        :max="intendStayMax"
                         :show-age="false"
                         :error="errors.duration_of_stay"
                     />
@@ -681,21 +687,20 @@
                 >
                 <p v-if="errors.skills_development_training" class="rbim-error">{{ errors.skills_development_training }}</p>
             </div>
-            <div>
-                <label class="rbim-label" :for="`${idPrefix}-skill_type_id`">
-                    Skill Type<span class="rbim-required" aria-hidden="true">*</span>
-                </label>
-                <select
-                    :id="`${idPrefix}-skill_type_id`"
-                    v-model="form.skill_type_id"
-                    class="rbim-input"
-                    :class="{ 'rbim-input-error': errors.skill_type_id }"
-                >
-                    <option value="">Select skill type</option>
-                    <option v-for="option in lookups.skillType" :key="option.id" :value="option.id">{{ option.label }}</option>
-                </select>
-                <p v-if="errors.skill_type_id" class="rbim-error">{{ errors.skill_type_id }}</p>
-            </div>
+            <LookupCombobox
+                v-model="form.skill_type_id"
+                v-model:query="form.skill_type_name"
+                :options="lookups.skillType ?? []"
+                :input-id="`${idPrefix}-skill_type`"
+                label="Skill Type"
+                placeholder="Search or type a skill type"
+                required
+                can-create
+                :limit="5"
+                :error="errors.skill_type_id || errors.skill_type"
+                hint="Choose from the list, or type a new name and press Enter to add it."
+                @create="(name) => createLookup('skillType', () => lookupService.createSkillType({ skill_type: name }), 'skill_type_id', 'skill_type_name', 'skill_type_id')"
+            />
         </template>
     </div>
 </template>
@@ -761,6 +766,7 @@ const props = defineProps({
 });
 
 const todayIso = new Date().toISOString().slice(0, 10);
+const intendStayMax = `${new Date().getFullYear() + 30}-12-01`;
 
 const educationRelevance = computed(() => educationFieldRelevance(props.resident));
 
