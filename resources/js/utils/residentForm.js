@@ -123,6 +123,17 @@ export function residentStatusRequiresHeadReplacement(statusId) {
     ].includes(Number(statusId));
 }
 
+export function residentStatusLabel(statusId) {
+    const labels = {
+        [RESIDENT_STATUS.ACTIVE]: 'Active',
+        [RESIDENT_STATUS.MOVED_OUT]: 'Moved Out',
+        [RESIDENT_STATUS.DECEASED]: 'Deceased',
+        [RESIDENT_STATUS.ARCHIVE]: 'Archive',
+    };
+
+    return labels[Number(statusId)] ?? 'this status';
+}
+
 export function eligibleHouseholdHeadCandidates(members, currentHeadId) {
     return (members || []).filter((member) => {
         if (Number(member.resident_id) === Number(currentHeadId)) {

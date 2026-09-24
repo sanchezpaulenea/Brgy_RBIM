@@ -633,6 +633,7 @@ import {
     RESIDENT_STATUS,
     applyValidationErrors,
     eligibleHouseholdHeadCandidates,
+    residentStatusLabel,
     residentStatusRequiresHeadReplacement,
     toOptionalLookupId,
 } from '@/utils/residentForm';
@@ -729,8 +730,9 @@ const headCandidates = computed(() => (
     eligibleHouseholdHeadCandidates(householdForHead.value?.residents, resident.value?.resident_id)
 ));
 
-const soloResidentDeceased = computed(() => (
-    Number(editForm.resident_status_id) === RESIDENT_STATUS.DECEASED
+const soloHeadDeparture = computed(() => (
+    residentStatusRequiresHeadReplacement(editForm.resident_status_id)
+    && Number(editForm.resident_status_id) !== Number(originalResidentStatusId.value)
     && (householdForHead.value?.residents?.length ?? 0) === 1
 ));
 
@@ -1307,7 +1309,7 @@ async function onResidentStatusChange() {
             return;
         }
 
-        if (soloResidentDeceased.value) {
+        if (soloHeadDeparture.value) {
             headReplacement.value = null;
 
             return;
@@ -1429,7 +1431,7 @@ async function handleSave() {
 
             if (
                 !headReplacement.value
-                && !soloResidentDeceased.value
+                && !soloHeadDeparture.value
                 && Number(householdForHead.value?.household_status_id) === HOUSEHOLD_STATUS_ACTIVE
             ) {
                 editErrors.new_head_resident_id = 'Select a new household head from the household members before changing this resident\'s status.';
@@ -1437,12 +1439,13 @@ async function handleSave() {
             }
         }
 
-        if (soloResidentDeceased.value) {
+        if (soloHeadDeparture.value) {
             const residentName = resident.value.full_name || 'This resident';
+            const statusLabel = residentStatusLabel(editForm.resident_status_id);
             const allowed = await askConfirm({
-                title: 'Record resident as deceased',
-                message: `${residentName} is the only member of this household. Saving will record them as deceased and set the household to Inactive. Continue?`,
-                confirmLabel: 'Save',
+                title: `Record resident as ${statusLabel}`,
+                message: `This household has only one resident. Marking ${residentName} as ${statusLabel} will leave no active members in this household. Continue?`,
+                confirmLabel: 'Continue',
                 variant: 'danger',
             });
 

@@ -317,16 +317,16 @@ class ResidentServices
             return false;
         }
 
-        return ! $this->isSoloResidentRecordedAsDeceased($resident, $statusId);
+        return ! $this->isSoloHeadDeparture($resident, $statusId);
     }
 
     /**
-     * A solo-living resident has nobody to hand the household over to, so the
-     * head pointer stays on them and the status change is saved as-is.
+     * A solo-living resident has nobody to hand the household over to, so Moved
+     * Out, Deceased, and Archive are saved without assigning a new head.
      */
-    private function isSoloResidentRecordedAsDeceased(Resident $resident, int $statusId): bool
+    private function isSoloHeadDeparture(Resident $resident, int $statusId): bool
     {
-        if ($statusId !== ResidentStatus::DECEASED) {
+        if (! ResidentStatus::requiresHouseholdHeadReplacement($statusId)) {
             return false;
         }
 
@@ -335,7 +335,7 @@ class ResidentServices
 
     /**
      * household.head_resident_id cannot be cleared, so a household whose only
-     * resident has just been recorded as deceased is marked inactive instead.
+     * resident has just left active status is marked inactive instead.
      *
      * @param  array<string, mixed>  $data
      */
@@ -345,11 +345,11 @@ class ResidentServices
             return null;
         }
 
-        if ((int) $resident->resident_status_id === ResidentStatus::DECEASED) {
+        if (ResidentStatus::requiresHouseholdHeadReplacement((int) $resident->resident_status_id)) {
             return null;
         }
 
-        if (! $this->isSoloResidentRecordedAsDeceased($resident, (int) $data['resident_status_id'])) {
+        if (! $this->isSoloHeadDeparture($resident, (int) $data['resident_status_id'])) {
             return null;
         }
 
