@@ -6,19 +6,20 @@ use App\Repositories\BarangayPersonnel\BarangayPersonnelRepository;
 use App\Repositories\BarangayPersonnel\PersonnelPositionRepository;
 use App\Repositories\HouseholdManagement\HouseholdAssessmentRepository;
 use App\Repositories\HouseholdManagement\HouseholdQuestionsRepository;
-use App\Repositories\HouseholdManagement\PetCensusRepository;
 use App\Repositories\HouseholdManagement\HouseholdRepository;
+use App\Repositories\HouseholdManagement\PetCensusRepository;
 use App\Repositories\HouseholdManagement\StreetRepository;
 use App\Repositories\Interfaces\BarangayPersonnel\BarangayPersonnelRepositoryInterface;
 use App\Repositories\Interfaces\BarangayPersonnel\PersonnelPositionRepositoryInterface;
 use App\Repositories\Interfaces\HouseholdManagement\HouseholdAssessmentRepositoryInterface;
 use App\Repositories\Interfaces\HouseholdManagement\HouseholdQuestionsRepositoryInterface;
-use App\Repositories\Interfaces\HouseholdManagement\PetCensusRepositoryInterface;
 use App\Repositories\Interfaces\HouseholdManagement\HouseholdRepositoryInterface;
+use App\Repositories\Interfaces\HouseholdManagement\PetCensusRepositoryInterface;
 use App\Repositories\Interfaces\HouseholdManagement\StreetRepositoryInterface;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\Logs\UserLogRepositoryInterface;
 use App\Repositories\Interfaces\Lookups\LookupRepositoryInterface;
+use App\Repositories\Interfaces\ReportRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Ctc\CtcRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Demographic\EthnicityRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Demographic\NationalityRepositoryInterface;
@@ -40,6 +41,7 @@ use App\Repositories\Interfaces\UserManagement\UserStatusInterface;
 use App\Repositories\Logs\AuditLogRepository;
 use App\Repositories\Logs\UserLogRepository;
 use App\Repositories\Lookups\LookupRepository;
+use App\Repositories\ReportRepository;
 use App\Repositories\ResidentManagement\Ctc\CtcRepository;
 use App\Repositories\ResidentManagement\Demographic\EthnicityRepository;
 use App\Repositories\ResidentManagement\Demographic\NationalityRepository;
@@ -96,5 +98,6 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(MigrationRepositoryInterface::class, MigrationRepository::class);
         $this->app->bind(CtcRepositoryInterface::class, CtcRepository::class);
         $this->app->bind(SkillRepositoryInterface::class, SkillRepository::class);
+        $this->app->bind(ReportRepositoryInterface::class, ReportRepository::class);
     }
 }

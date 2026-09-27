@@ -13,6 +13,7 @@ use App\Http\Controllers\HouseholdManagament\StreetController;
 use App\Http\Controllers\Logs\AuditLogController;
 use App\Http\Controllers\Logs\UserLogController;
 use App\Http\Controllers\Lookups\LookupController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ResidentManagement\Ctc\CtcController;
 use App\Http\Controllers\ResidentManagement\Demographic\EthnicityController;
 use App\Http\Controllers\ResidentManagement\Demographic\NationalityController;
@@ -99,6 +100,11 @@ Route::prefix('v1')->group(function () {
         Route::post('residents/{resident}/skills', [SkillController::class, 'store'])->name('residents.skills.store');
         Route::patch('skills/{skillsDevelopment}', [SkillController::class, 'update'])->name('skills.update');
         Route::post('skill-types', [SkillTypeController::class, 'store'])->name('skill-types.store');
+
+        Route::get('reports/categories', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('reports/options', [ReportController::class, 'options'])->name('reports.options');
+        Route::post('reports/preview', [ReportController::class, 'preview'])->name('reports.preview');
+        Route::post('reports/export', [ReportController::class, 'export'])->name('reports.export');
 
         Route::get('streets', [StreetController::class, 'index'])->name('streets.index');
         Route::post('streets', [StreetController::class, 'store'])->name('streets.store');

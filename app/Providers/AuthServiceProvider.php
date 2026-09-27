@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\BarangayPersonnel\BarangayPersonnel;
 use App\Models\BarangayPersonnel\PersonnelPosition;
+use App\Models\HouseholdManagement\Breed;
 use App\Models\HouseholdManagement\BuildingHouseType;
 use App\Models\HouseholdManagement\CensusStatus;
 use App\Models\HouseholdManagement\Clan;
@@ -11,18 +12,18 @@ use App\Models\HouseholdManagement\ConstructionMaterialOuterWall;
 use App\Models\HouseholdManagement\FuelType;
 use App\Models\HouseholdManagement\Household;
 use App\Models\HouseholdManagement\HouseholdAssessment;
-use App\Models\HouseholdManagement\Breed;
 use App\Models\HouseholdManagement\HouseholdQuestions;
-use App\Models\HouseholdManagement\PetCensus;
-use App\Models\HouseholdManagement\Specie;
 use App\Models\HouseholdManagement\HouseholdStatus;
 use App\Models\HouseholdManagement\KitchenGarbageDisposal;
 use App\Models\HouseholdManagement\OwnershipType;
+use App\Models\HouseholdManagement\PetCensus;
+use App\Models\HouseholdManagement\Specie;
 use App\Models\HouseholdManagement\Street;
 use App\Models\HouseholdManagement\ToiletFacilityType;
 use App\Models\HouseholdManagement\WaterSource;
 use App\Models\Logs\AuditLog;
 use App\Models\Logs\UserLog;
+use App\Models\Report;
 use App\Models\ResidentManagement\Ctc\Ctc;
 use App\Models\ResidentManagement\Demographic\Ethnicity;
 use App\Models\ResidentManagement\Demographic\MaritalStatus;
@@ -73,6 +74,7 @@ use App\Policies\HouseholdManagement\StreetPolicy;
 use App\Policies\Logs\AuditLogPolicy;
 use App\Policies\Logs\UserLogPolicy;
 use App\Policies\Lookups\ReferenceLookupPolicy;
+use App\Policies\ReportPolicy;
 use App\Policies\ResidentManagement\Ctc\CtcPolicy;
 use App\Policies\ResidentManagement\Demographic\EthnicityPolicy;
 use App\Policies\ResidentManagement\Demographic\NationalityPolicy;
@@ -165,6 +167,7 @@ class AuthServiceProvider extends ServiceProvider
         ToiletFacilityType::class => ReferenceLookupPolicy::class,
         BuildingHouseType::class => ReferenceLookupPolicy::class,
         ConstructionMaterialOuterWall::class => ReferenceLookupPolicy::class,
+        Report::class => ReportPolicy::class,
     ];
 
     public function register(): void {}

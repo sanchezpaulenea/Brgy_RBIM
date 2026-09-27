@@ -70,6 +70,9 @@ const PERMISSION_LABELS = {
     'skills.view': { group: 'Skills', label: 'View skills development records' },
     'skills.create': { group: 'Skills', label: 'Create skills development records' },
     'skills.update': { group: 'Skills', label: 'Update skills development records' },
+    'report.view': { group: 'Reports', label: 'View reports' },
+    'report.create': { group: 'Reports', label: 'Create and export reports' },
+    'report.update': { group: 'Reports', label: 'Update reports' },
 };
 
 const OTHER_GROUP = 'Other';
@@ -102,6 +105,7 @@ const PERMISSION_GROUP_ORDER = [
     'Nationalities',
     'Ethnicities',
     'Religions',
+    'Reports',
 ];
 
 export function permissionLabel(permission) {

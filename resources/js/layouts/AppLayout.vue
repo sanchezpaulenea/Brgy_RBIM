@@ -112,6 +112,19 @@
                     </div>
 
                     <RouterLink
+                        v-if="canViewReports"
+                        :to="{ name: 'reports' }"
+                        class="flex items-center gap-2.5 min-w-0 rounded-lg px-3 py-2 text-[13px] font-medium transition"
+                        :class="isReportsRoute ? 'bg-white/15 text-white' : 'text-white/90 hover:bg-white/10'"
+                        @click="sidebarOpen = false"
+                    >
+                        <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                        </svg>
+                        <span>Report Generation</span>
+                    </RouterLink>
+
+                    <RouterLink
                         v-if="personnelTabs.length === 1"
                         :to="{ name: personnelTabs[0].name }"
                         class="flex items-center gap-2.5 min-w-0 rounded-lg px-3 py-2 text-[13px] font-medium transition"
@@ -268,6 +281,7 @@ const openMenu = ref(null);
 
 const canViewHouseholdMenu = computed(() => householdTabs.value.length > 0);
 const canViewResidentMenu = computed(() => residentTabs.value.length > 0);
+const canViewReports = computed(() => hasPermission('report.view'));
 
 const canViewSystemSettings = computed(() => (
     isSystemAdministrator.value && hasPermission('setting.view')
@@ -289,6 +303,7 @@ const isHouseholdPetCensusRoute = computed(() => (
     route.name === 'household-pet-census'
 ));
 const isResidentRoute = computed(() => String(route.path).startsWith('/residents'));
+const isReportsRoute = computed(() => route.name === 'reports');
 const isSettingsRoute = computed(() => String(route.path).startsWith('/settings'));
 const isPersonnelRoute = computed(() => String(route.path).startsWith('/personnel'));
 const isUsersRoute = computed(() => String(route.path).startsWith('/users'));

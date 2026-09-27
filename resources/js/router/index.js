@@ -168,6 +168,15 @@ const routes = [
         },
     },
     {
+        path: '/reports',
+        name: 'reports',
+        component: () => import('@/pages/reports/ReportGenerationPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresPermissions: ['report.view'],
+        },
+    },
+    {
         path: '/residents/nationalities',
         name: 'nationalities',
         component: () => import('@/pages/lookups/LookupManagementPage.vue'),
