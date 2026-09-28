@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Report;
 
+use App\Services\ReportSchema;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class ReportOptionsRequest extends FormRequest
 {
@@ -28,7 +30,42 @@ class ReportOptionsRequest extends FormRequest
     {
         return [
             'category' => ['required', 'string', Rule::in(array_keys(config('report_categories', [])))],
+            'filter' => ['required', 'string'],
             'search' => ['nullable', 'string', 'max:100'],
+            'all' => ['sometimes', 'boolean'],
+        ];
+    }
+
+    /**
+     * @return array<int, callable(Validator): void>
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                if ($validator->errors()->isNotEmpty()) {
+                    return;
+                }
+
+                $category = config('report_categories.'.$this->input('category'));
+                $filterKey = $this->input('filter');
+
+                if (! is_array($category) || ! is_string($filterKey)) {
+                    return;
+                }
+
+                try {
+                    $filter = ReportSchema::filterDefinition($category, $filterKey);
+                } catch (\InvalidArgumentException) {
+                    $validator->errors()->add('filter', 'Choose a filter from the list.');
+
+                    return;
+                }
+
+                if (($filter['type'] ?? '') !== 'lookup') {
+                    $validator->errors()->add('filter', 'This filter does not have a search list.');
+                }
+            },
         ];
     }
 
@@ -39,6 +76,7 @@ class ReportOptionsRequest extends FormRequest
     {
         return [
             'category.in' => 'Choose a report category from the list.',
+            'filter.required' => 'Choose a filter from the list.',
         ];
     }
 }

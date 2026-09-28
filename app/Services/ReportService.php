@@ -3,6 +3,9 @@
 namespace App\Services;
 
 use App\Exports\ReportWorkbookExport;
+use App\Models\Logs\Action;
+use App\Models\UserManagement\User;
+use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ReportRepositoryInterface;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonInterface;
@@ -16,6 +19,7 @@ class ReportService
 {
     public function __construct(
         protected ReportRepositoryInterface $reportRepository,
+        protected AuditLogRepositoryInterface $auditLogRepository,
     ) {}
 
     /**
@@ -43,11 +47,11 @@ class ReportService
     /**
      * @return list<array{id: int, label: string}>
      */
-    public function getFilterOptions(string $key, ?string $search): array
+    public function getFilterOptions(string $key, string $filterKey, ?string $search, bool $all = false): array
     {
         $this->getCategoryDefinition($key);
 
-        return $this->reportRepository->getCategoryOptions($key, $search);
+        return $this->reportRepository->getCategoryOptions($key, $filterKey, $search, $all);
     }
 
     /**
@@ -64,10 +68,17 @@ class ReportService
      * @param  array<string, mixed>  $filterInput
      * @param  list<string>  $selectedColumns
      */
-    public function export(array $filterInput, array $selectedColumns, string $format, string $title): Response
-    {
+    public function export(
+        array $filterInput,
+        array $selectedColumns,
+        string $format,
+        string $title,
+        ?string $subtitle,
+        User $performedBy,
+    ): Response {
         $report = $this->assemble($filterInput, $selectedColumns, paginate: false);
         $report['title'] = $title;
+        $report['subtitle'] = $subtitle !== null && $subtitle !== '' ? $subtitle : null;
         $filename = Str::slug($title);
 
         if ($filename === '') {
@@ -81,18 +92,31 @@ class ReportService
         );
 
         if ($format === 'pdf') {
-            return Pdf::loadView('reports.master-list', [
+            $response = Pdf::loadView('reports.master-list', [
                 'title' => $report['title'],
                 'subtitle' => $report['subtitle'],
                 'headings' => $headings,
                 'rows' => $rows,
             ])->setPaper('a4', 'landscape')->download($filename.'.pdf');
+        } else {
+            $response = Excel::download(
+                new ReportWorkbookExport($report['title'], $report['subtitle'], $headings, $rows),
+                $filename.'.xlsx',
+            );
         }
 
-        return Excel::download(
-            new ReportWorkbookExport($report['title'], $report['subtitle'], $headings, $rows),
-            $filename.'.xlsx',
+        $this->auditLogRepository->log(
+            performedByUserId: $performedBy->user_id,
+            actionId: Action::EXPORT,
+            recordId: 0,
+            description: 'Export report',
+            oldValue: $this->exportFilterSummary($filterInput),
+            newValue: $format,
+            target: 'format',
+            entity: 'report',
         );
+
+        return $response;
     }
 
     /**
@@ -104,10 +128,11 @@ class ReportService
     {
         $categoryKey = (string) $filterInput['category'];
         $category = $this->getCategoryDefinition($categoryKey);
-        $filter = is_array($filterInput['filter'] ?? null) ? $filterInput['filter'] : [];
-        $columns = ReportSchema::selectedColumns($category['level'], $selectedColumns);
-        $query = $this->reportRepository->buildReportQuery($categoryKey, $filter, $selectedColumns);
-        $titles = $this->titles($categoryKey, $category, $filter);
+        $filters = is_array($filterInput['filters'] ?? null) ? $filterInput['filters'] : [];
+        $columns = ReportSchema::presentColumns($categoryKey, $selectedColumns, $filters);
+        $query = $this->reportRepository->buildReportQuery($categoryKey, $filters, $selectedColumns);
+        $titles = $this->titles($categoryKey, $category, $filters);
+        $unanswered = $this->unansweredNote($category, $filters);
 
         if ($paginate) {
             $paginator = $query->paginate(
@@ -138,44 +163,185 @@ class ReportService
                 ->values()
                 ->all(),
             'pagination' => $pagination,
+            'unanswered_households' => $unanswered['count'],
+            'unanswered_note' => $unanswered['note'],
         ];
     }
 
     /**
      * @param  array<string, mixed>  $category
-     * @param  array<string, mixed>  $filter
+     * @param  array<string, mixed>  $filters
+     * @return array{count: ?int, note: ?string}
+     */
+    private function unansweredNote(array $category, array $filters): array
+    {
+        if (($category['questions'] ?? false) !== true) {
+            return ['count' => null, 'note' => null];
+        }
+
+        $count = $this->reportRepository->unansweredHouseholdCount();
+        $noun = $count === 1 ? 'household has' : 'households have';
+        $tail = ReportSchema::includesUnanswered($category, $filters)
+            ? 'They are included in this list as Not Answered.'
+            : 'They are excluded from this list.';
+
+        return [
+            'count' => $count,
+            'note' => $count.' '.$noun.' no Household Questions answers. '.$tail,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $category
+     * @param  array<string, mixed>  $filters
      * @return array{title: string, subtitle: ?string}
      */
-    private function titles(string $categoryKey, array $category, array $filter): array
+    private function titles(string $categoryKey, array $category, array $filters): array
     {
         $label = (string) $category['label'];
-        $plural = Str::plural($label);
-        $mode = (string) ($filter['mode'] ?? 'all');
+        $definitions = array_values(array_filter(
+            $category['filters'] ?? [],
+            fn (mixed $filter): bool => is_array($filter),
+        ));
+        $phrases = [];
+        $allOpen = true;
 
-        if ($mode === 'all') {
+        foreach ($definitions as $filter) {
+            $state = ReportSchema::filterState($filters, (string) $filter['key']);
+
+            if (! ReportSchema::isAll($filter, $state)) {
+                $allOpen = false;
+            }
+
+            $phrases[] = $this->filterPhrase($categoryKey, $filter, $state);
+        }
+
+        if ($allOpen && count($definitions) === 1 && ($definitions[0]['type'] ?? '') === 'lookup') {
+            $plural = $definitions[0]['plural'] ?? Str::plural((string) $definitions[0]['label']);
+
             return [
                 'title' => "All {$plural} Master List",
                 'subtitle' => null,
             ];
         }
 
-        $ids = array_values(array_map('intval', $filter['ids'] ?? []));
-        $names = array_map(
-            fn (array $option): string => $option['label'].' '.$label,
-            $this->reportRepository->filterLabels($categoryKey, $ids),
-        );
-
-        if ($mode === 'one') {
+        if ($allOpen) {
             return [
-                'title' => "Per {$label} Master List",
-                'subtitle' => $names[0] ?? null,
+                'title' => "All {$label} Master List",
+                'subtitle' => null,
+            ];
+        }
+
+        if (count($definitions) === 1 && ($definitions[0]['type'] ?? '') === 'lookup') {
+            $filter = $definitions[0];
+            $state = ReportSchema::filterState($filters, (string) $filter['key']);
+            $plural = $filter['plural'] ?? Str::plural((string) $filter['label']);
+            $names = array_map(
+                fn (string $name): string => $name.' '.$filter['label'],
+                $this->selectedNames($categoryKey, $filter, $state),
+            );
+
+            if ($state['mode'] === 'one') {
+                return [
+                    'title' => "Per {$filter['label']} Master List",
+                    'subtitle' => $names[0] ?? null,
+                ];
+            }
+
+            return [
+                'title' => "Select {$plural} Master List",
+                'subtitle' => $names === [] ? null : implode(', ', $names),
             ];
         }
 
         return [
-            'title' => "Selected {$plural} Master List",
-            'subtitle' => $names === [] ? null : implode(', ', $names),
+            'title' => "{$label} Master List",
+            'subtitle' => $phrases === [] ? null : implode('; ', $phrases),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     * @param  array{mode: string, ids: list<int>, value: int|string|null}  $state
+     */
+    private function filterPhrase(string $categoryKey, array $filter, array $state): string
+    {
+        $label = (string) $filter['label'];
+
+        if (ReportSchema::isAll($filter, $state)) {
+            $plural = $filter['plural'] ?? Str::plural($label);
+
+            return $label.': All '.$plural;
+        }
+
+        if (($filter['type'] ?? '') === 'lookup') {
+            $names = $this->selectedNames($categoryKey, $filter, $state);
+
+            return $label.': '.($names === [] ? 'Selected' : implode(', ', $names));
+        }
+
+        $choice = ReportSchema::choice($filter, $state);
+        $text = (string) ($choice['label'] ?? $label);
+
+        if (($choice['op'] ?? '') === 'eq_input') {
+            $text .= ' '.(string) ($state['value'] ?? '');
+        }
+
+        return $label.': '.$text;
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     * @param  array{mode: string, ids: list<int>, value: int|string|null}  $state
+     * @return list<string>
+     */
+    private function selectedNames(string $categoryKey, array $filter, array $state): array
+    {
+        return array_map(
+            fn (array $option): string => $option['label'],
+            $this->reportRepository->filterLabels($categoryKey, (string) $filter['key'], $state['ids']),
+        );
+    }
+
+    /**
+     * Category and sub-filters, kept inside audit_log.old_value's 45 characters.
+     *
+     * @param  array<string, mixed>  $filterInput
+     */
+    private function exportFilterSummary(array $filterInput): string
+    {
+        $categoryKey = (string) ($filterInput['category'] ?? '');
+        $filters = is_array($filterInput['filters'] ?? null) ? $filterInput['filters'] : [];
+        $parts = [$categoryKey];
+
+        $definitions = [];
+
+        try {
+            $definitions = ReportSchema::category($categoryKey)['filters'] ?? [];
+        } catch (\InvalidArgumentException) {
+            $definitions = [];
+        }
+
+        foreach ($definitions as $filter) {
+            if (! is_array($filter)) {
+                continue;
+            }
+
+            $state = ReportSchema::filterState($filters, (string) $filter['key']);
+            $piece = $filter['key'].':'.$state['mode'];
+
+            if ($state['ids'] !== []) {
+                $piece .= ':'.implode(',', $state['ids']);
+            }
+
+            if ($state['value'] !== null && $state['value'] !== '') {
+                $piece .= '='.$state['value'];
+            }
+
+            $parts[] = $piece;
+        }
+
+        return mb_substr(implode(' ', $parts), 0, 45);
     }
 
     /**
@@ -185,28 +351,85 @@ class ReportService
     private function publicCategory(string $key, array $category): array
     {
         $label = (string) $category['label'];
-        $plural = Str::plural($label);
-        $excluded = $category['excluded_default_columns'] ?? [];
+        $defaults = array_flip($category['default_columns'] ?? []);
         $columns = [];
 
-        foreach (ReportSchema::columns((string) $category['level']) as $column) {
-            $columns[] = $this->publicColumn($column, ! in_array($column['key'], $excluded, true));
+        foreach (ReportSchema::columnsFor($key) as $column) {
+            $columns[] = $this->publicColumn($column, isset($defaults[$column['key']]));
         }
 
         return [
             'key' => $key,
             'label' => $label,
             'level' => $category['level'],
-            'filter_type' => $category['filter_type'],
-            'filter_modes' => $category['filter_type'] === 'lookup'
-                ? [
-                    ['value' => 'all', 'label' => "All {$plural}"],
-                    ['value' => 'one', 'label' => "Per {$label}"],
-                    ['value' => 'multiple', 'label' => "Select 1+ {$plural}"],
-                ]
-                : [],
+            'questions' => ($category['questions'] ?? false) === true,
+            'filters' => $this->publicFilters($category),
             'columns' => $columns,
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $category
+     * @return list<array<string, mixed>>
+     */
+    private function publicFilters(array $category): array
+    {
+        $filters = [];
+
+        foreach ($category['filters'] ?? [] as $filter) {
+            if (! is_array($filter)) {
+                continue;
+            }
+
+            $public = [
+                'key' => $filter['key'],
+                'label' => $filter['label'],
+                'type' => $filter['type'],
+                'owns' => array_values($filter['owns'] ?? []),
+            ];
+
+            if (($filter['type'] ?? '') === 'lookup') {
+                $plural = $filter['plural'] ?? Str::plural((string) $filter['label']);
+                $modes = [];
+
+                foreach ($filter['modes'] ?? [] as $mode) {
+                    $modes[] = [
+                        'value' => $mode,
+                        'label' => match ($mode) {
+                            'all' => "All {$plural}",
+                            'one' => "Per {$filter['label']}",
+                            'multiple' => 'Select 1 or more',
+                            default => (string) $mode,
+                        },
+                    ];
+                }
+
+                $public['modes'] = $modes;
+            } else {
+                $public['choices'] = array_map(function (array $choice): array {
+                    $item = [
+                        'value' => $choice['value'],
+                        'label' => $choice['label'],
+                        'numeric' => (bool) ($choice['numeric'] ?? false),
+                        'singular' => (bool) ($choice['singular'] ?? false),
+                    ];
+
+                    if (isset($choice['min'])) {
+                        $item['min'] = $choice['min'];
+                    }
+
+                    if (isset($choice['max'])) {
+                        $item['max'] = $choice['max'];
+                    }
+
+                    return $item;
+                }, $filter['choices'] ?? []);
+            }
+
+            $filters[] = $public;
+        }
+
+        return $filters;
     }
 
     /**
@@ -258,9 +481,17 @@ class ReportService
      */
     private function read(Model $model, array $column): mixed
     {
+        if ($this->isUnansweredQuestions($model, $column)) {
+            return $this->unansweredPlaceholder($column);
+        }
+
         $format = ReportSchema::format($column);
         $source = (string) ($column['source'] ?? '');
         $target = $source === '' ? $model : data_get($model, $source);
+
+        if ($format === 'value' && $target === null && array_key_exists('null_as', $column)) {
+            $target = $column['null_as'];
+        }
 
         return match ($format) {
             'count' => (int) ($model->{$source.'_count'} ?? 0),
@@ -274,6 +505,41 @@ class ReportService
             'group' => $this->readGroup($target, $column['columns'] ?? []),
             default => $this->scalar($target),
         };
+    }
+
+    private function isUnansweredQuestions(Model $model, array $column): bool
+    {
+        $source = (string) ($column['source'] ?? '');
+
+        if ($source !== 'questions' && ! str_starts_with($source, 'questions.')) {
+            return false;
+        }
+
+        return data_get($model, 'questions') === null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $column
+     */
+    private function unansweredPlaceholder(array $column): mixed
+    {
+        if (ReportSchema::format($column) !== 'group') {
+            return 'Not Answered';
+        }
+
+        $row = [];
+
+        foreach ($column['columns'] ?? [] as $child) {
+            if (is_array($child) && isset($child['key'])) {
+                $row[$child['key']] = 'Not Answered';
+            }
+        }
+
+        if (($column['source'] ?? '') === 'questions') {
+            return $row;
+        }
+
+        return [$row];
     }
 
     /**

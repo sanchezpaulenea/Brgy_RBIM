@@ -12,6 +12,8 @@ class Action extends Model
 
     public const VIEW = 3;
 
+    public const EXPORT = 5;
+
     protected $table = 'action';
 
     protected $primaryKey = 'action_id';

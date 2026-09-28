@@ -48,6 +48,7 @@ return [
             'key' => 'number_of_basement_level',
             'label' => 'Number of Basement Level',
             'source' => 'number_of_basement_level',
+            'null_as' => 0,
             'is_group' => false,
         ],
         [
@@ -308,4 +309,150 @@ return [
 
     // populated in Phase 3.
     'resident' => [],
+
+    /*
+    | Category-only columns. A category lists the keys it adds under
+    | extra_columns. They are not part of every household report.
+    */
+    'extras' => [
+        'total_pets_recorded' => [
+            'key' => 'total_pets_recorded',
+            'label' => 'Total Pets Recorded',
+            'source' => 'matching_pets',
+            'format' => 'count',
+            'count_via' => 'repository',
+            'is_group' => false,
+        ],
+        'total_diseases_recorded' => [
+            'key' => 'total_diseases_recorded',
+            'label' => 'Total Diseases Recorded',
+            'source' => 'matching_diseases',
+            'format' => 'count',
+            'count_via' => 'repository',
+            'is_group' => false,
+        ],
+        'total_primary_needs_recorded' => [
+            'key' => 'total_primary_needs_recorded',
+            'label' => 'Total Primary Needs Recorded',
+            'source' => 'matching_needs',
+            'format' => 'count',
+            'count_via' => 'repository',
+            'is_group' => false,
+        ],
+        'female_death_details' => [
+            'key' => 'female_death_details',
+            'label' => 'Female Death Details',
+            'source' => 'questions.femaleDeaths',
+            'is_group' => true,
+            'columns' => [
+                [
+                    'key' => 'age',
+                    'label' => 'Age',
+                    'source' => 'age',
+                ],
+                [
+                    'key' => 'cause_of_death',
+                    'label' => 'Cause of Death',
+                    'source' => 'cause_of_death',
+                ],
+            ],
+        ],
+        'child_death_details' => [
+            'key' => 'child_death_details',
+            'label' => 'Child Death Details',
+            'source' => 'questions.childDeaths',
+            'is_group' => true,
+            'columns' => [
+                [
+                    'key' => 'age',
+                    'label' => 'Age',
+                    'source' => 'age',
+                ],
+                [
+                    'key' => 'cause_of_death',
+                    'label' => 'Cause of Death',
+                    'source' => 'cause_of_death',
+                ],
+                [
+                    'key' => 'sex',
+                    'label' => 'Sex',
+                    'source' => 'sex.sex',
+                ],
+            ],
+        ],
+        'household_members_health' => [
+            'key' => 'household_members_health',
+            'label' => "Household Members' Health Details",
+            'source' => 'residents',
+            'is_group' => true,
+            'columns' => [
+                [
+                    'key' => 'health_insurance',
+                    'label' => 'Health Insurance',
+                    'source' => 'health.healthInsurance.health_insurance',
+                ],
+                [
+                    'key' => 'facility_visited_past_12mos',
+                    'label' => 'Facility Visited Past 12 Months',
+                    'source' => 'health.facilityVisitedPast12Mos.facility_visited_past_12mos',
+                ],
+                [
+                    'key' => 'facility_visit_reason',
+                    'label' => 'Facility Visit Reason',
+                    'source' => 'health.facilityVisitReason.facility_visit_reason',
+                ],
+                [
+                    'key' => 'disability',
+                    'label' => 'Disability',
+                    'source' => 'health.disabilityType.disability',
+                ],
+                [
+                    'key' => 'pwd_id_number',
+                    'label' => 'PWD ID Number',
+                    'source' => 'health.pwd_id_number',
+                ],
+                [
+                    'key' => 'place_of_delivery',
+                    'label' => 'Place of Delivery',
+                    'source' => 'infantHealth.placeOfDelivery.place_of_delivery',
+                ],
+                [
+                    'key' => 'birth_attendant',
+                    'label' => 'Birth Attendant',
+                    'source' => 'infantHealth.birthAttendant.birth_attendant',
+                ],
+                [
+                    'key' => 'immunization',
+                    'label' => 'Immunization',
+                    'source' => 'infantHealth.immunization.immunization',
+                ],
+                [
+                    'key' => 'number_pregnancies',
+                    'label' => 'Number of Pregnancies',
+                    'source' => 'health.womenHealth.number_pregnancies',
+                ],
+                [
+                    'key' => 'living_children',
+                    'label' => 'Living Children',
+                    'source' => 'health.womenHealth.living_children',
+                ],
+                [
+                    'key' => 'family_planning_method',
+                    'label' => 'Family Planning Method',
+                    'source' => 'health.womenHealth.familyPlanningMethod.family_planning_method',
+                ],
+                [
+                    'key' => 'source_of_fp_method',
+                    'label' => 'Source of Family Planning Method',
+                    'source' => 'health.womenHealth.sourceOfFpMethod.source_of_fp_method',
+                ],
+                [
+                    'key' => 'have_intention_to_use_fp',
+                    'label' => 'Intention to Use Family Planning',
+                    'source' => 'health.womenHealth.have_intention_to_use_fp',
+                    'format' => 'yes_no',
+                ],
+            ],
+        ],
+    ],
 ];

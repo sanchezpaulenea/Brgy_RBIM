@@ -2,13 +2,18 @@
 
 namespace App\Http\Requests\Report;
 
+use App\Http\Requests\Concerns\TitleCasesAttributes;
+use App\Services\ReportSchema;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class ReportPreviewRequest extends FormRequest
 {
+    use TitleCasesAttributes;
+
     public function authorize(): bool
     {
         return true;
@@ -16,22 +21,59 @@ class ReportPreviewRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $filter = $this->input('filter');
+        $filters = $this->input('filters');
+        $normalized = [];
 
-        if (! is_array($filter)) {
-            $filter = [];
+        if (is_array($filters)) {
+            foreach ($filters as $key => $filter) {
+                if (! is_string($key) || ! is_array($filter)) {
+                    continue;
+                }
+
+                $ids = $filter['ids'] ?? [];
+                $normalized[$key] = [
+                    'mode' => $filter['mode'] ?? null,
+                    'ids' => is_array($ids) ? array_values($ids) : [],
+                    'value' => $filter['value'] ?? null,
+                ];
+            }
         }
 
-        $ids = $filter['ids'] ?? [];
-        $filter['ids'] = is_array($ids) ? array_values($ids) : [];
+        $this->merge(['filters' => $normalized]);
+        $this->mergeTitleCased(['title', 'subtitle']);
+    }
 
-        $merge = ['filter' => $filter];
-
-        if (is_string($this->input('title'))) {
-            $merge['title'] = trim($this->input('title'));
+    /**
+     * Preserve words that are already ALL CAPS (CTC, PWD, SK, NCSC).
+     */
+    protected function titleCaseValue(mixed $value): mixed
+    {
+        if (! is_string($value)) {
+            return $value;
         }
 
-        $this->merge($merge);
+        $squished = Str::of($value)->squish()->toString();
+
+        if ($squished === '') {
+            return null;
+        }
+
+        $formatted = preg_replace_callback(
+            '/\S+/u',
+            function (array $match): string {
+                $word = $match[0];
+                $letters = preg_replace('/[^\p{L}]/u', '', $word) ?? '';
+
+                if ($letters !== '' && preg_match('/^\p{Lu}+$/u', $letters) === 1) {
+                    return $word;
+                }
+
+                return Str::title(Str::lower($word));
+            },
+            $squished,
+        );
+
+        return is_string($formatted) && $formatted !== '' ? $formatted : null;
     }
 
     /**
@@ -39,25 +81,9 @@ class ReportPreviewRequest extends FormRequest
      */
     public function rules(): array
     {
-        [$table, $key] = $this->filterTable();
-        $restrictIds = $table !== '' && $this->input('filter.mode') !== 'all';
-
         return [
             'category' => ['required', 'string', Rule::in(array_keys(config('report_categories', [])))],
-            'filter' => ['required', 'array'],
-            'filter.mode' => ['required', 'string', Rule::in(['all', 'one', 'multiple'])],
-            'filter.ids' => [
-                'present',
-                'array',
-                Rule::when($this->input('filter.mode') === 'all', ['max:0']),
-                Rule::when($this->input('filter.mode') === 'one', ['size:1']),
-                Rule::when($this->input('filter.mode') === 'multiple', ['min:1', 'max:50']),
-            ],
-            'filter.ids.*' => array_values(array_filter([
-                'integer',
-                'distinct',
-                $restrictIds ? Rule::exists($table, $key) : null,
-            ])),
+            'filters' => ['required', 'array'],
             'selected_columns' => ['required', 'array', 'min:1', 'max:50'],
             'selected_columns.*' => ['required', 'string', 'distinct'],
             'page' => ['sometimes', 'integer', 'min:1'],
@@ -71,12 +97,15 @@ class ReportPreviewRequest extends FormRequest
                 Rule::excludeIf(fn (): bool => ! $this->isExport()),
                 'required',
                 'string',
-                'max:120',
-                function (string $attribute, mixed $value, Closure $fail): void {
-                    if (! is_string($value) || preg_match('/[\p{L}\p{N}]/u', $value) !== 1) {
-                        $fail('Report title must include letters or numbers.');
-                    }
-                },
+                'max:100',
+                $this->requiresLetterOrNumber('Report title'),
+            ],
+            'subtitle' => [
+                Rule::excludeIf(fn (): bool => ! $this->isExport()),
+                'nullable',
+                'string',
+                'max:100',
+                $this->requiresLetterOrNumber('Report subtitle'),
             ],
         ];
     }
@@ -98,19 +127,8 @@ class ReportPreviewRequest extends FormRequest
                     return;
                 }
 
-                $allowed = array_column(
-                    config('report_columns.'.$category['level'], []),
-                    'key',
-                );
-
-                foreach ($this->input('selected_columns', []) as $index => $column) {
-                    if (! in_array($column, $allowed, true)) {
-                        $validator->errors()->add(
-                            "selected_columns.{$index}",
-                            'This column is not available for the selected report.',
-                        );
-                    }
-                }
+                $this->validateFilters($validator, $category);
+                $this->validateColumns($validator);
             },
         ];
     }
@@ -122,15 +140,11 @@ class ReportPreviewRequest extends FormRequest
     {
         return [
             'category.in' => 'Choose a report category from the list.',
-            'filter.mode.in' => 'Choose all, one, or more than one.',
-            'filter.ids.max' => 'The all option does not take a specific selection.',
-            'filter.ids.size' => 'Select one record for this report.',
-            'filter.ids.min' => 'Select at least one record for this report.',
-            'filter.ids.*.exists' => 'One of the selected records does not exist.',
             'selected_columns.required' => 'Select at least one column.',
             'selected_columns.min' => 'Select at least one column.',
             'title.required' => 'Report title is required.',
-            'title.max' => 'Report title may not be longer than 120 characters.',
+            'title.max' => 'Report title may not be longer than 100 characters.',
+            'subtitle.max' => 'Report subtitle may not be longer than 100 characters.',
             'format.in' => 'Choose PDF or Excel.',
         ];
     }
@@ -141,20 +155,193 @@ class ReportPreviewRequest extends FormRequest
     }
 
     /**
-     * @return array{0: string, 1: string}
+     * @param  array<string, mixed>  $category
      */
-    private function filterTable(): array
+    private function validateFilters(Validator $validator, array $category): void
     {
-        $categoryKey = $this->input('category');
-        $categories = config('report_categories', []);
+        $input = $this->input('filters', []);
+        $known = [];
 
-        if (! is_string($categoryKey) || ! isset($categories[$categoryKey]['filter_model'])) {
-            return ['', ''];
+        foreach ($category['filters'] ?? [] as $filter) {
+            if (! is_array($filter)) {
+                continue;
+            }
+
+            $key = (string) $filter['key'];
+            $known[$key] = true;
+            $state = is_array($input[$key] ?? null) ? $input[$key] : null;
+
+            if ($state === null) {
+                $validator->errors()->add("filters.{$key}", 'Choose a value for '.$filter['label'].'.');
+
+                continue;
+            }
+
+            if (($filter['type'] ?? '') === 'lookup') {
+                $this->validateLookup($validator, $filter, $state);
+
+                continue;
+            }
+
+            $this->validateChoice($validator, $filter, $state);
         }
 
-        $modelClass = $categories[$categoryKey]['filter_model'];
-        $model = new $modelClass;
+        foreach ($input as $key => $value) {
+            if (! isset($known[$key])) {
+                $validator->errors()->add('filters.'.$key, 'This filter is not part of the selected report.');
+            }
+        }
+    }
 
-        return [$model->getTable(), $model->getKeyName()];
+    /**
+     * @param  array<string, mixed>  $filter
+     * @param  array<string, mixed>  $state
+     */
+    private function validateLookup(Validator $validator, array $filter, array $state): void
+    {
+        $key = (string) $filter['key'];
+        $modes = $filter['modes'] ?? ['all', 'one', 'multiple'];
+        $mode = $state['mode'] ?? '';
+
+        if (! in_array($mode, $modes, true)) {
+            $validator->errors()->add("filters.{$key}.mode", 'Choose a filter option from the list.');
+
+            return;
+        }
+
+        $ids = is_array($state['ids'] ?? null) ? $state['ids'] : [];
+
+        if ($mode === 'all' && $ids !== []) {
+            $validator->errors()->add("filters.{$key}.ids", 'The all option does not take a specific selection.');
+
+            return;
+        }
+
+        if ($mode === 'one' && count($ids) !== 1) {
+            $validator->errors()->add("filters.{$key}.ids", 'Select one record for this report.');
+
+            return;
+        }
+
+        if ($mode === 'multiple' && (count($ids) < 1 || count($ids) > 100)) {
+            $validator->errors()->add("filters.{$key}.ids", 'Select at least one record for this report.');
+
+            return;
+        }
+
+        $parsed = [];
+
+        foreach ($ids as $id) {
+            if (! is_numeric($id) || (int) $id != $id) {
+                $validator->errors()->add("filters.{$key}.ids", 'Select a record from the list.');
+
+                return;
+            }
+
+            $parsed[] = (int) $id;
+        }
+
+        if (count($parsed) !== count(array_unique($parsed))) {
+            $validator->errors()->add("filters.{$key}.ids", 'Select each record only once.');
+
+            return;
+        }
+
+        if ($parsed === []) {
+            return;
+        }
+
+        $modelClass = $filter['model'];
+        $found = $modelClass::query()
+            ->whereIn((string) $filter['id_column'], $parsed)
+            ->pluck((string) $filter['id_column'])
+            ->map(fn (mixed $id): int => (int) $id)
+            ->all();
+
+        if (count($found) !== count($parsed)) {
+            $validator->errors()->add("filters.{$key}.ids", 'One of the selected records does not exist.');
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     * @param  array<string, mixed>  $state
+     */
+    private function validateChoice(Validator $validator, array $filter, array $state): void
+    {
+        $key = (string) $filter['key'];
+        $mode = $state['mode'] ?? '';
+        $matched = null;
+
+        foreach ($filter['choices'] ?? [] as $choice) {
+            if (is_array($choice) && ($choice['value'] ?? null) === $mode) {
+                $matched = $choice;
+            }
+        }
+
+        if ($matched === null) {
+            $validator->errors()->add("filters.{$key}.mode", 'Choose a filter option from the list.');
+
+            return;
+        }
+
+        if (($matched['numeric'] ?? false) !== true) {
+            return;
+        }
+
+        $value = $state['value'] ?? null;
+        $min = (int) ($matched['min'] ?? 0);
+        $max = (int) ($matched['max'] ?? 100);
+
+        if (! is_numeric($value) || (int) $value < $min || (int) $value > $max) {
+            $validator->errors()->add(
+                "filters.{$key}.value",
+                'Enter a number from '.$min.' to '.$max.'.',
+            );
+        }
+    }
+
+    private function validateColumns(Validator $validator): void
+    {
+        $allowed = array_column(
+            ReportSchema::columnsFor((string) $this->input('category')),
+            'key',
+        );
+
+        foreach ($this->input('selected_columns', []) as $index => $column) {
+            if (! in_array($column, $allowed, true)) {
+                $validator->errors()->add(
+                    "selected_columns.{$index}",
+                    'This column is not available for the selected report.',
+                );
+            }
+        }
+
+        if ($validator->errors()->isNotEmpty()) {
+            return;
+        }
+
+        $presented = ReportSchema::presentColumns(
+            (string) $this->input('category'),
+            $this->input('selected_columns', []),
+            $this->input('filters', []),
+        );
+
+        if ($presented === []) {
+            $validator->errors()->add('selected_columns', 'Select at least one column.');
+        }
+    }
+
+    private function requiresLetterOrNumber(string $label): Closure
+    {
+        return function (string $attribute, mixed $value, Closure $fail) use ($label): void {
+            if ($value === null || $value === '') {
+                return;
+            }
+
+            if (! is_string($value) || preg_match('/[\p{L}\p{N}]/u', $value) !== 1) {
+                $fail("{$label} must include letters or numbers.");
+            }
+        };
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Report\ReportOptionsRequest;
 use App\Http\Requests\Report\ReportPreviewRequest;
 use App\Models\Report;
+use App\Models\UserManagement\User;
 use App\Services\ReportService;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -37,7 +38,9 @@ class ReportController extends Controller
         return response()->json([
             'items' => $this->reportService->getFilterOptions(
                 $request->string('category')->toString(),
+                $request->string('filter')->toString(),
                 $request->validated('search'),
+                $request->boolean('all'),
             ),
         ]);
     }
@@ -68,11 +71,16 @@ class ReportController extends Controller
 
         $validated = $request->validated();
 
+        /** @var User $performedBy */
+        $performedBy = $request->user();
+
         return $this->reportService->export(
             $validated,
             $validated['selected_columns'],
             $validated['format'],
             $validated['title'],
+            $validated['subtitle'] ?? null,
+            $performedBy,
         );
     }
 }

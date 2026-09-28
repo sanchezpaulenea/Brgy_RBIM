@@ -40,6 +40,21 @@ class ReportSchema
     }
 
     /**
+     * @param  array<string, mixed>  $category
+     * @return array<string, mixed>
+     */
+    public static function filterDefinition(array $category, string $key): array
+    {
+        foreach ($category['filters'] ?? [] as $filter) {
+            if (is_array($filter) && ($filter['key'] ?? null) === $key) {
+                return $filter;
+            }
+        }
+
+        throw new InvalidArgumentException("Unknown report filter [{$key}].");
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public static function columns(string $level): array
@@ -50,17 +65,276 @@ class ReportSchema
     }
 
     /**
-     * @param  list<string>  $keys
+     * Level columns plus the category's extra column groups.
+     *
      * @return list<array<string, mixed>>
      */
-    public static function selectedColumns(string $level, array $keys): array
+    public static function columnsFor(string $categoryKey): array
     {
-        $selected = array_flip($keys);
+        $category = self::category($categoryKey);
+        $columns = self::columns((string) $category['level']);
+        $extras = config('report_columns.extras', []);
 
-        return array_values(array_filter(
-            self::columns($level),
-            fn (array $column): bool => isset($selected[$column['key']]),
-        ));
+        foreach ($category['extra_columns'] ?? [] as $key) {
+            if (is_string($key) && isset($extras[$key]) && is_array($extras[$key])) {
+                $columns[] = $extras[$key];
+            }
+        }
+
+        return $columns;
+    }
+
+    /**
+     * @param  list<string>  $keys
+     * @param  array<string, mixed>  $filterInput
+     * @return list<array<string, mixed>>
+     */
+    public static function presentColumns(string $categoryKey, array $keys, array $filterInput): array
+    {
+        $category = self::category($categoryKey);
+        $selected = array_flip($keys);
+        $hidden = [];
+        $forced = [];
+
+        foreach ($category['filters'] ?? [] as $filter) {
+            if (! is_array($filter)) {
+                continue;
+            }
+
+            $state = self::filterState($filterInput, (string) $filter['key']);
+            $owns = is_array($filter['owns'] ?? null) ? $filter['owns'] : [];
+
+            foreach ($owns as $owned) {
+                if (! is_string($owned) || $owned === '') {
+                    continue;
+                }
+
+                if (self::isSingular($filter, $state)) {
+                    $hidden[$owned] = true;
+                } else {
+                    $forced[$owned] = true;
+                }
+            }
+        }
+
+        $presented = [];
+
+        foreach (self::columnsFor($categoryKey) as $column) {
+            $key = (string) ($column['key'] ?? '');
+
+            if ($key === '' || isset($hidden[$key])) {
+                continue;
+            }
+
+            if (($column['is_group'] ?? false) === true) {
+                $children = [];
+                $groupSelected = isset($selected[$key]);
+
+                foreach ($column['columns'] ?? [] as $child) {
+                    if (! is_array($child)) {
+                        continue;
+                    }
+
+                    $childKey = (string) ($child['key'] ?? '');
+                    $qualified = $key.'.'.$childKey;
+
+                    if ($childKey === '' || isset($hidden[$qualified]) || isset($hidden[$childKey])) {
+                        continue;
+                    }
+
+                    if ($groupSelected || isset($forced[$qualified]) || isset($forced[$childKey])) {
+                        $children[] = $child;
+                    }
+                }
+
+                if ($children === []) {
+                    continue;
+                }
+
+                $column['columns'] = $children;
+                $presented[] = $column;
+
+                continue;
+            }
+
+            if (isset($selected[$key]) || isset($forced[$key])) {
+                $presented[] = $column;
+            }
+        }
+
+        return $presented;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $columns
+     * @return list<string>
+     */
+    public static function flatKeys(array $columns): array
+    {
+        $keys = [];
+
+        foreach ($columns as $column) {
+            $keys[] = (string) $column['key'];
+
+            foreach ($column['columns'] ?? [] as $child) {
+                if (is_array($child) && isset($child['key'])) {
+                    $keys[] = (string) $column['key'].'.'.(string) $child['key'];
+                }
+            }
+        }
+
+        return $keys;
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     * @return array{mode: string, ids: list<int>, value: int|string|null}
+     */
+    public static function filterState(array $input, string $key): array
+    {
+        $state = $input[$key] ?? [];
+
+        if (! is_array($state)) {
+            $state = [];
+        }
+
+        $ids = [];
+
+        foreach ($state['ids'] ?? [] as $id) {
+            if (is_numeric($id)) {
+                $ids[] = (int) $id;
+            }
+        }
+
+        $value = $state['value'] ?? null;
+
+        if ($value === '' || $value === null) {
+            $value = null;
+        } elseif (is_numeric($value)) {
+            $value = (int) $value;
+        } elseif (! is_string($value)) {
+            $value = null;
+        }
+
+        return [
+            'mode' => is_string($state['mode'] ?? null) ? $state['mode'] : '',
+            'ids' => $ids,
+            'value' => $value,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     * @param  array{mode: string, ids: list<int>, value: int|string|null}  $state
+     * @return array<string, mixed>
+     */
+    public static function choice(array $filter, array $state): array
+    {
+        foreach ($filter['choices'] ?? [] as $choice) {
+            if (is_array($choice) && ($choice['value'] ?? null) === $state['mode']) {
+                return $choice;
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     * @param  array{mode: string, ids: list<int>, value: int|string|null}  $state
+     */
+    public static function isAll(array $filter, array $state): bool
+    {
+        if (($filter['type'] ?? '') === 'lookup') {
+            return $state['mode'] === 'all';
+        }
+
+        return (self::choice($filter, $state)['op'] ?? '') === 'any';
+    }
+
+    /**
+     * True when the sub-filter resolves to exactly one value.
+     *
+     * @param  array<string, mixed>  $filter
+     * @param  array{mode: string, ids: list<int>, value: int|string|null}  $state
+     */
+    public static function isSingular(array $filter, array $state): bool
+    {
+        if (($filter['type'] ?? '') === 'lookup') {
+            if ($state['mode'] === 'one') {
+                return true;
+            }
+
+            return $state['mode'] === 'multiple' && count($state['ids']) === 1;
+        }
+
+        return (bool) (self::choice($filter, $state)['singular'] ?? false);
+    }
+
+    /**
+     * @param  array<string, mixed>  $category
+     * @param  array<string, mixed>  $filterInput
+     */
+    public static function includesUnanswered(array $category, array $filterInput): bool
+    {
+        if (($category['questions'] ?? false) !== true) {
+            return false;
+        }
+
+        foreach ($category['filters'] ?? [] as $filter) {
+            if (! is_array($filter)) {
+                continue;
+            }
+
+            $state = self::filterState($filterInput, (string) $filter['key']);
+
+            if (! self::isAll($filter, $state)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Sorts for owned columns that are actually present in the report.
+     *
+     * @param  array<string, mixed>  $category
+     * @param  array<string, mixed>  $filterInput
+     * @param  list<string>  $selectedColumns
+     * @return list<array{sort: array<string, mixed>, filter: array<string, mixed>, state: array{mode: string, ids: list<int>, value: int|string|null}}>
+     */
+    public static function activeSorts(string $categoryKey, array $filterInput, array $selectedColumns): array
+    {
+        $category = self::category($categoryKey);
+        $visible = array_flip(self::flatKeys(self::presentColumns($categoryKey, $selectedColumns, $filterInput)));
+        $sorts = [];
+
+        foreach ($category['filters'] ?? [] as $filter) {
+            if (! is_array($filter) || ! is_array($filter['sort'] ?? null)) {
+                continue;
+            }
+
+            $shown = false;
+
+            foreach ($filter['owns'] ?? [] as $owned) {
+                if (is_string($owned) && isset($visible[$owned])) {
+                    $shown = true;
+                }
+            }
+
+            if (! $shown) {
+                continue;
+            }
+
+            $sorts[] = [
+                'sort' => $filter['sort'],
+                'filter' => $filter,
+                'state' => self::filterState($filterInput, (string) $filter['key']),
+            ];
+        }
+
+        return $sorts;
     }
 
     /**
@@ -76,18 +350,18 @@ class ReportSchema
     }
 
     /**
-     * Relations to eager-load for the selected columns. Has-many data stays
+     * Relations to eager-load for the presented columns. Has-many data stays
      * on the root row; only the relations those columns read are loaded.
      *
-     * @param  list<string>  $keys
+     * @param  list<array<string, mixed>>  $columns
      * @return array{with: list<string>, withCount: list<string>}
      */
-    public static function loads(string $level, array $keys): array
+    public static function loadsFor(array $columns): array
     {
         $with = [];
         $counts = [];
 
-        foreach (self::selectedColumns($level, $keys) as $column) {
+        foreach ($columns as $column) {
             self::collectLoads($column, '', $with, $counts);
         }
 
@@ -108,7 +382,9 @@ class ReportSchema
         $path = self::qualify($prefix, (string) ($column['source'] ?? ''));
 
         if ($format === 'count') {
-            $counts[] = $path;
+            if (($column['count_via'] ?? '') !== 'repository' && $path !== '') {
+                $counts[] = $path;
+            }
 
             return;
         }
