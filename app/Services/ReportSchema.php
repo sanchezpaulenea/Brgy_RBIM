@@ -97,7 +97,7 @@ class ReportSchema
         $forced = [];
 
         foreach ($category['filters'] ?? [] as $filter) {
-            if (! is_array($filter)) {
+            if (! is_array($filter) || ! self::filterApplies($category, $filter, $filterInput)) {
                 continue;
             }
 
@@ -188,7 +188,7 @@ class ReportSchema
 
     /**
      * @param  array<string, mixed>  $input
-     * @return array{mode: string, ids: list<int>, value: int|string|null}
+     * @return array{mode: string, ids: list<int>, value: int|string|null, min: ?string, max: ?string}
      */
     public static function filterState(array $input, string $key): array
     {
@@ -220,7 +220,28 @@ class ReportSchema
             'mode' => is_string($state['mode'] ?? null) ? $state['mode'] : '',
             'ids' => $ids,
             'value' => $value,
+            'min' => self::bound($state['min'] ?? null),
+            'max' => self::bound($state['max'] ?? null),
         ];
+    }
+
+    private static function bound(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return (string) $value;
+        }
+
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        return $value === '' ? null : $value;
     }
 
     /**
@@ -245,11 +266,58 @@ class ReportSchema
      */
     public static function isAll(array $filter, array $state): bool
     {
+        if (($filter['type'] ?? '') === 'range') {
+            return ($state['min'] ?? null) === null && ($state['max'] ?? null) === null;
+        }
+
         if (($filter['type'] ?? '') === 'lookup') {
             return $state['mode'] === 'all';
         }
 
         return (self::choice($filter, $state)['op'] ?? '') === 'any';
+    }
+
+    /**
+     * A sub-filter stays out of the query when its paired answer does not apply.
+     *
+     * @param  array<string, mixed>  $category
+     * @param  array<string, mixed>  $filter
+     * @param  array<string, mixed>  $filterInput
+     */
+    public static function filterApplies(array $category, array $filter, array $filterInput): bool
+    {
+        $when = $filter['visible_when'] ?? null;
+
+        if (! is_array($when)) {
+            return true;
+        }
+
+        $state = self::filterState($filterInput, (string) ($when['filter'] ?? ''));
+        $except = $when['except_modes'] ?? [];
+
+        if (is_array($except) && in_array($state['mode'], $except, true)) {
+            return false;
+        }
+
+        $allowed = $when['lookup_ids'] ?? null;
+
+        if (! is_array($allowed)) {
+            return true;
+        }
+
+        if (! in_array($state['mode'], ['one', 'multiple'], true) || $state['ids'] === []) {
+            return false;
+        }
+
+        $allowedIds = array_map(intval(...), $allowed);
+
+        foreach ($state['ids'] as $id) {
+            if (! in_array($id, $allowedIds, true)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -260,6 +328,10 @@ class ReportSchema
      */
     public static function isSingular(array $filter, array $state): bool
     {
+        if (($filter['type'] ?? '') === 'range') {
+            return false;
+        }
+
         if (($filter['type'] ?? '') === 'lookup') {
             if ($state['mode'] === 'one') {
                 return true;
@@ -282,7 +354,7 @@ class ReportSchema
         }
 
         foreach ($category['filters'] ?? [] as $filter) {
-            if (! is_array($filter)) {
+            if (! is_array($filter) || ! self::filterApplies($category, $filter, $filterInput)) {
                 continue;
             }
 
@@ -311,7 +383,7 @@ class ReportSchema
         $sorts = [];
 
         foreach ($category['filters'] ?? [] as $filter) {
-            if (! is_array($filter) || ! is_array($filter['sort'] ?? null)) {
+            if (! is_array($filter) || ! is_array($filter['sort'] ?? null) || ! self::filterApplies($category, $filter, $filterInput)) {
                 continue;
             }
 

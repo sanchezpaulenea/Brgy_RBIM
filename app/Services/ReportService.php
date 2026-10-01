@@ -91,16 +91,21 @@ class ReportService
             $report['rows'],
         );
 
+        $headerLine = is_string($report['header'] ?? null) && $report['header'] !== ''
+            ? $report['header'].': '.$report['total']
+            : null;
+
         if ($format === 'pdf') {
             $response = Pdf::loadView('reports.master-list', [
                 'title' => $report['title'],
                 'subtitle' => $report['subtitle'],
+                'header' => $headerLine,
                 'headings' => $headings,
                 'rows' => $rows,
             ])->setPaper('a4', 'landscape')->download($filename.'.pdf');
         } else {
             $response = Excel::download(
-                new ReportWorkbookExport($report['title'], $report['subtitle'], $headings, $rows),
+                new ReportWorkbookExport($report['title'], $report['subtitle'], $headerLine, $headings, $rows),
                 $filename.'.xlsx',
             );
         }
@@ -163,6 +168,8 @@ class ReportService
                 ->values()
                 ->all(),
             'pagination' => $pagination,
+            'header' => is_string($category['header'] ?? null) && $category['header'] !== '' ? $category['header'] : null,
+            'total' => $pagination['total'] ?? $models->count(),
             'unanswered_households' => $unanswered['count'],
             'unanswered_note' => $unanswered['note'],
         ];
@@ -201,7 +208,7 @@ class ReportService
         $label = (string) $category['label'];
         $definitions = array_values(array_filter(
             $category['filters'] ?? [],
-            fn (mixed $filter): bool => is_array($filter),
+            fn (mixed $filter): bool => is_array($filter) && ReportSchema::filterApplies($category, $filter, $filters),
         ));
         $phrases = [];
         $allOpen = true;
@@ -274,6 +281,21 @@ class ReportService
             return $label.': All '.$plural;
         }
 
+        if (($filter['type'] ?? '') === 'range') {
+            $min = $state['min'] ?? null;
+            $max = $state['max'] ?? null;
+
+            if ($min !== null && $max !== null) {
+                return $label.': '.$min.' to '.$max;
+            }
+
+            if ($min !== null) {
+                return $label.': at least '.$min;
+            }
+
+            return $label.': at most '.($max ?? '');
+        }
+
         if (($filter['type'] ?? '') === 'lookup') {
             $names = $this->selectedNames($categoryKey, $filter, $state);
 
@@ -338,6 +360,14 @@ class ReportService
                 $piece .= '='.$state['value'];
             }
 
+            if ($state['min'] !== null) {
+                $piece .= '>='.$state['min'];
+            }
+
+            if ($state['max'] !== null) {
+                $piece .= '<='.$state['max'];
+            }
+
             $parts[] = $piece;
         }
 
@@ -363,6 +393,7 @@ class ReportService
             'label' => $label,
             'level' => $category['level'],
             'questions' => ($category['questions'] ?? false) === true,
+            'header' => is_string($category['header'] ?? null) ? $category['header'] : null,
             'filters' => $this->publicFilters($category),
             'columns' => $columns,
         ];
@@ -390,12 +421,13 @@ class ReportService
 
             if (($filter['type'] ?? '') === 'lookup') {
                 $plural = $filter['plural'] ?? Str::plural((string) $filter['label']);
+                $labels = is_array($filter['mode_labels'] ?? null) ? $filter['mode_labels'] : [];
                 $modes = [];
 
                 foreach ($filter['modes'] ?? [] as $mode) {
                     $modes[] = [
                         'value' => $mode,
-                        'label' => match ($mode) {
+                        'label' => $labels[$mode] ?? match ($mode) {
                             'all' => "All {$plural}",
                             'one' => "Per {$filter['label']}",
                             'multiple' => 'Select 1 or more',
@@ -405,6 +437,10 @@ class ReportService
                 }
 
                 $public['modes'] = $modes;
+            } elseif (($filter['type'] ?? '') === 'range') {
+                $public['scale'] = (int) ($filter['scale'] ?? 2);
+                $public['min_bound'] = $filter['min_bound'] ?? 0;
+                $public['max_bound'] = $filter['max_bound'] ?? null;
             } else {
                 $public['choices'] = array_map(function (array $choice): array {
                     $item = [
@@ -424,6 +460,15 @@ class ReportService
 
                     return $item;
                 }, $filter['choices'] ?? []);
+            }
+
+            if (is_array($filter['visible_when'] ?? null)) {
+                $when = $filter['visible_when'];
+                $public['visible_when'] = array_filter([
+                    'filter' => $when['filter'] ?? null,
+                    'except_modes' => $when['except_modes'] ?? null,
+                    'lookup_ids' => $when['lookup_ids'] ?? null,
+                ], fn (mixed $value): bool => $value !== null);
             }
 
             $filters[] = $public;
@@ -494,8 +539,9 @@ class ReportService
         }
 
         return match ($format) {
-            'count' => (int) ($model->{$source.'_count'} ?? 0),
+            'count' => $this->readCount($model, $source),
             'person_name' => $this->personName($target),
+            'money' => $this->money($target),
             'person_names' => $this->personNames($target),
             'yes_no' => $this->yesNo($target),
             'date' => $this->formatDate($target),
@@ -560,6 +606,36 @@ class ReportService
         }
 
         return null;
+    }
+
+    private function readCount(Model $model, string $source): int
+    {
+        if ($source === '') {
+            return 0;
+        }
+
+        if (! str_contains($source, '.')) {
+            return (int) ($model->{$source.'_count'} ?? 0);
+        }
+
+        $parent = Str::beforeLast($source, '.');
+        $relation = Str::afterLast($source, '.');
+        $related = data_get($model, $parent);
+
+        if (! $related instanceof Model) {
+            return 0;
+        }
+
+        return (int) ($related->{$relation.'_count'} ?? 0);
+    }
+
+    private function money(mixed $value): ?string
+    {
+        if ($value === null || $value === '' || ! is_numeric($value)) {
+            return null;
+        }
+
+        return number_format((float) $value, 2, '.', ',');
     }
 
     private function personName(mixed $person): ?string

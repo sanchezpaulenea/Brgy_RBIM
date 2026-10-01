@@ -50,6 +50,7 @@
                 <p class="text-sm text-slate-600">Every filter below applies together.</p>
                 <div
                     v-for="filter in selectedCategory.filters"
+                    v-show="filterIsVisible(filter)"
                     :key="filter.key"
                     class="space-y-3 rounded-lg border border-slate-200 p-4"
                 >
@@ -107,6 +108,42 @@
                                 {{ option.label }}
                             </label>
                         </div>
+                    </fieldset>
+
+                    <fieldset v-else-if="filter.type === 'range'" class="space-y-3">
+                        <legend class="sr-only">{{ filter.label }}</legend>
+                        <div class="grid max-w-md grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div>
+                                <label class="rbim-label" :for="`report-filter-${filter.key}-min`">Minimum</label>
+                                <input
+                                    :id="`report-filter-${filter.key}-min`"
+                                    v-model="filterState[filter.key].min"
+                                    type="number"
+                                    inputmode="decimal"
+                                    step="0.01"
+                                    min="0"
+                                    class="rbim-input"
+                                    :max="filter.max_bound ?? undefined"
+                                >
+                            </div>
+                            <div>
+                                <label class="rbim-label" :for="`report-filter-${filter.key}-max`">Maximum</label>
+                                <input
+                                    :id="`report-filter-${filter.key}-max`"
+                                    v-model="filterState[filter.key].max"
+                                    type="number"
+                                    inputmode="decimal"
+                                    step="0.01"
+                                    min="0"
+                                    class="rbim-input"
+                                    :max="filter.max_bound ?? undefined"
+                                >
+                            </div>
+                        </div>
+                        <p v-if="rangeProblem(filter)" class="rbim-error">{{ rangeProblem(filter) }}</p>
+                        <p v-else class="rbim-hint">
+                            Leave a box blank to leave that side open. A bound excludes residents who have no value for this field.
+                        </p>
                     </fieldset>
 
                     <fieldset v-else class="space-y-3">
@@ -239,6 +276,10 @@
                         </button>
                     </div>
                 </div>
+
+                <p v-if="preview.header" class="text-sm font-semibold text-slate-900">
+                    {{ preview.header }}: {{ preview.total }}
+                </p>
 
                 <p v-if="preview.unanswered_note" class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
                     {{ preview.unanswered_note }}
@@ -456,9 +497,11 @@ function blankFilters(category) {
 
     (category.filters ?? []).forEach((filter) => {
         next[filter.key] = {
-            mode: filter.type === 'lookup' ? 'all' : (filter.choices?.[0]?.value ?? ''),
+            mode: filter.type === 'lookup' ? 'all' : (filter.type === 'range' ? 'bounds' : (filter.choices?.[0]?.value ?? '')),
             ids: [],
             value: '',
+            min: '',
+            max: '',
         };
     });
 
@@ -598,11 +641,100 @@ function numericChoice(filter) {
     return (filter.choices ?? []).find((choice) => choice.value === mode && choice.numeric) ?? null;
 }
 
+function filterIsVisible(filter) {
+    const rule = filter.visible_when;
+
+    if (!rule) {
+        return true;
+    }
+
+    const other = filterState.value[rule.filter];
+
+    if (!other) {
+        return false;
+    }
+
+    if (Array.isArray(rule.except_modes) && rule.except_modes.includes(other.mode)) {
+        return false;
+    }
+
+    if (Array.isArray(rule.lookup_ids)) {
+        if (other.mode === 'all' || !other.ids.length) {
+            return false;
+        }
+
+        const allowed = new Set(rule.lookup_ids.map((id) => Number(id)));
+
+        return other.ids.every((id) => allowed.has(Number(id)));
+    }
+
+    return true;
+}
+
+function decimalText(value, scale) {
+    const text = typeof value === 'string' ? value.trim() : String(value ?? '').trim();
+
+    if (!text) {
+        return null;
+    }
+
+    const pattern = new RegExp(`^(?:0|[1-9]\\d*)(?:\\.\\d{1,${scale}})?$`);
+
+    if (!pattern.test(text)) {
+        return false;
+    }
+
+    const [whole, fraction = ''] = text.split('.');
+    const cents = Number(whole) * (10 ** scale) + Number((fraction + '0'.repeat(scale)).slice(0, scale));
+
+    return Number.isSafeInteger(cents) ? cents : false;
+}
+
+function rangeProblem(filter) {
+    const state = filterState.value[filter.key];
+
+    if (!state) {
+        return '';
+    }
+
+    const scale = Number(filter.scale ?? 2);
+    const min = decimalText(state.min, scale);
+    const max = decimalText(state.max, scale);
+    const floor = decimalText(String(filter.min_bound ?? 0), scale);
+    const ceiling = decimalText(String(filter.max_bound ?? ''), scale);
+
+    if (min === false || max === false) {
+        return `Enter an amount from ${filter.min_bound ?? 0} to ${filter.max_bound} with up to ${scale} decimal places.`;
+    }
+
+    if (min !== null && floor !== null && floor !== false && min < floor) {
+        return `Minimum cannot be less than ${filter.min_bound}.`;
+    }
+
+    if (max !== null && ceiling !== null && ceiling !== false && max > ceiling) {
+        return `Maximum cannot be greater than ${filter.max_bound}.`;
+    }
+
+    if (min !== null && max !== null && min > max) {
+        return 'Minimum cannot be greater than maximum.';
+    }
+
+    return '';
+}
+
 function filterIsReady(filter) {
+    if (!filterIsVisible(filter)) {
+        return true;
+    }
+
     const state = filterState.value[filter.key];
 
     if (!state) {
         return false;
+    }
+
+    if (filter.type === 'range') {
+        return rangeProblem(filter) === '';
     }
 
     if (filter.type === 'lookup') {
@@ -666,13 +798,16 @@ function filterPayload(page) {
     const filters = {};
 
     (selectedCategory.value?.filters ?? []).forEach((filter) => {
-        const state = filterState.value[filter.key] ?? { mode: 'all', ids: [], value: '' };
+        const state = filterState.value[filter.key] ?? { mode: 'all', ids: [], value: '', min: '', max: '' };
         const choice = numericChoice(filter);
+        const visible = filterIsVisible(filter);
 
         filters[filter.key] = {
-            mode: state.mode,
-            ids: filter.type === 'lookup' && state.mode !== 'all' ? state.ids.map(Number) : [],
-            value: choice ? Number(state.value) : null,
+            mode: visible ? state.mode : (filter.type === 'lookup' ? 'all' : (filter.choices?.[0]?.value ?? 'all')),
+            ids: visible && filter.type === 'lookup' && state.mode !== 'all' ? state.ids.map(Number) : [],
+            value: visible && choice ? Number(state.value) : null,
+            min: visible && filter.type === 'range' && state.min !== '' ? state.min : null,
+            max: visible && filter.type === 'range' && state.max !== '' ? state.max : null,
         };
     });
 

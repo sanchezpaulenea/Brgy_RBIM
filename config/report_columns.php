@@ -307,8 +307,142 @@ return [
         ],
     ],
 
-    // populated in Phase 3.
-    'resident' => [],
+    'resident' => [
+        [
+            'key' => 'household_id',
+            'label' => 'Household ID',
+            'source' => 'household.household_id',
+            'is_group' => false,
+        ],
+        [
+            'key' => 'resident_id',
+            'label' => 'Resident ID',
+            'source' => 'resident_id',
+            'is_group' => false,
+        ],
+        [
+            'key' => 'clan',
+            'label' => 'Clan',
+            'source' => 'household.clan.clan_name',
+            'is_group' => false,
+        ],
+        [
+            'key' => 'street',
+            'label' => 'Street',
+            'source' => 'household.street.street_name',
+            'is_group' => false,
+        ],
+        [
+            'key' => 'house_lot',
+            'label' => 'House Lot/Number',
+            'source' => 'household.house_lot',
+            'is_group' => false,
+        ],
+        [
+            'key' => 'household_status',
+            'label' => 'Household Status',
+            'source' => 'household.status.household_status',
+            'is_group' => false,
+        ],
+        [
+            'key' => 'head_resident_name',
+            'label' => "Head Resident's Name",
+            'source' => 'household.head',
+            'format' => 'person_name',
+            'is_group' => false,
+        ],
+        [
+            'key' => 'number_of_pets',
+            'label' => 'Number of Pets',
+            'source' => 'household.pets',
+            'format' => 'count',
+            'is_group' => false,
+        ],
+        [
+            'key' => 'total_household_members',
+            'label' => 'Total Household Members',
+            'source' => 'household.residents',
+            'format' => 'count',
+            'is_group' => false,
+        ],
+        [
+            'key' => 'household_members_name',
+            'label' => "Household Members' Names",
+            'source' => 'household.residents',
+            'format' => 'person_names',
+            'is_group' => false,
+        ],
+        [
+            'key' => 'resident_demographic',
+            'label' => "Household Member's Demographic Details",
+            'source' => '',
+            'is_group' => true,
+            'columns' => [
+                [
+                    'key' => 'sex',
+                    'label' => 'Sex',
+                    'source' => 'sex.sex',
+                ],
+                [
+                    'key' => 'date_of_birth',
+                    'label' => 'Date of Birth',
+                    'source' => 'date_of_birth',
+                    'format' => 'date',
+                ],
+                [
+                    'key' => 'age',
+                    'label' => 'Age',
+                    'source' => '',
+                    'format' => 'age',
+                ],
+                [
+                    'key' => 'relationship_to_hh',
+                    'label' => 'Relationship to Household Head',
+                    'source' => 'relationshipToHouseholdHead.relationship_to_hh',
+                ],
+                [
+                    'key' => 'marital_status',
+                    'label' => 'Marital Status',
+                    'source' => 'maritalStatus.marital_status',
+                ],
+                [
+                    'key' => 'nationality',
+                    'label' => 'Nationality',
+                    'source' => 'nationality.nationality',
+                ],
+                [
+                    'key' => 'religion',
+                    'label' => 'Religion',
+                    'source' => 'religion.religion',
+                ],
+                [
+                    'key' => 'ethnicity',
+                    'label' => 'Ethnicity',
+                    'source' => 'ethnicity.ethnicity',
+                ],
+                [
+                    'key' => 'resident_status',
+                    'label' => 'Resident Status',
+                    'source' => 'status.resident_status',
+                ],
+                [
+                    'key' => 'birth_city_municipality',
+                    'label' => 'Birth City/Municipality',
+                    'source' => 'birth_city_municipality',
+                ],
+                [
+                    'key' => 'birth_province',
+                    'label' => 'Birth Province',
+                    'source' => 'birth_province',
+                ],
+                [
+                    'key' => 'birth_country',
+                    'label' => 'Birth Country',
+                    'source' => 'birth_country',
+                ],
+            ],
+        ],
+    ],
 
     /*
     | Category-only columns. A category lists the keys it adds under
@@ -451,6 +585,255 @@ return [
                     'label' => 'Intention to Use Family Planning',
                     'source' => 'health.womenHealth.have_intention_to_use_fp',
                     'format' => 'yes_no',
+                ],
+            ],
+        ],
+        'education_details' => [
+            'key' => 'education_details',
+            'label' => "Household Member's Education Details",
+            'source' => 'education',
+            'is_group' => true,
+            'columns' => [
+                [
+                    'key' => 'highest_level',
+                    'label' => 'Highest Level of Education',
+                    'source' => 'highestLvlOfEduc.lvl_of_educ',
+                ],
+                [
+                    'key' => 'current_enrollment',
+                    'label' => 'Current Enrollment Status',
+                    'source' => 'currentEnrollmentStatus.current_enrollement_status',
+                ],
+                [
+                    'key' => 'school_lvl',
+                    'label' => 'School Level',
+                    'source' => 'schoolLvl.school_lvl',
+                ],
+                [
+                    'key' => 'place_of_school_brgy',
+                    'label' => 'Place of School (Barangay)',
+                    'source' => 'place_of_school_brgy',
+                ],
+                [
+                    'key' => 'place_of_school_city_municipality',
+                    'label' => 'Place of School (City/Municipality)',
+                    'source' => 'place_of_school_city_municipality',
+                ],
+            ],
+        ],
+        'economic_details' => [
+            'key' => 'economic_details',
+            'label' => "Household Member's Economic Details",
+            'source' => 'economic',
+            'is_group' => true,
+            'columns' => [
+                [
+                    'key' => 'monthly_income',
+                    'label' => 'Monthly Income',
+                    'source' => 'monthly_income',
+                    'format' => 'money',
+                ],
+                [
+                    'key' => 'source_of_income',
+                    'label' => 'Source of Income',
+                    'source' => 'sourceOfIncome.source_of_income',
+                ],
+                [
+                    'key' => 'work_status',
+                    'label' => 'Status of Work/Business',
+                    'source' => 'statusOfWorkBusiness.status_of_work_business',
+                ],
+                [
+                    'key' => 'place_of_work_business',
+                    'label' => 'Place of Work/Business',
+                    'source' => 'place_of_work_business',
+                ],
+            ],
+        ],
+        'health_details' => [
+            'key' => 'health_details',
+            'label' => "Household Member's Health Details",
+            'source' => '',
+            'is_group' => true,
+            'columns' => [
+                [
+                    'key' => 'health_insurance',
+                    'label' => 'Health Insurance',
+                    'source' => 'health.healthInsurance.health_insurance',
+                ],
+                [
+                    'key' => 'facility_visited_past_12mos',
+                    'label' => 'Facility Visited Past 12 Months',
+                    'source' => 'health.facilityVisitedPast12Mos.facility_visited_past_12mos',
+                ],
+                [
+                    'key' => 'facility_visit_reason',
+                    'label' => 'Facility Visit Reason',
+                    'source' => 'health.facilityVisitReason.facility_visit_reason',
+                ],
+                [
+                    'key' => 'disability',
+                    'label' => 'Disability',
+                    'source' => 'health.disabilityType.disability',
+                ],
+                [
+                    'key' => 'pwd_id_number',
+                    'label' => 'PWD ID Number',
+                    'source' => 'health.pwd_id_number',
+                ],
+                [
+                    'key' => 'place_of_delivery',
+                    'label' => 'Place of Delivery',
+                    'source' => 'infantHealth.placeOfDelivery.place_of_delivery',
+                ],
+                [
+                    'key' => 'birth_attendant',
+                    'label' => 'Birth Attendant',
+                    'source' => 'infantHealth.birthAttendant.birth_attendant',
+                ],
+                [
+                    'key' => 'immunization',
+                    'label' => 'Immunization',
+                    'source' => 'infantHealth.immunization.immunization',
+                ],
+                [
+                    'key' => 'number_pregnancies',
+                    'label' => 'Number of Pregnancies',
+                    'source' => 'health.womenHealth.number_pregnancies',
+                ],
+                [
+                    'key' => 'living_children',
+                    'label' => 'Living Children',
+                    'source' => 'health.womenHealth.living_children',
+                ],
+                [
+                    'key' => 'family_planning_method',
+                    'label' => 'Family Planning Method',
+                    'source' => 'health.womenHealth.familyPlanningMethod.family_planning_method',
+                ],
+                [
+                    'key' => 'source_of_fp_method',
+                    'label' => 'Source of Family Planning Method',
+                    'source' => 'health.womenHealth.sourceOfFpMethod.source_of_fp_method',
+                ],
+                [
+                    'key' => 'have_intention_to_use_fp',
+                    'label' => 'Intention to Use Family Planning',
+                    'source' => 'health.womenHealth.have_intention_to_use_fp',
+                    'format' => 'yes_no',
+                ],
+            ],
+        ],
+        'sociocivic_details' => [
+            'key' => 'sociocivic_details',
+            'label' => "Household Member's Sociocivic Details",
+            'source' => 'sociocivic',
+            'is_group' => true,
+            'columns' => [
+                [
+                    'key' => 'solo_parent_status',
+                    'label' => 'Solo Parent Status',
+                    'source' => 'soloParentStatus.solo_parent_status',
+                ],
+                [
+                    'key' => 'ncsc_rrn_id_number',
+                    'label' => 'NCSC RRN ID Number',
+                    'source' => 'ncsc_rrn_id_number',
+                ],
+                [
+                    'key' => 'osca_id_number',
+                    'label' => 'OSCA ID Number',
+                    'source' => 'osca_id_number',
+                ],
+                [
+                    'key' => 'solo_parent_id_number',
+                    'label' => 'Solo Parent ID Number',
+                    'source' => 'solo_parent_id_number',
+                ],
+                [
+                    'key' => 'registered_barangay_voter',
+                    'label' => 'Registered Barangay Voter',
+                    'source' => 'registered_barangay_voter',
+                    'format' => 'yes_no',
+                ],
+            ],
+        ],
+        'migration_details' => [
+            'key' => 'migration_details',
+            'label' => "Household Member's Migration Details",
+            'source' => 'migration',
+            'is_group' => true,
+            'columns' => [
+                [
+                    'key' => 'previous_residence_6mos_brgy',
+                    'label' => 'Previous Residence 6 Months (Barangay)',
+                    'source' => 'previous_residence_6mos_brgy',
+                ],
+                [
+                    'key' => 'previous_residence_6mos_city_municipality',
+                    'label' => 'Previous Residence 6 Months (City/Municipality)',
+                    'source' => 'previous_residence_6mos_city_municipality',
+                ],
+                [
+                    'key' => 'previous_residence_5yrs_brgy',
+                    'label' => 'Previous Residence 5 Years (Barangay)',
+                    'source' => 'previous_residence_5yrs_brgy',
+                ],
+                [
+                    'key' => 'previous_residence_5yrs_city_municipality',
+                    'label' => 'Previous Residence 5 Years (City/Municipality)',
+                    'source' => 'previous_residence_5yrs_city_municipality',
+                ],
+                [
+                    'key' => 'date_of_transfer_in_brgy',
+                    'label' => 'Date of Transfer into the Barangay',
+                    'source' => 'date_of_transfer_in_brgy',
+                    'format' => 'date',
+                ],
+                [
+                    'key' => 'resident_type',
+                    'label' => 'Resident Type',
+                    'source' => 'residentType.resident_type',
+                ],
+                [
+                    'key' => 'reason_for_leaving',
+                    'label' => 'Reason for Leaving',
+                    'source' => 'reasonForLeaving.reason_for_leaving',
+                ],
+                [
+                    'key' => 'will_return_to_previous_residence',
+                    'label' => 'Will Return to Previous Residence',
+                    'source' => 'will_return_to_previous_residence',
+                    'format' => 'yes_no',
+                ],
+                [
+                    'key' => 'reason_for_transfer',
+                    'label' => 'Reason for Transfer',
+                    'source' => 'reasonForTransfer.reason_for_transfer',
+                ],
+                [
+                    'key' => 'duration_of_stay',
+                    'label' => 'Duration of Stay',
+                    'source' => 'duration_of_stay',
+                    'format' => 'date',
+                ],
+            ],
+        ],
+        'skills_details' => [
+            'key' => 'skills_details',
+            'label' => "Household Member's Skills Details",
+            'source' => 'skillsDevelopment',
+            'is_group' => true,
+            'columns' => [
+                [
+                    'key' => 'skills_development_training',
+                    'label' => 'Skills Development Training',
+                    'source' => 'skills_development_training',
+                ],
+                [
+                    'key' => 'skill_type',
+                    'label' => 'Skill Type',
+                    'source' => 'skillType.skill_type',
                 ],
             ],
         ],

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 class ReportRepository implements ReportRepositoryInterface
@@ -94,7 +95,7 @@ class ReportRepository implements ReportRepositoryInterface
         $relationConstraints = [];
 
         foreach ($category['filters'] ?? [] as $filter) {
-            if (! is_array($filter)) {
+            if (! is_array($filter) || ! ReportSchema::filterApplies($category, $filter, $filters)) {
                 continue;
             }
 
@@ -171,7 +172,39 @@ class ReportRepository implements ReportRepositoryInterface
                 return;
             }
 
+            if ($apply === 'subrecord') {
+                $this->whereChildRows($query, $filter, function (QueryBuilder $sub) use ($filter, $ids): void {
+                    $table = $this->assertIdent((string) $filter['subrecord_table']);
+                    $column = $this->assertIdent((string) $filter['column']);
+                    $sub->whereIn($table.'.'.$column, $ids);
+                });
+
+                return;
+            }
+
             $this->whereLookupColumn($query, $filter, $ids);
+
+            return;
+        }
+
+        if (($filter['type'] ?? '') === 'range') {
+            if (ReportSchema::isAll($filter, $state) || $apply !== 'subrecord') {
+                return;
+            }
+
+            $this->whereChildRows($query, $filter, function (QueryBuilder $sub) use ($filter, $state): void {
+                $table = $this->assertIdent((string) $filter['subrecord_table']);
+                $column = $this->assertIdent((string) $filter['column']);
+                $qualified = $table.'.'.$column;
+
+                if ($state['min'] !== null) {
+                    $sub->where($qualified, '>=', $state['min']);
+                }
+
+                if ($state['max'] !== null) {
+                    $sub->where($qualified, '<=', $state['max']);
+                }
+            });
 
             return;
         }
@@ -203,6 +236,14 @@ class ReportRepository implements ReportRepositoryInterface
             return;
         }
 
+        if ($apply === 'subrecord') {
+            $this->whereChildRows($query, $filter, function (QueryBuilder $sub) use ($expression, $choice, $state): void {
+                $this->applyOp($sub, $expression, $choice, $state);
+            });
+
+            return;
+        }
+
         if ($apply === 'hq') {
             $this->ensureQuestionsJoin($query);
         }
@@ -227,7 +268,35 @@ class ReportRepository implements ReportRepositoryInterface
             return;
         }
 
+        if ($apply === 'resident') {
+            $query->whereIn('resident.'.$column, $ids);
+
+            return;
+        }
+
         $query->whereIn('household.'.$column, $ids);
+    }
+
+    /**
+     * Constrain residents by a child table without joining it onto the report
+     * rows. A join would repeat a resident when that child table has more than
+     * one row, and an inner join would drop residents who have no child row.
+     *
+     * @param  Builder<Model>  $query
+     * @param  array<string, mixed>  $filter
+     * @param  callable(QueryBuilder): void  $constrain
+     */
+    private function whereChildRows(Builder $query, array $filter, callable $constrain): void
+    {
+        $table = $this->assertIdent((string) $filter['subrecord_table']);
+        $owner = $this->assertIdent((string) ($filter['subrecord_owner'] ?? 'resident_id'));
+        $root = $this->assertIdent($query->getModel()->getTable());
+        $key = $this->assertIdent($query->getModel()->getKeyName());
+
+        $query->whereIn($root.'.'.$key, function (QueryBuilder $sub) use ($table, $owner, $constrain): void {
+            $sub->select($table.'.'.$owner)->from($table);
+            $constrain($sub);
+        });
     }
 
     /**
@@ -299,6 +368,21 @@ class ReportRepository implements ReportRepositoryInterface
 
         if ($op === 'eq_input') {
             $query->whereRaw($expression.' = ?', [(int) $state['value']]);
+
+            return;
+        }
+
+        if ($op === 'in') {
+            $operands = array_map(intval(...), (array) ($choice['operand'] ?? []));
+
+            if ($operands === []) {
+                $query->whereRaw('1 = 0');
+
+                return;
+            }
+
+            $placeholders = implode(', ', array_fill(0, count($operands), '?'));
+            $query->whereRaw($expression.' in ('.$placeholders.')', $operands);
 
             return;
         }
@@ -397,8 +481,8 @@ class ReportRepository implements ReportRepositoryInterface
         $with = [];
 
         foreach ($loads['with'] as $path) {
-            if ($path === 'residents') {
-                $with['residents'] = fn ($residents) => $residents
+            if ($path === 'residents' || str_ends_with($path, '.residents')) {
+                $with[$path] = fn ($residents) => $residents
                     ->orderBy('last_name')
                     ->orderBy('first_name');
 
@@ -428,9 +512,7 @@ class ReportRepository implements ReportRepositoryInterface
             $with[] = $path;
         }
 
-        if ($with !== []) {
-            $query->with($with);
-        }
+        $nestedCounts = [];
 
         foreach ($loads['withCount'] as $path) {
             if ($path === 'pets') {
@@ -443,7 +525,30 @@ class ReportRepository implements ReportRepositoryInterface
                 continue;
             }
 
-            $query->withCount($path);
+            if (! str_contains($path, '.')) {
+                $query->withCount($path);
+
+                continue;
+            }
+
+            $parent = Str::beforeLast($path, '.');
+            $relation = Str::afterLast($path, '.');
+            $nestedCounts[$parent][] = $relation;
+        }
+
+        foreach ($nestedCounts as $parent => $relations) {
+            $existing = $with[$parent] ?? null;
+            $with[$parent] = function ($related) use ($existing, $relations): void {
+                if (is_callable($existing)) {
+                    $existing($related);
+                }
+
+                $related->withCount($relations);
+            };
+        }
+
+        if ($with !== []) {
+            $query->with($with);
         }
     }
 
@@ -535,6 +640,12 @@ class ReportRepository implements ReportRepositoryInterface
 
             if ($type === 'junction_min') {
                 $this->applyJunctionMinSort($query, $sort, $active['state'], $active['filter']);
+
+                continue;
+            }
+
+            if ($type === 'child_lookup') {
+                $this->applyChildLookupSort($query, $sort);
             }
         }
     }
@@ -633,6 +744,32 @@ class ReportRepository implements ReportRepositoryInterface
         if (! ReportSchema::isAll($filter, $state)) {
             $sub->whereIn($junction.'.'.$junctionId, $state['ids']);
         }
+
+        $query->orderByRaw('COALESCE(('.$sub->toSql().'), ?) asc', [...$sub->getBindings(), 'Not Answered']);
+    }
+
+    /**
+     * One label per resident, taken from the child row. MIN keeps a single
+     * report row when a resident has more than one child record.
+     *
+     * @param  Builder<Model>  $query
+     * @param  array<string, mixed>  $sort
+     */
+    private function applyChildLookupSort(Builder $query, array $sort): void
+    {
+        $child = $this->assertIdent((string) $sort['child_table']);
+        $owner = $this->assertIdent((string) $sort['child_owner']);
+        $childFk = $this->assertIdent((string) $sort['child_fk']);
+        $lookupTable = $this->assertIdent((string) $sort['lookup_table']);
+        $lookupId = $this->assertIdent((string) $sort['lookup_id']);
+        $lookupLabel = $this->assertIdent((string) $sort['lookup_label']);
+        $root = $this->assertIdent($query->getModel()->getTable());
+        $key = $this->assertIdent($query->getModel()->getKeyName());
+
+        $sub = DB::table($child)
+            ->selectRaw('min('.$this->quote($lookupTable).'.'.$this->quote($lookupLabel).')')
+            ->leftJoin($lookupTable, $lookupTable.'.'.$lookupId, '=', $child.'.'.$childFk)
+            ->whereColumn($child.'.'.$owner, $root.'.'.$key);
 
         $query->orderByRaw('COALESCE(('.$sub->toSql().'), ?) asc', [...$sub->getBindings(), 'Not Answered']);
     }

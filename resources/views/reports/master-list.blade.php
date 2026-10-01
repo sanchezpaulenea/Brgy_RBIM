@@ -17,6 +17,9 @@
     @if ($subtitle)
         <h2>{{ $subtitle }}</h2>
     @endif
+    @if (! empty($header))
+        <p>{{ $header }}</p>
+    @endif
     <table>
         <thead>
             <tr>

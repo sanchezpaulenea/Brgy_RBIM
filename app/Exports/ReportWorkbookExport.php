@@ -17,6 +17,7 @@ class ReportWorkbookExport implements FromArray, ShouldAutoSize, WithStyles
     public function __construct(
         protected string $title,
         protected ?string $subtitle,
+        protected ?string $header,
         protected array $headings,
         protected array $rows,
     ) {}
@@ -30,6 +31,10 @@ class ReportWorkbookExport implements FromArray, ShouldAutoSize, WithStyles
 
         if ($this->subtitle !== null && $this->subtitle !== '') {
             $block[] = [$this->subtitle];
+        }
+
+        if ($this->header !== null && $this->header !== '') {
+            $block[] = [$this->header];
         }
 
         $block[] = $this->headings;
@@ -47,7 +52,15 @@ class ReportWorkbookExport implements FromArray, ShouldAutoSize, WithStyles
             ->setWrapText(true)
             ->setVertical(Alignment::VERTICAL_TOP);
 
-        $headingRow = $this->subtitle !== null && $this->subtitle !== '' ? 3 : 2;
+        $headingRow = 2;
+
+        if ($this->subtitle !== null && $this->subtitle !== '') {
+            $headingRow++;
+        }
+
+        if ($this->header !== null && $this->header !== '') {
+            $headingRow++;
+        }
 
         return [
             1 => ['font' => ['bold' => true, 'size' => 14]],

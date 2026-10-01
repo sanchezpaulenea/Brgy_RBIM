@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CurrentEnrollmentStatus extends Model
 {
+    public const YES_PUBLIC = 1;
+
+    public const YES_PRIVATE = 2;
+
     public const NOT_ENROLLED = 3;
 
     protected $table = 'current_enrollment_status';

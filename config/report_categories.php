@@ -14,7 +14,18 @@ use App\Models\HouseholdManagement\Specie;
 use App\Models\HouseholdManagement\Street;
 use App\Models\HouseholdManagement\ToiletFacilityType;
 use App\Models\HouseholdManagement\WaterSource;
+use App\Models\ResidentManagement\Demographic\Ethnicity;
+use App\Models\ResidentManagement\Demographic\MaritalStatus;
+use App\Models\ResidentManagement\Demographic\Nationality;
+use App\Models\ResidentManagement\Demographic\Religion;
+use App\Models\ResidentManagement\Demographic\ResidentStatus;
 use App\Models\ResidentManagement\Demographic\Sex;
+use App\Models\ResidentManagement\Economic\Economic;
+use App\Models\ResidentManagement\Economic\SourceOfIncome;
+use App\Models\ResidentManagement\Economic\StatusOfWorkBusiness;
+use App\Models\ResidentManagement\Education\CurrentEnrollmentStatus;
+use App\Models\ResidentManagement\Education\HighestLvlOfEduc;
+use App\Models\ResidentManagement\Education\SchoolLvl;
 
 /*
 |--------------------------------------------------------------------------
@@ -143,6 +154,10 @@ $lookup = static function (
         'constrain_relation' => $extra['constrain_relation'] ?? null,
         'constrain_column' => $extra['constrain_column'] ?? null,
         'constrain_order' => $extra['constrain_order'] ?? null,
+        'mode_labels' => $extra['mode_labels'] ?? null,
+        'subrecord_table' => $extra['subrecord_table'] ?? null,
+        'subrecord_owner' => $extra['subrecord_owner'] ?? null,
+        'visible_when' => $extra['visible_when'] ?? null,
     ];
 };
 
@@ -170,13 +185,17 @@ $choices = static function (
         'sort' => $sort,
         'presence_table' => $extra['presence_table'] ?? null,
         'presence_owner' => $extra['presence_owner'] ?? null,
+        'subrecord_table' => $extra['subrecord_table'] ?? null,
+        'subrecord_owner' => $extra['subrecord_owner'] ?? null,
+        'visible_when' => $extra['visible_when'] ?? null,
     ];
 };
 
 $category = static function (string $label, array $filters, array $extra = []) use ($standard): array {
     return [
-        'level' => 'household',
+        'level' => $extra['level'] ?? 'household',
         'label' => $label,
+        'header' => $extra['header'] ?? null,
         'questions' => $extra['questions'] ?? false,
         'filters' => $filters,
         'default_columns' => $extra['default_columns'] ?? $standard,
@@ -208,6 +227,112 @@ $rabiesChoices = [
     ['value' => 'older_12', 'label' => 'Older than 12 months', 'op' => 'older_than_months', 'months' => 12, 'singular' => false],
     ['value' => 'recorded', 'label' => 'Has vaccination record', 'op' => 'not_null', 'singular' => false],
 ];
+
+$residentDefaults = [
+    'household_id',
+    'resident_id',
+    'clan',
+    'street',
+    'house_lot',
+    'household_status',
+    'head_resident_name',
+    'number_of_pets',
+    'total_household_members',
+    'household_members_name',
+    'resident_demographic',
+];
+
+$residentExtras = [
+    'education_details',
+    'economic_details',
+    'health_details',
+    'sociocivic_details',
+    'migration_details',
+    'skills_details',
+];
+
+$residentCategory = static function (string $label, array $filters, array $extra = []) use ($category, $residentDefaults, $residentExtras): array {
+    $defaults = $residentDefaults;
+
+    foreach ($extra['also_default'] ?? [] as $column) {
+        $defaults[] = $column;
+    }
+
+    return $category($label, $filters, [
+        'level' => 'resident',
+        'header' => 'Total Resident Records',
+        'default_columns' => $defaults,
+        'extra_columns' => $residentExtras,
+    ]);
+};
+
+$attributeModes = static function (string $noun): array {
+    return [
+        'all' => 'All '.$noun,
+        'one' => 'Per '.$noun,
+        'multiple' => 'Select 1 or More '.$noun,
+    ];
+};
+
+$residentAttribute = static function (
+    string $categoryLabel,
+    string $filterKey,
+    string $noun,
+    string $column,
+    string $model,
+    string $table,
+    string $idColumn,
+    string $labelColumn,
+    string $owned,
+) use ($lookup, $sortLookup, $residentCategory, $attributeModes): array {
+    return $residentCategory($categoryLabel, [
+        $lookup(
+            $filterKey,
+            $categoryLabel,
+            $column,
+            'resident',
+            $model,
+            $table,
+            $idColumn,
+            $labelColumn,
+            [$owned],
+            $sortLookup($table, 'sort_'.$filterKey, $idColumn, $labelColumn, 'resident.'.$column),
+            ['mode_labels' => $attributeModes($noun)],
+        ),
+    ]);
+};
+
+$childSort = static function (
+    string $childTable,
+    string $childFk,
+    string $lookupTable,
+    string $lookupId,
+    string $lookupLabel,
+): array {
+    return [
+        'type' => 'child_lookup',
+        'child_table' => $childTable,
+        'child_owner' => 'resident_id',
+        'child_fk' => $childFk,
+        'lookup_table' => $lookupTable,
+        'lookup_id' => $lookupId,
+        'lookup_label' => $lookupLabel,
+    ];
+};
+
+$levelModes = [
+    'all' => 'All Levels',
+    'one' => 'Per Level',
+    'multiple' => 'Select 1 or More Levels',
+];
+
+$incomeModes = [
+    'all' => 'All Income',
+    'one' => 'Per Income',
+    'multiple' => 'Select 1 or More Income',
+];
+
+$statusModes = $attributeModes('Status');
 
 return [
     'clan' => $category('Clan', [
@@ -662,4 +787,195 @@ return [
             'type' => 'pet',
         ]],
     ]),
+
+    'nationality' => $residentAttribute(
+        'Nationality',
+        'nationality',
+        'Nationality',
+        'nationality_id',
+        Nationality::class,
+        'nationality',
+        'nationality_id',
+        'nationality',
+        'resident_demographic.nationality',
+    ),
+
+    'religion' => $residentAttribute(
+        'Religion',
+        'religion',
+        'Religion',
+        'religion_id',
+        Religion::class,
+        'religion',
+        'religion_id',
+        'religion',
+        'resident_demographic.religion',
+    ),
+
+    'ethnicity' => $residentAttribute(
+        'Ethnicity',
+        'ethnicity',
+        'Ethnicity',
+        'ethnicity_id',
+        Ethnicity::class,
+        'ethnicity',
+        'ethnicity_id',
+        'ethnicity',
+        'resident_demographic.ethnicity',
+    ),
+
+    'marital_status' => $residentAttribute(
+        'Marital Status',
+        'marital_status',
+        'Status',
+        'marital_status_id',
+        MaritalStatus::class,
+        'marital_status',
+        'marital_status_id',
+        'marital_status',
+        'resident_demographic.marital_status',
+    ),
+
+    'resident_status' => $residentAttribute(
+        'Resident Status',
+        'resident_status',
+        'Status',
+        'resident_status_id',
+        ResidentStatus::class,
+        'resident_status',
+        'resident_status_id',
+        'resident_status',
+        'resident_demographic.resident_status',
+    ),
+
+    'education' => $residentCategory('Education', [
+        $lookup(
+            'highest_level',
+            'Highest Level of Education',
+            'highest_lvl_of_educ_id',
+            'subrecord',
+            HighestLvlOfEduc::class,
+            'highest_lvl_of_educ',
+            'highest_lvl_of_educ_id',
+            'lvl_of_educ',
+            ['education_details.highest_level'],
+            $childSort('education', 'highest_lvl_of_educ_id', 'highest_lvl_of_educ', 'highest_lvl_of_educ_id', 'lvl_of_educ'),
+            [
+                'mode_labels' => $levelModes,
+                'subrecord_table' => 'education',
+                'subrecord_owner' => 'resident_id',
+            ],
+        ),
+        $choices(
+            'enrollment',
+            'Current Enrollment Status',
+            'options',
+            'subrecord',
+            [
+                ['value' => 'all', 'label' => 'All', 'op' => 'any', 'singular' => false],
+                ['value' => 'no', 'label' => 'No', 'op' => 'eq', 'operand' => CurrentEnrollmentStatus::NOT_ENROLLED, 'singular' => true],
+                ['value' => 'yes', 'label' => 'Yes', 'op' => 'in', 'operand' => [CurrentEnrollmentStatus::YES_PUBLIC, CurrentEnrollmentStatus::YES_PRIVATE], 'singular' => false],
+                ['value' => 'yes_private', 'label' => 'Yes, private', 'op' => 'eq', 'operand' => CurrentEnrollmentStatus::YES_PRIVATE, 'singular' => true],
+                ['value' => 'yes_public', 'label' => 'Yes, public', 'op' => 'eq', 'operand' => CurrentEnrollmentStatus::YES_PUBLIC, 'singular' => true],
+            ],
+            ['education_details.current_enrollment'],
+            $childSort(
+                'education',
+                'current_enrollement_status_id',
+                'current_enrollment_status',
+                'current_enrollment_status_id',
+                'current_enrollement_status',
+            ),
+            'education.current_enrollement_status_id',
+            'current_enrollement_status_id',
+            [
+                'subrecord_table' => 'education',
+                'subrecord_owner' => 'resident_id',
+            ],
+        ),
+        $lookup(
+            'school_level',
+            'School Level',
+            'school_lvl_id',
+            'subrecord',
+            SchoolLvl::class,
+            'school_lvl',
+            'school_lvl_id',
+            'school_lvl',
+            ['education_details.school_lvl'],
+            $childSort('education', 'school_lvl_id', 'school_lvl', 'school_lvl_id', 'school_lvl'),
+            [
+                'mode_labels' => $levelModes,
+                'subrecord_table' => 'education',
+                'subrecord_owner' => 'resident_id',
+                'visible_when' => [
+                    'filter' => 'enrollment',
+                    'except_modes' => ['no'],
+                ],
+            ],
+        ),
+    ], ['also_default' => ['education_details']]),
+
+    'economic' => $residentCategory('Economic', [
+        [
+            'key' => 'monthly_income',
+            'label' => 'Monthly Income',
+            'type' => 'range',
+            'apply' => 'subrecord',
+            'column' => 'monthly_income',
+            'scale' => Economic::MONTHLY_INCOME_SCALE,
+            'min_bound' => 0,
+            'max_bound' => Economic::MAX_MONTHLY_INCOME,
+            'owns' => [],
+            'sort' => null,
+            'subrecord_table' => 'economic',
+            'subrecord_owner' => 'resident_id',
+        ],
+        $lookup(
+            'source',
+            'Source of Income',
+            'source_of_income_id',
+            'subrecord',
+            SourceOfIncome::class,
+            'source_of_income',
+            'source_of_income_id',
+            'source_of_income',
+            ['economic_details.source_of_income'],
+            $childSort('economic', 'source_of_income_id', 'source_of_income', 'source_of_income_id', 'source_of_income'),
+            [
+                'mode_labels' => $incomeModes,
+                'plural' => 'Income',
+                'subrecord_table' => 'economic',
+                'subrecord_owner' => 'resident_id',
+            ],
+        ),
+        $lookup(
+            'work_status',
+            'Status of Work/Business',
+            'status_of_work_business_id',
+            'subrecord',
+            StatusOfWorkBusiness::class,
+            'status_of_work_business',
+            'status_of_work_business_id',
+            'status_of_work_business',
+            ['economic_details.work_status'],
+            $childSort(
+                'economic',
+                'status_of_work_business_id',
+                'status_of_work_business',
+                'status_of_work_business_id',
+                'status_of_work_business',
+            ),
+            [
+                'mode_labels' => $statusModes,
+                'plural' => 'Status',
+                'subrecord_table' => 'economic',
+                'subrecord_owner' => 'resident_id',
+                'visible_when' => [
+                    'filter' => 'source',
+                    'lookup_ids' => [SourceOfIncome::EMPLOYMENT, SourceOfIncome::BUSINESS],
+                ],
+            ],
+        ),
+    ], ['also_default' => ['economic_details']]),
 ];

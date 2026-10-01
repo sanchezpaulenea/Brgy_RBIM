@@ -35,6 +35,8 @@ class ReportPreviewRequest extends FormRequest
                     'mode' => $filter['mode'] ?? null,
                     'ids' => is_array($ids) ? array_values($ids) : [],
                     'value' => $filter['value'] ?? null,
+                    'min' => $filter['min'] ?? null,
+                    'max' => $filter['max'] ?? null,
                 ];
             }
         }
@@ -169,6 +171,11 @@ class ReportPreviewRequest extends FormRequest
 
             $key = (string) $filter['key'];
             $known[$key] = true;
+
+            if (! ReportSchema::filterApplies($category, $filter, $input)) {
+                continue;
+            }
+
             $state = is_array($input[$key] ?? null) ? $input[$key] : null;
 
             if ($state === null) {
@@ -179,6 +186,12 @@ class ReportPreviewRequest extends FormRequest
 
             if (($filter['type'] ?? '') === 'lookup') {
                 $this->validateLookup($validator, $filter, $state);
+
+                continue;
+            }
+
+            if (($filter['type'] ?? '') === 'range') {
+                $this->validateRange($validator, $filter, $state);
 
                 continue;
             }
@@ -299,6 +312,69 @@ class ReportPreviewRequest extends FormRequest
                 'Enter a number from '.$min.' to '.$max.'.',
             );
         }
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     * @param  array<string, mixed>  $state
+     */
+    private function validateRange(Validator $validator, array $filter, array $state): void
+    {
+        $key = (string) $filter['key'];
+        $scale = (int) ($filter['scale'] ?? 2);
+        $minBound = (string) ($filter['min_bound'] ?? '0');
+        $maxBound = (string) ($filter['max_bound'] ?? '99999999.99');
+        $min = $this->decimalBound($state['min'] ?? null, $scale, $minBound, $maxBound);
+        $max = $this->decimalBound($state['max'] ?? null, $scale, $minBound, $maxBound);
+
+        if ($min === false) {
+            $validator->errors()->add(
+                "filters.{$key}.min",
+                'Enter a minimum from '.$minBound.' to '.$maxBound.' with up to '.$scale.' decimal places.',
+            );
+        }
+
+        if ($max === false) {
+            $validator->errors()->add(
+                "filters.{$key}.max",
+                'Enter a maximum from '.$minBound.' to '.$maxBound.' with up to '.$scale.' decimal places.',
+            );
+        }
+
+        if ($min === false || $max === false || $min === null || $max === null) {
+            return;
+        }
+
+        if (bccomp($min, $max, $scale) === 1) {
+            $validator->errors()->add("filters.{$key}.min", 'Minimum cannot be greater than maximum.');
+        }
+    }
+
+    private function decimalBound(mixed $value, int $scale, string $minBound, string $maxBound): string|false|null
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_int($value) || is_float($value)) {
+            $value = (string) $value;
+        }
+
+        if (! is_string($value) || preg_match('/^(?:0|[1-9]\d*)(?:\.\d{1,'.$scale.'})?$/', $value) !== 1) {
+            return false;
+        }
+
+        $normalized = bcadd($value, '0', $scale);
+
+        if (bccomp($normalized, bcadd($minBound, '0', $scale), $scale) === -1) {
+            return false;
+        }
+
+        if (bccomp($normalized, bcadd($maxBound, '0', $scale), $scale) === 1) {
+            return false;
+        }
+
+        return $normalized;
     }
 
     private function validateColumns(Validator $validator): void
