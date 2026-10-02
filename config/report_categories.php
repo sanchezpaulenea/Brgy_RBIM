@@ -26,6 +26,16 @@ use App\Models\ResidentManagement\Economic\StatusOfWorkBusiness;
 use App\Models\ResidentManagement\Education\CurrentEnrollmentStatus;
 use App\Models\ResidentManagement\Education\HighestLvlOfEduc;
 use App\Models\ResidentManagement\Education\SchoolLvl;
+use App\Models\ResidentManagement\Health\BirthAttendant;
+use App\Models\ResidentManagement\Health\Disability;
+use App\Models\ResidentManagement\Health\FacilityVisitedPast12Mos;
+use App\Models\ResidentManagement\Health\FacilityVisitReason;
+use App\Models\ResidentManagement\Health\FamilyPlanningMethod;
+use App\Models\ResidentManagement\Health\HealthInsurance;
+use App\Models\ResidentManagement\Health\Immunization;
+use App\Models\ResidentManagement\Health\PlaceOfDelivery;
+use App\Models\ResidentManagement\Health\SourceOfFPMethod;
+use App\Models\ResidentManagement\Sociocivic\SoloParentStatus;
 
 /*
 |--------------------------------------------------------------------------
@@ -148,6 +158,7 @@ $lookup = static function (
         'label_column' => $labelColumn,
         'owns' => $owns,
         'sort' => $sort,
+        'subrecord_via' => $extra['subrecord_via'] ?? null,
         'junction_table' => $extra['junction_table'] ?? null,
         'junction_owner' => $extra['junction_owner'] ?? null,
         'junction_id' => $extra['junction_id'] ?? null,
@@ -155,6 +166,8 @@ $lookup = static function (
         'constrain_column' => $extra['constrain_column'] ?? null,
         'constrain_order' => $extra['constrain_order'] ?? null,
         'mode_labels' => $extra['mode_labels'] ?? null,
+        'sentinel_mode' => $extra['sentinel_mode'] ?? null,
+        'omit_sentinel_from' => $extra['omit_sentinel_from'] ?? [],
         'subrecord_table' => $extra['subrecord_table'] ?? null,
         'subrecord_owner' => $extra['subrecord_owner'] ?? null,
         'visible_when' => $extra['visible_when'] ?? null,
@@ -187,7 +200,9 @@ $choices = static function (
         'presence_owner' => $extra['presence_owner'] ?? null,
         'subrecord_table' => $extra['subrecord_table'] ?? null,
         'subrecord_owner' => $extra['subrecord_owner'] ?? null,
+        'subrecord_via' => $extra['subrecord_via'] ?? null,
         'visible_when' => $extra['visible_when'] ?? null,
+        'sentinel_model' => $extra['sentinel_model'] ?? null,
     ];
 };
 
@@ -197,6 +212,7 @@ $category = static function (string $label, array $filters, array $extra = []) u
         'label' => $label,
         'header' => $extra['header'] ?? null,
         'questions' => $extra['questions'] ?? false,
+        'audience' => $extra['audience'] ?? null,
         'filters' => $filters,
         'default_columns' => $extra['default_columns'] ?? $standard,
         'extra_columns' => $extra['extra_columns'] ?? [],
@@ -246,6 +262,8 @@ $residentExtras = [
     'education_details',
     'economic_details',
     'health_details',
+    'infant_health_details',
+    'women_health_details',
     'sociocivic_details',
     'migration_details',
     'skills_details',
@@ -260,7 +278,8 @@ $residentCategory = static function (string $label, array $filters, array $extra
 
     return $category($label, $filters, [
         'level' => 'resident',
-        'header' => 'Total Resident Records',
+        'header' => $extra['header'] ?? 'Total Resident Records',
+        'audience' => $extra['audience'] ?? null,
         'default_columns' => $defaults,
         'extra_columns' => $residentExtras,
     ]);
@@ -308,6 +327,7 @@ $childSort = static function (
     string $lookupTable,
     string $lookupId,
     string $lookupLabel,
+    ?array $via = null,
 ): array {
     return [
         'type' => 'child_lookup',
@@ -317,6 +337,10 @@ $childSort = static function (
         'lookup_table' => $lookupTable,
         'lookup_id' => $lookupId,
         'lookup_label' => $lookupLabel,
+        'via_table' => $via['table'] ?? null,
+        'via_from' => $via['from'] ?? null,
+        'via_to' => $via['to'] ?? null,
+        'via_owner' => $via['owner'] ?? null,
     ];
 };
 
@@ -333,6 +357,71 @@ $incomeModes = [
 ];
 
 $statusModes = $attributeModes('Status');
+
+$typeModes = [
+    'all' => 'All Types',
+    'one' => 'Per Type',
+    'multiple' => 'Select 1 or More Types',
+];
+
+$insuranceModes = [
+    'none' => 'No Insurance',
+    'all' => 'All Insurance (including no insurance)',
+    'one' => 'Per Insurance',
+    'multiple' => 'Select 1 or More Insurance',
+];
+
+$facilityModes = [
+    'none' => 'None',
+    'all' => 'All Facility (including none)',
+    'one' => 'Per Facility',
+    'multiple' => 'Select 1 or More Facility',
+];
+
+$reasonModes = [
+    'all' => 'All Reason',
+    'one' => 'Per Reason',
+    'multiple' => 'Select 1 or More Reason',
+];
+
+$placeModes = [
+    'all' => 'All Places',
+    'one' => 'Per Place',
+    'multiple' => 'Select 1 or More Places',
+];
+
+$attendantModes = [
+    'all' => 'All Attendants',
+    'one' => 'Per Attendant',
+    'multiple' => 'Select 1 or More Attendants',
+];
+
+$immunizationModes = [
+    'none' => 'No Immunization',
+    'all' => 'All Immunization (including no immunization)',
+    'one' => 'Per Immunization',
+    'multiple' => 'Select 1 or More Immunization',
+];
+
+$fpModes = [
+    'none' => 'No FP',
+    'all' => 'All FP (including no FP)',
+    'one' => 'Per FP',
+    'multiple' => 'Select 1 or More FP',
+];
+
+$fpSourceModes = [
+    'all' => 'All FP Source',
+    'one' => 'Per FP Source',
+    'multiple' => 'Select 1 or More FP Source',
+];
+
+$womenHealthVia = [
+    'table' => 'health',
+    'from' => 'health_id',
+    'to' => 'health_id',
+    'owner' => 'resident_id',
+];
 
 return [
     'clan' => $category('Clan', [
@@ -978,4 +1067,366 @@ return [
             ],
         ),
     ], ['also_default' => ['economic_details']]),
+
+    'health' => $residentCategory('Health', [
+        $lookup(
+            'health_insurance',
+            'Health Insurance',
+            'health_insurance_id',
+            'subrecord',
+            HealthInsurance::class,
+            'health_insurance',
+            'health_insurance_id',
+            'health_insurance',
+            ['health_details.health_insurance'],
+            $childSort('health', 'health_insurance_id', 'health_insurance', 'health_insurance_id', 'health_insurance'),
+            [
+                'modes' => ['none', 'all', 'one', 'multiple'],
+                'mode_labels' => $insuranceModes,
+                'sentinel_mode' => 'none',
+                'omit_sentinel_from' => ['one'],
+                'subrecord_table' => 'health',
+                'subrecord_owner' => 'resident_id',
+            ],
+        ),
+        $lookup(
+            'facility_visited',
+            'Facility Visited Past 12 Months',
+            'facility_visited_past_12mos_id',
+            'subrecord',
+            FacilityVisitedPast12Mos::class,
+            'facility_visited_past_12mos',
+            'facility_visited_past_12mos_id',
+            'facility_visited_past_12mos',
+            ['health_details.facility_visited_past_12mos'],
+            $childSort(
+                'health',
+                'facility_visited_past_12mos_id',
+                'facility_visited_past_12mos',
+                'facility_visited_past_12mos_id',
+                'facility_visited_past_12mos',
+            ),
+            [
+                'modes' => ['none', 'all', 'one', 'multiple'],
+                'mode_labels' => $facilityModes,
+                'sentinel_mode' => 'none',
+                'omit_sentinel_from' => ['one'],
+                'subrecord_table' => 'health',
+                'subrecord_owner' => 'resident_id',
+            ],
+        ),
+        $lookup(
+            'facility_visit_reason',
+            'Facility Visit Reason',
+            'facility_visit_reason_id',
+            'subrecord',
+            FacilityVisitReason::class,
+            'facility_visit_reason',
+            'facility_visit_reason_id',
+            'facility_visit_reason',
+            ['health_details.facility_visit_reason'],
+            $childSort(
+                'health',
+                'facility_visit_reason_id',
+                'facility_visit_reason',
+                'facility_visit_reason_id',
+                'facility_visit_reason',
+            ),
+            [
+                'mode_labels' => $reasonModes,
+                'subrecord_table' => 'health',
+                'subrecord_owner' => 'resident_id',
+                'visible_when' => [
+                    'filter' => 'facility_visited',
+                    'unless_sentinel' => true,
+                ],
+            ],
+        ),
+        $choices(
+            'disability',
+            'Disability',
+            'options',
+            'subrecord',
+            [
+                ['value' => 'all', 'label' => 'With/Without Disability', 'op' => 'any', 'singular' => false],
+                ['value' => 'with', 'label' => 'With Disability', 'op' => 'not_sentinel', 'singular' => false],
+                ['value' => 'without', 'label' => 'Without Disability', 'op' => 'is_sentinel', 'singular' => true],
+            ],
+            ['health_details.disability'],
+            $childSort('health', 'disability_id', 'disability', 'disability_id', 'disability'),
+            'health.disability_id',
+            'disability_id',
+            [
+                'subrecord_table' => 'health',
+                'subrecord_owner' => 'resident_id',
+                'sentinel_model' => Disability::class,
+            ],
+        ),
+    ], ['also_default' => ['health_details']]),
+
+    'infant_health' => $residentCategory('Infant Health', [
+        $lookup(
+            'place_of_delivery',
+            'Place of Delivery',
+            'place_of_delivery_id',
+            'subrecord',
+            PlaceOfDelivery::class,
+            'place_of_delivery',
+            'place_of_delivery_id',
+            'place_of_delivery',
+            ['infant_health_details.place_of_delivery'],
+            $childSort('infant_health', 'place_of_delivery_id', 'place_of_delivery', 'place_of_delivery_id', 'place_of_delivery'),
+            [
+                'mode_labels' => $placeModes,
+                'plural' => 'Places',
+                'subrecord_table' => 'infant_health',
+                'subrecord_owner' => 'resident_id',
+            ],
+        ),
+        $lookup(
+            'birth_attendant',
+            'Birth Attendant',
+            'birth_attendant_id',
+            'subrecord',
+            BirthAttendant::class,
+            'birth_attendant',
+            'birth_attendant_id',
+            'birth_attendant',
+            ['infant_health_details.birth_attendant'],
+            $childSort('infant_health', 'birth_attendant_id', 'birth_attendant', 'birth_attendant_id', 'birth_attendant'),
+            [
+                'mode_labels' => $attendantModes,
+                'plural' => 'Attendants',
+                'subrecord_table' => 'infant_health',
+                'subrecord_owner' => 'resident_id',
+            ],
+        ),
+        $lookup(
+            'immunization',
+            'Immunization',
+            'immunization_id',
+            'subrecord',
+            Immunization::class,
+            'immunization',
+            'immunization_id',
+            'immunization',
+            ['infant_health_details.immunization'],
+            $childSort('infant_health', 'immunization_id', 'immunization', 'immunization_id', 'immunization'),
+            [
+                'modes' => ['none', 'all', 'one', 'multiple'],
+                'mode_labels' => $immunizationModes,
+                'sentinel_mode' => 'none',
+                'omit_sentinel_from' => ['one'],
+                'subrecord_table' => 'infant_health',
+                'subrecord_owner' => 'resident_id',
+            ],
+        ),
+    ], [
+        'header' => 'Total Resident Records (scoped to infants 0-11 months)',
+        'audience' => 'infant',
+        'also_default' => ['infant_health_details'],
+    ]),
+
+    'women_health' => $residentCategory('Women Health', [
+        [
+            'key' => 'pregnancies',
+            'label' => 'No. of Pregnancies',
+            'type' => 'range',
+            'apply' => 'subrecord',
+            'column' => 'number_pregnancies',
+            'scale' => 0,
+            'min_bound' => 0,
+            'max_bound' => 99,
+            'owns' => ['women_health_details.number_pregnancies'],
+            'sort' => null,
+            'subrecord_table' => 'women_health',
+            'subrecord_owner' => 'resident_id',
+            'subrecord_via' => $womenHealthVia,
+        ],
+        [
+            'key' => 'living_children',
+            'label' => 'Living Children',
+            'type' => 'range',
+            'apply' => 'subrecord',
+            'column' => 'living_children',
+            'scale' => 0,
+            'min_bound' => 0,
+            'max_bound' => 99,
+            'owns' => ['women_health_details.living_children'],
+            'sort' => null,
+            'subrecord_table' => 'women_health',
+            'subrecord_owner' => 'resident_id',
+            'subrecord_via' => $womenHealthVia,
+        ],
+        $lookup(
+            'family_planning_method',
+            'Family Planning Method',
+            'family_planning_method_id',
+            'subrecord',
+            FamilyPlanningMethod::class,
+            'family_planning_method',
+            'family_planning_method_id',
+            'family_planning_method',
+            ['women_health_details.family_planning_method'],
+            $childSort(
+                'women_health',
+                'family_planning_method_id',
+                'family_planning_method',
+                'family_planning_method_id',
+                'family_planning_method',
+                $womenHealthVia,
+            ),
+            [
+                'modes' => ['none', 'all', 'one', 'multiple'],
+                'mode_labels' => $fpModes,
+                'sentinel_mode' => 'none',
+                'omit_sentinel_from' => ['one'],
+                'subrecord_table' => 'women_health',
+                'subrecord_owner' => 'resident_id',
+                'subrecord_via' => $womenHealthVia,
+            ],
+        ),
+        $lookup(
+            'source_of_fp_method',
+            'Source of FP',
+            'source_of_fp_method_id',
+            'subrecord',
+            SourceOfFPMethod::class,
+            'source_of_fp_method',
+            'source_of_fp_method_id',
+            'source_of_fp_method',
+            ['women_health_details.source_of_fp_method'],
+            $childSort(
+                'women_health',
+                'source_of_fp_method_id',
+                'source_of_fp_method',
+                'source_of_fp_method_id',
+                'source_of_fp_method',
+                $womenHealthVia,
+            ),
+            [
+                'mode_labels' => $fpSourceModes,
+                'subrecord_table' => 'women_health',
+                'subrecord_owner' => 'resident_id',
+                'subrecord_via' => $womenHealthVia,
+                'visible_when' => [
+                    'filter' => 'family_planning_method',
+                    'unless_sentinel' => true,
+                ],
+            ],
+        ),
+        $choices(
+            'fp_intention',
+            'Intention to Use FP',
+            'options',
+            'subrecord',
+            [
+                ['value' => 'yes', 'label' => 'Have Intention', 'op' => 'eq', 'operand' => 1, 'singular' => true],
+                ['value' => 'no', 'label' => 'No Intention', 'op' => 'eq', 'operand' => 0, 'singular' => true],
+            ],
+            ['women_health_details.have_intention_to_use_fp'],
+            null,
+            'women_health.have_intention_to_use_fp',
+            'have_intention_to_use_fp',
+            [
+                'subrecord_table' => 'women_health',
+                'subrecord_owner' => 'resident_id',
+                'subrecord_via' => $womenHealthVia,
+                'visible_when' => [
+                    'filter' => 'family_planning_method',
+                    'only_sentinel' => true,
+                ],
+            ],
+        ),
+    ], [
+        'header' => 'Total Resident Records (scoped to females aged 10-54)',
+        'audience' => 'women',
+        'also_default' => ['women_health_details'],
+    ]),
+
+    'sociocivic' => $residentCategory('Sociocivic', [
+        $choices(
+            'topics',
+            'Categories',
+            'checks',
+            'none',
+            [
+                ['value' => 1, 'label' => 'Solo Parents', 'op' => 'any', 'singular' => false],
+                ['value' => 2, 'label' => 'Senior Citizens', 'op' => 'any', 'singular' => false],
+                ['value' => 3, 'label' => 'Registered Barangay Voters', 'op' => 'any', 'singular' => false],
+            ],
+            [],
+            null,
+        ),
+        $lookup(
+            'solo_parent_status',
+            'Solo Parent Status',
+            'solo_parent_status_id',
+            'subrecord',
+            SoloParentStatus::class,
+            'solo_parent_status',
+            'solo_parent_status_id',
+            'solo_parent_status',
+            ['sociocivic_details.solo_parent_status'],
+            $childSort('sociocivic', 'solo_parent_status_id', 'solo_parent_status', 'solo_parent_status_id', 'solo_parent_status'),
+            [
+                'mode_labels' => $statusModes,
+                'plural' => 'Statuses',
+                'subrecord_table' => 'sociocivic',
+                'subrecord_owner' => 'resident_id',
+                'visible_when' => [
+                    'filter' => 'topics',
+                    'include_ids' => [1],
+                ],
+            ],
+        ),
+        $choices(
+            'registered_senior',
+            'Registered Senior Citizen',
+            'options',
+            'column_presence',
+            [
+                ['value' => 'all', 'label' => 'Yes/No', 'op' => 'any', 'singular' => false],
+                ['value' => 'yes', 'label' => 'Yes', 'op' => 'not_null', 'singular' => true],
+                ['value' => 'no', 'label' => 'No', 'op' => 'missing_or_null', 'singular' => true],
+            ],
+            ['sociocivic_details.registered_senior_citizen'],
+            null,
+            null,
+            'osca_id_number',
+            [
+                'subrecord_table' => 'sociocivic',
+                'subrecord_owner' => 'resident_id',
+                'visible_when' => [
+                    'filter' => 'topics',
+                    'include_ids' => [2],
+                ],
+            ],
+        ),
+        $choices(
+            'registered_barangay_voter',
+            'Registered Barangay Voter',
+            'options',
+            'voter',
+            [
+                ['value' => 'any', 'label' => 'Yes/No', 'op' => 'any', 'singular' => false],
+                ['value' => 'no', 'label' => 'No', 'op' => 'voter_no', 'singular' => true],
+                ['value' => 'yes', 'label' => 'Yes', 'op' => 'voter_yes', 'singular' => false],
+                ['value' => 'local', 'label' => 'Yes, registered in barangay happy hallow', 'op' => 'voter_local', 'singular' => true],
+                ['value' => 'other', 'label' => 'Yes, registered in different barangay', 'op' => 'voter_other', 'singular' => true],
+            ],
+            ['sociocivic_details.registered_barangay_voter'],
+            null,
+            null,
+            'registered_barangay_voter',
+            [
+                'subrecord_table' => 'sociocivic',
+                'subrecord_owner' => 'resident_id',
+                'visible_when' => [
+                    'filter' => 'topics',
+                    'include_ids' => [3],
+                ],
+            ],
+        ),
+    ], ['also_default' => ['sociocivic_details']]),
 ];

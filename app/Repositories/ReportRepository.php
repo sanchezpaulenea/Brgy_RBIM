@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Models\ResidentManagement\Demographic\Sex;
 use App\Repositories\Interfaces\ReportRepositoryInterface;
 use App\Services\ReportSchema;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,7 +18,7 @@ class ReportRepository implements ReportRepositoryInterface
     /**
      * @return list<array{id: int, label: string}>
      */
-    public function getCategoryOptions(string $categoryKey, string $filterKey, ?string $search = null, bool $all = false): array
+    public function getCategoryOptions(string $categoryKey, string $filterKey, ?string $search = null, bool $all = false, ?string $mode = null): array
     {
         $filter = ReportSchema::filterDefinition(ReportSchema::category($categoryKey), $filterKey);
 
@@ -28,12 +29,18 @@ class ReportRepository implements ReportRepositoryInterface
         $modelClass = $filter['model'];
         $prototype = new $modelClass;
         $labelColumn = (string) $filter['label_column'];
+        $idColumn = (string) $filter['id_column'];
         $term = trim((string) $search);
+        $omit = is_array($filter['omit_sentinel_from'] ?? null) ? $filter['omit_sentinel_from'] : [];
+        $sentinelId = is_string($mode) && in_array($mode, $omit, true)
+            ? ReportSchema::sentinelId($filter)
+            : null;
 
         $options = $modelClass::query()
             ->when($term !== '', function (Builder $query) use ($labelColumn, $term): void {
                 $query->where($labelColumn, 'like', $this->likeContains($term));
             })
+            ->when($sentinelId !== null, fn (Builder $query) => $query->where($idColumn, '!=', $sentinelId))
             ->orderBy($labelColumn)
             ->when(! $all, fn (Builder $query) => $query->limit(ReportSchema::OPTION_LIMIT))
             ->get();
@@ -120,6 +127,7 @@ class ReportRepository implements ReportRepositoryInterface
             });
         }
 
+        $this->applyAudience($query, $category);
         $this->applySelectedRelations($query, $presented, $petConstraints, $relationConstraints);
         $this->applyCounts($query, $category, $filters, $presentedKeys, $petConstraints);
         $this->applySorts($query, $categoryKey, $filters, $selectedColumns, $petConstraints);
@@ -147,6 +155,10 @@ class ReportRepository implements ReportRepositoryInterface
     {
         $apply = (string) ($filter['apply'] ?? '');
 
+        if (($filter['type'] ?? '') === 'checks') {
+            return;
+        }
+
         if (($filter['type'] ?? '') === 'lookup') {
             $this->rememberRelationConstraint($filter, $state, $relationConstraints);
 
@@ -154,7 +166,13 @@ class ReportRepository implements ReportRepositoryInterface
                 return;
             }
 
-            $ids = $state['ids'];
+            $ids = ReportSchema::selectedLookupIds($filter, $state);
+
+            if ($ids === []) {
+                $query->whereRaw('0 = 1');
+
+                return;
+            }
 
             if ($apply === 'pet') {
                 $column = $this->assertIdent((string) $filter['column']);
@@ -209,7 +227,7 @@ class ReportRepository implements ReportRepositoryInterface
             return;
         }
 
-        $choice = ReportSchema::choice($filter, $state);
+        $choice = ReportSchema::resolveSentinelChoice($filter, ReportSchema::choice($filter, $state));
 
         if ($choice === [] || ($choice['op'] ?? 'any') === 'any') {
             return;
@@ -218,6 +236,18 @@ class ReportRepository implements ReportRepositoryInterface
         if ($apply === 'presence') {
             $this->ensureQuestionsJoin($query);
             $this->wherePresence($query, $filter, $choice);
+
+            return;
+        }
+
+        if ($apply === 'column_presence') {
+            $this->whereColumnPresence($query, $filter, $choice);
+
+            return;
+        }
+
+        if ($apply === 'voter') {
+            $this->whereVoter($query, $filter, (string) ($choice['op'] ?? ''));
 
             return;
         }
@@ -292,11 +322,148 @@ class ReportRepository implements ReportRepositoryInterface
         $owner = $this->assertIdent((string) ($filter['subrecord_owner'] ?? 'resident_id'));
         $root = $this->assertIdent($query->getModel()->getTable());
         $key = $this->assertIdent($query->getModel()->getKeyName());
+        $via = is_array($filter['subrecord_via'] ?? null) ? $filter['subrecord_via'] : null;
 
-        $query->whereIn($root.'.'.$key, function (QueryBuilder $sub) use ($table, $owner, $constrain): void {
-            $sub->select($table.'.'.$owner)->from($table);
+        $query->whereIn($root.'.'.$key, function (QueryBuilder $sub) use ($table, $owner, $constrain, $via): void {
+            $sub->from($table);
+
+            if ($via === null) {
+                $sub->select($table.'.'.$owner);
+            } else {
+                $viaTable = $this->assertIdent((string) $via['table']);
+                $from = $this->assertIdent((string) $via['from']);
+                $to = $this->assertIdent((string) $via['to']);
+                $viaOwner = $this->assertIdent((string) ($via['owner'] ?? $owner));
+
+                $sub->select($viaTable.'.'.$viaOwner)
+                    ->leftJoin($viaTable, $viaTable.'.'.$to, '=', $table.'.'.$from);
+            }
+
             $constrain($sub);
         });
+    }
+
+    /**
+     * Yes means the child column is present. No means the child row is missing
+     * or the column is null, so residents without that row stay in the report.
+     *
+     * @param  Builder<Model>  $query
+     * @param  array<string, mixed>  $filter
+     * @param  array<string, mixed>  $choice
+     */
+    private function whereColumnPresence(Builder $query, array $filter, array $choice): void
+    {
+        $table = $this->assertIdent((string) $filter['subrecord_table']);
+        $column = $this->assertIdent((string) $filter['column']);
+        $owner = $this->assertIdent((string) ($filter['subrecord_owner'] ?? 'resident_id'));
+        $root = $this->assertIdent($query->getModel()->getTable());
+        $key = $this->assertIdent($query->getModel()->getKeyName());
+
+        $present = function (QueryBuilder $sub) use ($table, $column, $owner, $root, $key): void {
+            $sub->selectRaw('1')
+                ->from($table)
+                ->whereColumn($table.'.'.$owner, $root.'.'.$key)
+                ->whereNotNull($table.'.'.$column)
+                ->whereRaw('trim('.$table.'.'.$column.') <> \'\'');
+        };
+
+        if (($choice['op'] ?? '') === 'missing_or_null') {
+            $query->whereNotExists($present);
+
+            return;
+        }
+
+        $query->whereExists($present);
+    }
+
+    /**
+     * A stored barangay name means registered. Blank, Yes, and No do not.
+     * Local registration matches the official barangay name from system settings.
+     *
+     * @param  Builder<Model>  $query
+     * @param  array<string, mixed>  $filter
+     */
+    private function whereVoter(Builder $query, array $filter, string $op): void
+    {
+        if (! in_array($op, ['voter_no', 'voter_yes', 'voter_local', 'voter_other'], true)) {
+            $query->whereRaw('0 = 1');
+
+            return;
+        }
+
+        $table = $this->assertIdent((string) $filter['subrecord_table']);
+        $column = $this->assertIdent((string) $filter['column']);
+        $owner = $this->assertIdent((string) ($filter['subrecord_owner'] ?? 'resident_id'));
+        $root = $this->assertIdent($query->getModel()->getTable());
+        $key = $this->assertIdent($query->getModel()->getKeyName());
+        $qualified = $table.'.'.$column;
+        $local = $this->localBarangayKey();
+        $normalized = 'trim(lower(case when lower(trim('.$qualified.')) like \'barangay %\' then substring(trim('.$qualified.'), 10) else trim('.$qualified.') end))';
+
+        $registered = function (QueryBuilder $sub) use ($table, $qualified, $owner, $root, $key): void {
+            $sub->selectRaw('1')
+                ->from($table)
+                ->whereColumn($table.'.'.$owner, $root.'.'.$key)
+                ->whereNotNull($qualified)
+                ->whereRaw('trim('.$qualified.') <> \'\'')
+                ->whereRaw('lower(trim('.$qualified.')) not in (\'yes\', \'no\')');
+        };
+
+        if ($op === 'voter_no') {
+            $query->whereNotExists($registered);
+
+            return;
+        }
+
+        $query->whereExists(function (QueryBuilder $sub) use ($registered, $op, $normalized, $local): void {
+            $registered($sub);
+
+            if ($op === 'voter_local') {
+                $sub->whereRaw($normalized.' = ?', [$local]);
+            }
+
+            if ($op === 'voter_other') {
+                $sub->whereRaw($normalized.' <> ?', [$local]);
+            }
+        });
+    }
+
+    /**
+     * Official barangay name with a leading "Barangay " removed, lowercased.
+     */
+    private function localBarangayKey(): string
+    {
+        $value = DB::table('system_setting')
+            ->where('setting_key', 'barangay_name')
+            ->value('setting_value');
+        $value = mb_strtolower(trim((string) $value));
+        $value = preg_replace('/^barangay\s+/u', '', $value) ?? $value;
+        $value = trim((string) preg_replace('/\s+/u', ' ', (string) $value));
+
+        return $value !== '' ? $value : 'happy hallow';
+    }
+
+    /**
+     * Infant and women reports keep every qualifying resident, including those
+     * with no child row. The child columns stay blank through eager loading.
+     *
+     * @param  Builder<Model>  $query
+     * @param  array<string, mixed>  $category
+     */
+    private function applyAudience(Builder $query, array $category): void
+    {
+        $audience = $category['audience'] ?? null;
+
+        if ($audience === 'infant') {
+            $query->whereRaw('timestampdiff(MONTH, `resident`.`date_of_birth`, curdate()) between 0 and 11');
+
+            return;
+        }
+
+        if ($audience === 'women') {
+            $query->where('resident.sex_id', Sex::FEMALE)
+                ->whereRaw('timestampdiff(YEAR, `resident`.`date_of_birth`, curdate()) between 10 and 54');
+        }
     }
 
     /**
@@ -354,8 +521,15 @@ class ReportRepository implements ReportRepositoryInterface
         $expression = $this->assertExpression($expression);
         $op = (string) ($choice['op'] ?? 'any');
 
-        if ($op === 'eq') {
-            $query->whereRaw($expression.' = ?', [$choice['operand']]);
+        if ($op === 'eq' || $op === 'neq') {
+            if (! is_numeric($choice['operand'] ?? null)) {
+                $query->whereRaw('0 = 1');
+
+                return;
+            }
+
+            $comparator = $op === 'eq' ? '=' : '<>';
+            $query->whereRaw($expression.' '.$comparator.' ?', [$choice['operand']]);
 
             return;
         }
@@ -768,8 +942,21 @@ class ReportRepository implements ReportRepositoryInterface
 
         $sub = DB::table($child)
             ->selectRaw('min('.$this->quote($lookupTable).'.'.$this->quote($lookupLabel).')')
-            ->leftJoin($lookupTable, $lookupTable.'.'.$lookupId, '=', $child.'.'.$childFk)
-            ->whereColumn($child.'.'.$owner, $root.'.'.$key);
+            ->leftJoin($lookupTable, $lookupTable.'.'.$lookupId, '=', $child.'.'.$childFk);
+
+        $viaTable = $sort['via_table'] ?? null;
+
+        if (is_string($viaTable) && $viaTable !== '') {
+            $via = $this->assertIdent($viaTable);
+            $from = $this->assertIdent((string) $sort['via_from']);
+            $to = $this->assertIdent((string) $sort['via_to']);
+            $viaOwner = $this->assertIdent((string) $sort['via_owner']);
+
+            $sub->leftJoin($via, $via.'.'.$to, '=', $child.'.'.$from)
+                ->whereColumn($via.'.'.$viaOwner, $root.'.'.$key);
+        } else {
+            $sub->whereColumn($child.'.'.$owner, $root.'.'.$key);
+        }
 
         $query->orderByRaw('COALESCE(('.$sub->toSql().'), ?) asc', [...$sub->getBindings(), 'Not Answered']);
     }

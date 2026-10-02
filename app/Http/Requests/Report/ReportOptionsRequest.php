@@ -33,6 +33,7 @@ class ReportOptionsRequest extends FormRequest
             'filter' => ['required', 'string'],
             'search' => ['nullable', 'string', 'max:100'],
             'all' => ['sometimes', 'boolean'],
+            'mode' => ['nullable', 'string', 'max:32'],
         ];
     }
 
@@ -64,6 +65,20 @@ class ReportOptionsRequest extends FormRequest
 
                 if (($filter['type'] ?? '') !== 'lookup') {
                     $validator->errors()->add('filter', 'This filter does not have a search list.');
+
+                    return;
+                }
+
+                $mode = $this->input('mode');
+
+                if (! is_string($mode) || $mode === '') {
+                    return;
+                }
+
+                $modes = $filter['modes'] ?? ['all', 'one', 'multiple'];
+
+                if (! in_array($mode, $modes, true)) {
+                    $validator->errors()->add('mode', 'Choose a filter option from the list.');
                 }
             },
         ];

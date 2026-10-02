@@ -1,13 +1,7 @@
 import http from '@/services/http';
-import { LOOKUP_UNSPECIFIED_ID } from '@/utils/residentForm';
 
-/**
- * Lookup tables carry a "Not Applicable" row at id 0 so that optional answers
- * can satisfy their NOT NULL foreign keys. It is a storage placeholder, not a
- * choice, so it never reaches a dropdown.
- */
 function selectable(items) {
-    return (items ?? []).filter((item) => Number(item.id) !== LOOKUP_UNSPECIFIED_ID);
+    return (items ?? []).filter((item) => Number(item.id) > 0);
 }
 
 export async function fetchPersonnelPositions() {

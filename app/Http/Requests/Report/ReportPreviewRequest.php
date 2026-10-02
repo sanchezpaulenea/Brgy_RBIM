@@ -190,6 +190,12 @@ class ReportPreviewRequest extends FormRequest
                 continue;
             }
 
+            if (($filter['type'] ?? '') === 'checks') {
+                $this->validateChecks($validator, $filter, $state);
+
+                continue;
+            }
+
             if (($filter['type'] ?? '') === 'range') {
                 $this->validateRange($validator, $filter, $state);
 
@@ -226,6 +232,16 @@ class ReportPreviewRequest extends FormRequest
 
         if ($mode === 'all' && $ids !== []) {
             $validator->errors()->add("filters.{$key}.ids", 'The all option does not take a specific selection.');
+
+            return;
+        }
+
+        $sentinelMode = $filter['sentinel_mode'] ?? null;
+
+        if (is_string($sentinelMode) && $mode === $sentinelMode) {
+            if ($ids !== []) {
+                $validator->errors()->add("filters.{$key}.ids", 'This option does not take a specific selection.');
+            }
 
             return;
         }
@@ -273,6 +289,64 @@ class ReportPreviewRequest extends FormRequest
 
         if (count($found) !== count($parsed)) {
             $validator->errors()->add("filters.{$key}.ids", 'One of the selected records does not exist.');
+
+            return;
+        }
+
+        $omit = is_array($filter['omit_sentinel_from'] ?? null) ? $filter['omit_sentinel_from'] : [];
+
+        if (! in_array($mode, $omit, true)) {
+            return;
+        }
+
+        $sentinelId = ReportSchema::sentinelId($filter);
+
+        if ($sentinelId !== null && in_array($sentinelId, $parsed, true)) {
+            $validator->errors()->add("filters.{$key}.ids", 'That option is not available for this selection.');
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     * @param  array<string, mixed>  $state
+     */
+    private function validateChecks(Validator $validator, array $filter, array $state): void
+    {
+        $key = (string) $filter['key'];
+        $allowed = [];
+
+        foreach ($filter['choices'] ?? [] as $choice) {
+            if (is_array($choice) && is_numeric($choice['value'] ?? null)) {
+                $allowed[] = (int) $choice['value'];
+            }
+        }
+
+        $ids = is_array($state['ids'] ?? null) ? $state['ids'] : [];
+
+        if ($ids === []) {
+            $validator->errors()->add("filters.{$key}.ids", 'Select at least one category.');
+
+            return;
+        }
+
+        $seen = [];
+
+        foreach ($ids as $id) {
+            if (! is_numeric($id) || ! in_array((int) $id, $allowed, true)) {
+                $validator->errors()->add("filters.{$key}.ids", 'Choose a category from the list.');
+
+                return;
+            }
+
+            $numeric = (int) $id;
+
+            if (isset($seen[$numeric])) {
+                $validator->errors()->add("filters.{$key}.ids", 'Each category can be selected only once.');
+
+                return;
+            }
+
+            $seen[$numeric] = true;
         }
     }
 
@@ -327,18 +401,16 @@ class ReportPreviewRequest extends FormRequest
         $min = $this->decimalBound($state['min'] ?? null, $scale, $minBound, $maxBound);
         $max = $this->decimalBound($state['max'] ?? null, $scale, $minBound, $maxBound);
 
+        $boundMessage = $scale === 0
+            ? 'Enter a whole number from '.$minBound.' to '.$maxBound.'.'
+            : 'Enter an amount from '.$minBound.' to '.$maxBound.' with up to '.$scale.' decimal places.';
+
         if ($min === false) {
-            $validator->errors()->add(
-                "filters.{$key}.min",
-                'Enter a minimum from '.$minBound.' to '.$maxBound.' with up to '.$scale.' decimal places.',
-            );
+            $validator->errors()->add("filters.{$key}.min", $boundMessage);
         }
 
         if ($max === false) {
-            $validator->errors()->add(
-                "filters.{$key}.max",
-                'Enter a maximum from '.$minBound.' to '.$maxBound.' with up to '.$scale.' decimal places.',
-            );
+            $validator->errors()->add("filters.{$key}.max", $boundMessage);
         }
 
         if ($min === false || $max === false || $min === null || $max === null) {
@@ -360,7 +432,11 @@ class ReportPreviewRequest extends FormRequest
             $value = (string) $value;
         }
 
-        if (! is_string($value) || preg_match('/^(?:0|[1-9]\d*)(?:\.\d{1,'.$scale.'})?$/', $value) !== 1) {
+        $pattern = $scale === 0
+            ? '/^(?:0|[1-9]\d*)$/'
+            : '/^(?:0|[1-9]\d*)(?:\.\d{1,'.$scale.'})?$/';
+
+        if (! is_string($value) || preg_match($pattern, $value) !== 1) {
             return false;
         }
 

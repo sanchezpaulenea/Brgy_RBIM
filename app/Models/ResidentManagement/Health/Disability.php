@@ -2,12 +2,15 @@
 
 namespace App\Models\ResidentManagement\Health;
 
+use App\Models\Concerns\ResolvesLookupSentinel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class Disability extends Model
 {
+    use ResolvesLookupSentinel;
+
     protected $table = 'disability';
 
     protected $primaryKey = 'disability_id';

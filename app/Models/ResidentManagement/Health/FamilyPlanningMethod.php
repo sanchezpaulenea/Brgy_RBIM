@@ -2,11 +2,14 @@
 
 namespace App\Models\ResidentManagement\Health;
 
+use App\Models\Concerns\ResolvesLookupSentinel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class FamilyPlanningMethod extends Model
 {
+    use ResolvesLookupSentinel;
+
     protected $table = 'family_planning_method';
 
     protected $primaryKey = 'family_planning_method_id';

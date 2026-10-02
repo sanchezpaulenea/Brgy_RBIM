@@ -8,7 +8,8 @@
 | Ordered column lists keyed by report level. A column source is an Eloquent
 | path from the level's root model. Optional format values:
 | value (default), count, person_name, person_names, yes_no, date, age,
-| pluck, records. is_group columns expand into their child columns.
+| pluck, records, na_zero. is_group columns expand into their child columns.
+| na_zero prints 0 as N/A and leaves a missing value blank.
 |
 */
 
@@ -544,6 +545,7 @@ return [
                     'key' => 'pwd_id_number',
                     'label' => 'PWD ID Number',
                     'source' => 'health.pwd_id_number',
+                    'format' => 'na_zero',
                 ],
                 [
                     'key' => 'place_of_delivery',
@@ -680,46 +682,63 @@ return [
                     'key' => 'pwd_id_number',
                     'label' => 'PWD ID Number',
                     'source' => 'health.pwd_id_number',
+                    'format' => 'na_zero',
                 ],
+            ],
+        ],
+        'infant_health_details' => [
+            'key' => 'infant_health_details',
+            'label' => "Household Member's Infant Health Details",
+            'source' => 'infantHealth',
+            'is_group' => true,
+            'columns' => [
                 [
                     'key' => 'place_of_delivery',
                     'label' => 'Place of Delivery',
-                    'source' => 'infantHealth.placeOfDelivery.place_of_delivery',
+                    'source' => 'placeOfDelivery.place_of_delivery',
                 ],
                 [
                     'key' => 'birth_attendant',
                     'label' => 'Birth Attendant',
-                    'source' => 'infantHealth.birthAttendant.birth_attendant',
+                    'source' => 'birthAttendant.birth_attendant',
                 ],
                 [
                     'key' => 'immunization',
                     'label' => 'Immunization',
-                    'source' => 'infantHealth.immunization.immunization',
+                    'source' => 'immunization.immunization',
                 ],
+            ],
+        ],
+        'women_health_details' => [
+            'key' => 'women_health_details',
+            'label' => "Household Member's Women Health Details",
+            'source' => 'health.womenHealth',
+            'is_group' => true,
+            'columns' => [
                 [
                     'key' => 'number_pregnancies',
                     'label' => 'Number of Pregnancies',
-                    'source' => 'health.womenHealth.number_pregnancies',
+                    'source' => 'number_pregnancies',
                 ],
                 [
                     'key' => 'living_children',
                     'label' => 'Living Children',
-                    'source' => 'health.womenHealth.living_children',
+                    'source' => 'living_children',
                 ],
                 [
                     'key' => 'family_planning_method',
                     'label' => 'Family Planning Method',
-                    'source' => 'health.womenHealth.familyPlanningMethod.family_planning_method',
+                    'source' => 'familyPlanningMethod.family_planning_method',
                 ],
                 [
                     'key' => 'source_of_fp_method',
                     'label' => 'Source of Family Planning Method',
-                    'source' => 'health.womenHealth.sourceOfFpMethod.source_of_fp_method',
+                    'source' => 'sourceOfFpMethod.source_of_fp_method',
                 ],
                 [
                     'key' => 'have_intention_to_use_fp',
                     'label' => 'Intention to Use Family Planning',
-                    'source' => 'health.womenHealth.have_intention_to_use_fp',
+                    'source' => 'have_intention_to_use_fp',
                     'format' => 'yes_no',
                 ],
             ],
@@ -746,6 +765,12 @@ return [
                     'source' => 'osca_id_number',
                 ],
                 [
+                    'key' => 'registered_senior_citizen',
+                    'label' => 'Registered Senior Citizen (via OSCA ID)',
+                    'source' => 'registeredSeniorViaOsca',
+                    'format' => 'yes_no',
+                ],
+                [
                     'key' => 'solo_parent_id_number',
                     'label' => 'Solo Parent ID Number',
                     'source' => 'solo_parent_id_number',
@@ -754,7 +779,6 @@ return [
                     'key' => 'registered_barangay_voter',
                     'label' => 'Registered Barangay Voter',
                     'source' => 'registered_barangay_voter',
-                    'format' => 'yes_no',
                 ],
             ],
         ],

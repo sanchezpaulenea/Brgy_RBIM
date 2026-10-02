@@ -110,30 +110,50 @@
                         </div>
                     </fieldset>
 
+                    <fieldset v-else-if="filter.type === 'checks'" class="space-y-3">
+                        <legend class="sr-only">{{ filter.label }}</legend>
+                        <p class="text-sm text-slate-500">
+                            Select one, two, or all three. Each selected category shows its own filter, and those filters apply together.
+                        </p>
+                        <label
+                            v-for="choice in filter.choices"
+                            :key="choice.value"
+                            class="flex items-center gap-2 text-sm text-slate-700"
+                        >
+                            <input
+                                type="checkbox"
+                                class="text-brand focus:ring-brand"
+                                :checked="filterState[filter.key]?.ids.includes(Number(choice.value))"
+                                @change="toggleChecked(filter.key, choice.value)"
+                            >
+                            {{ choice.label }}
+                        </label>
+                    </fieldset>
+
                     <fieldset v-else-if="filter.type === 'range'" class="space-y-3">
                         <legend class="sr-only">{{ filter.label }}</legend>
                         <div class="grid max-w-md grid-cols-1 gap-3 sm:grid-cols-2">
                             <div>
-                                <label class="rbim-label" :for="`report-filter-${filter.key}-min`">Minimum</label>
+                                <label class="rbim-label" :for="`report-filter-${filter.key}-min`">{{ Number(filter.scale) === 0 ? 'Minimum threshold' : 'Minimum' }}</label>
                                 <input
                                     :id="`report-filter-${filter.key}-min`"
                                     v-model="filterState[filter.key].min"
                                     type="number"
-                                    inputmode="decimal"
-                                    step="0.01"
+                                    :inputmode="Number(filter.scale) === 0 ? 'numeric' : 'decimal'"
+                                    :step="Number(filter.scale) === 0 ? '1' : '0.01'"
                                     min="0"
                                     class="rbim-input"
                                     :max="filter.max_bound ?? undefined"
                                 >
                             </div>
                             <div>
-                                <label class="rbim-label" :for="`report-filter-${filter.key}-max`">Maximum</label>
+                                <label class="rbim-label" :for="`report-filter-${filter.key}-max`">{{ Number(filter.scale) === 0 ? 'Maximum threshold' : 'Maximum' }}</label>
                                 <input
                                     :id="`report-filter-${filter.key}-max`"
                                     v-model="filterState[filter.key].max"
                                     type="number"
-                                    inputmode="decimal"
-                                    step="0.01"
+                                    :inputmode="Number(filter.scale) === 0 ? 'numeric' : 'decimal'"
+                                    :step="Number(filter.scale) === 0 ? '1' : '0.01'"
                                     min="0"
                                     class="rbim-input"
                                     :max="filter.max_bound ?? undefined"
@@ -496,6 +516,12 @@ function blankFilters(category) {
     const next = {};
 
     (category.filters ?? []).forEach((filter) => {
+        if (filter.type === 'checks') {
+            next[filter.key] = { mode: 'multiple', ids: [], value: '', min: '', max: '' };
+
+            return;
+        }
+
         next[filter.key] = {
             mode: filter.type === 'lookup' ? 'all' : (filter.type === 'range' ? 'bounds' : (filter.choices?.[0]?.value ?? '')),
             ids: [],
@@ -616,7 +642,8 @@ async function loadOptions(filterKey, search, all) {
     }
 
     try {
-        const items = await fetchReportOptions(selectedCategory.value.key, filterKey, search, all);
+        const mode = filterState.value[filterKey]?.mode ?? null;
+        const items = await fetchReportOptions(selectedCategory.value.key, filterKey, search, all, mode);
         optionResults.value = {
             ...optionResults.value,
             [filterKey]: items,
@@ -658,6 +685,44 @@ function filterIsVisible(filter) {
         return false;
     }
 
+    if (rule.unless_sentinel) {
+        if (other.mode === 'all') {
+            return true;
+        }
+
+        if (rule.sentinel_mode && other.mode === rule.sentinel_mode) {
+            return false;
+        }
+
+        if (!other.ids.length) {
+            return false;
+        }
+
+        const sentinelId = Number(rule.sentinel_id);
+
+        return other.ids.some((id) => Number(id) !== sentinelId);
+    }
+
+    if (Array.isArray(rule.include_ids)) {
+        const needed = new Set(rule.include_ids.map((id) => Number(id)));
+
+        return other.ids.some((id) => needed.has(Number(id)));
+    }
+
+    if (rule.only_sentinel) {
+        if (rule.sentinel_mode && other.mode === rule.sentinel_mode) {
+            return true;
+        }
+
+        if (other.mode !== 'one' && other.mode !== 'multiple' || !other.ids.length) {
+            return false;
+        }
+
+        const sentinelId = Number(rule.sentinel_id);
+
+        return other.ids.every((id) => Number(id) === sentinelId);
+    }
+
     if (Array.isArray(rule.lookup_ids)) {
         if (other.mode === 'all' || !other.ids.length) {
             return false;
@@ -678,7 +743,8 @@ function decimalText(value, scale) {
         return null;
     }
 
-    const pattern = new RegExp(`^(?:0|[1-9]\\d*)(?:\\.\\d{1,${scale}})?$`);
+    const fractionPattern = scale > 0 ? `(?:\\.\\d{1,${scale}})?` : '';
+    const pattern = new RegExp(`^(?:0|[1-9]\\d*)${fractionPattern}$`);
 
     if (!pattern.test(text)) {
         return false;
@@ -704,6 +770,10 @@ function rangeProblem(filter) {
     const ceiling = decimalText(String(filter.max_bound ?? ''), scale);
 
     if (min === false || max === false) {
+        if (scale === 0) {
+            return `Enter a whole number from ${filter.min_bound ?? 0} to ${filter.max_bound}.`;
+        }
+
         return `Enter an amount from ${filter.min_bound ?? 0} to ${filter.max_bound} with up to ${scale} decimal places.`;
     }
 
@@ -737,8 +807,12 @@ function filterIsReady(filter) {
         return rangeProblem(filter) === '';
     }
 
+    if (filter.type === 'checks') {
+        return state.ids.length > 0;
+    }
+
     if (filter.type === 'lookup') {
-        if (state.mode === 'all') {
+        if (state.mode === 'all' || (filter.sentinel_mode && state.mode === filter.sentinel_mode)) {
             return true;
         }
 
@@ -768,7 +842,7 @@ function isSingular(filter) {
     }
 
     if (filter.type === 'lookup') {
-        if (state.mode === 'one') {
+        if (state.mode === 'one' || (filter.sentinel_mode && state.mode === filter.sentinel_mode)) {
             return true;
         }
 
@@ -801,10 +875,12 @@ function filterPayload(page) {
         const state = filterState.value[filter.key] ?? { mode: 'all', ids: [], value: '', min: '', max: '' };
         const choice = numericChoice(filter);
         const visible = filterIsVisible(filter);
+        const sendsIds = filter.type === 'checks'
+            || (filter.type === 'lookup' && state.mode !== 'all' && state.mode !== filter.sentinel_mode);
 
         filters[filter.key] = {
             mode: visible ? state.mode : (filter.type === 'lookup' ? 'all' : (filter.choices?.[0]?.value ?? 'all')),
-            ids: visible && filter.type === 'lookup' && state.mode !== 'all' ? state.ids.map(Number) : [],
+            ids: visible && sendsIds ? state.ids.map(Number) : [],
             value: visible && choice ? Number(state.value) : null,
             min: visible && filter.type === 'range' && state.min !== '' ? state.min : null,
             max: visible && filter.type === 'range' && state.max !== '' ? state.max : null,

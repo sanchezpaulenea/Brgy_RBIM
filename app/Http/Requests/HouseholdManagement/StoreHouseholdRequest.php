@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\HouseholdManagement;
 
-use App\Http\Requests\Concerns\MapsUnspecifiedLookups;
 use App\Http\Requests\HouseholdManagement\Concerns\NormalizesHouseholdAddress;
 use App\Rules\ValidPersonnelName;
 use App\Rules\ValidPlaceName;
@@ -15,7 +14,6 @@ use Throwable;
 
 class StoreHouseholdRequest extends FormRequest
 {
-    use MapsUnspecifiedLookups;
     use NormalizesHouseholdAddress;
 
     public function authorize(): bool
@@ -34,12 +32,6 @@ class StoreHouseholdRequest extends FormRequest
 
         if (! is_array($head)) {
             return;
-        }
-
-        foreach (['nationality_id', 'religion_id', 'ethnicity_id'] as $field) {
-            if (! array_key_exists($field, $head) || $head[$field] === null || $head[$field] === '') {
-                $head[$field] = 0;
-            }
         }
 
         $this->merge([
@@ -89,9 +81,9 @@ class StoreHouseholdRequest extends FormRequest
             'head.birth_city_municipality' => ['required', 'string', 'max:45', new ValidPlaceName('City / municipality of birth')],
             'head.birth_province' => ['required', 'string', 'max:45', new ValidPlaceName('Province of birth')],
             'head.birth_country' => ['required', 'string', 'max:45', new ValidPlaceName('Country of birth')],
-            'head.nationality_id' => $this->unspecifiedLookupRule('nationality', 'nationality_id', 'head.nationality_id'),
-            'head.religion_id' => $this->unspecifiedLookupRule('religion', 'religion_id', 'head.religion_id'),
-            'head.ethnicity_id' => $this->unspecifiedLookupRule('ethnicity', 'ethnicity_id', 'head.ethnicity_id'),
+            'head.nationality_id' => ['nullable', 'integer', Rule::exists('nationality', 'nationality_id')],
+            'head.religion_id' => ['nullable', 'integer', Rule::exists('religion', 'religion_id')],
+            'head.ethnicity_id' => ['nullable', 'integer', Rule::exists('ethnicity', 'ethnicity_id')],
             'head.marital_status_id' => ['required', 'integer', Rule::exists('marital_status', 'marital_status_id')],
             'head.clan_id' => ['sometimes', 'integer', Rule::exists('clan', 'clan_id')],
             'head.resident_status_id' => [

@@ -23,12 +23,12 @@ class PrepareRbimDatabase extends Command
      * INT NOT NULL with a foreign key, and the application stores 0 to mean
      * "this question does not apply to the resident".
      *
+     * Nationality, religion, and ethnicity are omitted: resident stores a
+     * skipped answer as NULL, not as id 0.
+     *
      * @var array<string, string>
      */
     private const NOT_APPLICABLE_LOOKUPS = [
-        'nationality' => 'Not Applicable',
-        'religion' => 'Not Applicable',
-        'ethnicity' => 'Not Applicable',
         'status_of_work_business' => 'Not Applicable',
         'health_insurance' => 'Not Applicable',
         'facility_visited_past_12mos' => 'Not Applicable',

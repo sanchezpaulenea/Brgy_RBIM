@@ -41,6 +41,7 @@ class ReportController extends Controller
                 $request->string('filter')->toString(),
                 $request->validated('search'),
                 $request->boolean('all'),
+                $request->validated('mode'),
             ),
         ]);
     }

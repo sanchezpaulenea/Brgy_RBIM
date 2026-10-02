@@ -47,11 +47,11 @@ class ReportService
     /**
      * @return list<array{id: int, label: string}>
      */
-    public function getFilterOptions(string $key, string $filterKey, ?string $search, bool $all = false): array
+    public function getFilterOptions(string $key, string $filterKey, ?string $search, bool $all = false, ?string $mode = null): array
     {
         $this->getCategoryDefinition($key);
 
-        return $this->reportRepository->getCategoryOptions($key, $filterKey, $search, $all);
+        return $this->reportRepository->getCategoryOptions($key, $filterKey, $search, $all, $mode);
     }
 
     /**
@@ -437,6 +437,10 @@ class ReportService
                 }
 
                 $public['modes'] = $modes;
+
+                if (is_string($filter['sentinel_mode'] ?? null) && $filter['sentinel_mode'] !== '') {
+                    $public['sentinel_mode'] = $filter['sentinel_mode'];
+                }
             } elseif (($filter['type'] ?? '') === 'range') {
                 $public['scale'] = (int) ($filter['scale'] ?? 2);
                 $public['min_bound'] = $filter['min_bound'] ?? 0;
@@ -464,11 +468,33 @@ class ReportService
 
             if (is_array($filter['visible_when'] ?? null)) {
                 $when = $filter['visible_when'];
-                $public['visible_when'] = array_filter([
+                $visibleWhen = array_filter([
                     'filter' => $when['filter'] ?? null,
                     'except_modes' => $when['except_modes'] ?? null,
                     'lookup_ids' => $when['lookup_ids'] ?? null,
+                    'include_ids' => $when['include_ids'] ?? null,
                 ], fn (mixed $value): bool => $value !== null);
+
+                $sentinelGate = match (true) {
+                    ($when['unless_sentinel'] ?? false) === true => 'unless_sentinel',
+                    ($when['only_sentinel'] ?? false) === true => 'only_sentinel',
+                    default => null,
+                };
+
+                if ($sentinelGate !== null && is_string($when['filter'] ?? null)) {
+                    $visibleWhen[$sentinelGate] = true;
+
+                    try {
+                        $other = ReportSchema::filterDefinition($category, $when['filter']);
+                        $visibleWhen['sentinel_mode'] = $other['sentinel_mode'] ?? null;
+                        $visibleWhen['sentinel_id'] = ReportSchema::sentinelId($other);
+                    } catch (\InvalidArgumentException) {
+                        $visibleWhen['sentinel_mode'] = null;
+                        $visibleWhen['sentinel_id'] = null;
+                    }
+                }
+
+                $public['visible_when'] = $visibleWhen;
             }
 
             $filters[] = $public;
@@ -544,6 +570,7 @@ class ReportService
             'money' => $this->money($target),
             'person_names' => $this->personNames($target),
             'yes_no' => $this->yesNo($target),
+            'na_zero' => $this->naZero($target),
             'date' => $this->formatDate($target),
             'age' => $target instanceof Model && method_exists($target, 'age') ? $target->age() : null,
             'pluck' => $this->pluckList($target, (string) ($column['pluck'] ?? '')),
@@ -678,6 +705,22 @@ class ReportService
         }
 
         return filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'Yes' : 'No';
+    }
+
+    /**
+     * A stored 0 is the not-applicable sentinel. A missing value stays blank.
+     */
+    private function naZero(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if ($value === 0 || $value === '0') {
+            return 'N/A';
+        }
+
+        return (string) $value;
     }
 
     private function formatDate(mixed $value): ?string

@@ -156,14 +156,8 @@ export function toId(value) {
     return Number.isInteger(number) && number > 0 ? number : null;
 }
 
-/**
- * Nationality, religion, and ethnicity columns are NOT NULL behind a foreign
- * key, so a blank answer is saved as the "Not Applicable" lookup row at id 0.
- */
-export const LOOKUP_UNSPECIFIED_ID = 0;
-
 export function toOptionalLookupId(value) {
-    return toId(value) ?? LOOKUP_UNSPECIFIED_ID;
+    return toId(value);
 }
 
 export function assignResidentNameError(form, errors, field, label, required = false) {

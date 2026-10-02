@@ -85,12 +85,6 @@ class ResidentServices
         $data['clan_id'] = $data['clan_id'] ?? $household->clan_id;
         $data['resident_status_id'] = $data['resident_status_id'] ?? ResidentStatus::ACTIVE;
 
-        foreach (Resident::OPTIONAL_LOOKUP_FIELDS as $field) {
-            if (! array_key_exists($field, $data) || $data[$field] === null || $data[$field] === '') {
-                $data[$field] = Resident::LOOKUP_UNSPECIFIED;
-            }
-        }
-
         return DB::transaction(function () use ($performedBy, $data, $household) {
             $this->assertNotAlreadyRegistered($household, $data);
 
@@ -430,9 +424,9 @@ class ResidentServices
             'birth city' => (string) $resident->birth_city_municipality,
             'birth province' => (string) $resident->birth_province,
             'birth country' => (string) $resident->birth_country,
-            'nationality' => (string) ($resident->nationality?->nationality ?? $resident->nationality_id),
-            'religion' => (string) ($resident->religion?->religion ?? $resident->religion_id),
-            'ethnicity' => (string) ($resident->ethnicity?->ethnicity ?? $resident->ethnicity_id),
+            'nationality' => (string) ($resident->nationality?->nationality ?? ''),
+            'religion' => (string) ($resident->religion?->religion ?? ''),
+            'ethnicity' => (string) ($resident->ethnicity?->ethnicity ?? ''),
             'marital status' => (string) ($resident->maritalStatus?->marital_status ?? $resident->marital_status_id),
             'clan' => (string) ($resident->clan?->clan_name ?? $resident->clan_id),
             'status' => (string) ($resident->status?->resident_status ?? $resident->resident_status_id),

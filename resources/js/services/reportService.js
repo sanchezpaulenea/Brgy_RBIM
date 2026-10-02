@@ -6,13 +6,14 @@ export async function fetchReportCategories() {
     return data.categories ?? [];
 }
 
-export async function fetchReportOptions(category, filter, search = '', all = false) {
+export async function fetchReportOptions(category, filter, search = '', all = false, mode = null) {
     const { data } = await http.get('/reports/options', {
         params: {
             category,
             filter,
             search: search || undefined,
             all: all ? 1 : undefined,
+            mode: mode || undefined,
         },
     });
 

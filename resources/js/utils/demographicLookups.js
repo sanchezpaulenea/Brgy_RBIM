@@ -1,6 +1,6 @@
 import { extractErrorMessage } from '@/services/http';
 import * as lookupService from '@/services/lookupService';
-import { LOOKUP_UNSPECIFIED_ID, toId } from '@/utils/residentForm';
+import { toId } from '@/utils/residentForm';
 
 export const REGISTER_HOUSEHOLD_LOOKUP_IDS = [1, 2, 3, 4, 5];
 export const REGISTER_HOUSEHOLD_LOOKUP_LIMIT = 5;
@@ -25,7 +25,7 @@ export async function ensureLookupId({
 
     if (!term) {
         if (optional) {
-            return LOOKUP_UNSPECIFIED_ID;
+            return null;
         }
 
         throw new Error(requiredMessage);

@@ -299,6 +299,34 @@ class ReportSchema
             return false;
         }
 
+        if (($when['unless_sentinel'] ?? false) === true) {
+            return self::passesUnlessSentinel($category, $when, $filterInput);
+        }
+
+        if (($when['only_sentinel'] ?? false) === true) {
+            try {
+                $other = self::filterDefinition($category, (string) ($when['filter'] ?? ''));
+            } catch (InvalidArgumentException) {
+                return false;
+            }
+
+            return self::selectionIsOnlySentinel($other, $state);
+        }
+
+        $include = $when['include_ids'] ?? null;
+
+        if (is_array($include)) {
+            $needed = array_map(intval(...), $include);
+
+            foreach ($state['ids'] as $id) {
+                if (in_array($id, $needed, true)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         $allowed = $when['lookup_ids'] ?? null;
 
         if (! is_array($allowed)) {
@@ -321,6 +349,122 @@ class ReportSchema
     }
 
     /**
+     * Facility visit reason stays hidden while the facility filter is None,
+     * or while a specific facility has not been chosen yet.
+     *
+     * @param  array<string, mixed>  $category
+     * @param  array<string, mixed>  $when
+     * @param  array<string, mixed>  $filterInput
+     */
+    public static function passesUnlessSentinel(array $category, array $when, array $filterInput): bool
+    {
+        try {
+            $other = self::filterDefinition($category, (string) ($when['filter'] ?? ''));
+        } catch (InvalidArgumentException) {
+            return false;
+        }
+
+        $state = self::filterState($filterInput, (string) ($when['filter'] ?? ''));
+
+        if ($state['mode'] === 'all') {
+            return true;
+        }
+
+        if (self::isSentinelMode($other, $state) || self::selectionIsOnlySentinel($other, $state)) {
+            return false;
+        }
+
+        return in_array($state['mode'], ['one', 'multiple'], true) && $state['ids'] !== [];
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     * @param  array{mode: string, ids: list<int>, value: int|string|null}  $state
+     */
+    public static function isSentinelMode(array $filter, array $state): bool
+    {
+        $mode = $filter['sentinel_mode'] ?? null;
+
+        return is_string($mode) && $mode !== '' && $state['mode'] === $mode;
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     */
+    public static function sentinelId(array $filter): ?int
+    {
+        $model = $filter['model'] ?? $filter['sentinel_model'] ?? null;
+
+        if (! is_string($model) || ! method_exists($model, 'noneId')) {
+            return null;
+        }
+
+        $id = $model::noneId();
+
+        return is_numeric($id) ? (int) $id : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     * @param  array{mode: string, ids: list<int>, value: int|string|null}  $state
+     * @return list<int>
+     */
+    public static function selectedLookupIds(array $filter, array $state): array
+    {
+        if (! self::isSentinelMode($filter, $state)) {
+            return $state['ids'];
+        }
+
+        $id = self::sentinelId($filter);
+
+        return $id === null ? [] : [$id];
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     * @param  array{mode: string, ids: list<int>, value: int|string|null}  $state
+     */
+    public static function selectionIsOnlySentinel(array $filter, array $state): bool
+    {
+        if (self::isSentinelMode($filter, $state)) {
+            return true;
+        }
+
+        $id = self::sentinelId($filter);
+
+        if ($id === null || ! in_array($state['mode'], ['one', 'multiple'], true) || $state['ids'] === []) {
+            return false;
+        }
+
+        foreach ($state['ids'] as $selected) {
+            if ($selected !== $id) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     * @param  array<string, mixed>  $choice
+     * @return array<string, mixed>
+     */
+    public static function resolveSentinelChoice(array $filter, array $choice): array
+    {
+        $op = (string) ($choice['op'] ?? '');
+
+        if ($op !== 'is_sentinel' && $op !== 'not_sentinel') {
+            return $choice;
+        }
+
+        $choice['op'] = $op === 'is_sentinel' ? 'eq' : 'neq';
+        $choice['operand'] = self::sentinelId($filter);
+
+        return $choice;
+    }
+
+    /**
      * True when the sub-filter resolves to exactly one value.
      *
      * @param  array<string, mixed>  $filter
@@ -333,7 +477,7 @@ class ReportSchema
         }
 
         if (($filter['type'] ?? '') === 'lookup') {
-            if ($state['mode'] === 'one') {
+            if ($state['mode'] === 'one' || self::isSentinelMode($filter, $state)) {
                 return true;
             }
 

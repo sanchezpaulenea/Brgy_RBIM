@@ -12,7 +12,7 @@ interface ReportRepositoryInterface
      *
      * @return list<array{id: int, label: string}>
      */
-    public function getCategoryOptions(string $categoryKey, string $filterKey, ?string $search = null, bool $all = false): array;
+    public function getCategoryOptions(string $categoryKey, string $filterKey, ?string $search = null, bool $all = false, ?string $mode = null): array;
 
     /**
      * Labels for the selected lookup ids, in the given id order.
