@@ -111,7 +111,7 @@ class ReportSchema
 
                 if (self::isSingular($filter, $state)) {
                     $hidden[$owned] = true;
-                } else {
+                } elseif (($filter['force_owned'] ?? true) !== false) {
                     $forced[$owned] = true;
                 }
             }

@@ -36,7 +36,15 @@ class ReportRepository implements ReportRepositoryInterface
             ? ReportSchema::sentinelId($filter)
             : null;
 
+        $idColumn = $this->assertIdent($idColumn);
+        $labelColumn = $this->assertIdent($labelColumn);
+        $distinctLabel = ($filter['distinct_label'] ?? false) === true;
+
         $options = $modelClass::query()
+            ->when($distinctLabel, function (Builder $query) use ($idColumn, $labelColumn): void {
+                $query->selectRaw('min('.$this->quote($idColumn).') as '.$this->quote($idColumn).', '.$this->quote($labelColumn))
+                    ->groupBy($labelColumn);
+            })
             ->when($term !== '', function (Builder $query) use ($labelColumn, $term): void {
                 $query->where($labelColumn, 'like', $this->likeContains($term));
             })
@@ -194,7 +202,17 @@ class ReportRepository implements ReportRepositoryInterface
                 $this->whereChildRows($query, $filter, function (QueryBuilder $sub) use ($filter, $ids): void {
                     $table = $this->assertIdent((string) $filter['subrecord_table']);
                     $column = $this->assertIdent((string) $filter['column']);
-                    $sub->whereIn($table.'.'.$column, $ids);
+                    $values = ($filter['distinct_label'] ?? false) === true
+                        ? $this->labelsForIds($filter, $ids)
+                        : $ids;
+
+                    if ($values === []) {
+                        $sub->whereRaw('0 = 1');
+
+                        return;
+                    }
+
+                    $sub->whereIn($table.'.'.$column, $values);
                 });
 
                 return;
@@ -206,7 +224,17 @@ class ReportRepository implements ReportRepositoryInterface
         }
 
         if (($filter['type'] ?? '') === 'range') {
-            if (ReportSchema::isAll($filter, $state) || $apply !== 'subrecord') {
+            if (ReportSchema::isAll($filter, $state)) {
+                return;
+            }
+
+            if ($apply === 'age') {
+                $this->whereCompletedAge($query, $state);
+
+                return;
+            }
+
+            if ($apply !== 'subrecord') {
                 return;
             }
 
@@ -444,8 +472,8 @@ class ReportRepository implements ReportRepositoryInterface
     }
 
     /**
-     * Infant and women reports keep every qualifying resident, including those
-     * with no child row. The child columns stay blank through eager loading.
+     * Age-gated reports keep every qualifying resident, including those with
+     * no child row. The child columns stay blank through eager loading.
      *
      * @param  Builder<Model>  $query
      * @param  array<string, mixed>  $category
@@ -463,6 +491,38 @@ class ReportRepository implements ReportRepositoryInterface
         if ($audience === 'women') {
             $query->where('resident.sex_id', Sex::FEMALE)
                 ->whereRaw('timestampdiff(YEAR, `resident`.`date_of_birth`, curdate()) between 10 and 54');
+
+            return;
+        }
+
+        if ($audience === 'ctc') {
+            $query->whereRaw('timestampdiff(YEAR, `resident`.`date_of_birth`, curdate()) >= 18');
+
+            return;
+        }
+
+        if ($audience === 'skills') {
+            $query->whereRaw('timestampdiff(YEAR, `resident`.`date_of_birth`, curdate()) >= 15');
+        }
+    }
+
+    /**
+     * Completed years, the same year count Resident::canHaveCtc() and
+     * canHaveSkills() use. A bound excludes a resident with no date of birth.
+     *
+     * @param  Builder<Model>  $query
+     * @param  array{min: ?string, max: ?string}  $state
+     */
+    private function whereCompletedAge(Builder $query, array $state): void
+    {
+        $expression = 'timestampdiff(YEAR, `resident`.`date_of_birth`, curdate())';
+
+        if ($state['min'] !== null) {
+            $query->whereRaw($expression.' >= ?', [(int) $state['min']]);
+        }
+
+        if ($state['max'] !== null) {
+            $query->whereRaw($expression.' <= ?', [(int) $state['max']]);
         }
     }
 
@@ -663,6 +723,15 @@ class ReportRepository implements ReportRepositoryInterface
                 continue;
             }
 
+            if ($path === 'skillsDevelopments') {
+                $with['skillsDevelopments'] = function ($skills): void {
+                    $skills->orderByRaw('(select `skill_type` from `skill_type` where `skill_type`.`skill_type_id` = `skills_development`.`skill_type_id`) asc')
+                        ->orderBy('skills_development_id');
+                };
+
+                continue;
+            }
+
             if ($path === 'pets') {
                 $with['pets'] = function ($pets) use ($petConstraints): void {
                     foreach ($petConstraints as $apply) {
@@ -820,6 +889,12 @@ class ReportRepository implements ReportRepositoryInterface
 
             if ($type === 'child_lookup') {
                 $this->applyChildLookupSort($query, $sort);
+
+                continue;
+            }
+
+            if ($type === 'child_column') {
+                $this->applyChildColumnSort($query, $sort);
             }
         }
     }
@@ -959,6 +1034,51 @@ class ReportRepository implements ReportRepositoryInterface
         }
 
         $query->orderByRaw('COALESCE(('.$sub->toSql().'), ?) asc', [...$sub->getBindings(), 'Not Answered']);
+    }
+
+    /**
+     * One text value per resident, taken from the child row. MIN keeps a single
+     * report row when a resident has more than one child record.
+     *
+     * @param  Builder<Model>  $query
+     * @param  array<string, mixed>  $sort
+     */
+    private function applyChildColumnSort(Builder $query, array $sort): void
+    {
+        $child = $this->assertIdent((string) $sort['child_table']);
+        $owner = $this->assertIdent((string) $sort['child_owner']);
+        $column = $this->assertIdent((string) $sort['column']);
+        $root = $this->assertIdent($query->getModel()->getTable());
+        $key = $this->assertIdent($query->getModel()->getKeyName());
+
+        $sub = DB::table($child)
+            ->selectRaw('min('.$this->quote($child).'.'.$this->quote($column).')')
+            ->whereColumn($child.'.'.$owner, $root.'.'.$key);
+
+        $query->orderByRaw('COALESCE(('.$sub->toSql().'), ?) asc', [...$sub->getBindings(), 'Not Answered']);
+    }
+
+    /**
+     * Selected option ids stand for the label text, so every resident with that
+     * same training name matches, not only the row that supplied the id.
+     *
+     * @param  array<string, mixed>  $filter
+     * @param  list<int>  $ids
+     * @return list<string>
+     */
+    private function labelsForIds(array $filter, array $ids): array
+    {
+        $modelClass = $filter['model'];
+        $idColumn = $this->assertIdent((string) $filter['id_column']);
+        $labelColumn = $this->assertIdent((string) $filter['label_column']);
+
+        return $modelClass::query()
+            ->whereIn($idColumn, $ids)
+            ->pluck($labelColumn)
+            ->map(fn (mixed $label): string => (string) $label)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /**

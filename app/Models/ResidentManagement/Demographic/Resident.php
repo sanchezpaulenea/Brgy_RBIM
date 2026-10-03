@@ -15,6 +15,7 @@ use App\Models\ResidentManagement\Skill\SkillsDevelopment;
 use App\Models\ResidentManagement\Sociocivic\Sociocivic;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
@@ -457,5 +458,13 @@ class Resident extends Model
     public function skillsDevelopment(): HasOne
     {
         return $this->hasOne(SkillsDevelopment::class, 'resident_id', 'resident_id');
+    }
+
+    /**
+     * @return HasMany<SkillsDevelopment, $this>
+     */
+    public function skillsDevelopments(): HasMany
+    {
+        return $this->hasMany(SkillsDevelopment::class, 'resident_id', 'resident_id');
     }
 }

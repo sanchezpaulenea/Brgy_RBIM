@@ -19,6 +19,7 @@ use App\Models\ResidentManagement\Demographic\MaritalStatus;
 use App\Models\ResidentManagement\Demographic\Nationality;
 use App\Models\ResidentManagement\Demographic\Religion;
 use App\Models\ResidentManagement\Demographic\ResidentStatus;
+use App\Models\ResidentManagement\Demographic\ResidentType;
 use App\Models\ResidentManagement\Demographic\Sex;
 use App\Models\ResidentManagement\Economic\Economic;
 use App\Models\ResidentManagement\Economic\SourceOfIncome;
@@ -35,6 +36,10 @@ use App\Models\ResidentManagement\Health\HealthInsurance;
 use App\Models\ResidentManagement\Health\Immunization;
 use App\Models\ResidentManagement\Health\PlaceOfDelivery;
 use App\Models\ResidentManagement\Health\SourceOfFPMethod;
+use App\Models\ResidentManagement\Migration\ReasonForLeaving;
+use App\Models\ResidentManagement\Migration\ReasonForTransfer;
+use App\Models\ResidentManagement\Skill\SkillsDevelopment;
+use App\Models\ResidentManagement\Skill\SkillType;
 use App\Models\ResidentManagement\Sociocivic\SoloParentStatus;
 
 /*
@@ -166,6 +171,8 @@ $lookup = static function (
         'constrain_column' => $extra['constrain_column'] ?? null,
         'constrain_order' => $extra['constrain_order'] ?? null,
         'mode_labels' => $extra['mode_labels'] ?? null,
+        'distinct_label' => $extra['distinct_label'] ?? false,
+        'force_owned' => $extra['force_owned'] ?? null,
         'sentinel_mode' => $extra['sentinel_mode'] ?? null,
         'omit_sentinel_from' => $extra['omit_sentinel_from'] ?? [],
         'subrecord_table' => $extra['subrecord_table'] ?? null,
@@ -203,6 +210,7 @@ $choices = static function (
         'subrecord_via' => $extra['subrecord_via'] ?? null,
         'visible_when' => $extra['visible_when'] ?? null,
         'sentinel_model' => $extra['sentinel_model'] ?? null,
+        'force_owned' => $extra['force_owned'] ?? null,
     ];
 };
 
@@ -210,6 +218,7 @@ $category = static function (string $label, array $filters, array $extra = []) u
     return [
         'level' => $extra['level'] ?? 'household',
         'label' => $label,
+        'fixed_title' => $extra['fixed_title'] ?? null,
         'header' => $extra['header'] ?? null,
         'questions' => $extra['questions'] ?? false,
         'audience' => $extra['audience'] ?? null,
@@ -266,6 +275,7 @@ $residentExtras = [
     'women_health_details',
     'sociocivic_details',
     'migration_details',
+    'ctc_details',
     'skills_details',
 ];
 
@@ -280,6 +290,7 @@ $residentCategory = static function (string $label, array $filters, array $extra
         'level' => 'resident',
         'header' => $extra['header'] ?? 'Total Resident Records',
         'audience' => $extra['audience'] ?? null,
+        'fixed_title' => $extra['fixed_title'] ?? null,
         'default_columns' => $defaults,
         'extra_columns' => $residentExtras,
     ]);
@@ -362,6 +373,18 @@ $typeModes = [
     'all' => 'All Types',
     'one' => 'Per Type',
     'multiple' => 'Select 1 or More Types',
+];
+
+$skillModes = [
+    'all' => 'All Skills',
+    'one' => 'Per Skills',
+    'multiple' => 'Select 1 or More Skills',
+];
+
+$skillTypeModes = [
+    'all' => 'All Type',
+    'one' => 'Per Type',
+    'multiple' => 'Select 1 or More Type',
 ];
 
 $insuranceModes = [
@@ -1429,4 +1452,241 @@ return [
             ],
         ),
     ], ['also_default' => ['sociocivic_details']]),
+
+    'migration' => $residentCategory('Migration', [
+        $lookup(
+            'resident_type',
+            'Resident Type',
+            'resident_type_id',
+            'subrecord',
+            ResidentType::class,
+            'resident_type',
+            'resident_type_id',
+            'resident_type',
+            ['migration_details.resident_type'],
+            $childSort('migration', 'resident_type_id', 'resident_type', 'resident_type_id', 'resident_type'),
+            [
+                'mode_labels' => $typeModes,
+                'plural' => 'Resident Types',
+                'subrecord_table' => 'migration',
+                'subrecord_owner' => 'resident_id',
+            ],
+        ),
+        $lookup(
+            'reason_for_leaving',
+            'Reason for Leaving',
+            'reason_for_leaving_id',
+            'subrecord',
+            ReasonForLeaving::class,
+            'reason_for_leaving',
+            'reason_for_leaving_id',
+            'reason_for_leaving',
+            ['migration_details.reason_for_leaving'],
+            $childSort('migration', 'reason_for_leaving_id', 'reason_for_leaving', 'reason_for_leaving_id', 'reason_for_leaving'),
+            [
+                'mode_labels' => $reasonModes,
+                'plural' => 'Reasons for Leaving',
+                'subrecord_table' => 'migration',
+                'subrecord_owner' => 'resident_id',
+            ],
+        ),
+        $lookup(
+            'reason_for_transfer',
+            'Reason for Transfer',
+            'reason_for_transfer_id',
+            'subrecord',
+            ReasonForTransfer::class,
+            'reason_for_transfer',
+            'reason_for_transfer_id',
+            'reason_for_transfer',
+            ['migration_details.reason_for_transfer'],
+            $childSort('migration', 'reason_for_transfer_id', 'reason_for_transfer', 'reason_for_transfer_id', 'reason_for_transfer'),
+            [
+                'mode_labels' => $reasonModes,
+                'plural' => 'Reasons for Transfer',
+                'subrecord_table' => 'migration',
+                'subrecord_owner' => 'resident_id',
+            ],
+        ),
+    ], ['also_default' => ['migration_details']]),
+
+    'ctc' => $residentCategory('Community Tax Certificate', [
+        $choices(
+            'has_valid_ctc',
+            'Has Valid CTC',
+            'boolean',
+            'subrecord',
+            [
+                ['value' => 'yes', 'label' => 'Yes', 'op' => 'eq', 'operand' => 1, 'singular' => false],
+                ['value' => 'no', 'label' => 'No', 'op' => 'eq', 'operand' => 0, 'singular' => false],
+            ],
+            [],
+            null,
+            'community_tax_cert.has_valid_ctc',
+            'has_valid_ctc',
+            [
+                'subrecord_table' => 'community_tax_cert',
+                'subrecord_owner' => 'resident_id',
+            ],
+        ),
+        $choices(
+            'ctc_issued_here',
+            'CTC Issued Here',
+            'boolean',
+            'subrecord',
+            [
+                ['value' => 'yes', 'label' => 'Yes', 'op' => 'eq', 'operand' => 1, 'singular' => false],
+                ['value' => 'no', 'label' => 'No', 'op' => 'eq', 'operand' => 0, 'singular' => false],
+            ],
+            [],
+            null,
+            'community_tax_cert.ctc_issued_here',
+            'ctc_issued_here',
+            [
+                'subrecord_table' => 'community_tax_cert',
+                'subrecord_owner' => 'resident_id',
+            ],
+        ),
+    ], [
+        'header' => 'Total Resident Records (scoped to residents 18+)',
+        'audience' => 'ctc',
+        'also_default' => ['ctc_details'],
+    ]),
+
+    'skills' => $residentCategory('Skills', [
+        $lookup(
+            'training',
+            'Skills Development Training',
+            'skills_development_training',
+            'subrecord',
+            SkillsDevelopment::class,
+            'skills_development',
+            'skills_development_id',
+            'skills_development_training',
+            ['skills_details.skills_development_training'],
+            [
+                'type' => 'child_column',
+                'child_table' => 'skills_development',
+                'child_owner' => 'resident_id',
+                'column' => 'skills_development_training',
+            ],
+            [
+                'mode_labels' => $skillModes,
+                'plural' => 'Skills',
+                'distinct_label' => true,
+                'subrecord_table' => 'skills_development',
+                'subrecord_owner' => 'resident_id',
+            ],
+        ),
+        $lookup(
+            'skill_type',
+            'Skill Type',
+            'skill_type_id',
+            'subrecord',
+            SkillType::class,
+            'skill_type',
+            'skill_type_id',
+            'skill_type',
+            ['skills_details.skill_type'],
+            $childSort('skills_development', 'skill_type_id', 'skill_type', 'skill_type_id', 'skill_type'),
+            [
+                'mode_labels' => $skillTypeModes,
+                'plural' => 'Type',
+                'subrecord_table' => 'skills_development',
+                'subrecord_owner' => 'resident_id',
+            ],
+        ),
+    ], [
+        'header' => 'Total Resident Records (scoped to residents 15+)',
+        'audience' => 'skills',
+        'also_default' => ['skills_details'],
+    ]),
+
+    'resident_cross_filter' => $residentCategory('Age', [
+        [
+            'key' => 'age',
+            'label' => 'Age',
+            'type' => 'range',
+            'apply' => 'age',
+            'column' => 'date_of_birth',
+            'scale' => 0,
+            'min_bound' => 0,
+            'max_bound' => 150,
+            'plural' => 'Ages',
+            'owns' => [],
+            'sort' => null,
+        ],
+        $lookup(
+            'marital_status',
+            'Marital Status',
+            'marital_status_id',
+            'resident',
+            MaritalStatus::class,
+            'marital_status',
+            'marital_status_id',
+            'marital_status',
+            ['resident_demographic.marital_status'],
+            $sortLookup('marital_status', 'sort_marital_status', 'marital_status_id', 'marital_status', 'resident.marital_status_id'),
+            ['mode_labels' => $statusModes],
+        ),
+        $choices(
+            'disability',
+            'Disability',
+            'options',
+            'subrecord',
+            [
+                ['value' => 'all', 'label' => 'With/Without Disability', 'op' => 'any', 'singular' => false],
+                ['value' => 'with', 'label' => 'With Disability', 'op' => 'not_sentinel', 'singular' => false],
+                ['value' => 'without', 'label' => 'Without Disability', 'op' => 'is_sentinel', 'singular' => true],
+            ],
+            ['health_details.disability'],
+            $childSort('health', 'disability_id', 'disability', 'disability_id', 'disability'),
+            'health.disability_id',
+            'disability_id',
+            [
+                'subrecord_table' => 'health',
+                'subrecord_owner' => 'resident_id',
+                'sentinel_model' => Disability::class,
+                'force_owned' => false,
+            ],
+        ),
+        $lookup(
+            'resident_type',
+            'Type of Resident',
+            'resident_type_id',
+            'subrecord',
+            ResidentType::class,
+            'resident_type',
+            'resident_type_id',
+            'resident_type',
+            ['migration_details.resident_type'],
+            $childSort('migration', 'resident_type_id', 'resident_type', 'resident_type_id', 'resident_type'),
+            [
+                'mode_labels' => $skillTypeModes,
+                'plural' => 'Type',
+                'force_owned' => false,
+                'subrecord_table' => 'migration',
+                'subrecord_owner' => 'resident_id',
+            ],
+        ),
+        $lookup(
+            'skill_type',
+            'Skill Type',
+            'skill_type_id',
+            'subrecord',
+            SkillType::class,
+            'skill_type',
+            'skill_type_id',
+            'skill_type',
+            ['skills_details.skill_type'],
+            $childSort('skills_development', 'skill_type_id', 'skill_type', 'skill_type_id', 'skill_type'),
+            [
+                'mode_labels' => $skillTypeModes,
+                'plural' => 'Type',
+                'force_owned' => false,
+                'subrecord_table' => 'skills_development',
+                'subrecord_owner' => 'resident_id',
+            ],
+        ),
+    ]),
 ];

@@ -211,16 +211,27 @@ class ReportService
             fn (mixed $filter): bool => is_array($filter) && ReportSchema::filterApplies($category, $filter, $filters),
         ));
         $phrases = [];
+        $activePhrases = [];
         $allOpen = true;
 
         foreach ($definitions as $filter) {
             $state = ReportSchema::filterState($filters, (string) $filter['key']);
+            $phrase = $this->filterPhrase($categoryKey, $filter, $state);
+            $phrases[] = $phrase;
 
             if (! ReportSchema::isAll($filter, $state)) {
                 $allOpen = false;
+                $activePhrases[] = $phrase;
             }
+        }
 
-            $phrases[] = $this->filterPhrase($categoryKey, $filter, $state);
+        $fixedTitle = $category['fixed_title'] ?? null;
+
+        if (is_string($fixedTitle) && $fixedTitle !== '') {
+            return [
+                'title' => $fixedTitle,
+                'subtitle' => $activePhrases === [] ? null : implode('; ', $activePhrases),
+            ];
         }
 
         if ($allOpen && count($definitions) === 1 && ($definitions[0]['type'] ?? '') === 'lookup') {

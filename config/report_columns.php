@@ -843,10 +843,30 @@ return [
                 ],
             ],
         ],
+        'ctc_details' => [
+            'key' => 'ctc_details',
+            'label' => "Household Member's CTC Details",
+            'source' => 'communityTaxCert',
+            'is_group' => true,
+            'columns' => [
+                [
+                    'key' => 'has_valid_ctc',
+                    'label' => 'Has Valid CTC',
+                    'source' => 'has_valid_ctc',
+                    'format' => 'yes_no',
+                ],
+                [
+                    'key' => 'ctc_issued_here',
+                    'label' => 'CTC Issued Here',
+                    'source' => 'ctc_issued_here',
+                    'format' => 'yes_no',
+                ],
+            ],
+        ],
         'skills_details' => [
             'key' => 'skills_details',
             'label' => "Household Member's Skills Details",
-            'source' => 'skillsDevelopment',
+            'source' => 'skillsDevelopments',
             'is_group' => true,
             'columns' => [
                 [
