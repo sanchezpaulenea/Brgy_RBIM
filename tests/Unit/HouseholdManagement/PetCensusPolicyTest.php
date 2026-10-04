@@ -17,38 +17,44 @@ class PetCensusPolicyTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_encoder_can_create_pet_census_when_permitted(): void
-    {
-        $this->assertTrue((new PetCensusPolicy)->create($this->user([
-            'isAdmin' => false,
-            'permissions' => ['household.create'],
-        ])));
-    }
-
-    public function test_updater_can_update_pet_census(): void
+    public function test_user_with_pet_view_can_list_and_view(): void
     {
         $policy = new PetCensusPolicy;
-        $user = $this->user([
-            'isAdmin' => false,
-            'permissions' => ['household.update'],
-        ]);
+        $user = $this->user(['pet.view']);
 
-        $this->assertTrue($policy->update($user, new PetCensus));
-        $this->assertFalse($policy->create($this->user([
-            'isAdmin' => false,
-            'permissions' => ['household.view'],
-        ])));
+        $this->assertTrue($policy->viewAny($user));
+        $this->assertTrue($policy->view($user, new PetCensus));
+    }
+
+    public function test_household_permissions_do_not_grant_pet_access(): void
+    {
+        $policy = new PetCensusPolicy;
+        $user = $this->user(['household.view', 'household.create', 'household.update']);
+
+        $this->assertFalse($policy->viewAny($user));
+        $this->assertFalse($policy->view($user, new PetCensus));
+        $this->assertFalse($policy->create($user));
+        $this->assertFalse($policy->update($user, new PetCensus));
+    }
+
+    public function test_create_and_update_require_their_own_permissions(): void
+    {
+        $policy = new PetCensusPolicy;
+
+        $this->assertTrue($policy->create($this->user(['pet.create'])));
+        $this->assertTrue($policy->update($this->user(['pet.update']), new PetCensus));
+        $this->assertFalse($policy->create($this->user(['pet.view'])));
+        $this->assertFalse($policy->update($this->user(['pet.view']), new PetCensus));
     }
 
     /**
-     * @param  array{isAdmin: bool, permissions: list<string>}  $attributes
+     * @param  list<string>  $permissions
      */
-    private function user(array $attributes): User
+    private function user(array $permissions): User
     {
         $user = Mockery::mock(User::class)->makePartial();
-        $user->shouldReceive('isAdmin')->zeroOrMoreTimes()->andReturn($attributes['isAdmin']);
         $user->shouldReceive('hasPermission')->zeroOrMoreTimes()->andReturnUsing(
-            fn (string $permission) => in_array($permission, $attributes['permissions'], true)
+            fn (string $permission) => in_array($permission, $permissions, true)
         );
 
         return $user;

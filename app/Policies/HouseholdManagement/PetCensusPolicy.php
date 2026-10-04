@@ -9,23 +9,21 @@ class PetCensusPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isAdmin() || $user->hasPermission('household.view');
+        return $user->hasPermission('pet.view');
     }
 
     public function view(User $user, PetCensus $pet): bool
     {
-        return $user->isAdmin() || $user->hasPermission('household.view');
+        return $user->hasPermission('pet.view');
     }
 
     public function create(User $user): bool
     {
-        return $user->isAdmin()
-            || $user->hasPermission('household.create')
-            || $user->hasPermission('household.update');
+        return $user->hasPermission('pet.create');
     }
 
     public function update(User $user, PetCensus $pet): bool
     {
-        return $user->isAdmin() || $user->hasPermission('household.update');
+        return $user->hasPermission('pet.update');
     }
 }

@@ -83,6 +83,19 @@
                         </div>
                     </div>
 
+                    <RouterLink
+                        v-if="canViewPetCensus"
+                        :to="{ name: 'pet-census' }"
+                        class="flex items-center gap-2.5 min-w-0 rounded-lg px-3 py-2 text-[13px] font-medium transition"
+                        :class="isPetCensusRoute ? 'bg-white/15 text-white' : 'text-white/90 hover:bg-white/10'"
+                        @click="sidebarOpen = false"
+                    >
+                        <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path d="M6.1 3.2a1.55 1.55 0 100 3.1 1.55 1.55 0 000-3.1zm7.8 0a1.55 1.55 0 100 3.1 1.55 1.55 0 000-3.1zM3.35 6.35a1.35 1.35 0 100 2.7 1.35 1.35 0 000-2.7zm13.3 0a1.35 1.35 0 100 2.7 1.35 1.35 0 000-2.7zM10 8.15c-2.35 0-4.25 1.55-4.25 3.7 0 2.2 1.85 3.85 4.25 3.85s4.25-1.65 4.25-3.85c0-2.15-1.9-3.7-4.25-3.7z" />
+                        </svg>
+                        <span>Pet Census</span>
+                    </RouterLink>
+
                     <div v-if="canViewResidentMenu">
                         <button
                             type="button"
@@ -280,6 +293,7 @@ const sidebarOpen = ref(false);
 const openMenu = ref(null);
 
 const canViewHouseholdMenu = computed(() => householdTabs.value.length > 0);
+const canViewPetCensus = computed(() => hasPermission('pet.view'));
 const canViewResidentMenu = computed(() => residentTabs.value.length > 0);
 const canViewReports = computed(() => hasPermission('report.view'));
 
@@ -299,9 +313,7 @@ const isHouseholdRoute = computed(() => String(route.path).startsWith('/househol
 const isHouseholdViewRoute = computed(() => (
     route.name === 'households' || route.name === 'household-detail'
 ));
-const isHouseholdPetCensusRoute = computed(() => (
-    route.name === 'household-pet-census'
-));
+const isPetCensusRoute = computed(() => route.name === 'pet-census');
 const isResidentRoute = computed(() => String(route.path).startsWith('/residents'));
 const isReportsRoute = computed(() => route.name === 'reports');
 const isSettingsRoute = computed(() => String(route.path).startsWith('/settings'));
@@ -311,10 +323,6 @@ const isUsersRoute = computed(() => String(route.path).startsWith('/users'));
 function isSidebarTabActive(tab) {
     if (tab.name === 'households') {
         return isHouseholdViewRoute.value;
-    }
-
-    if (tab.name === 'household-pet-census') {
-        return isHouseholdPetCensusRoute.value;
     }
 
     if (tab.name === 'residents') {

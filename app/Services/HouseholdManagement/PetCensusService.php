@@ -5,7 +5,9 @@ namespace App\Services\HouseholdManagement;
 use App\Models\HouseholdManagement\Household;
 use App\Models\HouseholdManagement\PetCensus;
 use App\Models\Logs\Action;
+use App\Models\ResidentManagement\Demographic\Resident;
 use App\Models\UserManagement\User;
+use Carbon\CarbonInterface;
 use App\Repositories\Interfaces\HouseholdManagement\PetCensusRepositoryInterface;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Services\ResidentManagement\Concerns\LogsAuditableFieldChanges;
@@ -19,6 +21,52 @@ class PetCensusService
         protected PetCensusRepositoryInterface $petCensusRepository,
         protected AuditLogRepositoryInterface $auditLogRepository,
     ) {}
+
+    /**
+     * @param  array{household_id?: int, specie_id?: int, breed_id?: int, sex_id?: int}  $filters
+     * @return array{items: list<array<string, mixed>>, options: array<string, list<array<string, mixed>>>}
+     */
+    public function list(array $filters = []): array
+    {
+        $options = $this->petCensusRepository->filterOptions();
+
+        return [
+            'items' => $this->petCensusRepository->list($filters)
+                ->map(fn (PetCensus $pet) => $this->formatRecord($pet))
+                ->values()
+                ->all(),
+            'options' => [
+                'households' => $options['households']
+                    ->map(fn (Household $household) => [
+                        'id' => $household->household_id,
+                        'label' => $this->householdLabel($household),
+                    ])
+                    ->values()
+                    ->all(),
+                'species' => $options['species']
+                    ->map(fn ($specie) => [
+                        'id' => $specie->specie_id,
+                        'label' => $specie->specie,
+                    ])
+                    ->values()
+                    ->all(),
+                'breeds' => $options['breeds']
+                    ->map(fn ($breed) => [
+                        'id' => $breed->breed_id,
+                        'label' => $breed->breed,
+                    ])
+                    ->values()
+                    ->all(),
+                'sexes' => $options['sexes']
+                    ->map(fn ($sex) => [
+                        'id' => $sex->sex_id,
+                        'label' => $sex->sex,
+                    ])
+                    ->values()
+                    ->all(),
+            ],
+        ];
+    }
 
     /**
      * @param  array<string, mixed>  $data
@@ -93,6 +141,7 @@ class PetCensusService
         return [
             'pet_census_id' => $pet->pet_census_id,
             'household_id' => $pet->household_id,
+            'household_label' => $this->householdLabel($pet->household, $pet->household_id),
             'specie_id' => $pet->specie_id,
             'specie' => $pet->specie?->specie,
             'breed_id' => $pet->breed_id,
@@ -100,9 +149,55 @@ class PetCensusService
             'sex_id' => $pet->sex_id,
             'sex' => $pet->sex?->sex,
             'pet_date_of_birth' => $pet->pet_date_of_birth?->format('Y-m-d'),
+            'age' => $this->ageInYears($pet->pet_date_of_birth),
             'is_spay_neuter' => (bool) $pet->is_spay_neuter,
             'rabies_vaccination_date' => $pet->rabies_vaccination_date?->format('Y-m-d'),
         ];
+    }
+
+    private function householdLabel(?Household $household, ?int $householdId = null): string
+    {
+        $id = $household?->household_id ?? $householdId;
+        $head = $household?->head;
+        $name = $head instanceof Resident ? $this->residentName($head) : '';
+
+        if ($name === '') {
+            return 'Household '.$id;
+        }
+
+        return 'Household '.$id.' — '.$name;
+    }
+
+    private function residentName(Resident $resident): string
+    {
+        $givenNames = collect([
+            $resident->first_name,
+            $resident->middle_name,
+            $resident->suffix,
+        ])->filter()->implode(' ');
+
+        if ($givenNames === '') {
+            return (string) $resident->last_name;
+        }
+
+        return $resident->last_name.', '.$givenNames;
+    }
+
+    private function ageInYears(?CarbonInterface $dateOfBirth): ?int
+    {
+        if ($dateOfBirth === null) {
+            return null;
+        }
+
+        $today = now()->startOfDay();
+        $birth = $dateOfBirth->copy()->startOfDay();
+        $age = $today->year - $birth->year;
+
+        if ($today->month < $birth->month || ($today->month === $birth->month && $today->day < $birth->day)) {
+            $age--;
+        }
+
+        return max($age, 0);
     }
 
     /**

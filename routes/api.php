@@ -63,6 +63,7 @@ Route::prefix('v1')->group(function () {
         Route::patch('households/{household}', [HouseholdController::class, 'update'])->name('households.update');
         Route::post('households/{household}/questions', [HouseholdQuestionsController::class, 'store'])->name('households.questions.store');
         Route::patch('household-questions/{householdQuestions}', [HouseholdQuestionsController::class, 'update'])->name('household-questions.update');
+        Route::get('pet-census', [PetCensusController::class, 'index'])->name('pet-census.index');
         Route::post('households/{household}/pets', [PetCensusController::class, 'store'])->name('households.pets.store');
         Route::patch('pet-census/{petCensus}', [PetCensusController::class, 'update'])->name('pet-census.update');
         Route::post('species', [PetLookupWriteController::class, 'store'])->defaults('lookup', 'specie')->name('species.store');

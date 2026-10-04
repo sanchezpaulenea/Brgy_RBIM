@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\HouseholdManagament;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\HouseholdManagement\IndexPetCensusRequest;
 use App\Http\Requests\HouseholdManagement\StorePetCensusRequest;
 use App\Http\Requests\HouseholdManagement\UpdatePetCensusRequest;
 use App\Models\HouseholdManagement\Household;
@@ -16,6 +17,21 @@ class PetCensusController extends Controller
     public function __construct(
         protected PetCensusService $petCensusService,
     ) {}
+
+    /**
+     * GET /api/v1/pet-census
+     */
+    public function index(IndexPetCensusRequest $request): JsonResponse
+    {
+        $this->authorize('viewAny', PetCensus::class);
+
+        $result = $this->petCensusService->list($request->filters());
+
+        return response()->json([
+            'items' => $result['items'],
+            'options' => $result['options'],
+        ]);
+    }
 
     public function store(StorePetCensusRequest $request, Household $household): JsonResponse
     {

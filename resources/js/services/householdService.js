@@ -56,6 +56,20 @@ export async function createHouseholdPets(householdId, pets) {
     return data.items;
 }
 
+export async function fetchPetCensus(filters = {}) {
+    const params = {};
+
+    ['household_id', 'specie_id', 'breed_id', 'sex_id'].forEach((key) => {
+        if (filters[key]) {
+            params[key] = filters[key];
+        }
+    });
+
+    const { data } = await http.get('/pet-census', { params });
+
+    return data;
+}
+
 export async function updateHouseholdPet(petCensusId, payload) {
     const { data } = await http.patch(`/pet-census/${petCensusId}`, payload);
 
