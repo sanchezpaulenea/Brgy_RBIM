@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="http://[::1]:5173/resources/css/app.css">
+    <title>Refresh button</title>
+</head>
+<body class="bg-[#f4f6f5] p-8">
+    <form class="rbim-card grid max-w-5xl gap-3 p-4 sm:grid-cols-4">
+        <div>
+            <label class="rbim-label" for="search">Search</label>
+            <input id="search" class="rbim-input py-2" type="search" placeholder="Search street or head res">
+        </div>
+        <div>
+            <label class="rbim-label" for="street">Street</label>
+            <select id="street" class="rbim-input py-2"><option>All streets</option></select>
+        </div>
+        <div>
+            <label class="rbim-label" for="status">Household Status</label>
+            <select id="status" class="rbim-input py-2"><option>All statuses</option></select>
+        </div>
+        <div class="flex items-end">
+            <button type="button" class="rbim-btn py-2" id="refresh">Refresh</button>
+        </div>
+    </form>
+    <pre id="report" class="mt-4 text-xs"></pre>
+    <script>
+        window.addEventListener('load', () => {
+            const input = document.getElementById('search').getBoundingClientRect();
+            const button = document.getElementById('refresh').getBoundingClientRect();
+            const style = getComputedStyle(button);
+            document.getElementById('report').textContent = [
+                'input height: ' + input.height.toFixed(1),
+                'button height: ' + button.height.toFixed(1),
+                'button bg: ' + style.backgroundColor,
+                'button color: ' + style.color,
+            ].join('\n');
+        });
+    </script>
+</body>
+</html>

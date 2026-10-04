@@ -53,7 +53,7 @@
                     </select>
                 </div>
                 <div class="flex items-end">
-                    <button type="button" class="rbim-btn-outline" :disabled="loading" @click="clearFilters">
+                    <button type="button" class="rbim-btn py-2" :disabled="loading" @click="clearFilters">
                         Refresh
                     </button>
                 </div>
@@ -100,9 +100,6 @@
                                             class="rbim-btn-action"
                                             @click="startEdit(household)"
                                         >
-                                            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                                <path d="M13.586 2.586a2 2 0 112.828 2.828l-8.5 8.5a1 1 0 01-.44.253l-3 .857a.5.5 0 01-.618-.618l.857-3a1 1 0 01.253-.44l8.62-8.38z" />
-                                            </svg>
                                             Update
                                         </button>
                                     </div>

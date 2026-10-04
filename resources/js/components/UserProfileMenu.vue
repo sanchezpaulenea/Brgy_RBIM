@@ -2,38 +2,41 @@
     <div ref="rootRef" class="relative shrink-0">
         <button
             type="button"
-            class="flex max-w-[11rem] cursor-pointer items-center gap-2 rounded-full border-2 border-[#4a7eb8] bg-[#dce6f5] py-1 pl-1 pr-1.5 text-left shadow-sm transition hover:bg-[#d2def0] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:max-w-[16.5rem]"
+            class="flex max-w-[12.5rem] cursor-pointer items-center gap-2.5 rounded-2xl bg-white/10 py-1.5 pl-1.5 pr-3 text-left text-white shadow-sm ring-1 ring-white/25 transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:max-w-[16.5rem]"
             aria-haspopup="dialog"
             :aria-expanded="open"
             aria-label="Open account menu"
             @click="toggleMenu"
         >
-            <span class="flex min-h-10 min-w-0 items-center rounded-2xl bg-white px-3 py-1 shadow-sm">
-                <span class="truncate text-xs font-semibold uppercase tracking-[0.08em] text-[#1d3a66]">
-                    {{ pillName }}
-                </span>
-            </span>
             <UserAvatar
                 :src="user?.avatar_url"
                 :preset="user?.avatar_preset"
-                size-class="h-10 w-10 ring-2 ring-white"
+                size-class="h-10 w-10 ring-2 ring-white/80"
                 decorative
             />
+            <span class="min-w-0">
+                <span class="block truncate text-xs font-semibold uppercase tracking-[0.08em]">
+                    {{ pillName }}
+                </span>
+                <span class="block truncate text-[11px] text-white/75">
+                    {{ rolesLabel }}
+                </span>
+            </span>
         </button>
 
         <div
             v-if="open"
-            class="absolute right-0 top-full z-50 mt-2 w-[22.5rem] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-2xl"
+            class="absolute right-0 top-full z-50 mt-3 w-[22.5rem] max-w-[calc(100vw-1.5rem)] rounded-[28px] bg-[#eef3ea] p-3 shadow-2xl"
             role="dialog"
             aria-label="Account"
         >
-            <div class="relative px-4 py-3 text-center">
+            <div class="relative rounded-full bg-[#f7faf4] px-8 py-2 text-center">
                 <p class="truncate text-[13px] text-slate-500">
                     {{ managedByLabel }}
                 </p>
                 <button
                     type="button"
-                    class="absolute right-3 top-2.5 cursor-pointer rounded-full p-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                    class="absolute right-1.5 top-1/2 -translate-y-1/2 cursor-pointer rounded-full p-1 text-slate-500 transition hover:bg-white hover:text-slate-700"
                     aria-label="Close account menu"
                     @click="closeMenu"
                 >
@@ -43,7 +46,8 @@
                 </button>
             </div>
 
-            <div class="border-t border-slate-200 px-4 py-4">
+            <div class="mt-2 overflow-hidden rounded-[22px] bg-white shadow-sm">
+            <div class="px-4 py-4">
                 <div class="flex items-center gap-3">
                     <div class="relative shrink-0">
                         <UserAvatar
@@ -75,17 +79,6 @@
                             {{ positionLabel }}
                         </p>
                     </div>
-
-                    <button
-                        type="button"
-                        class="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
-                        aria-label="Collapse account details"
-                        @click="closeMenu"
-                    >
-                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
-                        </svg>
-                    </button>
                 </div>
 
                 <div
@@ -131,20 +124,15 @@
                 >
             </div>
 
-            <div class="border-t border-slate-200 px-4 py-3">
-                <div class="flex items-start gap-3">
-                    <span class="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-50 text-sky-700">
-                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM3 18a7 7 0 1114 0H3z" />
-                        </svg>
-                    </span>
-                    <div class="min-w-0">
-                        <p class="text-sm font-medium text-slate-800">Assigned roles</p>
-                        <p class="mt-0.5 text-sm text-slate-500">
-                            {{ rolesLabel }}
-                        </p>
-                    </div>
-                </div>
+            <div class="flex items-center gap-3 border-t border-slate-200 px-4 py-3">
+                <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center text-slate-700">
+                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM3 18a7 7 0 1114 0H3z" />
+                    </svg>
+                </span>
+                <p class="min-w-0 truncate text-sm font-medium text-slate-800">
+                    {{ rolesLabel }}
+                </p>
             </div>
 
             <div class="border-t border-slate-200">
@@ -154,13 +142,14 @@
                     :disabled="loading"
                     @click="handleLogout"
                 >
-                    <span class="inline-flex h-8 w-8 items-center justify-center text-slate-600">
+                    <span class="inline-flex h-8 w-8 items-center justify-center text-slate-700">
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12H3m12 0l-3.5-3.5M15 12l-3.5 3.5M10 5h7.5A1.5 1.5 0 0119 6.5v11a1.5 1.5 0 01-1.5 1.5H10" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
                         </svg>
                     </span>
-                    Logout
+                    Log out
                 </button>
+            </div>
             </div>
         </div>
     </div>

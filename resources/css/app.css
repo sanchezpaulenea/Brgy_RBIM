@@ -31,6 +31,17 @@
     }
 
     /*
+     * Chromium hides number steppers until the field is hovered. Age ranges
+     * and other stepped counts should show the up and down arrows at rest.
+     */
+    input[type='number'].rbim-input::-webkit-inner-spin-button,
+    input[type='number'].rbim-input::-webkit-outer-spin-button {
+        opacity: 1;
+        height: 1.5rem;
+        cursor: pointer;
+    }
+
+    /*
      * Native select arrows sit flush to the border (and differ by browser).
      * A custom chevron keeps them inset and vertically centered.
      */
@@ -97,9 +108,10 @@
     }
 
     /*
-     * Wide enough for "Barangay Personnel Management" at the shared nav font size.
+     * Wide enough for "Barangay Personnel Management" plus a fixed chevron column,
+     * so every submenu indicator shares the same right edge.
      */
     .rbim-shell {
-        --rbim-sidebar: min(18.5rem, 85vw);
+        --rbim-sidebar: min(22rem, 85vw);
     }
 }
