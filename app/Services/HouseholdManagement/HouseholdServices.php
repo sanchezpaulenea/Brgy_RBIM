@@ -71,9 +71,9 @@ class HouseholdServices
                     'birth_city_municipality' => $headData['birth_city_municipality'],
                     'birth_province' => $headData['birth_province'],
                     'birth_country' => $headData['birth_country'],
-                    'nationality_id' => $headData['nationality_id'] ?? null,
-                    'religion_id' => $headData['religion_id'] ?? null,
-                    'ethnicity_id' => $headData['ethnicity_id'] ?? null,
+                    'nationality_id' => $this->nullBlankLookupId($headData['nationality_id'] ?? null),
+                    'religion_id' => $this->nullBlankLookupId($headData['religion_id'] ?? null),
+                    'ethnicity_id' => $this->nullBlankLookupId($headData['ethnicity_id'] ?? null),
                     'marital_status_id' => $headData['marital_status_id'],
                     'clan_id' => $headData['clan_id'] ?? $data['clan_id'],
                     'resident_status_id' => $headData['resident_status_id'] ?? ResidentStatus::ACTIVE,
@@ -389,6 +389,11 @@ class HouseholdServices
             'household_id' => $resident->household_id,
             'applicable_sections' => $resident->applicableSections(),
         ];
+    }
+
+    private function nullBlankLookupId(mixed $value): mixed
+    {
+        return $value === '' || $value === null ? null : $value;
     }
 
     private function householdAuditLabel(Household $household): string

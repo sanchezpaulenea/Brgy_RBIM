@@ -84,6 +84,7 @@ class ResidentServices
 
         $data['clan_id'] = $data['clan_id'] ?? $household->clan_id;
         $data['resident_status_id'] = $data['resident_status_id'] ?? ResidentStatus::ACTIVE;
+        $data = $this->nullBlankDemographicLookups($data);
 
         return DB::transaction(function () use ($performedBy, $data, $household) {
             $this->assertNotAlreadyRegistered($household, $data);
@@ -121,6 +122,7 @@ class ResidentServices
             : null;
 
         unset($data['new_head_resident_id'], $data['former_head_relationship_to_hh_id']);
+        $data = $this->nullBlankDemographicLookups($data);
 
         $previous = $this->residentAuditSnapshot($resident);
 
@@ -402,6 +404,21 @@ class ResidentServices
     /**
      * @return array<string, string>
      */
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function nullBlankDemographicLookups(array $data): array
+    {
+        foreach (['nationality_id', 'religion_id', 'ethnicity_id'] as $field) {
+            if (array_key_exists($field, $data) && ($data[$field] === '' || $data[$field] === null)) {
+                $data[$field] = null;
+            }
+        }
+
+        return $data;
+    }
+
     private function residentAuditSnapshot(Resident $resident): array
     {
         $resident->loadMissing([

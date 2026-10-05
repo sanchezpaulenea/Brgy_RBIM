@@ -44,6 +44,9 @@ class StoreHouseholdRequest extends FormRequest
                 'birth_city_municipality' => $this->titleCasePlace($head['birth_city_municipality'] ?? null),
                 'birth_province' => $this->titleCasePlace($head['birth_province'] ?? null),
                 'birth_country' => $this->titleCasePlace($head['birth_country'] ?? null),
+                'nationality_id' => $this->blankLookupId($head['nationality_id'] ?? null),
+                'religion_id' => $this->blankLookupId($head['religion_id'] ?? null),
+                'ethnicity_id' => $this->blankLookupId($head['ethnicity_id'] ?? null),
             ],
         ]);
     }
@@ -184,6 +187,11 @@ class StoreHouseholdRequest extends FormRequest
                 'The household head must be at least 15 years old.',
             );
         }
+    }
+
+    private function blankLookupId(mixed $value): mixed
+    {
+        return $value === '' || $value === null ? null : $value;
     }
 
     private function titleCaseName(mixed $value): mixed

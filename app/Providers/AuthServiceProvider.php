@@ -6,12 +6,10 @@ use App\Models\BarangayPersonnel\BarangayPersonnel;
 use App\Models\BarangayPersonnel\PersonnelPosition;
 use App\Models\HouseholdManagement\Breed;
 use App\Models\HouseholdManagement\BuildingHouseType;
-use App\Models\HouseholdManagement\CensusStatus;
 use App\Models\HouseholdManagement\Clan;
 use App\Models\HouseholdManagement\ConstructionMaterialOuterWall;
 use App\Models\HouseholdManagement\FuelType;
 use App\Models\HouseholdManagement\Household;
-use App\Models\HouseholdManagement\HouseholdAssessment;
 use App\Models\HouseholdManagement\HouseholdQuestions;
 use App\Models\HouseholdManagement\HouseholdStatus;
 use App\Models\HouseholdManagement\KitchenGarbageDisposal;
@@ -65,7 +63,6 @@ use App\Models\UserManagement\User;
 use App\Models\UserManagement\UserRole;
 use App\Policies\BarangayPersonnel\BarangayPersonnelPolicy;
 use App\Policies\BarangayPersonnel\PersonnelPolicy;
-use App\Policies\HouseholdManagement\HouseholdAssessmentPolicy;
 use App\Policies\HouseholdManagement\HouseholdPolicy;
 use App\Policies\HouseholdManagement\HouseholdQuestionsPolicy;
 use App\Policies\HouseholdManagement\PetCensusPolicy;
@@ -115,7 +112,6 @@ class AuthServiceProvider extends ServiceProvider
         BarangayPersonnel::class => PersonnelPolicy::class,
         Setting::class => SystemSettingPolicy::class,
         Household::class => HouseholdPolicy::class,
-        HouseholdAssessment::class => HouseholdAssessmentPolicy::class,
         HouseholdQuestions::class => HouseholdQuestionsPolicy::class,
         PetCensus::class => PetCensusPolicy::class,
         Specie::class => PetLookupWritePolicy::class,
@@ -125,7 +121,6 @@ class AuthServiceProvider extends ServiceProvider
         Nationality::class => NationalityPolicy::class,
         Ethnicity::class => EthnicityPolicy::class,
         Religion::class => ReligionPolicy::class,
-        CensusStatus::class => ReferenceLookupPolicy::class,
         Clan::class => ReferenceLookupPolicy::class,
         HouseholdStatus::class => ReferenceLookupPolicy::class,
         MaritalStatus::class => ReferenceLookupPolicy::class,

@@ -53,10 +53,7 @@ class EducationRepository implements EducationRepositoryInterface
      */
     public function create(array $attributes): Education
     {
-        if (empty($attributes['education_id'])) {
-            $max = Education::query()->lockForUpdate()->max('education_id');
-            $attributes['education_id'] = (int) $max + 1;
-        }
+        unset($attributes['education_id']);
 
         $education = Education::create($attributes);
 

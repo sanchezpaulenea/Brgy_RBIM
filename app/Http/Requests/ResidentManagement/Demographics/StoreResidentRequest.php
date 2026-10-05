@@ -26,6 +26,9 @@ class StoreResidentRequest extends FormRequest
             'birth_city_municipality' => $this->titleCasePlace($this->input('birth_city_municipality')),
             'birth_province' => $this->titleCasePlace($this->input('birth_province')),
             'birth_country' => $this->titleCasePlace($this->input('birth_country')),
+            'nationality_id' => $this->blankLookupId($this->input('nationality_id')),
+            'religion_id' => $this->blankLookupId($this->input('religion_id')),
+            'ethnicity_id' => $this->blankLookupId($this->input('ethnicity_id')),
         ]);
     }
 
@@ -92,6 +95,11 @@ class StoreResidentRequest extends FormRequest
             'household_id.required' => 'Household is required.',
             'household_id.exists' => 'The selected household does not exist.',
         ];
+    }
+
+    private function blankLookupId(mixed $value): mixed
+    {
+        return $value === '' || $value === null ? null : $value;
     }
 
     private function titleCaseName(mixed $value): mixed

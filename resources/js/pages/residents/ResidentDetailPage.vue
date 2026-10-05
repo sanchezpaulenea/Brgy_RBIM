@@ -342,7 +342,7 @@
                             </div>
                             <template v-if="!familyPlanningIsNone">
                                 <div>
-                                    <label class="rbim-label">Source of Family Planning Method</label>
+                                    <label class="rbim-label">Source of Family Planning Method<span class="rbim-required" aria-hidden="true">*</span></label>
                                     <select
                                         v-model="editForm.source_of_fp_method_id"
                                         class="rbim-input"
@@ -811,9 +811,9 @@ const demographicFields = computed(() => {
         { label: 'Birth City / Municipality', value: item.birth_city_municipality || '—' },
         { label: 'Birth Province', value: item.birth_province || '—' },
         { label: 'Birth Country', value: item.birth_country || '—' },
-        { label: 'Nationality', value: item.nationality || '—' },
-        { label: 'Religion', value: item.religion || '—' },
-        { label: 'Ethnicity', value: item.ethnicity || '—' },
+        { label: 'Nationality', value: item.nationality || 'Not specified' },
+        { label: 'Religion', value: item.religion || 'Not specified' },
+        { label: 'Ethnicity', value: item.ethnicity || 'Not specified' },
         { label: 'Marital Status', value: item.marital_status || '—' },
         { label: 'Clan', value: item.clan_name || '—' },
         { label: 'Resident Status', value: item.resident_status || '—' },

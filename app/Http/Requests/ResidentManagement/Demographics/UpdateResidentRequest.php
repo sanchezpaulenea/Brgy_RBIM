@@ -33,6 +33,12 @@ class UpdateResidentRequest extends FormRequest
             }
         }
 
+        foreach (['nationality_id', 'religion_id', 'ethnicity_id'] as $field) {
+            if ($this->exists($field)) {
+                $merge[$field] = $this->blankLookupId($this->input($field));
+            }
+        }
+
         if ($merge !== []) {
             $this->merge($merge);
         }
@@ -161,6 +167,11 @@ class UpdateResidentRequest extends FormRequest
                 );
             },
         ];
+    }
+
+    private function blankLookupId(mixed $value): mixed
+    {
+        return $value === '' || $value === null ? null : $value;
     }
 
     private function titleCaseName(mixed $value): mixed

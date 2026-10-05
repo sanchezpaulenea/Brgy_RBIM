@@ -4,7 +4,6 @@ use App\Http\Controllers\Authentication\AuthController;
 use App\Http\Controllers\Authentication\PasswordController;
 use App\Http\Controllers\BarangayPersonnel\BarangayPersonnelController;
 use App\Http\Controllers\BarangayPersonnel\PersonnelController;
-use App\Http\Controllers\HouseholdManagament\HouseholdAssessmentController;
 use App\Http\Controllers\HouseholdManagament\HouseholdController;
 use App\Http\Controllers\HouseholdManagament\HouseholdQuestionsController;
 use App\Http\Controllers\HouseholdManagament\PetCensusController;
@@ -54,11 +53,6 @@ Route::prefix('v1')->group(function () {
         Route::get('personnel-positions', [BarangayPersonnelController::class, 'index'])->name('personnel-positions.index');
         Route::get('households', [HouseholdController::class, 'index'])->name('households.index');
         Route::post('households', [HouseholdController::class, 'store'])->name('households.store');
-        Route::get('household-assessment-options', [HouseholdAssessmentController::class, 'options'])->name('household-assessments.options');
-        Route::get('household-assessments', [HouseholdAssessmentController::class, 'indexAll'])->name('household-assessments.index');
-        Route::get('households/{household}/assessments', [HouseholdAssessmentController::class, 'index'])->name('households.assessments.index');
-        Route::post('households/{household}/assessments', [HouseholdAssessmentController::class, 'store'])->name('households.assessments.store');
-        Route::patch('household-assessments/{assessment}/status', [HouseholdAssessmentController::class, 'updateStatus'])->name('household-assessments.update-status');
         Route::get('households/{household}', [HouseholdController::class, 'show'])->name('households.show');
         Route::patch('households/{household}', [HouseholdController::class, 'update'])->name('households.update');
         Route::post('households/{household}/questions', [HouseholdQuestionsController::class, 'store'])->name('households.questions.store');
@@ -120,7 +114,6 @@ Route::prefix('v1')->group(function () {
         Route::get('lookups/{lookup}', [LookupController::class, 'index'])->name('lookups.index');
         Route::get('clans', [LookupController::class, 'index'])->defaults('lookup', 'clan')->name('clans.index');
         Route::get('household-statuses', [LookupController::class, 'index'])->defaults('lookup', 'household-status')->name('household-statuses.index');
-        Route::get('census-statuses', [LookupController::class, 'index'])->defaults('lookup', 'census-status')->name('census-statuses.index');
         Route::get('marital-statuses', [LookupController::class, 'index'])->defaults('lookup', 'marital-status')->name('marital-statuses.index');
         Route::get('relationships-to-hh', [LookupController::class, 'index'])->defaults('lookup', 'relationship-to-hh')->name('relationships-to-hh.index');
         Route::get('resident-statuses', [LookupController::class, 'index'])->defaults('lookup', 'resident-status')->name('resident-statuses.index');

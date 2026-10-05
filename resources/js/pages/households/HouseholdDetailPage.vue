@@ -284,12 +284,17 @@
                     </section>
                     <section class="space-y-4">
                         <h3 class="text-sm font-semibold text-slate-900">Household Questions</h3>
-                        <HouseholdQuestionsFields
-                            :form="questionForm"
-                            :errors="questionErrors"
-                            :lookups="questionLookups"
-                            id-prefix="detail-questions"
-                        />
+                        <p v-if="!canUpdateQuestions" class="text-sm text-slate-500">
+                            You do not have permission to update household questions.
+                        </p>
+                        <fieldset :disabled="!canUpdateQuestions" class="min-w-0 space-y-4 border-0 p-0">
+                            <HouseholdQuestionsFields
+                                :form="questionForm"
+                                :errors="questionErrors"
+                                :lookups="questionLookups"
+                                id-prefix="detail-questions"
+                            />
+                        </fieldset>
                     </section>
                     <HouseholdPetCensusForm
                         ref="petForm"
@@ -336,6 +341,7 @@ import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
 import { ageFromDateOfBirth, formatDate, formatDateTime } from '@/utils/format';
+import { canPerformUpdate } from '@/utils/residentProfiling';
 import { applyValidationErrors, householdStructureFromRecord, householdStructurePayload, optionalAddressText, toId, validateHouseholdStructure } from '@/utils/residentForm';
 import {
     emptyHouseholdQuestionLookups,
@@ -349,7 +355,8 @@ import {
 } from '@/utils/householdQuestions';
 
 const route = useRoute();
-const { hasPermission } = useAuth();
+const auth = useAuth();
+const { hasPermission } = auth;
 const { householdTabs } = useSectionTabs();
 
 const household = ref(null);
@@ -378,6 +385,7 @@ const confirm = reactive({
 });
 
 const canUpdate = computed(() => hasPermission('household.update'));
+const canUpdateQuestions = computed(() => canPerformUpdate(auth, 'householdquestion.update'));
 
 function emptyEditForm() {
     return {
@@ -527,7 +535,12 @@ async function handleUpdate() {
     }
 
     validateHouseholdStructure(editForm, editErrors);
-    validateHouseholdQuestions(questionForm, questionErrors);
+
+    if (canUpdateQuestions.value) {
+        validateHouseholdQuestions(questionForm, questionErrors);
+    } else {
+        clearQuestionErrors();
+    }
 
     const petsValid = petForm.value?.validateAll?.() !== false;
 
@@ -557,13 +570,15 @@ async function handleUpdate() {
             household_status_id: toId(editForm.household_status_id),
         });
 
-        const questionsPayload = householdQuestionsPayload(questionForm);
-        const questionsId = household.value?.questions?.household_questions_id;
+        if (canUpdateQuestions.value) {
+            const questionsPayload = householdQuestionsPayload(questionForm);
+            const questionsId = household.value?.questions?.household_questions_id;
 
-        if (questionsId) {
-            await householdService.updateHouseholdQuestions(questionsId, questionsPayload);
-        } else {
-            await householdService.createHouseholdQuestions(route.params.id, questionsPayload);
+            if (questionsId) {
+                await householdService.updateHouseholdQuestions(questionsId, questionsPayload);
+            } else {
+                await householdService.createHouseholdQuestions(route.params.id, questionsPayload);
+            }
         }
 
         await petForm.value?.save?.();

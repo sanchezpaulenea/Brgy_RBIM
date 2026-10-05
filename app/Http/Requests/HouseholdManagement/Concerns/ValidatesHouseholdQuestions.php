@@ -75,7 +75,7 @@ trait ValidatesHouseholdQuestions
             'main_source_drinking_water_id' => [
                 $presence,
                 'integer',
-                Rule::exists('water_source', 'water_source'),
+                Rule::exists('water_source', 'water_source_id'),
             ],
             'kitchen_garbage_disposal_id' => [
                 $presence,

@@ -579,10 +579,10 @@ return [
             'hq',
             WaterSource::class,
             'water_source',
-            'water_source',
             'water_source_id',
+            'water_source',
             ['household_questions.main_source_drinking_water'],
-            $sortLookup('water_source', 'sort_water_source', 'water_source', 'water_source_id', 'hq.main_source_drinking_water_id'),
+            $sortLookup('water_source', 'sort_water_source', 'water_source_id', 'water_source', 'hq.main_source_drinking_water_id'),
         ),
     ], ['questions' => true]),
 

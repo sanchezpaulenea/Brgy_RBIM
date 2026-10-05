@@ -4,14 +4,12 @@ namespace App\Providers;
 
 use App\Repositories\BarangayPersonnel\BarangayPersonnelRepository;
 use App\Repositories\BarangayPersonnel\PersonnelPositionRepository;
-use App\Repositories\HouseholdManagement\HouseholdAssessmentRepository;
 use App\Repositories\HouseholdManagement\HouseholdQuestionsRepository;
 use App\Repositories\HouseholdManagement\HouseholdRepository;
 use App\Repositories\HouseholdManagement\PetCensusRepository;
 use App\Repositories\HouseholdManagement\StreetRepository;
 use App\Repositories\Interfaces\BarangayPersonnel\BarangayPersonnelRepositoryInterface;
 use App\Repositories\Interfaces\BarangayPersonnel\PersonnelPositionRepositoryInterface;
-use App\Repositories\Interfaces\HouseholdManagement\HouseholdAssessmentRepositoryInterface;
 use App\Repositories\Interfaces\HouseholdManagement\HouseholdQuestionsRepositoryInterface;
 use App\Repositories\Interfaces\HouseholdManagement\HouseholdRepositoryInterface;
 use App\Repositories\Interfaces\HouseholdManagement\PetCensusRepositoryInterface;
@@ -82,7 +80,6 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(HouseholdRepositoryInterface::class, HouseholdRepository::class);
         $this->app->bind(HouseholdQuestionsRepositoryInterface::class, HouseholdQuestionsRepository::class);
         $this->app->bind(PetCensusRepositoryInterface::class, PetCensusRepository::class);
-        $this->app->bind(HouseholdAssessmentRepositoryInterface::class, HouseholdAssessmentRepository::class);
         $this->app->bind(ResidentRepositoryInterface::class, ResidentRepository::class);
         $this->app->bind(StreetRepositoryInterface::class, StreetRepository::class);
         $this->app->bind(NationalityRepositoryInterface::class, NationalityRepository::class);

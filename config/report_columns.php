@@ -94,7 +94,7 @@ return [
                 [
                     'key' => 'main_source_drinking_water',
                     'label' => 'Main Source of Drinking Water',
-                    'source' => 'mainSourceDrinkingWater.water_source_id',
+                    'source' => 'mainSourceDrinkingWater.water_source',
                 ],
                 [
                     'key' => 'kitchen_garbage_disposal',

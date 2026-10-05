@@ -82,36 +82,6 @@ export async function updateHouseholdQuestions(questionsId, payload) {
     return data.item;
 }
 
-export async function fetchAllHouseholdAssessments() {
-    const { data } = await http.get('/household-assessments');
-
-    return data.items;
-}
-
-export async function fetchHouseholdAssessments(householdId) {
-    const { data } = await http.get(`/households/${householdId}/assessments`);
-
-    return data.items;
-}
-
-export async function fetchHouseholdAssessmentOptions() {
-    const { data } = await http.get('/household-assessment-options');
-
-    return data.personnel;
-}
-
-export async function createHouseholdAssessment(householdId, payload) {
-    const { data } = await http.post(`/households/${householdId}/assessments`, payload);
-
-    return data.item;
-}
-
-export async function updateHouseholdAssessmentStatus(assessmentId, payload) {
-    const { data } = await http.patch(`/household-assessments/${assessmentId}/status`, payload);
-
-    return data.item;
-}
-
 export async function createResident(payload) {
     const { data } = await http.post('/residents', payload);
 

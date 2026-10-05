@@ -20,7 +20,7 @@ class PetCensusPolicyTest extends TestCase
     public function test_user_with_pet_view_can_list_and_view(): void
     {
         $policy = new PetCensusPolicy;
-        $user = $this->user(['pet.view']);
+        $user = $this->user(['petcensus.view']);
 
         $this->assertTrue($policy->viewAny($user));
         $this->assertTrue($policy->view($user, new PetCensus));
@@ -41,10 +41,10 @@ class PetCensusPolicyTest extends TestCase
     {
         $policy = new PetCensusPolicy;
 
-        $this->assertTrue($policy->create($this->user(['pet.create'])));
-        $this->assertTrue($policy->update($this->user(['pet.update']), new PetCensus));
-        $this->assertFalse($policy->create($this->user(['pet.view'])));
-        $this->assertFalse($policy->update($this->user(['pet.view']), new PetCensus));
+        $this->assertTrue($policy->create($this->user(['petcensus.create'])));
+        $this->assertTrue($policy->update($this->user(['petcensus.update']), new PetCensus));
+        $this->assertFalse($policy->create($this->user(['petcensus.view'])));
+        $this->assertFalse($policy->update($this->user(['petcensus.view']), new PetCensus));
     }
 
     /**

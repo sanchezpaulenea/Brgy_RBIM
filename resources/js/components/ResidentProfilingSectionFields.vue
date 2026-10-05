@@ -323,7 +323,7 @@
             <template v-if="!familyPlanningIsNone">
                 <div>
                     <label class="rbim-label" :for="`${idPrefix}-source_of_fp_method_id`">
-                        Source of Family Planning Method
+                        Source of Family Planning Method<span class="rbim-required" aria-hidden="true">*</span>
                     </label>
                     <select
                         :id="`${idPrefix}-source_of_fp_method_id`"

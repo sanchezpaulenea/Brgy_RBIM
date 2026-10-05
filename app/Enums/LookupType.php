@@ -8,7 +8,6 @@ use App\Models\BarangayPersonnel\PersonnelPosition;
 use App\Models\BarangayPersonnel\PersonnelStatus;
 use App\Models\HouseholdManagement\Breed;
 use App\Models\HouseholdManagement\BuildingHouseType;
-use App\Models\HouseholdManagement\CensusStatus;
 use App\Models\HouseholdManagement\Clan;
 use App\Models\HouseholdManagement\ConstructionMaterialOuterWall;
 use App\Models\HouseholdManagement\FuelType;
@@ -54,7 +53,6 @@ enum LookupType: string
     case LoginStatus = 'login-status';
     case Action = 'action';
     case Permission = 'permission';
-    case CensusStatus = 'census-status';
     case Clan = 'clan';
     case HouseholdStatus = 'household-status';
     case MaritalStatus = 'marital-status';
@@ -102,7 +100,6 @@ enum LookupType: string
             self::LoginStatus => LoginStatus::class,
             self::Action => Action::class,
             self::Permission => Permission::class,
-            self::CensusStatus => CensusStatus::class,
             self::Clan => Clan::class,
             self::HouseholdStatus => HouseholdStatus::class,
             self::MaritalStatus => MaritalStatus::class,
@@ -151,7 +148,6 @@ enum LookupType: string
     public function isReadOnlyReference(): bool
     {
         return in_array($this, [
-            self::CensusStatus,
             self::Clan,
             self::HouseholdStatus,
             self::MaritalStatus,
@@ -210,7 +206,6 @@ enum LookupType: string
             self::BuildingHouseType,
             self::ConstructionMaterialOuterWall => $this->idColumn() ?? 'id',
             default => $this->labelColumn() ?? match ($this) {
-                self::CensusStatus => 'status_name',
                 self::Clan => 'clan_name',
                 self::HouseholdStatus => 'household_status',
                 self::MaritalStatus => 'marital_status',
@@ -246,7 +241,7 @@ enum LookupType: string
             self::SkillType => 'skill_type_id',
             self::OwnershipType => 'ownership_type_id',
             self::FuelType => 'fuel_type_id',
-            self::WaterSource => 'water_source',
+            self::WaterSource => 'water_source_id',
             self::KitchenGarbageDisposal => 'kitchen_garbage_disposal_id',
             self::ToiletFacilityType => 'toilet_facility_type_id',
             self::BuildingHouseType => 'building_house_type_id',
@@ -280,7 +275,7 @@ enum LookupType: string
             self::SkillType => 'skill_type',
             self::OwnershipType => 'ownership_type',
             self::FuelType => 'fuel_type',
-            self::WaterSource => 'water_source_id',
+            self::WaterSource => 'water_source',
             self::KitchenGarbageDisposal => 'kitchen_garbage_disposal',
             self::ToiletFacilityType => 'toilet_facility_type',
             self::BuildingHouseType => 'building_house_type',
@@ -310,13 +305,6 @@ enum LookupType: string
         }
 
         return match ($this) {
-            self::CensusStatus => [
-                'id' => $model->getKey(),
-                'label' => (string) $model->getAttribute('status_name'),
-                'census_status_id' => $model->getKey(),
-                'status_code' => $model->getAttribute('status_code'),
-                'status_name' => $model->getAttribute('status_name'),
-            ],
             self::Clan => [
                 'id' => $model->getKey(),
                 'label' => (string) $model->getAttribute('clan_name'),

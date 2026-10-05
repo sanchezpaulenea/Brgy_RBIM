@@ -87,7 +87,7 @@ class HouseholdQuestions extends Model
      */
     public function mainSourceDrinkingWater(): BelongsTo
     {
-        return $this->belongsTo(WaterSource::class, 'main_source_drinking_water_id', 'water_source');
+        return $this->belongsTo(WaterSource::class, 'main_source_drinking_water_id', 'water_source_id');
     }
 
     /**

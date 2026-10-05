@@ -134,7 +134,7 @@ class HouseholdQuestionsService
             'fuel_type_for_cooking_id' => $questions->fuel_type_for_cooking_id,
             'fuel_type_for_cooking' => $questions->fuelTypeForCooking?->fuel_type,
             'main_source_drinking_water_id' => $questions->main_source_drinking_water_id,
-            'main_source_drinking_water' => $questions->mainSourceDrinkingWater?->water_source_id,
+            'main_source_drinking_water' => $questions->mainSourceDrinkingWater?->water_source,
             'kitchen_garbage_disposal_id' => $questions->kitchen_garbage_disposal_id,
             'kitchen_garbage_disposal' => $questions->kitchenGarbageDisposal?->kitchen_garbage_disposal,
             'perform_garbage_seggragation' => $questions->perform_garbage_seggragation,

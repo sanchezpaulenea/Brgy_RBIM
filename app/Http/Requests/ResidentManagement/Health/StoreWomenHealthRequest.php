@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\ResidentManagement\Health;
 
+use App\Models\ResidentManagement\Health\FamilyPlanningMethod;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -25,10 +26,12 @@ class StoreWomenHealthRequest extends FormRequest
                 'integer',
                 Rule::exists('family_planning_method', 'family_planning_method_id'),
             ],
-            'source_of_fp_method_id' => $this->optionalLookupRule(
-                'source_of_fp_method',
-                'source_of_fp_method_id',
-            ),
+            'source_of_fp_method_id' => [
+                Rule::requiredIf(fn () => ! $this->familyPlanningMethodIndicatesNone()),
+                'nullable',
+                'integer',
+                Rule::exists('source_of_fp_method', 'source_of_fp_method_id'),
+            ],
             'have_intention_to_use_fp' => ['required', 'boolean'],
         ];
     }
@@ -45,24 +48,24 @@ class StoreWomenHealthRequest extends FormRequest
             'living_children.integer' => 'Living children must be numeric.',
             'family_planning_method_id.required' => 'Family planning method is required.',
             'family_planning_method_id.exists' => 'The selected family planning method does not exist.',
+            'source_of_fp_method_id.required' => 'Source of family planning method is required.',
             'source_of_fp_method_id.exists' => 'The selected source of family planning method does not exist.',
             'have_intention_to_use_fp.required' => 'Intention to use family planning is required.',
         ];
     }
 
-    /**
-     * @return array<int, mixed>
-     */
-    private function optionalLookupRule(string $table, string $column): array
+    private function familyPlanningMethodIndicatesNone(): bool
     {
-        return [
-            'nullable',
-            'integer',
-            'min:0',
-            Rule::when(
-                fn () => (int) $this->input($column) > 0,
-                [Rule::exists($table, $column)],
-            ),
-        ];
+        $methodId = (int) $this->input('family_planning_method_id');
+
+        if ($methodId <= 0) {
+            return false;
+        }
+
+        $method = FamilyPlanningMethod::query()
+            ->where('family_planning_method_id', $methodId)
+            ->first();
+
+        return $method?->indicatesNone() ?? false;
     }
 }

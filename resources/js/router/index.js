@@ -120,7 +120,12 @@ const routes = [
     },
     {
         path: '/households/pet-census',
-        redirect: { name: 'pet-census' },
+        name: 'household-pet-census',
+        component: () => import('@/pages/households/HouseholdPetCensusPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresPermissions: ['petcensus.view'],
+        },
     },
     {
         path: '/households/:id(\\d+)',
@@ -133,12 +138,7 @@ const routes = [
     },
     {
         path: '/pet-census',
-        name: 'pet-census',
-        component: () => import('@/pages/households/HouseholdPetCensusPage.vue'),
-        meta: {
-            requiresAuth: true,
-            requiresPermissions: ['pet.view'],
-        },
+        redirect: { name: 'household-pet-census' },
     },
     {
         path: '/residents',

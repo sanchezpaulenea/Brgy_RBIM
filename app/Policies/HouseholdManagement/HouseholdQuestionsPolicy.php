@@ -26,6 +26,6 @@ class HouseholdQuestionsPolicy
 
     public function update(User $user, HouseholdQuestions $questions): bool
     {
-        return $user->isAdmin() || $user->hasPermission('household.update');
+        return $user->isAdmin() || $user->hasPermission('householdquestion.update');
     }
 }

@@ -1,6 +1,8 @@
 <template>
-    <AppLayout title="Pet Census">
+    <AppLayout title="Household Management">
         <div class="space-y-6">
+            <PageTabs :tabs="householdTabs" />
+
             <div v-if="error" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {{ error }}
             </div>
@@ -150,8 +152,10 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
 import HouseholdPetFields from '@/components/HouseholdPetFields.vue';
+import PageTabs from '@/components/PageTabs.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { useAuth } from '@/composables/useAuth';
+import { useSectionTabs } from '@/composables/useSectionTabs';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import { formatDate, matchesSearch } from '@/utils/format';
@@ -159,7 +163,8 @@ import { emptyPetForm, emptyPetLookups, petPayload, validatePetForm, yesNoLabel 
 import { applyValidationErrors } from '@/utils/residentForm';
 
 const { hasPermission } = useAuth();
-const canUpdate = computed(() => hasPermission('pet.update'));
+const { householdTabs } = useSectionTabs();
+const canUpdate = computed(() => hasPermission('petcensus.update'));
 const canViewHousehold = computed(() => hasPermission('household.view'));
 
 const loading = ref(false);

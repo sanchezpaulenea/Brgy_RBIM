@@ -12,12 +12,11 @@ class Education extends Model
 
     protected $primaryKey = 'education_id';
 
-    public $incrementing = false;
+    public $incrementing = true;
 
     public $timestamps = false;
 
     protected $fillable = [
-        'education_id',
         'resident_id',
         'highest_lvl_of_educ_id',
         'current_enrollement_status_id',
