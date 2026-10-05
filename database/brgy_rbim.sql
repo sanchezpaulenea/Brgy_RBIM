@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Oct 05, 2026 at 02:06 AM
+-- Generation Time: Oct 05, 2026 at 02:13 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.4.0
 
@@ -937,7 +937,7 @@ CREATE TABLE IF NOT EXISTS `permission` (
   `permission` varchar(45) NOT NULL,
   PRIMARY KEY (`permission_id`),
   UNIQUE KEY `uq_permission` (`permission`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=73 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=74 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `permission`
@@ -964,7 +964,7 @@ INSERT INTO `permission` (`permission_id`, `permission`) VALUES
 (24, 'household.update'),
 (22, 'household.view'),
 (26, 'householdquestion.create'),
-(39, 'householdquestion.update'),
+(73, 'householdquestion.update'),
 (25, 'householdquestion.view'),
 (47, 'infanthealth.create'),
 (48, 'infanthealth.update'),
@@ -1417,7 +1417,7 @@ CREATE TABLE IF NOT EXISTS `role_permission` (
   PRIMARY KEY (`role_permission_id`),
   UNIQUE KEY `uq_permission_assignment` (`role_id`,`permission_id`),
   KEY `permission_role` (`permission_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=170 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=172 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `role_permission`
@@ -1441,7 +1441,6 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (63, 1, 35),
 (56, 1, 36),
 (57, 1, 37),
-(61, 1, 39),
 (91, 1, 40),
 (92, 1, 41),
 (117, 1, 42),
@@ -1472,6 +1471,7 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (163, 1, 70),
 (164, 1, 71),
 (165, 1, 72),
+(171, 1, 73),
 (16, 2, 15),
 (17, 2, 16),
 (18, 2, 17),
@@ -1496,7 +1496,6 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (41, 2, 36),
 (42, 2, 37),
 (43, 2, 38),
-(60, 2, 39),
 (64, 2, 40),
 (65, 2, 41),
 (66, 2, 42),
@@ -1530,6 +1529,7 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (160, 2, 70),
 (161, 2, 71),
 (162, 2, 72),
+(170, 2, 73),
 (7, 3, 1),
 (10, 3, 2),
 (8, 3, 3),
