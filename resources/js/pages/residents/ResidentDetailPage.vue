@@ -158,6 +158,10 @@
             <div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white shadow-xl" role="dialog" aria-modal="true">
                 <div class="border-b border-slate-100 px-5 py-4">
                     <h2 class="text-base font-semibold text-slate-900">{{ editorTitle }}</h2>
+                    <div v-if="editing === 'migration'" class="mt-1 text-sm font-normal text-slate-500">
+                        <p>Current household address: {{ location.barangay || '—' }}, {{ location.city || '—' }}.</p>
+                        <p>Resident type: Automatically determined based on previous and current residence.</p>
+                    </div>
                 </div>
                 <form class="space-y-4 px-5 py-4" novalidate @submit.prevent="handleSave">
                     <div v-if="editError" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -384,10 +388,6 @@
                     </template>
 
                     <template v-else-if="editing === 'migration'">
-                        <p class="text-sm text-slate-500">
-                            Current household address: {{ location.barangay || '—' }}, {{ location.city || '—' }}.
-                            Resident type is identified by comparing previous residence 5 years ago and 6 months ago with this address.
-                        </p>
                         <div class="grid gap-4 sm:grid-cols-2">
                             <div>
                                 <label class="rbim-label">Previous Residence 6 Months Ago (Barangay)<span class="rbim-required" aria-hidden="true">*</span></label>
@@ -441,17 +441,17 @@
                                     :value="migrationClassification.stayLabel || '—'"
                                     disabled
                                 >
-                                <p class="mt-1 text-xs text-slate-500">Computed from date of transfer. Do not encode.</p>
+                                <p class="mt-1 text-xs text-slate-500">Automatically calculated from the date of transfer.</p>
                             </div>
                             <div>
-                                <label class="rbim-label">Type of Resident</label>
+                                <label class="rbim-label">Resident Type</label>
                                 <input
                                     type="text"
                                     class="rbim-input bg-slate-50"
                                     :value="migrationClassification.typeLabel || '—'"
                                     disabled
                                 >
-                                <p class="mt-1 text-xs text-slate-500">Identified from previous and current barangay / city.</p>
+                                <p class="mt-1 text-xs text-slate-500">Automatically determined from previous and current residence.</p>
                             </div>
                             <template v-if="!migrationClassification.nonMigrant">
                                 <div>
@@ -1099,7 +1099,7 @@ function displayMigration(record) {
         { label: 'Previous Residence 5 Years Ago (Barangay)', value: record.previous_residence_5yrs_brgy || '—' },
         { label: 'Previous Residence 5 Years Ago (City / Municipality)', value: record.previous_residence_5yrs_city_municipality || '—' },
         { label: 'Length of Stay in the Barangay', value: record.length_of_stay_label || '—' },
-        { label: 'Type of Resident', value: record.resident_type || '—' },
+        { label: 'Resident Type', value: record.resident_type || '—' },
     ];
 
     if (record.resident_type && /non[- ]migrant/i.test(record.resident_type)) {

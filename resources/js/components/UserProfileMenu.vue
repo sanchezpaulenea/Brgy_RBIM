@@ -2,7 +2,7 @@
     <div ref="rootRef" class="relative shrink-0">
         <button
             type="button"
-            class="flex max-w-[12.5rem] cursor-pointer items-center gap-2.5 rounded-2xl bg-white/10 py-1.5 pl-1.5 pr-3 text-left text-white shadow-sm ring-1 ring-white/25 transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:max-w-[16.5rem]"
+            class="flex max-w-[14rem] cursor-pointer items-center gap-3 rounded-xl py-1 text-left text-white transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:max-w-[18rem]"
             aria-haspopup="dialog"
             :aria-expanded="open"
             aria-label="Open account menu"
@@ -11,14 +11,14 @@
             <UserAvatar
                 :src="user?.avatar_url"
                 :preset="user?.avatar_preset"
-                size-class="h-10 w-10 ring-2 ring-white/80"
+                size-class="h-11 w-11"
                 decorative
             />
             <span class="min-w-0">
-                <span class="block truncate text-xs font-semibold uppercase tracking-[0.08em]">
+                <span class="block truncate text-[15px] font-semibold uppercase leading-tight tracking-[0.04em]">
                     {{ pillName }}
                 </span>
-                <span class="block truncate text-[11px] text-white/75">
+                <span class="mt-0.5 block truncate text-[13px] font-normal leading-tight text-white/80">
                     {{ rolesLabel }}
                 </span>
             </span>
@@ -26,41 +26,42 @@
 
         <div
             v-if="open"
-            class="absolute right-0 top-full z-50 mt-3 w-[22.5rem] max-w-[calc(100vw-1.5rem)] rounded-[28px] bg-[#eef3ea] p-3 shadow-2xl"
+            class="absolute right-0 top-full z-50 mt-2 w-[21.5rem] max-w-[calc(100vw-1.5rem)] rounded-3xl bg-[#f3f6f1] p-2.5 shadow-[0_16px_40px_rgba(15,23,42,0.16)]"
             role="dialog"
             aria-label="Account"
         >
-            <div class="relative rounded-full bg-[#f7faf4] px-8 py-2 text-center">
+            <div class="relative rounded-full bg-white px-8 py-1.5 text-center">
                 <p class="truncate text-[13px] text-slate-500">
                     {{ managedByLabel }}
                 </p>
                 <button
                     type="button"
-                    class="absolute right-1.5 top-1/2 -translate-y-1/2 cursor-pointer rounded-full p-1 text-slate-500 transition hover:bg-white hover:text-slate-700"
+                    class="absolute right-1.5 top-1/2 -translate-y-1/2 cursor-pointer rounded-full p-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
                     aria-label="Close account menu"
                     @click="closeMenu"
                 >
-                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path fill-rule="evenodd" d="M4.22 4.22a.75.75 0 011.06 0L10 8.94l4.72-4.72a.75.75 0 111.06 1.06L11.06 10l4.72 4.72a.75.75 0 11-1.06 1.06L10 11.06l-4.72 4.72a.75.75 0 01-1.06-1.06L8.94 10 4.22 5.28a.75.75 0 010-1.06z" clip-rule="evenodd" />
                     </svg>
                 </button>
             </div>
 
-            <div class="mt-2 overflow-hidden rounded-[22px] bg-white shadow-sm">
-            <div class="px-4 py-4">
+            <div class="mt-2 overflow-hidden rounded-[20px] bg-white shadow-sm">
+            <div class="px-4 py-3.5">
                 <div class="flex items-center gap-3">
-                    <div class="relative shrink-0">
+                    <div class="group relative shrink-0">
                         <UserAvatar
                             :src="user?.avatar_url"
                             :preset="user?.avatar_preset"
                             class="transition"
                             :class="{ 'opacity-60': saving }"
-                            size-class="h-14 w-14"
+                            size-class="h-12 w-12"
                             :alt="displayName"
                         />
                         <button
                             type="button"
                             class="absolute -bottom-0.5 -right-0.5 inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50"
+                            :class="pickerOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100'"
                             aria-label="Change profile photo"
                             :aria-expanded="pickerOpen"
                             @click.stop="pickerOpen = !pickerOpen"
@@ -72,10 +73,10 @@
                     </div>
 
                     <div class="min-w-0 flex-1">
-                        <p class="truncate text-[15px] font-semibold uppercase tracking-wide text-slate-900">
+                        <p class="truncate text-[15px] font-semibold uppercase leading-tight tracking-[0.03em] text-slate-900">
                             {{ displayName }}
                         </p>
-                        <p class="truncate text-sm text-slate-500">
+                        <p class="mt-0.5 truncate text-[13px] text-slate-500">
                             {{ positionLabel }}
                         </p>
                     </div>
@@ -124,10 +125,11 @@
                 >
             </div>
 
-            <div class="flex items-center gap-3 border-t border-slate-200 px-4 py-3">
-                <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center text-slate-700">
-                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM3 18a7 7 0 1114 0H3z" />
+            <div class="flex items-center gap-3 border-t border-slate-100 px-4 py-3">
+                <span class="inline-flex h-6 w-6 shrink-0 items-center justify-center text-slate-700">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7.2a4 4 0 11-8 0 4 4 0 018 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 20.2a7 7 0 0114 0" />
                     </svg>
                 </span>
                 <p class="min-w-0 truncate text-sm font-medium text-slate-800">
@@ -135,16 +137,17 @@
                 </p>
             </div>
 
-            <div class="border-t border-slate-200">
+            <div class="border-t border-slate-100">
                 <button
                     type="button"
                     class="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-left text-sm font-medium text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                     :disabled="loading"
                     @click="handleLogout"
                 >
-                    <span class="inline-flex h-8 w-8 items-center justify-center text-slate-700">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                    <span class="inline-flex h-6 w-6 items-center justify-center text-slate-700">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.5 8.5V6.2A2.2 2.2 0 0013.3 4H6.2A2.2 2.2 0 004 6.2v11.6A2.2 2.2 0 006.2 20h7.1a2.2 2.2 0 002.2-2.2v-2.3" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 12h9.5m0 0-2.6-2.6M19.5 12l-2.6 2.6" />
                         </svg>
                     </span>
                     Log out

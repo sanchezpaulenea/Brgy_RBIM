@@ -26,6 +26,10 @@
                     <h3 v-if="currentLabel" class="text-sm font-semibold text-slate-900">
                         {{ currentLabel }}
                     </h3>
+                    <div v-if="currentKey === 'migration'" class="text-sm font-normal text-slate-500">
+                        <p>Current household address: {{ location.barangay || '—' }}, {{ location.city || '—' }}.</p>
+                        <p>Resident type: Automatically determined based on previous and current residence.</p>
+                    </div>
                 </div>
                 <ResidentProfilingSectionFields
                     v-if="currentKey"

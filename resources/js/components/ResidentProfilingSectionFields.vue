@@ -475,10 +475,6 @@
         </template>
 
         <template v-else-if="section === 'migration'">
-            <p class="sm:col-span-2 text-sm text-slate-500">
-                Current household address: {{ location.barangay || '—' }}, {{ location.city || '—' }}.
-                Resident type is identified by comparing previous residence 5 years ago and 6 months ago with this address.
-            </p>
             <div>
                 <label class="rbim-label" :for="`${idPrefix}-previous_residence_6mos_brgy`">
                     Previous Residence 6 Months Ago (Barangay)<span class="rbim-required" aria-hidden="true">*</span>
@@ -543,17 +539,17 @@
                     :value="migrationClassification.stayLabel || '—'"
                     disabled
                 >
-                <p class="mt-1 text-xs text-slate-500">Computed from date of transfer. Do not encode.</p>
+                <p class="mt-1 text-xs text-slate-500">Automatically calculated from the date of transfer.</p>
             </div>
             <div>
-                <label class="rbim-label">Type of Resident</label>
+                <label class="rbim-label">Resident Type</label>
                 <input
                     type="text"
                     class="rbim-input bg-slate-50"
                     :value="migrationClassification.typeLabel || '—'"
                     disabled
                 >
-                <p class="mt-1 text-xs text-slate-500">Identified from previous and current barangay / city.</p>
+                <p class="mt-1 text-xs text-slate-500">Automatically determined from previous and current residence.</p>
             </div>
             <template v-if="!migrationClassification.nonMigrant">
                 <div>
