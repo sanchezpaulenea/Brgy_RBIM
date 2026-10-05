@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.3
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Oct 05, 2026 at 04:00 AM
--- Server version: 8.4.7
--- PHP Version: 8.4.15
+-- Generation Time: Oct 05, 2026 at 07:28 AM
+-- Server version: 9.1.0
+-- PHP Version: 8.4.0
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS `audit_log` (
   PRIMARY KEY (`audit_id`),
   KEY `action` (`action_id`),
   KEY `audit_user` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `audit_log`
@@ -110,7 +110,9 @@ INSERT INTO `audit_log` (`audit_id`, `user_id`, `action_id`, `record_id`, `descr
 (36, 2, 1, 2, 'Create skills development', NULL, 'Tesda', '2026-10-05 11:58:46', 'record', 'skills_development'),
 (37, 2, 1, 2, 'Create household questions', NULL, 'Household 8', '2026-10-05 11:59:24', 'record', 'household_questions'),
 (38, 2, 1, 1, 'Create pet census', NULL, 'Household 8', '2026-10-05 12:00:43', 'record', 'pet_census'),
-(39, 2, 1, 2, 'Create pet census', NULL, 'Household 8', '2026-10-05 12:00:43', 'record', 'pet_census');
+(39, 2, 1, 2, 'Create pet census', NULL, 'Household 8', '2026-10-05 12:00:43', 'record', 'pet_census'),
+(40, 1, 2, 1, 'Session ended because the account was signed in on another device.', NULL, 'concurrent_login', '2026-10-05 14:52:08', 'session', 'user_log'),
+(41, 2, 2, 13, 'Session ended because the account was signed in on another device.', NULL, 'concurrent_login', '2026-10-05 14:53:10', 'session', 'user_log');
 
 -- --------------------------------------------------------
 
@@ -1225,6 +1227,27 @@ INSERT INTO `pet_census` (`pet_census_id`, `household_id`, `specie_id`, `breed_i
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `pet_status`
+--
+
+DROP TABLE IF EXISTS `pet_status`;
+CREATE TABLE IF NOT EXISTS `pet_status` (
+  `pet_status_id` int NOT NULL AUTO_INCREMENT,
+  `pet_status` varchar(45) NOT NULL,
+  PRIMARY KEY (`pet_status_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `pet_status`
+--
+
+INSERT INTO `pet_status` (`pet_status_id`, `pet_status`) VALUES
+(1, 'Active'),
+(2, 'Diseased');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `place_of_delivery`
 --
 
@@ -2131,14 +2154,14 @@ CREATE TABLE IF NOT EXISTS `user_log` (
   PRIMARY KEY (`user_log_id`),
   KEY `user_log` (`user_id`),
   KEY `login_status` (`login_status_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `user_log`
 --
 
 INSERT INTO `user_log` (`user_log_id`, `user_id`, `login_time`, `logout_time`, `login_status_id`, `ip_address`, `device`) VALUES
-(1, 1, '2026-08-31 19:24:57', '2026-08-31 19:24:57', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(1, 1, '2026-08-31 19:24:57', '2026-10-05 14:52:07', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (2, 1, '2026-08-31 19:25:07', '2026-08-31 19:29:50', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (3, 3, '2026-08-31 19:29:59', '2026-08-31 19:30:16', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (4, 3, '2026-08-31 19:30:26', '2026-08-31 19:30:38', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
@@ -2146,7 +2169,11 @@ INSERT INTO `user_log` (`user_log_id`, `user_id`, `login_time`, `logout_time`, `
 (6, 2, '2026-08-31 19:30:47', '2026-10-05 10:44:53', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (11, 2, '2026-10-05 10:44:53', '2026-10-05 10:50:56', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (12, 2, '2026-10-05 11:08:55', '2026-10-05 11:25:29', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(13, 2, '2026-10-05 11:40:42', '2026-10-05 11:40:42', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
+(13, 2, '2026-10-05 11:40:42', '2026-10-05 14:53:10', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(14, 1, '2026-10-05 14:52:06', '2026-10-05 14:53:00', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(15, 2, '2026-10-05 14:53:10', '2026-10-05 15:01:37', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(16, 2, '2026-10-05 15:01:48', '2026-10-05 15:17:10', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(17, 2, '2026-10-05 15:18:36', '2026-10-05 15:18:36', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
 
 -- --------------------------------------------------------
 
