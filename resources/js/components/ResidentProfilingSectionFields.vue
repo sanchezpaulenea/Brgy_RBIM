@@ -543,7 +543,7 @@
                     :value="migrationClassification.stayLabel || '—'"
                     disabled
                 >
-                <p class="mt-1 text-xs text-slate-500">Computed from date of transfer. Do not encode.</p>
+                <p class="mt-1 text-xs text-slate-500">Automatically calculated from the date of transfer.</p>
             </div>
             <div>
                 <label class="rbim-label">Type of Resident</label>
@@ -553,7 +553,7 @@
                     :value="migrationClassification.typeLabel || '—'"
                     disabled
                 >
-                <p class="mt-1 text-xs text-slate-500">Identified from previous and current barangay / city.</p>
+                <p class="mt-1 text-xs text-slate-500">Automatically determined from previous and current residence.</p>
             </div>
             <template v-if="!migrationClassification.nonMigrant">
                 <div>

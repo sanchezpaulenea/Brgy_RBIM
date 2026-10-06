@@ -23,6 +23,16 @@
     input[type='password']::-ms-clear {
         display: none;
     }
+
+    /*
+     * Chromium hides number steppers until hover. Keep them visible so the
+     * control is obvious before the field is pointed at.
+     */
+    input[type='number']::-webkit-inner-spin-button,
+    input[type='number']::-webkit-outer-spin-button {
+        opacity: 1;
+        pointer-events: auto;
+    }
 }
 
 @layer components {
@@ -100,6 +110,6 @@
      * Wide enough for "Barangay Personnel Management" at the shared nav font size.
      */
     .rbim-shell {
-        --rbim-sidebar: min(18.5rem, 85vw);
+        --rbim-sidebar: min(22rem, 85vw);
     }
 }

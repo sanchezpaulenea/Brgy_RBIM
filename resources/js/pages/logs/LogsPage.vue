@@ -29,7 +29,7 @@
                     <input id="date_to" v-model="filters.date_to" type="date" class="rbim-input py-2">
                 </div>
                 <div class="flex items-end gap-2 sm:col-span-2">
-                    <button type="button" class="rbim-btn-outline" :disabled="loading" @click="clearFilters">
+                    <button type="button" class="rbim-btn py-2" :disabled="loading" @click="clearFilters">
                         Refresh
                     </button>
                 </div>
@@ -59,7 +59,7 @@
                     <input id="login_to" v-model="loginFilters.date_to" type="date" class="rbim-input py-2">
                 </div>
                 <div class="flex items-end gap-2 sm:col-span-2">
-                    <button type="button" class="rbim-btn-outline" :disabled="loading" @click="clearLoginFilters">
+                    <button type="button" class="rbim-btn py-2" :disabled="loading" @click="clearLoginFilters">
                         Refresh
                     </button>
                 </div>

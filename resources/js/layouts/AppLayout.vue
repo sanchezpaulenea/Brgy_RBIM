@@ -39,7 +39,7 @@
                 @click="sidebarOpen = false"
             />
             <aside
-                class="fixed bottom-0 left-0 top-20 z-30 w-[var(--rbim-sidebar)] max-w-[18.5rem] overflow-x-hidden overflow-y-auto bg-brand text-white shadow-lg transition-transform duration-200 md:translate-x-0"
+                class="fixed bottom-0 left-0 top-20 z-30 w-[var(--rbim-sidebar)] max-w-[22rem] overflow-x-hidden overflow-y-auto bg-brand text-white shadow-lg transition-transform duration-200 md:translate-x-0"
                 :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
             >
                 <nav class="flex flex-col gap-1 p-3">
@@ -65,8 +65,8 @@
                             <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd" />
                             </svg>
-                            <span class="flex-1">Household Management</span>
-                            <span class="text-xs">{{ openMenu === 'household' ? '▾' : '▸' }}</span>
+                            <span class="min-w-0 flex-1 whitespace-nowrap">Household Management</span>
+                            <span class="ml-auto inline-flex h-4 w-4 shrink-0 items-center justify-center text-xs leading-none">{{ openMenu === 'household' ? '▾' : '▸' }}</span>
                         </button>
 
                         <div v-show="openMenu === 'household'" class="ml-6 mt-1 space-y-1 border-l border-white/20 pl-3">
@@ -93,8 +93,8 @@
                             <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                             </svg>
-                            <span class="flex-1">Resident Management</span>
-                            <span class="text-xs">{{ openMenu === 'resident' ? '▾' : '▸' }}</span>
+                            <span class="min-w-0 flex-1 whitespace-nowrap">Resident Management</span>
+                            <span class="ml-auto inline-flex h-4 w-4 shrink-0 items-center justify-center text-xs leading-none">{{ openMenu === 'resident' ? '▾' : '▸' }}</span>
                         </button>
 
                         <div v-show="openMenu === 'resident'" class="ml-6 mt-1 space-y-1 border-l border-white/20 pl-3">
@@ -146,8 +146,8 @@
                             <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18h4v-3a3 3 0 00-4.56-2.56A5.99 5.99 0 0116 15v3zM4.56 12.44A3 3 0 000 15v3h4v-3c0-.91.2-1.78.56-2.56z" />
                             </svg>
-                            <span class="flex-1 whitespace-nowrap">Barangay Personnel Management</span>
-                            <span class="text-xs">{{ openMenu === 'personnel' ? '▾' : '▸' }}</span>
+                            <span class="min-w-0 flex-1 whitespace-nowrap">Barangay Personnel Management</span>
+                            <span class="ml-auto inline-flex h-4 w-4 shrink-0 items-center justify-center text-xs leading-none">{{ openMenu === 'personnel' ? '▾' : '▸' }}</span>
                         </button>
                         <div v-show="openMenu === 'personnel'" class="ml-6 mt-1 space-y-1 border-l border-white/20 pl-3">
                             <RouterLink
@@ -185,8 +185,8 @@
                             <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
                             </svg>
-                            <span class="flex-1">User Account Management</span>
-                            <span class="text-xs">{{ openMenu === 'users' ? '▾' : '▸' }}</span>
+                            <span class="min-w-0 flex-1 whitespace-nowrap">User Account Management</span>
+                            <span class="ml-auto inline-flex h-4 w-4 shrink-0 items-center justify-center text-xs leading-none">{{ openMenu === 'users' ? '▾' : '▸' }}</span>
                         </button>
                         <div v-show="openMenu === 'users'" class="ml-6 mt-1 space-y-1 border-l border-white/20 pl-3">
                             <RouterLink
@@ -212,8 +212,8 @@
                             <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.53 1.53 0 01-2.29.95c-1.37-.84-2.94.73-2.1 2.1.54.88.1 2.03-.95 2.28-1.56.38-1.56 2.6 0 2.98a1.53 1.53 0 01.95 2.29c-.84 1.37.73 2.94 2.1 2.1a1.53 1.53 0 012.28.95c.38 1.56 2.6 1.56 2.98 0a1.53 1.53 0 012.29-.95c1.37.84 2.94-.73 2.1-2.1a1.53 1.53 0 01.95-2.28c1.56-.38 1.56-2.6 0-2.98a1.53 1.53 0 01-.95-2.29c.84-1.37-.73-2.94-2.1-2.1a1.53 1.53 0 01-2.28-.95zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
                             </svg>
-                            <span class="flex-1">Settings</span>
-                            <span class="text-xs">{{ openMenu === 'settings' ? '▾' : '▸' }}</span>
+                            <span class="min-w-0 flex-1 whitespace-nowrap">Settings</span>
+                            <span class="ml-auto inline-flex h-4 w-4 shrink-0 items-center justify-center text-xs leading-none">{{ openMenu === 'settings' ? '▾' : '▸' }}</span>
                         </button>
 
                         <div v-show="openMenu === 'settings'" class="ml-6 mt-1 space-y-1 border-l border-white/20 pl-3">
