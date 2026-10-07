@@ -150,6 +150,12 @@ class HouseholdServices
     {
         unset($data['head_resident_id'], $data['head'], $data['has_basement']);
 
+        if (array_key_exists('pets', $data)) {
+            $pets = is_array($data['pets']) ? $data['pets'] : [];
+            unset($data['pets']);
+            $this->petCensusService->rejectPetsThatAreNotOnHousehold($household, $pets);
+        }
+
         $previous = $this->householdAuditSnapshot($household);
 
         return DB::transaction(function () use ($performedBy, $household, $data, $previous) {
@@ -300,6 +306,7 @@ class HouseholdServices
             'questions.intendToStay',
             'questions.femaleDeaths',
             'questions.childDeaths.sex',
+            'pets.petStatus',
             'pets.specie',
             'pets.breed',
             'pets.sex',

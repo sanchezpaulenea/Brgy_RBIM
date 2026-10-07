@@ -14,6 +14,7 @@ use App\Models\HouseholdManagement\FuelType;
 use App\Models\HouseholdManagement\HouseholdStatus;
 use App\Models\HouseholdManagement\KitchenGarbageDisposal;
 use App\Models\HouseholdManagement\OwnershipType;
+use App\Models\HouseholdManagement\PetStatus;
 use App\Models\HouseholdManagement\Specie;
 use App\Models\HouseholdManagement\ToiletFacilityType;
 use App\Models\HouseholdManagement\WaterSource;
@@ -87,6 +88,7 @@ enum LookupType: string
     case ConstructionMaterialOuterWall = 'construction-material-outer-wall';
     case Specie = 'specie';
     case Breed = 'breed';
+    case PetStatus = 'pet-status';
 
     /**
      * @return class-string<Model>
@@ -134,6 +136,7 @@ enum LookupType: string
             self::ConstructionMaterialOuterWall => ConstructionMaterialOuterWall::class,
             self::Specie => Specie::class,
             self::Breed => Breed::class,
+            self::PetStatus => PetStatus::class,
         };
     }
 
@@ -157,6 +160,7 @@ enum LookupType: string
             self::Sex,
             self::Specie,
             self::Breed,
+            self::PetStatus,
             ...self::incrementTwoLookups(),
         ], true);
     }
@@ -248,6 +252,7 @@ enum LookupType: string
             self::ConstructionMaterialOuterWall => 'construction_material_outer_wall_id',
             self::Specie => 'specie_id',
             self::Breed => 'breed_id',
+            self::PetStatus => 'pet_status_id',
             default => null,
         };
     }
@@ -283,6 +288,7 @@ enum LookupType: string
             self::Specie => 'specie',
             self::Breed => 'breed',
             self::Sex => 'sex',
+            self::PetStatus => 'pet_status',
             default => null,
         };
     }

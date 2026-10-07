@@ -33,10 +33,11 @@ class PetCensusController extends Controller
         ]);
     }
 
-    public function store(StorePetCensusRequest $request, Household $household): JsonResponse
+    public function store(StorePetCensusRequest $request): JsonResponse
     {
-        $this->authorize('view', $household);
         $this->authorize('create', PetCensus::class);
+
+        $household = Household::query()->findOrFail($request->integer('household_id'));
 
         /** @var User $performedBy */
         $performedBy = $request->user();

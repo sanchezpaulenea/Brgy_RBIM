@@ -19,6 +19,14 @@ class UpdatePetCensusRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->petCensusRules();
+        return $this->petCensusRules(requireStatus: true);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return $this->petCensusMessages();
     }
 }

@@ -122,6 +122,10 @@
                                 <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Rabies vaccination date</dt>
                                 <dd class="mt-1 text-sm text-slate-900">{{ pet.rabies_vaccination_date ? formatDate(pet.rabies_vaccination_date) : '—' }}</dd>
                             </div>
+                            <div>
+                                <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Pet Status</dt>
+                                <dd class="mt-1 text-sm text-slate-900">{{ pet.pet_status || '—' }}</dd>
+                            </div>
                         </dl>
                     </div>
                 </article>
@@ -296,13 +300,18 @@
                             />
                         </fieldset>
                     </section>
-                    <HouseholdPetCensusForm
-                        ref="petForm"
-                        mode="edit"
-                        :household-id="household.household_id"
-                        :existing-pets="household.pets || []"
-                        :can-create="canUpdate"
-                    />
+                    <p v-if="!canUpdatePets" class="text-sm text-slate-500">
+                        You do not have permission to update pet records.
+                    </p>
+                    <fieldset :disabled="!canUpdatePets" class="min-w-0 space-y-4 border-0 p-0">
+                        <HouseholdPetCensusForm
+                            ref="petForm"
+                            mode="edit"
+                            :household-id="household.household_id"
+                            :existing-pets="household.pets || []"
+                            :can-create="canUpdatePets"
+                        />
+                    </fieldset>
                     <div class="flex justify-end gap-2">
                         <button type="button" class="rbim-btn-outline" @click="cancelEdit">
                             Cancel
@@ -386,6 +395,7 @@ const confirm = reactive({
 
 const canUpdate = computed(() => hasPermission('household.update'));
 const canUpdateQuestions = computed(() => canPerformUpdate(auth, 'householdquestion.update'));
+const canUpdatePets = computed(() => hasPermission('petcensus.update'));
 
 function emptyEditForm() {
     return {
@@ -542,7 +552,7 @@ async function handleUpdate() {
         clearQuestionErrors();
     }
 
-    const petsValid = petForm.value?.validateAll?.() !== false;
+    const petsValid = !canUpdatePets.value || petForm.value?.validateAll?.() !== false;
 
     if (Object.keys(editErrors).length || Object.keys(questionErrors).length || !petsValid) {
         return;
@@ -581,7 +591,9 @@ async function handleUpdate() {
             }
         }
 
-        await petForm.value?.save?.();
+        if (canUpdatePets.value) {
+            await petForm.value?.save?.();
+        }
         successMessage.value = 'Household updated successfully.';
         cancelEdit();
         await loadHousehold();

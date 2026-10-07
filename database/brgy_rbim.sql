@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.3
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Oct 05, 2026 at 07:28 AM
--- Server version: 9.1.0
--- PHP Version: 8.4.0
+-- Generation Time: Oct 07, 2026 at 08:37 AM
+-- Server version: 8.4.7
+-- PHP Version: 8.4.15
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS `audit_log` (
   PRIMARY KEY (`audit_id`),
   KEY `action` (`action_id`),
   KEY `audit_user` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `audit_log`
@@ -112,7 +112,8 @@ INSERT INTO `audit_log` (`audit_id`, `user_id`, `action_id`, `record_id`, `descr
 (38, 2, 1, 1, 'Create pet census', NULL, 'Household 8', '2026-10-05 12:00:43', 'record', 'pet_census'),
 (39, 2, 1, 2, 'Create pet census', NULL, 'Household 8', '2026-10-05 12:00:43', 'record', 'pet_census'),
 (40, 1, 2, 1, 'Session ended because the account was signed in on another device.', NULL, 'concurrent_login', '2026-10-05 14:52:08', 'session', 'user_log'),
-(41, 2, 2, 13, 'Session ended because the account was signed in on another device.', NULL, 'concurrent_login', '2026-10-05 14:53:10', 'session', 'user_log');
+(41, 2, 2, 13, 'Session ended because the account was signed in on another device.', NULL, 'concurrent_login', '2026-10-05 14:53:10', 'session', 'user_log'),
+(49, 2, 2, 17, 'Session ended because the account was signed in on another device.', NULL, 'concurrent_login', '2026-10-07 16:32:50', 'session', 'user_log');
 
 -- --------------------------------------------------------
 
@@ -192,7 +193,7 @@ CREATE TABLE IF NOT EXISTS `breed` (
   `breed_id` int NOT NULL AUTO_INCREMENT,
   `breed` varchar(45) NOT NULL,
   PRIMARY KEY (`breed_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `breed`
@@ -1209,20 +1210,22 @@ CREATE TABLE IF NOT EXISTS `pet_census` (
   `pet_date_of_birth` date NOT NULL,
   `is_spay_neuter` tinyint(1) NOT NULL,
   `rabies_vaccination_date` date DEFAULT NULL,
+  `pet_status_id` int NOT NULL DEFAULT '1',
   PRIMARY KEY (`pet_census_id`),
   KEY `house_pet` (`household_id`),
   KEY `specie` (`specie_id`),
   KEY `breed` (`breed_id`),
-  KEY `pet_sex` (`sex_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `pet_sex` (`sex_id`),
+  KEY `pet_current_status` (`pet_status_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `pet_census`
 --
 
-INSERT INTO `pet_census` (`pet_census_id`, `household_id`, `specie_id`, `breed_id`, `sex_id`, `pet_date_of_birth`, `is_spay_neuter`, `rabies_vaccination_date`) VALUES
-(1, 8, 1, 1, 1, '2008-12-12', 1, '2010-12-13'),
-(2, 8, 2, 2, 2, '2000-05-12', 1, '2001-05-13');
+INSERT INTO `pet_census` (`pet_census_id`, `household_id`, `specie_id`, `breed_id`, `sex_id`, `pet_date_of_birth`, `is_spay_neuter`, `rabies_vaccination_date`, `pet_status_id`) VALUES
+(1, 8, 1, 1, 1, '2008-12-12', 1, '2010-12-13', 1),
+(2, 8, 2, 2, 2, '2000-05-12', 1, '2001-05-13', 1);
 
 -- --------------------------------------------------------
 
@@ -1985,7 +1988,7 @@ CREATE TABLE IF NOT EXISTS `specie` (
   `specie_id` int NOT NULL AUTO_INCREMENT,
   `specie` varchar(45) NOT NULL,
   PRIMARY KEY (`specie_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `specie`
@@ -2125,7 +2128,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   UNIQUE KEY `uq_username` (`username`),
   UNIQUE KEY `uq_personnel` (`personnel_id`),
   KEY `user_status` (`user_status_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `user`
@@ -2154,7 +2157,7 @@ CREATE TABLE IF NOT EXISTS `user_log` (
   PRIMARY KEY (`user_log_id`),
   KEY `user_log` (`user_id`),
   KEY `login_status` (`login_status_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `user_log`
@@ -2173,7 +2176,9 @@ INSERT INTO `user_log` (`user_log_id`, `user_id`, `login_time`, `logout_time`, `
 (14, 1, '2026-10-05 14:52:06', '2026-10-05 14:53:00', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (15, 2, '2026-10-05 14:53:10', '2026-10-05 15:01:37', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (16, 2, '2026-10-05 15:01:48', '2026-10-05 15:17:10', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(17, 2, '2026-10-05 15:18:36', '2026-10-05 15:18:36', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
+(17, 2, '2026-10-05 15:18:36', '2026-10-07 16:32:50', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(18, 2, '2026-10-07 16:32:50', '2026-10-07 16:36:14', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(19, 3, '2026-10-07 16:36:21', '2026-10-07 16:36:21', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
 
 -- --------------------------------------------------------
 
@@ -2193,7 +2198,7 @@ CREATE TABLE IF NOT EXISTS `user_role` (
   UNIQUE KEY `uq_role_assignment` (`user_id`,`role_id`),
   KEY `user_role` (`role_id`),
   KEY `role_assignor` (`assigned_by`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `user_role`
@@ -2406,6 +2411,7 @@ ALTER TABLE `migration`
 ALTER TABLE `pet_census`
   ADD CONSTRAINT `breed` FOREIGN KEY (`breed_id`) REFERENCES `breed` (`breed_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `house_pet` FOREIGN KEY (`household_id`) REFERENCES `household` (`household_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `pet_current_status` FOREIGN KEY (`pet_status_id`) REFERENCES `pet_status` (`pet_status_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `pet_sex` FOREIGN KEY (`sex_id`) REFERENCES `sex` (`sex_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `specie` FOREIGN KEY (`specie_id`) REFERENCES `specie` (`specie_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 

@@ -51,7 +51,10 @@ export async function createHouseholdQuestions(householdId, payload) {
 }
 
 export async function createHouseholdPets(householdId, pets) {
-    const { data } = await http.post(`/households/${householdId}/pets`, { pets });
+    const { data } = await http.post('/pet-census', {
+        household_id: Number(householdId),
+        pets,
+    });
 
     return data.items;
 }
@@ -59,7 +62,7 @@ export async function createHouseholdPets(householdId, pets) {
 export async function fetchPetCensus(filters = {}) {
     const params = {};
 
-    ['household_id', 'specie_id', 'breed_id', 'sex_id'].forEach((key) => {
+    ['search', 'pet_status_id', 'specie_id', 'breed_id'].forEach((key) => {
         if (filters[key]) {
             params[key] = filters[key];
         }

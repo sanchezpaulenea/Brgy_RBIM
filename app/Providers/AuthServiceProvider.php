@@ -15,6 +15,7 @@ use App\Models\HouseholdManagement\HouseholdStatus;
 use App\Models\HouseholdManagement\KitchenGarbageDisposal;
 use App\Models\HouseholdManagement\OwnershipType;
 use App\Models\HouseholdManagement\PetCensus;
+use App\Models\HouseholdManagement\PetStatus;
 use App\Models\HouseholdManagement\Specie;
 use App\Models\HouseholdManagement\Street;
 use App\Models\HouseholdManagement\ToiletFacilityType;
@@ -115,6 +116,7 @@ class AuthServiceProvider extends ServiceProvider
         HouseholdQuestions::class => HouseholdQuestionsPolicy::class,
         PetCensus::class => PetCensusPolicy::class,
         Specie::class => PetLookupWritePolicy::class,
+        PetStatus::class => ReferenceLookupPolicy::class,
         Breed::class => PetLookupWritePolicy::class,
         Street::class => StreetPolicy::class,
         Resident::class => ResidentPolicy::class,

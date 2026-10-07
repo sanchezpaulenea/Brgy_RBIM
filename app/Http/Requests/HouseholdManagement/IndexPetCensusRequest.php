@@ -12,16 +12,24 @@ class IndexPetCensusRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->exists('search') && is_string($this->input('search'))) {
+            $search = trim($this->input('search'));
+            $this->merge(['search' => $search === '' ? null : $search]);
+        }
+    }
+
     /**
      * @return array<string, array<int, mixed>>
      */
     public function rules(): array
     {
         return [
-            'household_id' => ['sometimes', 'integer', Rule::exists('household', 'household_id')],
+            'search' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'pet_status_id' => ['sometimes', 'integer', Rule::exists('pet_status', 'pet_status_id')],
             'specie_id' => ['sometimes', 'integer', Rule::exists('specie', 'specie_id')],
             'breed_id' => ['sometimes', 'integer', Rule::exists('breed', 'breed_id')],
-            'sex_id' => ['sometimes', 'integer', Rule::exists('sex', 'sex_id')],
         ];
     }
 
@@ -31,18 +39,20 @@ class IndexPetCensusRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'household_id.exists' => 'The selected household does not exist.',
+            'pet_status_id.exists' => 'The selected pet status does not exist.',
             'specie_id.exists' => 'The selected species does not exist.',
             'breed_id.exists' => 'The selected breed does not exist.',
-            'sex_id.exists' => 'The selected sex does not exist.',
         ];
     }
 
     /**
-     * @return array{household_id?: int, specie_id?: int, breed_id?: int, sex_id?: int}
+     * @return array{search?: string|null, pet_status_id?: int, specie_id?: int, breed_id?: int}
      */
     public function filters(): array
     {
-        return $this->validated();
+        return array_filter(
+            $this->validated(),
+            fn (mixed $value) => $value !== null && $value !== '',
+        );
     }
 }

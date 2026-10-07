@@ -3,6 +3,7 @@
 namespace App\Http\Requests\HouseholdManagement;
 
 use App\Http\Requests\HouseholdManagement\Concerns\NormalizesHouseholdAddress;
+use App\Models\HouseholdManagement\Household;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -50,6 +51,14 @@ class UpdateHouseholdRequest extends FormRequest
             ],
             'head_resident_id' => ['prohibited'],
             'head' => ['prohibited'],
+            'pets' => ['sometimes', 'array'],
+            'pets.*.pet_census_id' => [
+                'required',
+                'integer',
+                Rule::exists('pet_census', 'pet_census_id')->where(
+                    fn ($query) => $query->where('household_id', $this->householdId()),
+                ),
+            ],
         ];
     }
 
@@ -67,6 +76,8 @@ class UpdateHouseholdRequest extends FormRequest
             'number_of_basement_level.required' => 'Number of basement levels is required when the house has a basement.',
             'head_resident_id.prohibited' => 'The household head cannot be changed on this update.',
             'head.prohibited' => 'The household head cannot be changed on this update.',
+            'pets.*.pet_census_id.required' => 'Add pets from the Pet Census tab.',
+            'pets.*.pet_census_id.exists' => 'The pet does not belong to this household.',
         ];
     }
 
@@ -114,5 +125,12 @@ class UpdateHouseholdRequest extends FormRequest
                 }
             },
         ];
+    }
+
+    private function householdId(): int
+    {
+        $household = $this->route('household');
+
+        return $household instanceof Household ? (int) $household->household_id : (int) $household;
     }
 }

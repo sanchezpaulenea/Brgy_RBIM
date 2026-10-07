@@ -22,6 +22,7 @@ class PetCensus extends Model
         'pet_date_of_birth',
         'is_spay_neuter',
         'rabies_vaccination_date',
+        'pet_status_id',
     ];
 
     /**
@@ -68,5 +69,13 @@ class PetCensus extends Model
     public function sex(): BelongsTo
     {
         return $this->belongsTo(Sex::class, 'sex_id', 'sex_id');
+    }
+
+    /**
+     * @return BelongsTo<PetStatus, $this>
+     */
+    public function petStatus(): BelongsTo
+    {
+        return $this->belongsTo(PetStatus::class, 'pet_status_id', 'pet_status_id');
     }
 }

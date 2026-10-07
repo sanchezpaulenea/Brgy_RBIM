@@ -9,9 +9,9 @@
             placeholder="Search or type a specie"
             required
             :can-create="canCreate"
-            :error="errors.specie_id"
+            :error="errors.specie || errors.specie_id"
             :hint="PET_LOOKUP_HINT"
-            @create="(name) => createLookup('species', () => lookupService.createSpecie({ specie: name }), 'specie_id', 'specie_name')"
+            @create="(name) => acceptTypedLookup('species', 'specie_id', 'specie_name', name)"
         />
         <LookupCombobox
             v-model="pet.breed_id"
@@ -22,24 +22,27 @@
             placeholder="Search or type a breed"
             required
             :can-create="canCreate"
-            :error="errors.breed_id"
+            :error="errors.breed || errors.breed_id"
             :hint="PET_LOOKUP_HINT"
-            @create="(name) => createLookup('breeds', () => lookupService.createBreed({ breed: name }), 'breed_id', 'breed_name')"
+            @create="(name) => acceptTypedLookup('breeds', 'breed_id', 'breed_name', name)"
         />
-        <LookupCombobox
-            v-model="pet.sex_id"
-            v-model:query="pet.sex_name"
-            :options="lookups.sexes"
-            :input-id="`${idPrefix}-sex`"
-            label="Sex"
-            placeholder="Search or type a sex"
-            required
-            :can-create="canCreate"
-            :max-length="10"
-            :error="errors.sex_id"
-            :hint="PET_LOOKUP_HINT"
-            @create="(name) => createLookup('sexes', () => lookupService.createSex({ sex: name }), 'sex_id', 'sex_name')"
-        />
+        <div>
+            <label :for="`${idPrefix}-sex`" class="rbim-label">
+                Sex<span class="rbim-required" aria-hidden="true">*</span>
+            </label>
+            <select
+                :id="`${idPrefix}-sex`"
+                v-model="pet.sex_id"
+                class="rbim-input"
+                :class="{ 'rbim-input-error': errors.sex_id }"
+            >
+                <option value="">Select</option>
+                <option v-for="sex in lookups.sexes" :key="sex.id" :value="sex.id">
+                    {{ sex.label }}
+                </option>
+            </select>
+            <p v-if="errors.sex_id" class="rbim-error">{{ errors.sex_id }}</p>
+        </div>
         <BirthDateField
             v-model="pet.pet_date_of_birth"
             :input-id="`${idPrefix}-dob`"
@@ -64,22 +67,40 @@
             </select>
             <p v-if="errors.is_spay_neuter" class="rbim-error">{{ errors.is_spay_neuter }}</p>
         </div>
-        <BirthDateField
-            v-model="pet.rabies_vaccination_date"
-            :input-id="`${idPrefix}-rabies`"
-            label="Rabies vaccination date"
-            :show-age="false"
-            :error="errors.rabies_vaccination_date"
-        />
+        <div>
+            <BirthDateField
+                v-model="pet.rabies_vaccination_date"
+                :input-id="`${idPrefix}-rabies`"
+                label="Rabies vaccination date"
+                :show-age="false"
+                :error="errors.rabies_vaccination_date"
+            />
+            <p class="rbim-hint">{{ PET_RABIES_HINT }}</p>
+        </div>
+        <div v-if="showStatus">
+            <label :for="`${idPrefix}-status`" class="rbim-label">
+                Pet Status<span class="rbim-required" aria-hidden="true">*</span>
+            </label>
+            <select
+                :id="`${idPrefix}-status`"
+                v-model="pet.pet_status_id"
+                class="rbim-input"
+                :class="{ 'rbim-input-error': errors.pet_status_id }"
+            >
+                <option value="">Select</option>
+                <option v-for="status in lookups.petStatuses" :key="status.id" :value="status.id">
+                    {{ status.label }}
+                </option>
+            </select>
+            <p v-if="errors.pet_status_id" class="rbim-error">{{ errors.pet_status_id }}</p>
+        </div>
     </div>
 </template>
 
 <script setup>
 import BirthDateField from '@/components/BirthDateField.vue';
 import LookupCombobox from '@/components/LookupCombobox.vue';
-import { extractErrorMessage } from '@/services/http';
-import * as lookupService from '@/services/lookupService';
-import { PET_LOOKUP_HINT } from '@/utils/petCensus';
+import { PET_LOOKUP_HINT, PET_RABIES_HINT } from '@/utils/petCensus';
 
 const props = defineProps({
     pet: { type: Object, required: true },
@@ -87,21 +108,24 @@ const props = defineProps({
     lookups: { type: Object, required: true },
     idPrefix: { type: String, required: true },
     canCreate: { type: Boolean, default: false },
+    showStatus: { type: Boolean, default: false },
 });
 
-async function createLookup(listKey, createFn, idField, nameField) {
-    try {
-        const item = await createFn();
+function acceptTypedLookup(listKey, idField, nameField, name) {
+    const trimmed = String(name ?? '').trim();
+    const existing = (props.lookups[listKey] ?? []).find((option) => (
+        String(option.label ?? '').toLowerCase() === trimmed.toLowerCase()
+    ));
 
-        if (!props.lookups[listKey].some((option) => Number(option.id) === Number(item.id))) {
-            props.lookups[listKey].push(item);
-        }
-
-        props.pet[idField] = item.id;
-        props.pet[nameField] = item.label;
-        delete props.errors[idField];
-    } catch (err) {
-        props.errors[idField] = extractErrorMessage(err, 'Unable to add this value.');
+    if (existing) {
+        props.pet[idField] = existing.id;
+        props.pet[nameField] = existing.label;
+    } else {
+        props.pet[idField] = null;
+        props.pet[nameField] = trimmed;
     }
+
+    delete props.errors[idField];
+    delete props.errors[nameField];
 }
 </script>
