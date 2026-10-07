@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.3
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Oct 07, 2026 at 08:37 AM
--- Server version: 8.4.7
--- PHP Version: 8.4.15
+-- Generation Time: Oct 07, 2026 at 01:09 PM
+-- Server version: 9.1.0
+-- PHP Version: 8.4.0
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS `breed` (
   `breed_id` int NOT NULL AUTO_INCREMENT,
   `breed` varchar(45) NOT NULL,
   PRIMARY KEY (`breed_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `breed`
@@ -201,7 +201,10 @@ CREATE TABLE IF NOT EXISTS `breed` (
 
 INSERT INTO `breed` (`breed_id`, `breed`) VALUES
 (1, 'Chihuahua'),
-(2, 'Puspin');
+(2, 'Puspin'),
+(6, 'Shih Tzu'),
+(7, 'Golden Retriever'),
+(8, 'Not Applicable');
 
 -- --------------------------------------------------------
 
@@ -1492,8 +1495,8 @@ INSERT INTO `resident` (`resident_id`, `last_name`, `first_name`, `middle_name`,
 (5, 'Dela Cruz', 'May', NULL, NULL, 4, 2, '2026-01-01', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 1, 2, 1, 2),
 (6, 'Dela Cruz', 'Pia', NULL, NULL, 4, 2, '2016-04-13', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 1, 2, 1, 2),
 (7, 'Dela Cruz', 'Jim', NULL, NULL, 11, 1, '2016-04-13', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 4, 2, 1, 2),
-(8, 'Penduko', 'Pedro', NULL, NULL, 1, 1, '1953-05-12', 'Baguio', 'Benguet', 'Philippines', NULL, NULL, NULL, 1, 5, 1, 7),
-(9, 'Piattos', 'Mary Grace', NULL, NULL, 1, 2, '1970-07-19', 'Baguio', 'Benguet', 'Philippines', NULL, NULL, NULL, 7, 3, 1, 8);
+(8, 'Baltazar', 'Pedro', NULL, NULL, 1, 1, '1953-05-12', 'Baguio', 'Benguet', 'Philippines', NULL, NULL, NULL, 1, 5, 1, 7),
+(9, 'De Guzman', 'Mary', NULL, NULL, 1, 2, '1970-07-19', 'Baguio', 'Benguet', 'Philippines', NULL, NULL, NULL, 7, 3, 1, 8);
 
 --
 -- Triggers `resident`
@@ -2157,7 +2160,7 @@ CREATE TABLE IF NOT EXISTS `user_log` (
   PRIMARY KEY (`user_log_id`),
   KEY `user_log` (`user_id`),
   KEY `login_status` (`login_status_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `user_log`
@@ -2178,7 +2181,10 @@ INSERT INTO `user_log` (`user_log_id`, `user_id`, `login_time`, `logout_time`, `
 (16, 2, '2026-10-05 15:01:48', '2026-10-05 15:17:10', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (17, 2, '2026-10-05 15:18:36', '2026-10-07 16:32:50', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (18, 2, '2026-10-07 16:32:50', '2026-10-07 16:36:14', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(19, 3, '2026-10-07 16:36:21', '2026-10-07 16:36:21', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
+(19, 3, '2026-10-07 16:36:21', '2026-10-07 16:36:21', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(20, 2, '2026-10-07 20:45:12', '2026-10-07 20:48:10', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(21, 1, '2026-10-07 20:48:20', '2026-10-07 20:49:04', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(22, 2, '2026-10-07 20:49:14', '2026-10-07 20:49:14', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
 
 -- --------------------------------------------------------
 
