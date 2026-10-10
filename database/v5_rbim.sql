@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Oct 07, 2026 at 01:09 PM
+-- Generation Time: Oct 10, 2026 at 04:52 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.4.0
 
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS `audit_log` (
   PRIMARY KEY (`audit_id`),
   KEY `action` (`action_id`),
   KEY `audit_user` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=57 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `audit_log`
@@ -113,7 +113,14 @@ INSERT INTO `audit_log` (`audit_id`, `user_id`, `action_id`, `record_id`, `descr
 (39, 2, 1, 2, 'Create pet census', NULL, 'Household 8', '2026-10-05 12:00:43', 'record', 'pet_census'),
 (40, 1, 2, 1, 'Session ended because the account was signed in on another device.', NULL, 'concurrent_login', '2026-10-05 14:52:08', 'session', 'user_log'),
 (41, 2, 2, 13, 'Session ended because the account was signed in on another device.', NULL, 'concurrent_login', '2026-10-05 14:53:10', 'session', 'user_log'),
-(49, 2, 2, 17, 'Session ended because the account was signed in on another device.', NULL, 'concurrent_login', '2026-10-07 16:32:50', 'session', 'user_log');
+(49, 2, 2, 17, 'Session ended because the account was signed in on another device.', NULL, 'concurrent_login', '2026-10-07 16:32:50', 'session', 'user_log'),
+(50, 2, 1, 9, 'Create household', NULL, 'Manaligod, Juli', '2026-10-09 19:45:24', 'household', 'household'),
+(51, 2, 1, 10, 'Create resident', NULL, 'Manaligod, Juli', '2026-10-09 19:45:24', 'record', 'resident'),
+(52, 2, 1, 3, 'Create education', NULL, 'College graduate', '2026-10-09 19:48:27', 'record', 'education'),
+(53, 2, 2, 23, 'Session ended because the account was signed in on another device.', NULL, 'concurrent_login', '2026-10-09 20:55:24', 'session', 'user_log'),
+(54, 2, 1, 4, 'Create education', NULL, 'College level', '2026-10-09 21:01:45', 'record', 'education'),
+(55, 2, 1, 3, 'Create health', NULL, 'GSIS', '2026-10-09 21:10:56', 'record', 'health'),
+(56, 1, 2, 6, 'Update system setting', 'brgyhappyhallow@gmail.com', 'bchallowhappy@gmail.com', '2026-10-09 23:51:25', 'barangay_email', 'system_setting');
 
 -- --------------------------------------------------------
 
@@ -201,7 +208,7 @@ CREATE TABLE IF NOT EXISTS `breed` (
 
 INSERT INTO `breed` (`breed_id`, `breed`) VALUES
 (1, 'Chihuahua'),
-(2, 'Puspin'),
+(2, 'Ragdoll'),
 (6, 'Shih Tzu'),
 (7, 'Golden Retriever'),
 (8, 'Not Applicable');
@@ -230,6 +237,26 @@ INSERT INTO `building_house_type` (`building_house_type_id`, `building_house_typ
 (4, 'Commercial/industrial/agricultural'),
 (5, 'Institutional living quarter (hotel, hospital'),
 (6, 'Other housing units (boat, cave, others)');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `certificate`
+--
+
+DROP TABLE IF EXISTS `certificate`;
+CREATE TABLE IF NOT EXISTS `certificate` (
+  `certificate_id` int NOT NULL AUTO_INCREMENT,
+  `resident_id` int NOT NULL,
+  `date_of_issue` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `purpose_of_request` varchar(45) NOT NULL,
+  `type_of_certificate_id` int NOT NULL,
+  `issuer_id` int NOT NULL,
+  PRIMARY KEY (`certificate_id`),
+  KEY `requester` (`resident_id`),
+  KEY `issuer` (`issuer_id`),
+  KEY `certificate_type` (`type_of_certificate_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -478,7 +505,7 @@ CREATE TABLE IF NOT EXISTS `education` (
   KEY `highest_lvl_of_educ` (`highest_lvl_of_educ_id`),
   KEY `resident_education` (`resident_id`),
   KEY `school_lvl` (`school_lvl_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `education`
@@ -486,7 +513,9 @@ CREATE TABLE IF NOT EXISTS `education` (
 
 INSERT INTO `education` (`education_id`, `resident_id`, `highest_lvl_of_educ_id`, `current_enrollement_status_id`, `school_lvl_id`, `place_of_school_brgy`, `place_of_school_city_municipality`) VALUES
 (1, 8, 13, 3, 7, NULL, NULL),
-(2, 9, 13, 3, 7, NULL, NULL);
+(2, 9, 13, 3, 7, NULL, NULL),
+(3, 10, 13, 3, 7, NULL, NULL),
+(4, 3, 12, 2, 2, 'Happy Hallow', 'Baguio City');
 
 -- --------------------------------------------------------
 
@@ -665,7 +694,7 @@ CREATE TABLE IF NOT EXISTS `health` (
   KEY `facility_visit_reason` (`facility_visit_reason_id`),
   KEY `health_insurance` (`health_insurance_id`),
   KEY `resident_health` (`resident_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `health`
@@ -673,7 +702,8 @@ CREATE TABLE IF NOT EXISTS `health` (
 
 INSERT INTO `health` (`health_id`, `health_insurance_id`, `facility_visited_past_12mos_id`, `facility_visit_reason_id`, `disability_id`, `pwd_id_number`, `resident_id`) VALUES
 (1, 5, 3, 4, 6, NULL, 8),
-(2, 5, 7, 5, 6, NULL, 9);
+(2, 5, 7, 5, 6, NULL, 9),
+(3, 5, 8, 8, 6, NULL, 6);
 
 -- --------------------------------------------------------
 
@@ -758,7 +788,7 @@ CREATE TABLE IF NOT EXISTS `household` (
   KEY `house_clan` (`clan_id`),
   KEY `house_status` (`household_status_id`),
   KEY `house_head` (`head_resident_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `household`
@@ -768,7 +798,8 @@ INSERT INTO `household` (`household_id`, `clan_id`, `head_resident_id`, `street_
 (1, 1, 1, 1, 1, 0, 'Lot 15', '2026-08-15 18:21:34', 1),
 (2, 2, 2, 2, 1, 0, 'Lot 4', '2026-08-15 18:25:41', 1),
 (7, 5, 8, 1, 1, 3, '453', '2026-10-05 11:52:27', 1),
-(8, 3, 9, 4, 2, 1, '14', '2026-10-05 11:57:36', 1);
+(8, 3, 9, 4, 2, 1, '14', '2026-10-05 11:57:36', 1),
+(9, 5, 10, 1, 1, 0, 'dhom 1', '2026-10-09 19:45:24', 1);
 
 -- --------------------------------------------------------
 
@@ -985,11 +1016,7 @@ INSERT INTO `marital_status` (`marital_status_id`, `marital_status`) VALUES
 DROP TABLE IF EXISTS `migration`;
 CREATE TABLE IF NOT EXISTS `migration` (
   `migration_id` int NOT NULL AUTO_INCREMENT,
-  `previous_residence_6mos_brgy` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `previous_residence_6mos_city_municipality` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `previous_residence_5yrs_brgy` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `previous_residence_5yrs_city_municipality` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `date_of_transfer_in_brgy` date DEFAULT NULL,
+  `date_of_transfer_in_brgy` date NOT NULL,
   `resident_type_id` int NOT NULL,
   `reason_for_leaving_id` int NOT NULL,
   `will_return_to_previous_residence` tinyint(1) NOT NULL,
@@ -1006,9 +1033,9 @@ CREATE TABLE IF NOT EXISTS `migration` (
 -- Dumping data for table `migration`
 --
 
-INSERT INTO `migration` (`migration_id`, `previous_residence_6mos_brgy`, `previous_residence_6mos_city_municipality`, `previous_residence_5yrs_brgy`, `previous_residence_5yrs_city_municipality`, `date_of_transfer_in_brgy`, `resident_type_id`, `reason_for_leaving_id`, `will_return_to_previous_residence`, `reason_for_transfer_id`, `duration_of_stay`, `resident_id`) VALUES
-(1, 'Happy Hallow', 'Baguio', 'Happy Hallow', 'Baguio', NULL, 1, 16, 0, 6, NULL, 8),
-(2, 'Happy Hallow', 'Baguio', 'Happy Hallow', 'Baguio', NULL, 1, 16, 0, 6, NULL, 9);
+INSERT INTO `migration` (`migration_id`, `date_of_transfer_in_brgy`, `resident_type_id`, `reason_for_leaving_id`, `will_return_to_previous_residence`, `reason_for_transfer_id`, `duration_of_stay`, `resident_id`) VALUES
+(1, '0000-00-00', 1, 16, 0, 6, NULL, 8),
+(2, '0000-00-00', 1, 16, 0, 6, NULL, 9);
 
 -- --------------------------------------------------------
 
@@ -1070,7 +1097,7 @@ CREATE TABLE IF NOT EXISTS `permission` (
   `permission` varchar(45) NOT NULL,
   PRIMARY KEY (`permission_id`),
   UNIQUE KEY `uq_permission` (`permission`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=74 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=77 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `permission`
@@ -1078,6 +1105,9 @@ CREATE TABLE IF NOT EXISTS `permission` (
 
 INSERT INTO `permission` (`permission_id`, `permission`) VALUES
 (18, 'auditlog.view'),
+(74, 'certificate.create'),
+(76, 'certificate.edit'),
+(75, 'certificate.view'),
 (62, 'ctc.create'),
 (63, 'ctc.update'),
 (61, 'ctc.view'),
@@ -1210,7 +1240,7 @@ CREATE TABLE IF NOT EXISTS `pet_census` (
   `specie_id` int NOT NULL,
   `breed_id` int NOT NULL,
   `sex_id` int NOT NULL,
-  `pet_date_of_birth` date NOT NULL,
+  `pet_date_of_birth` date DEFAULT NULL,
   `is_spay_neuter` tinyint(1) NOT NULL,
   `rabies_vaccination_date` date DEFAULT NULL,
   `pet_status_id` int NOT NULL DEFAULT '1',
@@ -1482,7 +1512,7 @@ CREATE TABLE IF NOT EXISTS `resident` (
   KEY `ethnicity` (`ethnicity_id`),
   KEY `religion` (`religion_id`),
   KEY `household_resident` (`household_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `resident`
@@ -1496,7 +1526,8 @@ INSERT INTO `resident` (`resident_id`, `last_name`, `first_name`, `middle_name`,
 (6, 'Dela Cruz', 'Pia', NULL, NULL, 4, 2, '2016-04-13', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 1, 2, 1, 2),
 (7, 'Dela Cruz', 'Jim', NULL, NULL, 11, 1, '2016-04-13', 'Baguio City', 'Benguet', 'Philippines', 1, 1, 2, 4, 2, 1, 2),
 (8, 'Baltazar', 'Pedro', NULL, NULL, 1, 1, '1953-05-12', 'Baguio', 'Benguet', 'Philippines', NULL, NULL, NULL, 1, 5, 1, 7),
-(9, 'De Guzman', 'Mary', NULL, NULL, 1, 2, '1970-07-19', 'Baguio', 'Benguet', 'Philippines', NULL, NULL, NULL, 7, 3, 1, 8);
+(9, 'De Guzman', 'Mary', NULL, NULL, 1, 2, '1970-07-19', 'Baguio', 'Benguet', 'Philippines', NULL, NULL, NULL, 7, 3, 1, 8),
+(10, 'Manaligod', 'Juli', NULL, NULL, 1, 1, '1956-09-07', 'Baguio City', 'Benguet', 'Philippines', NULL, NULL, NULL, 2, 5, 1, 9);
 
 --
 -- Triggers `resident`
@@ -1604,7 +1635,7 @@ CREATE TABLE IF NOT EXISTS `role_permission` (
   PRIMARY KEY (`role_permission_id`),
   UNIQUE KEY `uq_permission_assignment` (`role_id`,`permission_id`),
   KEY `permission_role` (`permission_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=173 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=180 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `role_permission`
@@ -1659,6 +1690,9 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (164, 1, 71),
 (165, 1, 72),
 (171, 1, 73),
+(177, 1, 74),
+(179, 1, 75),
+(178, 1, 76),
 (16, 2, 15),
 (17, 2, 16),
 (18, 2, 17),
@@ -1717,6 +1751,9 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (161, 2, 71),
 (162, 2, 72),
 (170, 2, 73),
+(174, 2, 74),
+(176, 2, 75),
+(175, 2, 76),
 (7, 3, 1),
 (10, 3, 2),
 (8, 3, 3),
@@ -2012,7 +2049,7 @@ CREATE TABLE IF NOT EXISTS `status_of_work_business` (
   `status_of_work_business_id` int NOT NULL AUTO_INCREMENT,
   `status_of_work_business` varchar(45) NOT NULL,
   PRIMARY KEY (`status_of_work_business_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `status_of_work_business`
@@ -2025,7 +2062,8 @@ INSERT INTO `status_of_work_business` (`status_of_work_business_id`, `status_of_
 (4, 'Individually Owned Business'),
 (5, 'Shared/Partnership Business'),
 (6, 'Corporate Business'),
-(7, 'Not Applicable');
+(7, 'Not Applicable'),
+(8, 'Term-Based');
 
 -- --------------------------------------------------------
 
@@ -2078,7 +2116,7 @@ INSERT INTO `system_setting` (`setting_id`, `setting_key`, `setting_value`, `dat
 (3, 'barangay_code', '1430300006', 'string', 'Philippine Standard Geographic Code'),
 (4, 'barangay_address', 'Barangay Happy Hallow, Baguio City, Benguet, ', 'string', 'Complete Address'),
 (5, 'barangay_contact_no', '09123456789', 'string', 'Contact Number'),
-(6, 'barangay_email', 'brgyhappyhallow@gmail.com', 'string', 'Official Email Address'),
+(6, 'barangay_email', 'bchallowhappy@gmail.com', 'string', 'Official Email Address'),
 (7, 'default_password', 'Temp12345', 'string', 'Default Password'),
 (8, 'password_min_length', '8', 'int', 'Minimum length of password'),
 (9, 'max_login_attempts', '5', 'int', 'Maximum attempts of login'),
@@ -2111,6 +2149,19 @@ INSERT INTO `toilet_facility_type` (`toilet_facility_type_id`, `toilet_facility_
 (5, 'Water sealed, sewer septic tank, shared'),
 (6, 'Water sealed, sewer septic tank, exclusive'),
 (7, 'Others');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `type_of_certificate`
+--
+
+DROP TABLE IF EXISTS `type_of_certificate`;
+CREATE TABLE IF NOT EXISTS `type_of_certificate` (
+  `type_of_certificate_id` int NOT NULL AUTO_INCREMENT,
+  `type_of_certificate` varchar(45) NOT NULL,
+  PRIMARY KEY (`type_of_certificate_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -2160,7 +2211,7 @@ CREATE TABLE IF NOT EXISTS `user_log` (
   PRIMARY KEY (`user_log_id`),
   KEY `user_log` (`user_id`),
   KEY `login_status` (`login_status_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `user_log`
@@ -2184,7 +2235,15 @@ INSERT INTO `user_log` (`user_log_id`, `user_id`, `login_time`, `logout_time`, `
 (19, 3, '2026-10-07 16:36:21', '2026-10-07 16:36:21', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (20, 2, '2026-10-07 20:45:12', '2026-10-07 20:48:10', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (21, 1, '2026-10-07 20:48:20', '2026-10-07 20:49:04', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(22, 2, '2026-10-07 20:49:14', '2026-10-07 20:49:14', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
+(22, 2, '2026-10-07 20:49:14', '2026-10-07 21:19:59', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(23, 2, '2026-10-09 19:37:20', '2026-10-09 20:55:24', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(24, 2, '2026-10-09 20:55:23', '2026-10-09 21:24:37', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(25, 2, '2026-10-09 22:18:01', '2026-10-09 22:25:04', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(26, 1, '2026-10-09 22:25:25', '2026-10-09 22:26:42', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(27, 2, '2026-10-09 22:26:50', '2026-10-09 22:35:02', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(28, 1, '2026-10-09 22:47:09', '2026-10-09 22:58:38', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(29, 2, '2026-10-09 23:07:59', '2026-10-09 23:26:24', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(30, 1, '2026-10-09 23:50:06', '2026-10-09 23:57:07', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
 
 -- --------------------------------------------------------
 
@@ -2311,6 +2370,14 @@ ALTER TABLE `audit_log`
 ALTER TABLE `barangay_personnel`
   ADD CONSTRAINT `personnel_position` FOREIGN KEY (`position_id`) REFERENCES `personnel_position` (`position_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `personnel_status` FOREIGN KEY (`personnel_status_id`) REFERENCES `personnel_status` (`personnel_status_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `certificate`
+--
+ALTER TABLE `certificate`
+  ADD CONSTRAINT `certificate_type` FOREIGN KEY (`type_of_certificate_id`) REFERENCES `type_of_certificate` (`type_of_certificate_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `issuer` FOREIGN KEY (`issuer_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `requester` FOREIGN KEY (`resident_id`) REFERENCES `resident` (`resident_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 --
 -- Constraints for table `child_hhm_died`
