@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Oct 10, 2026 at 04:52 AM
+-- Generation Time: Oct 10, 2026 at 05:00 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.4.0
 
@@ -2161,7 +2161,19 @@ CREATE TABLE IF NOT EXISTS `type_of_certificate` (
   `type_of_certificate_id` int NOT NULL AUTO_INCREMENT,
   `type_of_certificate` varchar(45) NOT NULL,
   PRIMARY KEY (`type_of_certificate_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `type_of_certificate`
+--
+
+INSERT INTO `type_of_certificate` (`type_of_certificate_id`, `type_of_certificate`) VALUES
+(1, 'Certificate of Residency'),
+(2, 'Barangay Clearance'),
+(3, 'First Time Job Seeker'),
+(4, 'Oath of Undertaking'),
+(5, 'Certificate of Indigency'),
+(6, 'Solo Parent Certificate');
 
 -- --------------------------------------------------------
 
