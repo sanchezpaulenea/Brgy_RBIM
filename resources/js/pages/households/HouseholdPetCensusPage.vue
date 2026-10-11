@@ -70,7 +70,7 @@
             </form>
 
             <div v-if="!adding && loading" class="rbim-card p-8 text-center text-sm text-slate-500">
-                Loading pet census...
+                Loading household pets...
             </div>
             <div v-else-if="!adding" class="rbim-card overflow-hidden">
                 <div class="overflow-x-auto">
@@ -129,28 +129,41 @@
                 </div>
             </div>
 
-            <article v-if="!adding && canUpdate && editing" class="rbim-card p-6">
-                <h2 class="text-sm font-semibold text-slate-900">Update pet {{ editing.pet_census_id }}</h2>
-                <p v-if="formError" class="mt-3 text-sm text-red-700">{{ formError }}</p>
-                <form class="mt-4 space-y-4" novalidate @submit.prevent="saveEdit">
-                    <HouseholdPetFields
-                        :pet="editForm"
-                        :errors="editErrors"
-                        :lookups="editLookups"
-                        id-prefix="pet-census-edit"
-                        can-create
-                        show-status
-                    />
-                    <div class="flex justify-end gap-2">
-                        <button type="button" class="rbim-btn-outline" :disabled="saving" @click="cancelEdit">
-                            Cancel
-                        </button>
-                        <button type="submit" class="rbim-btn" :disabled="saving">
-                            {{ saving ? 'Saving...' : 'Save' }}
-                        </button>
+            <div
+                v-if="!adding && canUpdate && editing"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+                @click.self="cancelEdit"
+            >
+                <div class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white shadow-xl" role="dialog" aria-modal="true">
+                    <div class="border-b border-slate-100 px-5 py-4">
+                        <h2 class="text-base font-semibold text-slate-900">Update household pet</h2>
+                        <p class="mt-1 text-sm text-slate-600">
+                            Fields marked with <span class="rbim-required">*</span> are required.
+                        </p>
                     </div>
-                </form>
-            </article>
+                    <form class="space-y-4 px-5 py-4" novalidate @submit.prevent="saveEdit">
+                        <div v-if="formError" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                            {{ formError }}
+                        </div>
+                        <HouseholdPetFields
+                            :pet="editForm"
+                            :errors="editErrors"
+                            :lookups="editLookups"
+                            id-prefix="pet-census-edit"
+                            can-create
+                            show-status
+                        />
+                        <div class="flex justify-end gap-2">
+                            <button type="button" class="rbim-btn-outline" :disabled="saving" @click="cancelEdit">
+                                Cancel
+                            </button>
+                            <button type="submit" class="rbim-btn" :disabled="saving">
+                                {{ saving ? 'Saving...' : 'Save' }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </AppLayout>
 </template>
@@ -167,7 +180,7 @@ import { useSectionTabs } from '@/composables/useSectionTabs';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import { formatDate } from '@/utils/format';
-import { emptyPetForm, emptyPetLookups, petPayload, validatePetForm, yesNoLabel } from '@/utils/petCensus';
+import { emptyPetForm, emptyPetLookups, isAllowedPetSpecies, petPayload, validatePetForm, yesNoLabel } from '@/utils/petCensus';
 import { applyValidationErrors } from '@/utils/residentForm';
 
 const { hasPermission } = useAuth();
@@ -205,7 +218,7 @@ const filtersAreActive = computed(() => (
 
 function applyOptions(next) {
     options.petStatuses = next?.pet_statuses ?? [];
-    options.species = next?.species ?? [];
+    options.species = (next?.species ?? []).filter((option) => isAllowedPetSpecies(option.label));
     options.breeds = next?.breeds ?? [];
     options.sexes = next?.sexes ?? [];
     editLookups.species = options.species;
@@ -228,7 +241,7 @@ async function loadPets() {
         pets.value = data.items ?? [];
         applyOptions(data.options);
     } catch (err) {
-        error.value = extractErrorMessage(err, 'Unable to load the pet census.');
+        error.value = extractErrorMessage(err, 'Unable to load household pets.');
     } finally {
         loading.value = false;
     }

@@ -82,7 +82,7 @@
                         </div>
                     </dl>
 
-                    <h3 class="mt-8 text-sm font-semibold text-slate-900">Pet Census</h3>
+                    <h3 class="mt-8 text-sm font-semibold text-slate-900">Household Pet</h3>
                     <p class="mt-2 text-sm text-slate-900">
                         Number of pets: {{ household.pets?.length ?? 0 }}
                     </p>

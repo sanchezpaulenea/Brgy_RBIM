@@ -4,6 +4,7 @@ namespace App\Services\HouseholdManagement;
 
 use App\Models\HouseholdManagement\Household;
 use App\Models\HouseholdManagement\PetCensus;
+use App\Models\HouseholdManagement\Specie;
 use App\Models\Logs\Action;
 use App\Models\ResidentManagement\Demographic\Resident;
 use App\Models\UserManagement\User;
@@ -83,7 +84,7 @@ class PetCensusService
 
             if (! is_numeric($petCensusId)) {
                 throw ValidationException::withMessages([
-                    "pets.{$index}.pet_census_id" => 'Add pets from the Pet Census tab.',
+                    "pets.{$index}.pet_census_id" => 'Add pets from the Household Pet tab.',
                 ]);
             }
 
@@ -237,13 +238,21 @@ class PetCensusService
      */
     private function persistableAttributes(array $data, ?int $householdId = null): array
     {
+        $specie = $this->canonicalAllowedSpecies((string) ($data['specie'] ?? ''));
+
+        if ($specie === null) {
+            throw ValidationException::withMessages([
+                'specie' => ['Specie must be Dog or Cat.'],
+            ]);
+        }
+
         $attributes = [
-            'specie_id' => $this->petCensusRepository->findOrCreateSpecieId($this->titleCaseLookup((string) $data['specie'])),
+            'specie_id' => $this->petCensusRepository->findOrCreateSpecieId($specie),
             'breed_id' => $this->petCensusRepository->findOrCreateBreedId($this->titleCaseLookup((string) $data['breed'])),
             'sex_id' => $data['sex_id'],
-            'pet_date_of_birth' => $data['pet_date_of_birth'],
+            'pet_date_of_birth' => $this->nullableDate($data['pet_date_of_birth'] ?? null),
             'is_spay_neuter' => $data['is_spay_neuter'],
-            'rabies_vaccination_date' => $data['rabies_vaccination_date'] ?? null,
+            'rabies_vaccination_date' => $this->nullableDate($data['rabies_vaccination_date'] ?? null),
         ];
 
         if (array_key_exists('pet_status_id', $data) && $data['pet_status_id'] !== null && $data['pet_status_id'] !== '') {
@@ -260,6 +269,28 @@ class PetCensusService
     private function titleCaseLookup(string $label): string
     {
         return Str::of($label)->squish()->title()->toString();
+    }
+
+    private function canonicalAllowedSpecies(string $label): ?string
+    {
+        $normalized = Str::of($label)->squish()->lower()->toString();
+
+        foreach (Specie::ALLOWED as $allowed) {
+            if (strtolower($allowed) === $normalized) {
+                return $allowed;
+            }
+        }
+
+        return null;
+    }
+
+    private function nullableDate(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return (string) $value;
     }
 
     /**

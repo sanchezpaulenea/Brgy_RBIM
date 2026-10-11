@@ -4,13 +4,37 @@ export const PET_LOOKUP_HINT = 'Choose from the list, or type a new name and pre
 
 export const PET_RABIES_HINT = 'Date the pet last received anti rabies vaccine';
 
+export const ALLOWED_SPECIES = ['Dog', 'Cat'];
+
 const PET_NAME_PATTERN = /^[\p{L} '\-]+$/u;
+
+export function isAllowedPetSpecies(name) {
+    const normalized = String(name ?? '').trim().toLowerCase();
+
+    return ALLOWED_SPECIES.some((label) => label.toLowerCase() === normalized);
+}
+
+export function canonicalPetSpecies(name) {
+    const normalized = String(name ?? '').trim().toLowerCase();
+
+    return ALLOWED_SPECIES.find((label) => label.toLowerCase() === normalized) ?? String(name ?? '').trim();
+}
+
+export function allowedSpeciesOptions(species = []) {
+    return ALLOWED_SPECIES.map((label) => {
+        const existing = (species ?? []).find((option) => (
+            String(option.label ?? '').trim().toLowerCase() === label.toLowerCase()
+        ));
+
+        return existing ? { id: existing.id, label } : { id: null, label };
+    });
+}
 
 export function emptyPetForm(record = null) {
     return {
         pet_census_id: record?.pet_census_id ?? null,
         specie_id: record?.specie_id ?? null,
-        specie_name: record?.specie ?? '',
+        specie_name: canonicalPetSpecies(record?.specie ?? ''),
         breed_id: record?.breed_id ?? null,
         breed_name: record?.breed ?? '',
         sex_id: record?.sex_id ?? '',
@@ -43,10 +67,10 @@ export async function fetchPetLookups() {
 
 export function petPayload(form) {
     const payload = {
-        specie: String(form.specie_name ?? '').trim(),
+        specie: canonicalPetSpecies(form.specie_name),
         breed: String(form.breed_name ?? '').trim(),
         sex_id: Number(form.sex_id),
-        pet_date_of_birth: form.pet_date_of_birth,
+        pet_date_of_birth: form.pet_date_of_birth || null,
         is_spay_neuter: form.is_spay_neuter === 'true' || form.is_spay_neuter === true,
         rabies_vaccination_date: form.rabies_vaccination_date || null,
     };
@@ -77,12 +101,13 @@ export function validatePetForm(form, errors, { requireStatus = false } = {}) {
         delete errors[key];
     });
 
-    const specieError = lookupNameError(form.specie_name, 'Specie');
-    const breedError = lookupNameError(form.breed_name, 'Breed');
-
-    if (specieError) {
-        errors.specie = specieError;
+    if (!isAllowedPetSpecies(form.specie_name)) {
+        errors.specie = String(form.specie_name ?? '').trim()
+            ? 'Specie must be Dog or Cat.'
+            : 'Specie is required.';
     }
+
+    const breedError = lookupNameError(form.breed_name, 'Breed');
 
     if (breedError) {
         errors.breed = breedError;
@@ -92,9 +117,7 @@ export function validatePetForm(form, errors, { requireStatus = false } = {}) {
         errors.sex_id = 'Sex is required.';
     }
 
-    if (!form.pet_date_of_birth) {
-        errors.pet_date_of_birth = 'Pet date of birth is required.';
-    } else if (form.pet_date_of_birth > new Date().toISOString().slice(0, 10)) {
+    if (form.pet_date_of_birth && form.pet_date_of_birth > new Date().toISOString().slice(0, 10)) {
         errors.pet_date_of_birth = 'Pet date of birth cannot be in the future.';
     }
 

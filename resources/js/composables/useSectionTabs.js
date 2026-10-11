@@ -38,7 +38,7 @@ export function useSectionTabs() {
             ? { name: 'household-register', label: 'Register Household' }
             : null,
         hasPermission('petcensus.view')
-            ? { name: 'household-pet-census', label: 'Pet Census' }
+            ? { name: 'household-pet-census', label: 'Household Pet' }
             : null,
         hasPermission('street.view')
             ? { name: 'streets', label: 'Street' }

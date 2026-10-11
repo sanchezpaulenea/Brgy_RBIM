@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\HouseholdManagement\Concerns;
 
+use App\Models\HouseholdManagement\Specie;
 use Closure;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
@@ -23,7 +25,7 @@ trait ValidatesPetCensus
             $this->merge(['pets' => $pets]);
         }
 
-        if ($this->exists('specie') || $this->exists('breed') || $this->exists('rabies_vaccination_date')) {
+        if ($this->exists('specie') || $this->exists('breed') || $this->exists('pet_date_of_birth') || $this->exists('rabies_vaccination_date')) {
             $this->merge($this->normalizePetInput($this->all()));
         }
     }
@@ -36,10 +38,10 @@ trait ValidatesPetCensus
         $field = fn (string $name) => $prefix === '' ? $name : $prefix.$name;
 
         $rules = [
-            $field('specie') => $this->petLookupNameRules('Specie'),
+            $field('specie') => $this->petSpeciesRules(),
             $field('breed') => $this->petLookupNameRules('Breed'),
             $field('sex_id') => ['required', 'integer', Rule::exists('sex', 'sex_id')],
-            $field('pet_date_of_birth') => ['required', 'date', 'before_or_equal:today'],
+            $field('pet_date_of_birth') => ['nullable', 'date', 'before_or_equal:today'],
             $field('is_spay_neuter') => ['required', 'boolean'],
             $field('rabies_vaccination_date') => ['nullable', 'date', 'before_or_equal:today'],
         ];
@@ -60,10 +62,10 @@ trait ValidatesPetCensus
 
         return [
             $field('specie').'.required' => 'Specie is required.',
+            $field('specie').'.in' => 'Specie must be Dog or Cat.',
             $field('breed').'.required' => 'Breed is required.',
             $field('sex_id').'.required' => 'Sex is required.',
             $field('sex_id').'.exists' => 'The selected sex does not exist.',
-            $field('pet_date_of_birth').'.required' => 'Pet date of birth is required.',
             $field('pet_date_of_birth').'.before_or_equal' => 'Pet date of birth cannot be in the future.',
             $field('is_spay_neuter').'.required' => 'Spay/neuter is required.',
             $field('rabies_vaccination_date').'.before_or_equal' => 'Rabies vaccination date cannot be in the future.',
@@ -108,6 +110,15 @@ trait ValidatesPetCensus
     /**
      * @return array<int, mixed>
      */
+    private function petSpeciesRules(): array
+    {
+        return [
+            'required',
+            'string',
+            Rule::in(Specie::ALLOWED),
+        ];
+    }
+
     private function petLookupNameRules(string $label): array
     {
         return [
@@ -135,11 +146,36 @@ trait ValidatesPetCensus
             }
         }
 
+        if (array_key_exists('specie', $pet) && is_string($pet['specie'])) {
+            $canonical = $this->canonicalPetSpecies($pet['specie']);
+
+            if ($canonical !== null) {
+                $pet['specie'] = $canonical;
+            }
+        }
+
+        if (array_key_exists('pet_date_of_birth', $pet) && $pet['pet_date_of_birth'] === '') {
+            $pet['pet_date_of_birth'] = null;
+        }
+
         if (array_key_exists('rabies_vaccination_date', $pet) && $pet['rabies_vaccination_date'] === '') {
             $pet['rabies_vaccination_date'] = null;
         }
 
         return $pet;
+    }
+
+    private function canonicalPetSpecies(string $value): ?string
+    {
+        $normalized = Str::of($value)->squish()->lower()->toString();
+
+        foreach (Specie::ALLOWED as $label) {
+            if (strtolower($label) === $normalized) {
+                return $label;
+            }
+        }
+
+        return null;
     }
 
     private function assertRabiesOnOrAfterBirth(Validator $validator, mixed $birth, mixed $rabies, string $key): void

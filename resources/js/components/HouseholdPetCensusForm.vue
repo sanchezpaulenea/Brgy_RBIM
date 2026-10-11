@@ -1,7 +1,7 @@
 <template>
     <article v-if="mode === 'register'" class="rbim-card p-6">
         <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">
-            Pet census
+            Household Pet
         </h2>
         <p class="mt-1 text-xs text-slate-500">
             Household is filled in from this registration.
@@ -154,10 +154,10 @@
     </article>
 
     <section v-else class="space-y-4">
-        <h3 class="text-sm font-semibold text-slate-900">Pet Census</h3>
+        <h3 class="text-sm font-semibold text-slate-900">Household Pet</h3>
         <p v-if="formError" class="text-sm text-red-700">{{ formError }}</p>
         <p v-if="!pets.length" class="text-sm text-slate-500">
-            No pets recorded for this household. Add pets from the Pet Census tab.
+            No pets recorded for this household. Add pets from the Household Pet tab.
         </p>
         <section
             v-for="(pet, index) in pets"
@@ -346,7 +346,7 @@ async function save() {
     const existing = pets.value.filter((pet) => pet.pet_census_id);
 
     if (existing.length !== pets.value.length) {
-        formError.value = 'Add pets from the Pet Census tab.';
+        formError.value = 'Add pets from the Household Pet tab.';
         return [];
     }
 
@@ -377,7 +377,7 @@ async function onContinue() {
         await householdService.createHouseholdPets(props.householdId, pets.value.map(petPayload));
         emit('finished');
     } catch (err) {
-        applyPetErrors(err, 'Unable to save pet census.');
+        applyPetErrors(err, 'Unable to save household pets.');
     } finally {
         saving.value = false;
     }

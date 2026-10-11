@@ -1,18 +1,23 @@
 <template>
     <div class="grid gap-4 sm:grid-cols-2">
-        <LookupCombobox
-            v-model="pet.specie_id"
-            v-model:query="pet.specie_name"
-            :options="lookups.species"
-            :input-id="`${idPrefix}-specie`"
-            label="Specie"
-            placeholder="Search or type a specie"
-            required
-            :can-create="canCreate"
-            :error="errors.specie || errors.specie_id"
-            :hint="PET_LOOKUP_HINT"
-            @create="(name) => acceptTypedLookup('species', 'specie_id', 'specie_name', name)"
-        />
+        <div>
+            <label :for="`${idPrefix}-specie`" class="rbim-label">
+                Specie<span class="rbim-required" aria-hidden="true">*</span>
+            </label>
+            <select
+                :id="`${idPrefix}-specie`"
+                :value="pet.specie_name"
+                class="rbim-input"
+                :class="{ 'rbim-input-error': errors.specie || errors.specie_id }"
+                @change="onSpecieSelected($event.target.value)"
+            >
+                <option value="">Select specie</option>
+                <option v-for="option in allowedSpecies" :key="option.label" :value="option.label">
+                    {{ option.label }}
+                </option>
+            </select>
+            <p v-if="errors.specie || errors.specie_id" class="rbim-error">{{ errors.specie || errors.specie_id }}</p>
+        </div>
         <LookupCombobox
             v-model="pet.breed_id"
             v-model:query="pet.breed_name"
@@ -47,7 +52,6 @@
             v-model="pet.pet_date_of_birth"
             :input-id="`${idPrefix}-dob`"
             label="Pet date of birth"
-            required
             :show-age="false"
             :error="errors.pet_date_of_birth"
         />
@@ -98,9 +102,10 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import BirthDateField from '@/components/BirthDateField.vue';
 import LookupCombobox from '@/components/LookupCombobox.vue';
-import { PET_LOOKUP_HINT, PET_RABIES_HINT } from '@/utils/petCensus';
+import { allowedSpeciesOptions, PET_LOOKUP_HINT, PET_RABIES_HINT } from '@/utils/petCensus';
 
 const props = defineProps({
     pet: { type: Object, required: true },
@@ -110,6 +115,17 @@ const props = defineProps({
     canCreate: { type: Boolean, default: false },
     showStatus: { type: Boolean, default: false },
 });
+
+const allowedSpecies = computed(() => allowedSpeciesOptions(props.lookups.species));
+
+function onSpecieSelected(name) {
+    const option = allowedSpecies.value.find((item) => item.label === name);
+
+    props.pet.specie_name = name;
+    props.pet.specie_id = option?.id ?? null;
+    delete props.errors.specie;
+    delete props.errors.specie_id;
+}
 
 function acceptTypedLookup(listKey, idField, nameField, name) {
     const trimmed = String(name ?? '').trim();

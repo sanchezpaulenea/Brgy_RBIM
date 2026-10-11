@@ -16,6 +16,8 @@ class Specie extends Model
 
     public $timestamps = false;
 
+    public const ALLOWED = ['Dog', 'Cat'];
+
     protected $fillable = [
         'specie',
     ];

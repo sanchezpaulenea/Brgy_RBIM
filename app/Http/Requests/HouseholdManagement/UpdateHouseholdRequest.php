@@ -77,7 +77,7 @@ class UpdateHouseholdRequest extends FormRequest
             'number_of_basement_level.required' => 'Number of basement levels is required when the house has a basement.',
             'head_resident_id.prohibited' => 'The household head cannot be changed on this update.',
             'head.prohibited' => 'The household head cannot be changed on this update.',
-            'pets.*.pet_census_id.required' => 'Add pets from the Pet Census tab.',
+            'pets.*.pet_census_id.required' => 'Add pets from the Household Pet tab.',
             'pets.*.pet_census_id.exists' => 'The pet does not belong to this household.',
         ];
     }
