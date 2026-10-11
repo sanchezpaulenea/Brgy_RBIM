@@ -128,41 +128,41 @@
                     </table>
                 </div>
             </div>
+        </div>
 
-            <div
-                v-if="!adding && canUpdate && editing"
-                class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
-                @click.self="cancelEdit"
-            >
-                <div class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white shadow-xl" role="dialog" aria-modal="true">
-                    <div class="border-b border-slate-100 px-5 py-4">
-                        <h2 class="text-base font-semibold text-slate-900">Update household pet</h2>
-                        <p class="mt-1 text-sm text-slate-600">
-                            Fields marked with <span class="rbim-required">*</span> are required.
-                        </p>
-                    </div>
-                    <form class="space-y-4 px-5 py-4" novalidate @submit.prevent="saveEdit">
-                        <div v-if="formError" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                            {{ formError }}
-                        </div>
-                        <HouseholdPetFields
-                            :pet="editForm"
-                            :errors="editErrors"
-                            :lookups="editLookups"
-                            id-prefix="pet-census-edit"
-                            can-create
-                            show-status
-                        />
-                        <div class="flex justify-end gap-2">
-                            <button type="button" class="rbim-btn-outline" :disabled="saving" @click="cancelEdit">
-                                Cancel
-                            </button>
-                            <button type="submit" class="rbim-btn" :disabled="saving">
-                                {{ saving ? 'Saving...' : 'Save' }}
-                            </button>
-                        </div>
-                    </form>
+        <div
+            v-if="!adding && canUpdate && editing"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+            @click.self="cancelEdit"
+        >
+            <div class="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-xl bg-white shadow-xl" role="dialog" aria-modal="true">
+                <div class="border-b border-slate-100 px-5 py-4">
+                    <h2 class="text-base font-semibold text-slate-900">Update household pet</h2>
+                    <p class="mt-1 text-sm text-slate-600">
+                        Fields marked with <span class="rbim-required">*</span> are required.
+                    </p>
                 </div>
+                <form class="max-h-[calc(90vh-5rem)] space-y-4 overflow-y-auto px-5 py-4" novalidate @submit.prevent="saveEdit">
+                    <div v-if="formError" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {{ formError }}
+                    </div>
+                    <HouseholdPetFields
+                        :pet="editForm"
+                        :errors="editErrors"
+                        :lookups="editLookups"
+                        id-prefix="pet-census-edit"
+                        can-create
+                        show-status
+                    />
+                    <div class="flex justify-end gap-2">
+                        <button type="button" class="rbim-btn-outline" :disabled="saving" @click="cancelEdit">
+                            Cancel
+                        </button>
+                        <button type="submit" class="rbim-btn" :disabled="saving">
+                            {{ saving ? 'Saving...' : 'Save' }}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </AppLayout>

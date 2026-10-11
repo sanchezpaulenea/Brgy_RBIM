@@ -95,8 +95,16 @@
                             :key="pet.pet_census_id"
                             class="grid gap-4 rounded-lg border border-slate-200 p-4 sm:grid-cols-2 lg:grid-cols-3"
                         >
-                            <div class="sm:col-span-2 lg:col-span-3">
+                            <div class="flex items-center justify-between sm:col-span-2 lg:col-span-3">
                                 <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Pet {{ index + 1 }}</dt>
+                                <button
+                                    v-if="canUpdatePets"
+                                    type="button"
+                                    class="rbim-btn-action"
+                                    @click="startPetEdit(pet)"
+                                >
+                                    Update
+                                </button>
                             </div>
                             <div>
                                 <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Specie</dt>
@@ -302,24 +310,48 @@
                             />
                         </fieldset>
                     </section>
-                    <p v-if="!canUpdatePets" class="text-sm text-slate-500">
-                        You do not have permission to update pet records.
-                    </p>
-                    <fieldset :disabled="!canUpdatePets" class="min-w-0 space-y-4 border-0 p-0">
-                        <HouseholdPetCensusForm
-                            ref="petForm"
-                            mode="edit"
-                            :household-id="household.household_id"
-                            :existing-pets="household.pets || []"
-                            :can-create="canUpdatePets"
-                        />
-                    </fieldset>
                     <div class="flex justify-end gap-2">
                         <button type="button" class="rbim-btn-outline" @click="cancelEdit">
                             Cancel
                         </button>
                         <button type="submit" class="rbim-btn" :disabled="saving">
                             {{ saving ? 'Saving...' : 'Update household' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div
+            v-if="canUpdatePets && editingPet"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+            @click.self="cancelPetEdit"
+        >
+            <div class="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-xl bg-white shadow-xl" role="dialog" aria-modal="true">
+                <div class="border-b border-slate-100 px-5 py-4">
+                    <h2 class="text-base font-semibold text-slate-900">Update household pet</h2>
+                    <p class="mt-1 text-sm text-slate-600">
+                        Fields marked with <span class="rbim-required">*</span> are required.
+                    </p>
+                </div>
+                <form class="max-h-[calc(90vh-5rem)] space-y-4 overflow-y-auto px-5 py-4" novalidate @submit.prevent="savePetEdit">
+                    <div v-if="petFormError" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {{ petFormError }}
+                    </div>
+                    <HouseholdPetFields
+                        :pet="petEditForm"
+                        :errors="petEditErrors"
+                        :lookups="petLookups"
+                        id-prefix="household-pet-edit"
+                        :can-create="canUpdatePets"
+                        show-status
+                    />
+                    <div class="flex justify-end gap-2">
+                        <button type="button" class="rbim-btn-outline" :disabled="savingPet" @click="cancelPetEdit">
+                            Cancel
+                        </button>
+                        <button type="submit" class="rbim-btn" :disabled="savingPet">
+                            {{ savingPet ? 'Saving...' : 'Save' }}
                         </button>
                     </div>
                 </form>
@@ -343,7 +375,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
-import HouseholdPetCensusForm from '@/components/HouseholdPetCensusForm.vue';
+import HouseholdPetFields from '@/components/HouseholdPetFields.vue';
 import HouseholdQuestionsFields from '@/components/HouseholdQuestionsFields.vue';
 import PageTabs from '@/components/PageTabs.vue';
 import { useAuth } from '@/composables/useAuth';
@@ -365,6 +397,13 @@ import {
     deathListLabel,
     yesNoLabel,
 } from '@/utils/householdQuestions';
+import {
+    emptyPetForm,
+    emptyPetLookups,
+    fetchPetLookups,
+    petPayload,
+    validatePetForm,
+} from '@/utils/petCensus';
 
 const route = useRoute();
 const auth = useAuth();
@@ -384,8 +423,13 @@ const successMessage = ref('');
 const editForm = reactive(emptyEditForm());
 const editErrors = reactive({});
 const questionForm = reactive(emptyHouseholdQuestionsForm());
-const petForm = ref(null);
 const questionErrors = reactive({});
+const editingPet = ref(null);
+const savingPet = ref(false);
+const petFormError = ref('');
+const petEditForm = reactive(emptyPetForm());
+const petEditErrors = reactive({});
+const petLookups = reactive(emptyPetLookups());
 const confirm = reactive({
     open: false,
     title: '',
@@ -511,23 +555,67 @@ function cancelEdit() {
     clearQuestionErrors();
 }
 
+function startPetEdit(pet) {
+    editingPet.value = pet;
+    petFormError.value = '';
+    Object.assign(petEditForm, emptyPetForm(pet));
+    Object.keys(petEditErrors).forEach((key) => {
+        delete petEditErrors[key];
+    });
+}
+
+function cancelPetEdit() {
+    editingPet.value = null;
+    petFormError.value = '';
+}
+
+async function savePetEdit() {
+    if (!editingPet.value || !validatePetForm(petEditForm, petEditErrors, { requireStatus: true })) {
+        return;
+    }
+
+    savingPet.value = true;
+    petFormError.value = '';
+    error.value = '';
+    successMessage.value = '';
+
+    try {
+        await householdService.updateHouseholdPet(editingPet.value.pet_census_id, petPayload(petEditForm));
+        editingPet.value = null;
+        successMessage.value = 'Household pet updated successfully.';
+        await loadHousehold();
+    } catch (err) {
+        const validationErrors = extractValidationErrors(err);
+
+        if (Object.keys(validationErrors).length) {
+            applyValidationErrors(petEditErrors, validationErrors);
+        }
+
+        petFormError.value = extractErrorMessage(err, 'Unable to update this pet.');
+    } finally {
+        savingPet.value = false;
+    }
+}
+
 async function loadHousehold() {
     loading.value = true;
     error.value = '';
 
     try {
-        const [item, streetItems, statusItems, householdQuestionLookups, locationProfile] = await Promise.all([
+        const [item, streetItems, statusItems, householdQuestionLookups, locationProfile, nextPetLookups] = await Promise.all([
             householdService.fetchHousehold(route.params.id),
             lookupService.fetchStreets(),
             lookupService.fetchLookup('household-status'),
             fetchHouseholdQuestionLookups(),
             householdService.fetchLocationProfile(),
+            fetchPetLookups(),
         ]);
         household.value = item;
         streets.value = streetItems;
         householdStatuses.value = statusItems;
         Object.assign(questionLookups, householdQuestionLookups);
         Object.assign(location, locationProfile ?? { barangay: '', city: '', province: '' });
+        Object.assign(petLookups, nextPetLookups);
     } catch (err) {
         household.value = null;
         error.value = extractErrorMessage(err, 'Unable to load this household.');
@@ -561,9 +649,7 @@ async function handleUpdate() {
         clearQuestionErrors();
     }
 
-    const petsValid = !canUpdatePets.value || petForm.value?.validateAll?.() !== false;
-
-    if (Object.keys(editErrors).length || Object.keys(questionErrors).length || !petsValid) {
+    if (Object.keys(editErrors).length || Object.keys(questionErrors).length) {
         return;
     }
 
@@ -600,9 +686,6 @@ async function handleUpdate() {
             }
         }
 
-        if (canUpdatePets.value) {
-            await petForm.value?.save?.();
-        }
         successMessage.value = 'Household updated successfully.';
         cancelEdit();
         await loadHousehold();
