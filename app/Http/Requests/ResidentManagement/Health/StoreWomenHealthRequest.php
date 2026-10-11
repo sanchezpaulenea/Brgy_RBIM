@@ -32,7 +32,11 @@ class StoreWomenHealthRequest extends FormRequest
                 'integer',
                 Rule::exists('source_of_fp_method', 'source_of_fp_method_id'),
             ],
-            'have_intention_to_use_fp' => ['required', 'boolean'],
+            'have_intention_to_use_fp' => [
+                Rule::requiredIf(fn () => $this->familyPlanningMethodIndicatesNone()),
+                'nullable',
+                'boolean',
+            ],
         ];
     }
 

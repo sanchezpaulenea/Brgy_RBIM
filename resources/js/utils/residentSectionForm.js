@@ -374,12 +374,21 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
         requiredInteger(form, errors, 'number_pregnancies', 'Number of pregnancies is required.');
         requiredInteger(form, errors, 'living_children', 'Living children is required.');
         requiredSelect(form, errors, 'family_planning_method_id', 'Family planning method is required.');
-        requiredBoolean(form, errors, 'have_intention_to_use_fp', 'Intention to use family planning is required.');
 
-        if (!isFamilyPlanningNone(lookupById(lookups.familyPlanningMethod, form.family_planning_method_id))) {
+        const familyPlanningNone = isFamilyPlanningNone(
+            lookupById(lookups.familyPlanningMethod, form.family_planning_method_id),
+        );
+
+        if (!familyPlanningNone) {
             requiredSelect(form, errors, 'source_of_fp_method_id', 'Source of family planning method is required.');
         } else {
             delete errors.source_of_fp_method_id;
+        }
+
+        if (form.family_planning_method_id && familyPlanningNone) {
+            requiredBoolean(form, errors, 'have_intention_to_use_fp', 'Intention to use family planning is required.');
+        } else {
+            delete errors.have_intention_to_use_fp;
         }
     }
 
@@ -589,12 +598,13 @@ export function prepareSectionPayload(key, form, { lookups = {}, resident = {}, 
 
     if (key === 'women_health') {
         payload.family_planning_method_id = Number(form.family_planning_method_id);
-        payload.have_intention_to_use_fp = form.have_intention_to_use_fp === true;
 
         if (isFamilyPlanningNone(lookupById(lookups.familyPlanningMethod, form.family_planning_method_id))) {
             payload.source_of_fp_method_id = notApplicableLookupId(lookups.sourceOfFpMethod);
+            payload.have_intention_to_use_fp = form.have_intention_to_use_fp === true;
         } else {
             payload.source_of_fp_method_id = form.source_of_fp_method_id ? Number(form.source_of_fp_method_id) : null;
+            payload.have_intention_to_use_fp = true;
         }
     }
 

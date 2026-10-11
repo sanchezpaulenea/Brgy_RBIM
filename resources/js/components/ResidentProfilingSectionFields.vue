@@ -339,7 +339,7 @@
                     <p v-if="errors.source_of_fp_method_id" class="rbim-error">{{ errors.source_of_fp_method_id }}</p>
                 </div>
             </template>
-            <div>
+            <div v-if="showsIntentionToUseFp">
                 <label class="rbim-label" :for="`${idPrefix}-have_intention_to_use_fp`">
                     Intention to Use Family Planning<span class="rbim-required" aria-hidden="true">*</span>
                 </label>
@@ -828,6 +828,22 @@ const economicShowsWorkDetails = computed(() => (
 const familyPlanningIsNone = computed(() => (
     isFamilyPlanningNone(lookupById(props.lookups.familyPlanningMethod, props.form.family_planning_method_id))
 ));
+
+const showsIntentionToUseFp = computed(() => (
+    Boolean(props.form.family_planning_method_id) && familyPlanningIsNone.value
+));
+
+watch(
+    () => [props.section, props.form.family_planning_method_id, familyPlanningIsNone.value],
+    () => {
+        if (props.section !== 'women_health' || familyPlanningIsNone.value) {
+            return;
+        }
+
+        props.form.have_intention_to_use_fp = true;
+        delete props.errors.have_intention_to_use_fp;
+    },
+);
 
 const facilityVisitedHasValue = computed(() => (
     Boolean(props.form.facility_visited_past_12mos_id)

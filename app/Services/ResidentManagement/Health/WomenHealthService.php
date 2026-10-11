@@ -133,7 +133,8 @@ class WomenHealthService
 
     /**
      * "None" skips Source of FP. That column is INT NOT NULL, so the existing
-     * "Not Applicable" lookup row is stored. Intention to use FP is stored as answered.
+     * "Not Applicable" lookup row is stored. Intention is required only for None;
+     * any other method is stored as Yes.
      *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
@@ -161,16 +162,20 @@ class WomenHealthService
             }
 
             $data['source_of_fp_method_id'] = $notApplicableId;
+
+            if (! array_key_exists('have_intention_to_use_fp', $data)
+                || $data['have_intention_to_use_fp'] === null
+                || $data['have_intention_to_use_fp'] === ''
+            ) {
+                throw ValidationException::withMessages([
+                    'have_intention_to_use_fp' => ['Intention to use family planning is required.'],
+                ]);
+            }
+
+            return $data;
         }
 
-        if (! array_key_exists('have_intention_to_use_fp', $data)
-            || $data['have_intention_to_use_fp'] === null
-            || $data['have_intention_to_use_fp'] === ''
-        ) {
-            throw ValidationException::withMessages([
-                'have_intention_to_use_fp' => ['Intention to use family planning is required.'],
-            ]);
-        }
+        $data['have_intention_to_use_fp'] = true;
 
         return $data;
     }

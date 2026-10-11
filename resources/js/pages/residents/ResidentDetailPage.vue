@@ -246,70 +246,15 @@
                     </template>
 
                     <template v-else-if="editing === 'women_health'">
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <div>
-                                <label class="rbim-label">Number of Pregnancies<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <input
-                                    v-model="editForm.number_pregnancies"
-                                    type="number"
-                                    min="0"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.number_pregnancies }"
-                                >
-                                <p v-if="editErrors.number_pregnancies" class="rbim-error">{{ editErrors.number_pregnancies }}</p>
-                            </div>
-                            <div>
-                                <label class="rbim-label">Living Children<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <input
-                                    v-model="editForm.living_children"
-                                    type="number"
-                                    min="0"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.living_children }"
-                                >
-                                <p v-if="editErrors.living_children" class="rbim-error">{{ editErrors.living_children }}</p>
-                            </div>
-                            <div>
-                                <label class="rbim-label">Family Planning Method<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <select
-                                    v-model="editForm.family_planning_method_id"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.family_planning_method_id }"
-                                >
-                                    <option value="">Select</option>
-                                    <option v-for="option in lookups.familyPlanningMethod" :key="option.id" :value="option.id">{{ option.label }}</option>
-                                </select>
-                                <p v-if="editErrors.family_planning_method_id" class="rbim-error">{{ editErrors.family_planning_method_id }}</p>
-                            </div>
-                            <template v-if="!familyPlanningIsNone">
-                                <div>
-                                    <label class="rbim-label">Source of Family Planning Method<span class="rbim-required" aria-hidden="true">*</span></label>
-                                    <select
-                                        v-model="editForm.source_of_fp_method_id"
-                                        class="rbim-input"
-                                        :class="{ 'rbim-input-error': editErrors.source_of_fp_method_id }"
-                                    >
-                                        <option value="">Select</option>
-                                        <option v-for="option in lookups.sourceOfFpMethod" :key="option.id" :value="option.id">{{ option.label }}</option>
-                                    </select>
-                                    <p v-if="editErrors.source_of_fp_method_id" class="rbim-error">{{ editErrors.source_of_fp_method_id }}</p>
-                                </div>
-                            </template>
-                            <div>
-                                <label class="rbim-label">Intention to Use Family Planning<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <select
-                                    :value="editForm.have_intention_to_use_fp === true ? 'true' : editForm.have_intention_to_use_fp === false ? 'false' : ''"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.have_intention_to_use_fp }"
-                                    @change="editForm.have_intention_to_use_fp = $event.target.value === '' ? '' : $event.target.value === 'true'"
-                                >
-                                    <option value="">Select</option>
-                                    <option value="true">Yes</option>
-                                    <option value="false">No</option>
-                                </select>
-                                <p v-if="editErrors.have_intention_to_use_fp" class="rbim-error">{{ editErrors.have_intention_to_use_fp }}</p>
-                            </div>
-                        </div>
+                        <ResidentProfilingSectionFields
+                            section="women_health"
+                            :form="editForm"
+                            :errors="editErrors"
+                            :lookups="lookups"
+                            :resident="resident"
+                            :location="location"
+                            id-prefix="resident-edit-women-health"
+                        />
                     </template>
 
                     <template v-else-if="editing === 'sociocivic'">
@@ -592,7 +537,6 @@ import {
     isFamilyPlanningNone,
     isNotApplicableLookup,
     isNotApplicableSchoolLvl,
-    lookupById,
     resolveApplicableSections,
     sociocivicFieldRelevance,
     sociocivicVoterFormState,
@@ -688,10 +632,6 @@ const migrantReasonsForLeaving = computed(() => (
 
 const migrantReasonsForTransfer = computed(() => (
     (lookups.reasonForTransfer ?? []).filter((option) => !isNotApplicableLookup(option))
-));
-
-const familyPlanningIsNone = computed(() => (
-    isFamilyPlanningNone(lookupById(lookups.familyPlanningMethod, editForm.family_planning_method_id))
 ));
 
 const migrationClassification = computed(() => classifyMigrationForm(editForm, location));
@@ -973,7 +913,12 @@ function displayWomenHealth(record) {
         fields.push({ label: 'Source of Family Planning Method', value: record.source_of_fp_method || '—' });
     }
 
-    fields.push({ label: 'Intention to Use Family Planning', value: yesNo(record.have_intention_to_use_fp) });
+    if (!record.family_planning_method_id || isFamilyPlanningNone({
+        id: record.family_planning_method_id,
+        label: record.family_planning_method,
+    })) {
+        fields.push({ label: 'Intention to Use Family Planning', value: yesNo(record.have_intention_to_use_fp) });
+    }
 
     return fields;
 }
