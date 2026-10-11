@@ -17,6 +17,7 @@ use App\Models\HouseholdManagement\WaterSource;
 use App\Models\ResidentManagement\Demographic\Ethnicity;
 use App\Models\ResidentManagement\Demographic\MaritalStatus;
 use App\Models\ResidentManagement\Demographic\Nationality;
+use App\Models\ResidentManagement\Demographic\RelationshipToHouseholdHead;
 use App\Models\ResidentManagement\Demographic\Religion;
 use App\Models\ResidentManagement\Demographic\ResidentStatus;
 use App\Models\ResidentManagement\Demographic\ResidentType;
@@ -958,6 +959,18 @@ return [
         'resident_status_id',
         'resident_status',
         'resident_demographic.resident_status',
+    ),
+
+    'relationship_to_hh' => $residentAttribute(
+        'Relationship to Household',
+        'relationship_to_hh',
+        'Relationship',
+        'relationship_to_hh_id',
+        RelationshipToHouseholdHead::class,
+        'relationship_to_hh',
+        'relationship_to_hh_id',
+        'relationship_to_hh',
+        'resident_demographic.relationship_to_hh',
     ),
 
     'education' => $residentCategory('Education', [
