@@ -44,13 +44,14 @@
                     :id="`${idPrefix}-school_level`"
                     :value="modelValue.school_level"
                     class="rbim-input"
-                    :class="{ 'rbim-input-error': errors.school_level }"
-                    @change="patch('school_level', $event.target.value)"
+                    :class="{ 'rbim-input-error': errors.school_level, 'bg-slate-50': isEnrolled }"
+                    disabled
                 >
                     <option value="">Select school level</option>
                     <option v-for="option in schoolLevels" :key="option" :value="option">{{ option }}</option>
                 </select>
                 <p v-if="errors.school_level" class="rbim-error">{{ errors.school_level }}</p>
+                <p v-else class="rbim-hint">Automatically selected from highest level of education.</p>
             </div>
             <div v-if="isEnrolled" class="sm:col-span-2">
                 <label class="rbim-label" :for="`${idPrefix}-school_location`">
@@ -75,6 +76,7 @@
 <script setup>
 import { computed } from 'vue';
 import { ageFromDateOfBirth } from '@/utils/format';
+import { schoolLevelLabelForHighestEducation } from '@/utils/residentProfiling';
 
 const highestEducationLevels = [
     'No grade completed',
@@ -134,9 +136,16 @@ function patch(field, value) {
         [field]: value,
     };
 
-    if (field === 'enrollment_status' && value !== 'Currently enrolled') {
+    if (next.enrollment_status === 'Currently enrolled') {
+        next.school_level = schoolLevelLabelForHighestEducation(
+            next.highest_education_attained,
+            schoolLevels,
+        ) || '';
+    } else if (field === 'enrollment_status' || field === 'highest_education_attained') {
         next.school_level = '';
-        next.school_location = '';
+        if (field === 'enrollment_status') {
+            next.school_location = '';
+        }
     }
 
     emit('update:modelValue', next);

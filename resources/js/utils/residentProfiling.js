@@ -230,6 +230,45 @@ export function isNotApplicableSchoolLvl(option) {
     return isNotApplicableLookup(option);
 }
 
+/**
+ * Maps Highest Level of Education labels to the matching School Level option.
+ * Uses the live dropdown labels, not hardcoded IDs.
+ */
+const HIGHEST_TO_SCHOOL_PATTERNS = [
+    { highest: /post[- ]?grad/i, school: /college|universit|post[- ]?grad/i },
+    { highest: /college/i, school: /college|universit/i },
+    { highest: /vocational|tech|tesda/i, school: /vocational|tech|tesda/i },
+    { highest: /senior/i, school: /senior/i },
+    { highest: /junior/i, school: /junior/i },
+    { highest: /high school/i, school: /junior|high school/i },
+    { highest: /elementary/i, school: /elementary/i },
+    { highest: /pre[- ]?school|preschool/i, school: /pre[- ]?school|preschool|kindergarten/i },
+    { highest: /no education|no grade|none|not applicable/i, school: /pre[- ]?school|preschool|kindergarten|day care/i },
+];
+
+export function schoolLvlIdForHighestEducation(highestOption, schoolLevels = []) {
+    const highestLabel = String(highestOption?.label ?? highestOption ?? '').trim();
+
+    if (!highestLabel) {
+        return '';
+    }
+
+    const rule = HIGHEST_TO_SCHOOL_PATTERNS.find((item) => item.highest.test(highestLabel));
+
+    if (!rule) {
+        return '';
+    }
+
+    const usable = (schoolLevels ?? []).filter((option) => !isNotApplicableSchoolLvl(option));
+    const match = usable.find((option) => rule.school.test(String(option.label ?? option ?? '')));
+
+    return match?.id ?? match ?? '';
+}
+
+export function schoolLevelLabelForHighestEducation(highestLabel, schoolLevels = []) {
+    return schoolLvlIdForHighestEducation(highestLabel, schoolLevels);
+}
+
 export function isNotApplicableHighestEduc(option) {
     const text = String(option?.label ?? option ?? '').trim().toLowerCase();
 

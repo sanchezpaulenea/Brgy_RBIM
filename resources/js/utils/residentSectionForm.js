@@ -16,6 +16,7 @@ import {
     notApplicableLookupId,
     notApplicableSchoolLvlId,
     resolveApplicableSections,
+    schoolLvlIdForHighestEducation,
     sociocivicFieldRelevance,
     sourceOfIncomeSkipsWorkDetails,
     titleCaseWords,
@@ -286,6 +287,15 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
 
                 if (isNotApplicableSchoolLvl(lookupById(lookups.schoolLvl, form.school_lvl_id))) {
                     errors.school_lvl_id = 'School level is required.';
+                }
+
+                const expectedSchoolLvlId = schoolLvlIdForHighestEducation(
+                    lookupById(lookups.highestLvlOfEduc, form.highest_lvl_of_educ_id),
+                    lookups.schoolLvl,
+                );
+
+                if (expectedSchoolLvlId && Number(form.school_lvl_id) !== Number(expectedSchoolLvlId)) {
+                    errors.school_lvl_id = 'School level must match the highest level of education.';
                 }
             }
         }

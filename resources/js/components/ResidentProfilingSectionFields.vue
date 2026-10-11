@@ -40,12 +40,14 @@
                         :id="`${idPrefix}-school_lvl_id`"
                         v-model="form.school_lvl_id"
                         class="rbim-input"
-                        :class="{ 'rbim-input-error': errors.school_lvl_id }"
+                        :class="{ 'rbim-input-error': errors.school_lvl_id, 'bg-slate-50': educationEnrolled }"
+                        :disabled="educationEnrolled"
                     >
                         <option value="">Select school level</option>
                         <option v-for="option in enrolledSchoolLevels" :key="option.id" :value="option.id">{{ option.label }}</option>
                     </select>
                     <p v-if="errors.school_lvl_id" class="rbim-error">{{ errors.school_lvl_id }}</p>
+                    <p v-else class="rbim-hint">Automatically selected from Highest Level of Education.</p>
                 </div>
                 <div>
                     <label class="rbim-label" :for="`${idPrefix}-place_of_school_brgy`">
@@ -706,7 +708,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import BirthDateField from '@/components/BirthDateField.vue';
 import LookupCombobox from '@/components/LookupCombobox.vue';
 import { extractErrorMessage } from '@/services/http';
@@ -721,6 +723,7 @@ import {
     isNotApplicableSchoolLvl,
     isRegisteredSoloParent,
     lookupById,
+    schoolLvlIdForHighestEducation,
     sociocivicFieldRelevance,
     sourceOfIncomeSkipsWorkDetails,
 } from '@/utils/residentProfiling';
@@ -777,6 +780,33 @@ const educationEnrolled = computed(() => (
 const enrolledSchoolLevels = computed(() => (
     (props.lookups.schoolLvl ?? []).filter((option) => !isNotApplicableSchoolLvl(option))
 ));
+
+function applyEducationSchoolLevel() {
+    if (props.section !== 'education') {
+        return;
+    }
+
+    if (educationEnrolled.value) {
+        const highest = lookupById(props.lookups.highestLvlOfEduc, props.form.highest_lvl_of_educ_id);
+        props.form.school_lvl_id = schoolLvlIdForHighestEducation(highest, enrolledSchoolLevels.value) || '';
+        return;
+    }
+
+    if (props.form.current_enrollement_status_id) {
+        props.form.school_lvl_id = '';
+    }
+}
+
+watch(
+    () => [
+        props.section,
+        props.form.highest_lvl_of_educ_id,
+        props.form.current_enrollement_status_id,
+        educationEnrolled.value,
+        enrolledSchoolLevels.value,
+    ],
+    applyEducationSchoolLevel,
+);
 
 const migrantReasonsForLeaving = computed(() => (
     (props.lookups.reasonForLeaving ?? []).filter((option) => !isNotApplicableLookup(option))

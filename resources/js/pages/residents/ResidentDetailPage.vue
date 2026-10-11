@@ -198,74 +198,15 @@
                     </template>
 
                     <template v-else-if="editing === 'education'">
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <div v-if="educationRelevance.highest_level">
-                                <label class="rbim-label">Highest Level of Education<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <select
-                                    v-model="editForm.highest_lvl_of_educ_id"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.highest_lvl_of_educ_id }"
-                                >
-                                    <option value="">Select</option>
-                                    <option v-for="option in lookups.highestLvlOfEduc" :key="option.id" :value="option.id">{{ option.label }}</option>
-                                </select>
-                                <p v-if="editErrors.highest_lvl_of_educ_id" class="rbim-error">{{ editErrors.highest_lvl_of_educ_id }}</p>
-                            </div>
-                            <div v-if="educationRelevance.enrollment">
-                                <label class="rbim-label">Current Enrollment Status<span class="rbim-required" aria-hidden="true">*</span></label>
-                                <select
-                                    v-model="editForm.current_enrollement_status_id"
-                                    class="rbim-input"
-                                    :class="{ 'rbim-input-error': editErrors.current_enrollement_status_id }"
-                                >
-                                    <option value="">Select</option>
-                                    <option v-for="option in lookups.currentEnrollmentStatus" :key="option.id" :value="option.id">{{ option.label }}</option>
-                                </select>
-                                <p v-if="editErrors.current_enrollement_status_id" class="rbim-error">{{ editErrors.current_enrollement_status_id }}</p>
-                            </div>
-                            <template v-if="educationRelevance.enrollment && educationEnrolled">
-                                <div>
-                                    <label class="rbim-label">School Level<span class="rbim-required" aria-hidden="true">*</span></label>
-                                    <select
-                                        v-model="editForm.school_lvl_id"
-                                        class="rbim-input"
-                                        :class="{ 'rbim-input-error': editErrors.school_lvl_id }"
-                                    >
-                                        <option value="">Select</option>
-                                        <option v-for="option in enrolledSchoolLevels" :key="option.id" :value="option.id">{{ option.label }}</option>
-                                    </select>
-                                    <p v-if="editErrors.school_lvl_id" class="rbim-error">{{ editErrors.school_lvl_id }}</p>
-                                </div>
-                                <div>
-                                    <label class="rbim-label">School Barangay<span class="rbim-required" aria-hidden="true">*</span></label>
-                                    <input
-                                        v-model="editForm.place_of_school_brgy"
-                                        type="text"
-                                        maxlength="45"
-                                        class="rbim-input"
-                                        :class="{ 'rbim-input-error': editErrors.place_of_school_brgy }"
-                                    >
-                                    <p v-if="editErrors.place_of_school_brgy" class="rbim-error">{{ editErrors.place_of_school_brgy }}</p>
-                                </div>
-                                <div>
-                                    <label class="rbim-label">School City / Municipality<span class="rbim-required" aria-hidden="true">*</span></label>
-                                    <input
-                                        v-model="editForm.place_of_school_city_municipality"
-                                        type="text"
-                                        maxlength="45"
-                                        class="rbim-input"
-                                        :class="{ 'rbim-input-error': editErrors.place_of_school_city_municipality }"
-                                    >
-                                    <p v-if="editErrors.place_of_school_city_municipality" class="rbim-error">{{ editErrors.place_of_school_city_municipality }}</p>
-                                </div>
-                            </template>
-                            <p
-                                v-if="!educationRelevance.highest_level && !educationRelevance.enrollment"
-                                class="sm:col-span-2 text-sm text-slate-500"
-                            >
-                                No education fields apply at this resident's current age.
-                            </p>
-                        </div>
+                        <ResidentProfilingSectionFields
+                            section="education"
+                            :form="editForm"
+                            :errors="editErrors"
+                            :lookups="lookups"
+                            :resident="resident"
+                            :location="location"
+                            id-prefix="resident-edit-education"
+                        />
                     </template>
 
                     <template v-else-if="editing === 'economic'">
@@ -648,7 +589,6 @@ import {
     educationFieldRelevance,
     canPerformCreate,
     canPerformUpdate,
-    isEnrollmentStatusEnrolled,
     isFamilyPlanningNone,
     isNotApplicableLookup,
     isNotApplicableSchoolLvl,
@@ -740,16 +680,6 @@ const soloHeadDeparture = computed(() => (
     residentStatusRequiresHeadReplacement(editForm.resident_status_id)
     && Number(editForm.resident_status_id) !== Number(originalResidentStatusId.value)
     && (householdForHead.value?.residents?.length ?? 0) === 1
-));
-
-const educationRelevance = computed(() => educationFieldRelevance(resident.value));
-
-const educationEnrolled = computed(() => (
-    isEnrollmentStatusEnrolled(lookupById(lookups.currentEnrollmentStatus, editForm.current_enrollement_status_id))
-));
-
-const enrolledSchoolLevels = computed(() => (
-    (lookups.schoolLvl ?? []).filter((option) => !isNotApplicableSchoolLvl(option))
 ));
 
 const migrantReasonsForLeaving = computed(() => (
