@@ -50,12 +50,14 @@
                 <label class="rbim-label" for="house_lot">House Lot</label>
                 <input
                     id="house_lot"
-                    v-model="form.house_lot"
+                    :value="form.house_lot"
                     type="text"
+                    inputmode="numeric"
                     maxlength="45"
                     placeholder="Leave blank if not applicable"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.house_lot }"
+                    @input="form.house_lot = digitsOnly($event.target.value)"
                 >
                 <p v-if="errors.house_lot" class="rbim-error">{{ errors.house_lot }}</p>
             </div>
@@ -238,6 +240,7 @@
 import FormSectionCard from '@/components/FormSectionCard.vue';
 import HelpTip from '@/components/HelpTip.vue';
 import LookupCombobox from '@/components/LookupCombobox.vue';
+import { digitsOnly } from '@/utils/validation';
 
 const form = defineModel({ type: Object, required: true });
 

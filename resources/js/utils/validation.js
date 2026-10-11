@@ -90,6 +90,20 @@ export function digitsOnly(value) {
     return String(value ?? '').replace(/\D/g, '');
 }
 
+export function houseLotValidationError(value) {
+    const text = String(value ?? '').trim();
+
+    if (!text) {
+        return '';
+    }
+
+    if (!/^\d+$/.test(text)) {
+        return 'House number may only contain numbers.';
+    }
+
+    return '';
+}
+
 export function pwdIdValidationError(value, required = false) {
     const number = digitsOnly(value);
 

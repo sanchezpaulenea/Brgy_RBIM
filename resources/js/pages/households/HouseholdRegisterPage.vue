@@ -114,11 +114,13 @@
                                 <label for="house_lot" class="rbim-label">House/Lot Number</label>
                                 <input
                                     id="house_lot"
-                                    v-model="household.house_lot"
+                                    :value="household.house_lot"
                                     type="text"
+                                    inputmode="numeric"
                                     maxlength="45"
                                     class="rbim-input"
                                     :class="{ 'rbim-input-error': householdErrors.house_lot }"
+                                    @input="household.house_lot = digitsOnly($event.target.value)"
                                 >
                                 <p v-if="householdErrors.house_lot" class="rbim-error">{{ householdErrors.house_lot }}</p>
                             </div>
@@ -254,6 +256,7 @@ import {
     toId,
     validateResidentForm,
 } from '@/utils/residentForm';
+import { digitsOnly, houseLotValidationError } from '@/utils/validation';
 import {
     HOUSEHOLD_REGISTER_DRAFT_KEY,
     clearFormDraft,
@@ -446,6 +449,12 @@ function validateHousehold() {
     }
 
     validateHouseholdStructure(household, householdErrors);
+
+    const houseLotError = houseLotValidationError(household.house_lot);
+
+    if (houseLotError) {
+        householdErrors.house_lot = houseLotError;
+    }
 
     return Object.keys(householdErrors).length === 0;
 }

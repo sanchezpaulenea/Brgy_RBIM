@@ -211,11 +211,13 @@
                             <label for="detail_house_lot" class="rbim-label">House/Lot Number</label>
                             <input
                                 id="detail_house_lot"
-                                v-model="editForm.house_lot"
+                                :value="editForm.house_lot"
                                 type="text"
+                                inputmode="numeric"
                                 maxlength="45"
                                 class="rbim-input"
                                 :class="{ 'rbim-input-error': editErrors.house_lot }"
+                                @input="editForm.house_lot = digitsOnly($event.target.value)"
                             >
                             <p v-if="editErrors.house_lot" class="rbim-error">{{ editErrors.house_lot }}</p>
                         </div>
@@ -352,6 +354,7 @@ import * as lookupService from '@/services/lookupService';
 import { ageFromDateOfBirth, formatDate, formatDateTime } from '@/utils/format';
 import { canPerformUpdate } from '@/utils/residentProfiling';
 import { applyValidationErrors, householdStructureFromRecord, householdStructurePayload, optionalAddressText, toId, validateHouseholdStructure } from '@/utils/residentForm';
+import { digitsOnly, houseLotValidationError } from '@/utils/validation';
 import {
     emptyHouseholdQuestionLookups,
     emptyHouseholdQuestionsForm,
@@ -545,6 +548,12 @@ async function handleUpdate() {
     }
 
     validateHouseholdStructure(editForm, editErrors);
+
+    const houseLotError = houseLotValidationError(editForm.house_lot);
+
+    if (houseLotError) {
+        editErrors.house_lot = houseLotError;
+    }
 
     if (canUpdateQuestions.value) {
         validateHouseholdQuestions(questionForm, questionErrors);

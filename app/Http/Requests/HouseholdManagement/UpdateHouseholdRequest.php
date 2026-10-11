@@ -33,7 +33,7 @@ class UpdateHouseholdRequest extends FormRequest
         return [
             'clan_id' => ['sometimes', 'integer', Rule::exists('clan', 'clan_id')],
             'street_id' => ['sometimes', 'integer', Rule::exists('street', 'street_id')],
-            'house_lot' => ['sometimes', 'nullable', 'string', 'max:45'],
+            'house_lot' => ['sometimes', 'nullable', 'string', 'max:45', 'regex:/^\\d+$/'],
             'number_of_house_story' => ['sometimes', 'required', 'integer', 'min:1', 'max:50'],
             'has_basement' => ['sometimes', 'required', 'boolean'],
             'number_of_basement_level' => [
@@ -68,6 +68,7 @@ class UpdateHouseholdRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'house_lot.regex' => 'House number may only contain numbers.',
             'clan_id.exists' => 'The selected clan does not exist.',
             'street_id.exists' => 'The selected street does not exist.',
             'household_status_id.exists' => 'The selected household status does not exist.',

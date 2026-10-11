@@ -37,12 +37,12 @@ class HouseholdAddressNormalizationTest extends TestCase
     public function test_store_request_keeps_real_lot_values(): void
     {
         $request = StoreHouseholdRequest::create('/api/v1/households', 'POST', [
-            'house_lot' => '  Lot 15  ',
+            'house_lot' => '  15  ',
         ]);
 
         $this->invokePrepareForValidation($request);
 
-        $this->assertSame('Lot 15', $request->input('house_lot'));
+        $this->assertSame('15', $request->input('house_lot'));
     }
 
     public function test_store_request_sets_basement_level_to_zero_when_house_has_no_basement(): void
