@@ -229,7 +229,7 @@
                 @create="(name) => createLookup('facilityVisited', () => lookupService.createFacilityVisited({ facility_visited_past_12mos: name }), 'facility_visited_past_12mos_id', 'facility_visited_name', 'facility_visited_past_12mos_id')"
             />
             <LookupCombobox
-                v-if="!facilityVisitedIsNone"
+                v-if="showsFacilityVisitReason"
                 v-model="form.facility_visit_reason_id"
                 v-model:query="form.facility_visit_reason_name"
                 :options="lookups.facilityVisitReason ?? []"
@@ -829,9 +829,33 @@ const familyPlanningIsNone = computed(() => (
     isFamilyPlanningNone(lookupById(props.lookups.familyPlanningMethod, props.form.family_planning_method_id))
 ));
 
+const facilityVisitedHasValue = computed(() => (
+    Boolean(props.form.facility_visited_past_12mos_id)
+        || Boolean(String(props.form.facility_visited_name ?? '').trim())
+));
+
 const facilityVisitedIsNone = computed(() => (
     isNotApplicableLookup(lookupById(props.lookups.facilityVisited ?? [], props.form.facility_visited_past_12mos_id))
+        || isNotApplicableLookup(props.form.facility_visited_name)
 ));
+
+const showsFacilityVisitReason = computed(() => (
+    facilityVisitedHasValue.value && !facilityVisitedIsNone.value
+));
+
+watch(
+    () => [props.section, showsFacilityVisitReason.value],
+    () => {
+        if (props.section !== 'health' || showsFacilityVisitReason.value) {
+            return;
+        }
+
+        props.form.facility_visit_reason_id = '';
+        props.form.facility_visit_reason_name = '';
+        delete props.errors.facility_visit_reason_id;
+        delete props.errors.facility_visit_reason;
+    },
+);
 
 const showsPwdId = computed(() => (
     hasDisability(

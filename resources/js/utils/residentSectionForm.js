@@ -329,12 +329,15 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
         requireCombobox(form, errors, 'facility_visited_past_12mos_id', 'facility_visited_name', 'Facility visited past 12 months is required.');
 
         const facilityOption = lookupById(lookups.facilityVisited ?? [], form.facility_visited_past_12mos_id);
-        const facilityIsNone = isNotApplicableLookup(facilityOption);
+        const facilityHasValue = Boolean(toId(form.facility_visited_past_12mos_id) || String(form.facility_visited_name ?? '').trim());
+        const facilityIsNone = isNotApplicableLookup(facilityOption)
+            || isNotApplicableLookup(form.facility_visited_name);
 
-        if (!facilityIsNone) {
+        if (facilityHasValue && !facilityIsNone) {
             requireCombobox(form, errors, 'facility_visit_reason_id', 'facility_visit_reason_name', 'Facility visit reason is required.');
         } else {
             delete errors.facility_visit_reason_id;
+            delete errors.facility_visit_reason;
         }
 
         const disabilityLabel = String(
