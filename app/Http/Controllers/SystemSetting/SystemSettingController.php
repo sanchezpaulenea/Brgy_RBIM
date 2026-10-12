@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\SystemSetting;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SystemSetting\StorePunongBarangaySignatureRequest;
 use App\Http\Requests\SystemSetting\UpdateSettingRequest;
 use App\Models\Setting\Setting;
 use App\Models\UserManagement\User;
@@ -58,6 +59,49 @@ class SystemSettingController extends Controller
         return response()->json([
             'message' => 'Setting updated successfully.',
             'setting' => $updated,
+        ]);
+    }
+
+    /**
+     * POST /api/v1/settings/punong-barangay-signature
+     */
+    public function storePunongBarangaySignature(StorePunongBarangaySignatureRequest $request): JsonResponse
+    {
+        $setting = $this->settingService->findByKey('punong_barangay_signature') ?? new Setting([
+            'setting_key' => 'punong_barangay_signature',
+        ]);
+
+        $this->authorize('update', $setting);
+
+        /** @var User $performedBy */
+        $performedBy = $request->user();
+
+        return response()->json([
+            'message' => 'Punong Barangay signature uploaded.',
+            'setting' => $this->settingService->uploadPunongBarangaySignature(
+                $performedBy,
+                $request->file('signature'),
+            ),
+        ]);
+    }
+
+    /**
+     * DELETE /api/v1/settings/punong-barangay-signature
+     */
+    public function destroyPunongBarangaySignature(): JsonResponse
+    {
+        $setting = $this->settingService->findByKey('punong_barangay_signature') ?? new Setting([
+            'setting_key' => 'punong_barangay_signature',
+        ]);
+
+        $this->authorize('update', $setting);
+
+        /** @var User $performedBy */
+        $performedBy = request()->user();
+
+        return response()->json([
+            'message' => 'Punong Barangay signature removed.',
+            'setting' => $this->settingService->removePunongBarangaySignature($performedBy),
         ]);
     }
 }

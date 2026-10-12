@@ -4,12 +4,14 @@ namespace App\Providers;
 
 use App\Repositories\BarangayPersonnel\BarangayPersonnelRepository;
 use App\Repositories\BarangayPersonnel\PersonnelPositionRepository;
+use App\Repositories\CertificateRepository;
 use App\Repositories\HouseholdManagement\HouseholdQuestionsRepository;
 use App\Repositories\HouseholdManagement\HouseholdRepository;
 use App\Repositories\HouseholdManagement\PetCensusRepository;
 use App\Repositories\HouseholdManagement\StreetRepository;
 use App\Repositories\Interfaces\BarangayPersonnel\BarangayPersonnelRepositoryInterface;
 use App\Repositories\Interfaces\BarangayPersonnel\PersonnelPositionRepositoryInterface;
+use App\Repositories\Interfaces\CertificateRepositoryInterface;
 use App\Repositories\Interfaces\HouseholdManagement\HouseholdQuestionsRepositoryInterface;
 use App\Repositories\Interfaces\HouseholdManagement\HouseholdRepositoryInterface;
 use App\Repositories\Interfaces\HouseholdManagement\PetCensusRepositoryInterface;
@@ -32,6 +34,7 @@ use App\Repositories\Interfaces\ResidentManagement\Migration\MigrationRepository
 use App\Repositories\Interfaces\ResidentManagement\Skill\SkillRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Sociocivic\SociocivicRepositoryInterface;
 use App\Repositories\Interfaces\Setting\SettingRepositoryInterface;
+use App\Repositories\Interfaces\TypeOfCertificateRepositoryInterface;
 use App\Repositories\Interfaces\UserManagement\RoleInterface;
 use App\Repositories\Interfaces\UserManagement\UserRepositoryInterface;
 use App\Repositories\Interfaces\UserManagement\UserRoleRepositoryInterface;
@@ -54,6 +57,7 @@ use App\Repositories\ResidentManagement\Migration\MigrationRepository;
 use App\Repositories\ResidentManagement\Skill\SkillRepository;
 use App\Repositories\ResidentManagement\Sociocivic\SociocivicRepository;
 use App\Repositories\Setting\SettingRepository;
+use App\Repositories\TypeOfCertificateRepository;
 use App\Repositories\UserManagement\RoleRepository;
 use App\Repositories\UserManagement\UserRepository;
 use App\Repositories\UserManagement\UserRoleRepository;
@@ -96,5 +100,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(CtcRepositoryInterface::class, CtcRepository::class);
         $this->app->bind(SkillRepositoryInterface::class, SkillRepository::class);
         $this->app->bind(ReportRepositoryInterface::class, ReportRepository::class);
+        $this->app->bind(CertificateRepositoryInterface::class, CertificateRepository::class);
+        $this->app->bind(TypeOfCertificateRepositoryInterface::class, TypeOfCertificateRepository::class);
     }
 }

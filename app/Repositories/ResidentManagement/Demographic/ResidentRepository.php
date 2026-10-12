@@ -131,6 +131,31 @@ class ResidentRepository implements ResidentRepositoryInterface
             ->first();
     }
 
+    public function findForCertificate(int $residentId): ?Resident
+    {
+        return Resident::query()
+            ->with(['status', 'sex', 'household.street'])
+            ->where('resident_id', $residentId)
+            ->first();
+    }
+
+    public function searchByName(string $term, int $limit = 20): Collection
+    {
+        $like = '%'.$this->escapeLike(mb_strtolower(trim($term))).'%';
+
+        return Resident::query()
+            ->with('status')
+            ->where(function ($query) use ($like) {
+                $query->whereRaw('LOWER(first_name) LIKE ? ESCAPE \'\\\\\'', [$like])
+                    ->orWhereRaw('LOWER(COALESCE(middle_name, \'\')) LIKE ? ESCAPE \'\\\\\'', [$like])
+                    ->orWhereRaw('LOWER(last_name) LIKE ? ESCAPE \'\\\\\'', [$like]);
+            })
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->limit($limit)
+            ->get();
+    }
+
     public function countByHousehold(int $householdId): int
     {
         return Resident::query()

@@ -83,6 +83,8 @@ const SETTING_LABELS = {
     default_password: 'Default Password',
     session_timeout_minutes: 'Session Timeout Minutes',
     audit_log_retention_days: 'Audit Log Retention Days',
+    punong_barangay_name: 'Punong Barangay Name',
+    punong_barangay_signature: 'Punong Barangay Signature',
 };
 
 export function formatSettingLabel(key) {

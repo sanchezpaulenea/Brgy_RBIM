@@ -181,6 +181,15 @@ const routes = [
         },
     },
     {
+        path: '/certificates',
+        name: 'certificates',
+        component: () => import('@/pages/certificates/CertificatesPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresPermissions: ['certificate.view'],
+        },
+    },
+    {
         path: '/residents/nationalities',
         name: 'nationalities',
         component: () => import('@/pages/lookups/LookupManagementPage.vue'),

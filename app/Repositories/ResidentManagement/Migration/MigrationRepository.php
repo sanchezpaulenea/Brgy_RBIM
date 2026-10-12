@@ -35,6 +35,15 @@ class MigrationRepository implements MigrationRepositoryInterface
             ->first();
     }
 
+    public function latestForResident(int $residentId): ?Migration
+    {
+        return Migration::query()
+            ->with('residentType')
+            ->where('resident_id', $residentId)
+            ->orderByDesc('migration_id')
+            ->first();
+    }
+
     /**
      * @param  array<string, mixed>  $attributes
      */

@@ -23,6 +23,13 @@ interface ResidentRepositoryInterface
 
     public function findById(int $residentId): ?Resident;
 
+    public function findForCertificate(int $residentId): ?Resident;
+
+    /**
+     * @return Collection<int, Resident>
+     */
+    public function searchByName(string $term, int $limit = 20): Collection;
+
     public function countByHousehold(int $householdId): int;
 
     /**

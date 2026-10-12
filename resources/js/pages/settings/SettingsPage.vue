@@ -42,7 +42,18 @@
                             {{ formatSettingLabel(setting.setting_key) }}
                         </div>
                         <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left break-words" role="cell">
-                            <template v-if="canUpdateSettings && editingId === setting.setting_id">
+                            <template v-if="setting.setting_key === 'punong_barangay_signature'">
+                                <p class="font-medium text-slate-900">{{ setting.setting_value ? 'Uploaded' : 'Not set' }}</p>
+                                <img
+                                    v-if="signaturePreviewUrl"
+                                    :src="signaturePreviewUrl"
+                                    alt="Punong Barangay signature preview"
+                                    class="mt-2 h-16 max-w-full bg-slate-100 object-contain"
+                                >
+                                <p class="rbim-hint">Use a transparent-background PNG. Width must be between 100 and 1500 pixels, and the file must be 1024 KB or smaller.</p>
+                                <p v-if="signatureError" class="rbim-error">{{ signatureError }}</p>
+                            </template>
+                            <template v-else-if="canUpdateSettings && editingId === setting.setting_id">
                                 <input
                                     v-model="editValues[setting.setting_id]"
                                     :type="setting.data_type === 'int' ? 'number' : 'text'"
@@ -66,7 +77,25 @@
                             {{ setting.description }}
                         </div>
                         <div v-if="canUpdateSettings" class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="cell">
-                            <div v-if="editingId === setting.setting_id" class="flex flex-wrap gap-2">
+                            <div v-if="setting.setting_key === 'punong_barangay_signature'" class="flex flex-col items-start gap-2">
+                                <input
+                                    type="file"
+                                    accept="image/png"
+                                    class="text-xs text-slate-600"
+                                    :disabled="signatureUploading"
+                                    @change="uploadSignature"
+                                >
+                                <button
+                                    v-if="setting.setting_value"
+                                    type="button"
+                                    class="rbim-btn-danger px-3 py-1.5 text-xs"
+                                    :disabled="signatureUploading"
+                                    @click="confirmRemoveSignature = true"
+                                >
+                                    Remove
+                                </button>
+                            </div>
+                            <div v-else-if="editingId === setting.setting_id" class="flex flex-wrap gap-2">
                                 <button
                                     type="button"
                                     class="rbim-btn px-3 py-1.5 text-xs"
@@ -97,14 +126,25 @@
                     </div>
                 </div>
             </section>
+            <ConfirmDialog
+                :open="confirmRemoveSignature"
+                title="Remove Punong Barangay signature"
+                message="The signature image will be removed. Certificates can still be issued with a blank signature line."
+                confirm-label="Remove"
+                variant="danger"
+                @cancel="confirmRemoveSignature = false"
+                @confirm="removeSignature"
+            />
         </div>
     </AppLayout>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { useAuth } from '@/composables/useAuth';
+import { fetchSignatureBlob } from '@/services/certificateService';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as settingService from '@/services/settingService';
 import { formatSettingLabel } from '@/utils/format';
@@ -123,6 +163,7 @@ const SETTING_HINTS = {
     account_lockout_minutes: 'Whole number between 1 and 1440 minutes (24 hours).',
     session_timeout_minutes: 'Whole number between 5 and 480 minutes (8 hours).',
     audit_log_retention_days: 'Whole number between 30 and 3650 days (10 years).',
+    punong_barangay_name: 'Letters, spaces, periods, hyphens, and apostrophes only. Example: Soriano A. Palunan.',
 };
 
 const SETTING_PLACEHOLDERS = {
@@ -133,6 +174,7 @@ const SETTING_PLACEHOLDERS = {
     barangay_contact_no: '09123456789',
     barangay_email: 'brgyhappyhallow@gmail.com',
     default_password: 'Temp12345',
+    punong_barangay_name: 'Soriano A. Palunan',
 };
 
 const NUMERIC_INPUT_MODES = {
@@ -157,6 +199,8 @@ const SETTING_GROUPS = [
             'barangay_code',
             'barangay_contact_no',
             'barangay_email',
+            'punong_barangay_name',
+            'punong_barangay_signature',
         ],
     },
     {
@@ -189,6 +233,10 @@ const editValues = reactive({});
 const editError = ref('');
 const error = ref('');
 const successMessage = ref('');
+const signaturePreviewUrl = ref('');
+const signatureError = ref('');
+const signatureUploading = ref(false);
+const confirmRemoveSignature = ref(false);
 
 const canUpdateSettings = computed(() => (
     isSuperAdmin.value && hasPermission('setting.update')
@@ -261,6 +309,7 @@ async function loadSettings() {
 
     try {
         settings.value = await settingService.fetchSettings();
+        await loadSignaturePreview();
     } catch (err) {
         error.value = extractErrorMessage(err, 'Unable to load settings.');
     } finally {
@@ -300,6 +349,86 @@ async function saveSetting(setting) {
         savingId.value = null;
     }
 }
+
+function signatureSetting() {
+    return settings.value.find((setting) => setting.setting_key === 'punong_barangay_signature') ?? null;
+}
+
+function clearSignaturePreview() {
+    if (signaturePreviewUrl.value) {
+        URL.revokeObjectURL(signaturePreviewUrl.value);
+        signaturePreviewUrl.value = '';
+    }
+}
+
+async function loadSignaturePreview() {
+    clearSignaturePreview();
+    signatureError.value = '';
+
+    if (!signatureSetting()?.setting_value) {
+        return;
+    }
+
+    try {
+        const blob = await fetchSignatureBlob();
+        signaturePreviewUrl.value = URL.createObjectURL(blob);
+    } catch (err) {
+        signatureError.value = err.response?.status === 404
+            ? 'No Punong Barangay signature uploaded.'
+            : extractErrorMessage(err, 'Unable to preview the Punong Barangay signature.');
+    }
+}
+
+async function uploadSignature(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) {
+        return;
+    }
+
+    signatureUploading.value = true;
+    signatureError.value = '';
+    error.value = '';
+    successMessage.value = '';
+
+    try {
+        const updated = await settingService.uploadPunongBarangaySignature(file);
+        settings.value = settings.value.map((row) => (
+            row.setting_id === updated.setting_id ? updated : row
+        ));
+        await loadSignaturePreview();
+        successMessage.value = 'Punong Barangay signature uploaded.';
+    } catch (err) {
+        signatureError.value = extractValidationErrors(err).signature
+            ?? extractErrorMessage(err, 'Unable to upload the Punong Barangay signature.');
+    } finally {
+        signatureUploading.value = false;
+    }
+}
+
+async function removeSignature() {
+    confirmRemoveSignature.value = false;
+    signatureUploading.value = true;
+    signatureError.value = '';
+    error.value = '';
+    successMessage.value = '';
+
+    try {
+        const updated = await settingService.removePunongBarangaySignature();
+        settings.value = settings.value.map((row) => (
+            row.setting_id === updated.setting_id ? updated : row
+        ));
+        clearSignaturePreview();
+        successMessage.value = 'Punong Barangay signature removed.';
+    } catch (err) {
+        signatureError.value = extractErrorMessage(err, 'Unable to remove the Punong Barangay signature.');
+    } finally {
+        signatureUploading.value = false;
+    }
+}
+
+onBeforeUnmount(clearSignaturePreview);
 
 onMounted(loadSettings);
 </script>

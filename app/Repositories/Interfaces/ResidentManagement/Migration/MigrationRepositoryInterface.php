@@ -10,6 +10,8 @@ interface MigrationRepositoryInterface
 
     public function findByResidentId(int $residentId): ?Migration;
 
+    public function latestForResident(int $residentId): ?Migration;
+
     /**
      * @param  array<string, mixed>  $attributes
      */

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\BarangayPersonnel\BarangayPersonnel;
 use App\Models\BarangayPersonnel\PersonnelPosition;
+use App\Models\Certificate\Certificate;
 use App\Models\HouseholdManagement\Breed;
 use App\Models\HouseholdManagement\BuildingHouseType;
 use App\Models\HouseholdManagement\Clan;
@@ -64,6 +65,7 @@ use App\Models\UserManagement\User;
 use App\Models\UserManagement\UserRole;
 use App\Policies\BarangayPersonnel\BarangayPersonnelPolicy;
 use App\Policies\BarangayPersonnel\PersonnelPolicy;
+use App\Policies\CertificatePolicy;
 use App\Policies\HouseholdManagement\HouseholdPolicy;
 use App\Policies\HouseholdManagement\HouseholdQuestionsPolicy;
 use App\Policies\HouseholdManagement\PetCensusPolicy;
@@ -165,6 +167,7 @@ class AuthServiceProvider extends ServiceProvider
         BuildingHouseType::class => ReferenceLookupPolicy::class,
         ConstructionMaterialOuterWall::class => ReferenceLookupPolicy::class,
         Report::class => ReportPolicy::class,
+        Certificate::class => CertificatePolicy::class,
     ];
 
     public function register(): void {}

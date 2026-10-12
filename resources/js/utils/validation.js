@@ -310,6 +310,23 @@ const SETTING_VALIDATORS = {
             ? ''
             : 'Please enter a valid email address that includes an @ symbol and a domain (e.g. barangay@example.com).';
     },
+    punong_barangay_name(value) {
+        const name = value.trim();
+
+        if (name.length < 2) {
+            return 'Punong Barangay name must be at least 2 characters.';
+        }
+
+        if (!/^[\p{L} .'\u2019-]+$/u.test(name)) {
+            return 'Punong Barangay name may only contain letters, spaces, periods, hyphens, and apostrophes.';
+        }
+
+        if (!/\p{L}/u.test(name)) {
+            return 'Punong Barangay name must contain at least one letter.';
+        }
+
+        return '';
+    },
 };
 
 export function settingValueValidationError(setting, value) {

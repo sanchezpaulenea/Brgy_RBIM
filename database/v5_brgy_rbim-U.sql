@@ -2113,7 +2113,7 @@ CREATE TABLE IF NOT EXISTS `system_setting` (
   `description` varchar(255) NOT NULL,
   PRIMARY KEY (`setting_id`),
   UNIQUE KEY `uq_setting_key` (`setting_key`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `system_setting`
@@ -2131,7 +2131,9 @@ INSERT INTO `system_setting` (`setting_id`, `setting_key`, `setting_value`, `dat
 (9, 'max_login_attempts', '5', 'int', 'Maximum attempts of login'),
 (10, 'account_lockout_minutes', '10', 'int', 'Account lockout minutes duration'),
 (11, 'session_timeout_minutes', '30', 'int', 'Session timeout minutes when idle'),
-(12, 'audit_log_retention_days', '365', 'int', 'Audit log retention days');
+(12, 'audit_log_retention_days', '365', 'int', 'Audit log retention days'),
+(13, 'punong_barangay_name', 'Soriano A. Palunan', 'string', 'Punong Barangay Name'),
+(14, 'punong_barangay_signature', '', 'string', 'Punong Barangay Signature File Path');
 
 -- --------------------------------------------------------
 

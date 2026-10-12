@@ -7,6 +7,7 @@ use App\Rules\ValidBarangayAddress;
 use App\Rules\ValidBarangayContactNumber;
 use App\Rules\ValidDefaultPassword;
 use App\Rules\ValidPlaceName;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateSettingRequest extends FormRequest
@@ -60,6 +61,7 @@ class UpdateSettingRequest extends FormRequest
             'setting_value.boolean' => 'Setting value must be true or false.',
             'setting_value.regex' => 'Barangay code must be exactly 10 digits, following the Philippine Standard Geographic Code (PSGC) format.',
             'setting_value.email' => 'Please enter a valid email address.',
+            'setting_value.prohibited' => 'The Punong Barangay signature cannot be edited here. Upload or remove the file instead.',
         ];
     }
 
@@ -107,6 +109,27 @@ class UpdateSettingRequest extends FormRequest
             'barangay_code' => ['required', 'string', 'regex:/^\d{10}$/'],
             'barangay_contact_no' => ['required', 'string', 'max:45', new ValidBarangayContactNumber],
             'barangay_email' => ['required', 'string', 'max:45', 'email'],
+            'punong_barangay_name' => [
+                'required',
+                'string',
+                'max:45',
+                function (string $attribute, mixed $value, Closure $fail): void {
+                    if (! is_string($value)) {
+                        return;
+                    }
+
+                    if (mb_strlen($value) < 2) {
+                        $fail('Punong Barangay name must be at least 2 characters.');
+
+                        return;
+                    }
+
+                    if (preg_match('/^(?=.*\p{L})[\p{L} .\'\x{2019}-]+$/u', $value) !== 1) {
+                        $fail('Punong Barangay name may only contain letters, spaces, periods, hyphens, and apostrophes, and must contain at least one letter.');
+                    }
+                },
+            ],
+            'punong_barangay_signature' => ['prohibited'],
             'default_password' => ['required', 'string', 'max:45', new ValidDefaultPassword],
             'password_min_length' => ['required', 'integer', 'between:8,32'],
             'max_login_attempts' => ['required', 'integer', 'between:3,10'],

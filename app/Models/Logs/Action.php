@@ -12,6 +12,8 @@ class Action extends Model
 
     public const VIEW = 3;
 
+    public const PRINT = 4;
+
     public const EXPORT = 5;
 
     protected $table = 'action';

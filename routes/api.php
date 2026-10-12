@@ -4,6 +4,7 @@ use App\Http\Controllers\Authentication\AuthController;
 use App\Http\Controllers\Authentication\PasswordController;
 use App\Http\Controllers\BarangayPersonnel\BarangayPersonnelController;
 use App\Http\Controllers\BarangayPersonnel\PersonnelController;
+use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\HouseholdManagament\HouseholdController;
 use App\Http\Controllers\HouseholdManagament\HouseholdQuestionsController;
 use App\Http\Controllers\HouseholdManagament\PetCensusController;
@@ -101,6 +102,13 @@ Route::prefix('v1')->group(function () {
         Route::post('reports/preview', [ReportController::class, 'preview'])->name('reports.preview');
         Route::post('reports/export', [ReportController::class, 'export'])->name('reports.export');
 
+        Route::get('certificates/types', [CertificateController::class, 'types'])->name('certificates.types');
+        Route::get('certificates/residents', [CertificateController::class, 'residents'])->name('certificates.residents');
+        Route::get('certificates/residents/{resident}/history', [CertificateController::class, 'history'])->name('certificates.residents.history');
+        Route::post('certificates/preview', [CertificateController::class, 'preview'])->name('certificates.preview');
+        Route::post('certificates', [CertificateController::class, 'store'])->name('certificates.store');
+        Route::get('certificates/signature', [CertificateController::class, 'signature'])->name('certificates.signature');
+
         Route::get('streets', [StreetController::class, 'index'])->name('streets.index');
         Route::post('streets', [StreetController::class, 'store'])->name('streets.store');
         Route::get('nationalities', [NationalityController::class, 'index'])->name('nationalities.index');
@@ -173,6 +181,8 @@ Route::prefix('v1')->group(function () {
             Route::delete('religions/{religion}', [ReligionController::class, 'destroy'])->name('religions.destroy');
 
             Route::get('settings', [SystemSettingController::class, 'index'])->name('settings.index');
+            Route::post('settings/punong-barangay-signature', [SystemSettingController::class, 'storePunongBarangaySignature'])->name('settings.punong-barangay-signature.store');
+            Route::delete('settings/punong-barangay-signature', [SystemSettingController::class, 'destroyPunongBarangaySignature'])->name('settings.punong-barangay-signature.destroy');
             Route::patch('settings/{setting}', [SystemSettingController::class, 'update'])->name('settings.update');
 
             Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
