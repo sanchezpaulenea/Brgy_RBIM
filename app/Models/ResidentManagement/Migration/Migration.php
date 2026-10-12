@@ -17,10 +17,6 @@ class Migration extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'previous_residence_6mos_brgy',
-        'previous_residence_6mos_city_municipality',
-        'previous_residence_5yrs_brgy',
-        'previous_residence_5yrs_city_municipality',
         'date_of_transfer_in_brgy',
         'resident_type_id',
         'reason_for_leaving_id',

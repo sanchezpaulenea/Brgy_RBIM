@@ -86,12 +86,11 @@ class MigrationClassifier
     }
 
     /**
-     * Non-migrant when both previous residences match the current one.
-     * Otherwise migrant at 6 months of stay, transient below that.
+     * Since birth is non-migrant. Otherwise migrant at 6 months of stay, transient below that.
      */
-    public static function classify(bool $sameSixMonthsAgo, bool $sameFiveYearsAgo, ?int $stayMonths): int
+    public static function classify(bool $sinceBirth, ?int $stayMonths): int
     {
-        if ($sameSixMonthsAgo && $sameFiveYearsAgo) {
+        if ($sinceBirth) {
             return ResidentType::NON_MIGRANT;
         }
 
@@ -100,13 +99,6 @@ class MigrationClassifier
         }
 
         return ResidentType::TRANSIENT;
-    }
-
-    public static function earliestTransferDateWhenSixMonthsDiffers(?CarbonInterface $asOf = null): Carbon
-    {
-        $asOf ??= Carbon::now();
-
-        return $asOf->copy()->startOfMonth()->subMonths(self::MIGRANT_THRESHOLD_MONTHS);
     }
 
     public static function isNonMigrant(int $residentTypeId): bool

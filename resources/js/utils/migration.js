@@ -6,42 +6,6 @@ export const TRANSIENT_TYPE_ID = 3;
 
 export const MIGRANT_THRESHOLD_MONTHS = 6;
 
-export function normalizePlace(value) {
-    const text = String(value ?? '').trim().replace(/\s+/g, ' ');
-
-    if (text === '') {
-        return '';
-    }
-
-    return text
-        .replace(/^(brgy\.?|barangay)\s+/i, '')
-        .replace(/\s+(city|municipality)$/i, '')
-        .trim()
-        .toLowerCase();
-}
-
-export function placesMatch(left, right) {
-    const a = normalizePlace(left);
-    const b = normalizePlace(right);
-
-    return a !== '' && a === b;
-}
-
-export function sameAsCurrentResidence(previousBrgy, previousCity, currentBrgy, currentCity) {
-    if (!placesMatch(previousCity, currentCity)) {
-        return false;
-    }
-
-    const previousBarangay = normalizePlace(previousBrgy);
-    const currentBarangay = normalizePlace(currentBrgy);
-
-    if (previousBarangay === '' || currentBarangay === '') {
-        return true;
-    }
-
-    return previousBarangay === currentBarangay;
-}
-
 export function lengthOfStayMonths(isoDate, asOf = new Date()) {
     if (!isoDate) {
         return null;
@@ -70,42 +34,17 @@ export function lengthOfStayLabel(months) {
     return `${years} years / ${remaining} months`;
 }
 
-export function classifyResidentType({
-    previousBrgy,
-    previousCity,
-    previousFiveYearBrgy,
-    previousFiveYearCity,
-    currentBrgy,
-    currentCity,
-    transferDate,
-}) {
-    const sameSixMonths = sameAsCurrentResidence(previousBrgy, previousCity, currentBrgy, currentCity);
-    const sameFiveYears = sameAsCurrentResidence(
-        previousFiveYearBrgy ?? previousBrgy,
-        previousFiveYearCity ?? previousCity,
-        currentBrgy,
-        currentCity,
-    );
+/**
+ * Month precision used by the transfer-date field (`YYYY-MM-01`).
+ */
+export function transferMonthFromDate(isoDate) {
+    const match = /^(\d{4})-(\d{2})/.exec(String(isoDate ?? ''));
 
-    if (sameSixMonths && sameFiveYears) {
-        return NON_MIGRANT_TYPE_ID;
+    if (!match || match[1] === '0000') {
+        return '';
     }
 
-    const months = lengthOfStayMonths(transferDate);
-
-    if (months !== null && months >= MIGRANT_THRESHOLD_MONTHS) {
-        return MIGRANT_TYPE_ID;
-    }
-
-    return TRANSIENT_TYPE_ID;
-}
-
-export function monthsAgoIso(months, asOf = new Date()) {
-    const date = new Date(asOf.getFullYear(), asOf.getMonth() - months, 1);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-
-    return `${year}-${month}-01`;
+    return `${match[1]}-${match[2]}-01`;
 }
 
 export function residentTypeLabel(typeId) {
@@ -127,46 +66,40 @@ export function residentTypeLabel(typeId) {
 export function formatMonthYear(isoDate) {
     const match = /^(\d{4})-(\d{2})/.exec(String(isoDate ?? ''));
 
-    if (!match) {
+    if (!match || match[1] === '0000') {
         return '';
     }
 
     return `${match[2]}/${match[1]}`;
 }
 
-export function classifyMigrationForm(form, location = {}) {
-    const sameSixMonths = sameAsCurrentResidence(
-        form?.previous_residence_6mos_brgy,
-        form?.previous_residence_6mos_city_municipality,
-        location?.barangay,
-        location?.city,
-    );
-    const sameFiveYears = sameAsCurrentResidence(
-        form?.previous_residence_5yrs_brgy,
-        form?.previous_residence_5yrs_city_municipality,
-        location?.barangay,
-        location?.city,
-    );
-    const typeId = classifyResidentType({
-        previousBrgy: form?.previous_residence_6mos_brgy,
-        previousCity: form?.previous_residence_6mos_city_municipality,
-        previousFiveYearBrgy: form?.previous_residence_5yrs_brgy,
-        previousFiveYearCity: form?.previous_residence_5yrs_city_municipality,
-        currentBrgy: location?.barangay,
-        currentCity: location?.city,
-        transferDate: form?.date_of_transfer_in_brgy,
-    });
-    const nonMigrant = typeId === NON_MIGRANT_TYPE_ID;
-    const months = nonMigrant ? null : lengthOfStayMonths(form?.date_of_transfer_in_brgy);
+/**
+ * Since Birth is non-migrant. Otherwise 6 months and above is migrant, below that is transient.
+ */
+export function classifyMigrationForm(form, { dateOfBirth } = {}) {
+    const sinceBirth = form?.since_birth === true;
+    const transferDate = sinceBirth
+        ? (transferMonthFromDate(dateOfBirth) || transferMonthFromDate(form?.date_of_transfer_in_brgy))
+        : transferMonthFromDate(form?.date_of_transfer_in_brgy);
+    const months = lengthOfStayMonths(transferDate);
+
+    let typeId = null;
+
+    if (sinceBirth && transferDate) {
+        typeId = NON_MIGRANT_TYPE_ID;
+    } else if (!sinceBirth && months !== null) {
+        typeId = months >= MIGRANT_THRESHOLD_MONTHS ? MIGRANT_TYPE_ID : TRANSIENT_TYPE_ID;
+    }
 
     return {
         typeId,
         typeLabel: residentTypeLabel(typeId),
-        nonMigrant,
-        sixMonthsDiffers: !sameSixMonths,
-        fiveYearsDiffers: !sameFiveYears,
+        nonMigrant: typeId === NON_MIGRANT_TYPE_ID,
+        migrantOrTransient: typeId === MIGRANT_TYPE_ID || typeId === TRANSIENT_TYPE_ID,
+        sinceBirth,
         stayMonths: months,
         stayLabel: lengthOfStayLabel(months),
-        transferDateMin: !sameSixMonths ? monthsAgoIso(MIGRANT_THRESHOLD_MONTHS) : '',
+        transferDate,
+        plansToReturn: form?.will_return_to_previous_residence === true,
     };
 }

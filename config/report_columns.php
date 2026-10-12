@@ -789,26 +789,6 @@ return [
             'is_group' => true,
             'columns' => [
                 [
-                    'key' => 'previous_residence_6mos_brgy',
-                    'label' => 'Previous Residence 6 Months (Barangay)',
-                    'source' => 'previous_residence_6mos_brgy',
-                ],
-                [
-                    'key' => 'previous_residence_6mos_city_municipality',
-                    'label' => 'Previous Residence 6 Months (City/Municipality)',
-                    'source' => 'previous_residence_6mos_city_municipality',
-                ],
-                [
-                    'key' => 'previous_residence_5yrs_brgy',
-                    'label' => 'Previous Residence 5 Years (Barangay)',
-                    'source' => 'previous_residence_5yrs_brgy',
-                ],
-                [
-                    'key' => 'previous_residence_5yrs_city_municipality',
-                    'label' => 'Previous Residence 5 Years (City/Municipality)',
-                    'source' => 'previous_residence_5yrs_city_municipality',
-                ],
-                [
                     'key' => 'date_of_transfer_in_brgy',
                     'label' => 'Date of Transfer into the Barangay',
                     'source' => 'date_of_transfer_in_brgy',
@@ -837,7 +817,7 @@ return [
                 ],
                 [
                     'key' => 'duration_of_stay',
-                    'label' => 'Duration of Stay',
+                    'label' => 'Until When the Resident Intends to Stay',
                     'source' => 'duration_of_stay',
                     'format' => 'date',
                 ],

@@ -11,15 +11,17 @@ use Tests\TestCase;
 class MigrationClassifierTest extends TestCase
 {
     #[DataProvider('sameAddressCases')]
-    public function test_same_address_is_non_migrant(string $previousBrgy, string $previousCity, string $currentBrgy, string $currentCity): void
+    public function test_same_address_comparison_ignores_case_spacing_and_suffixes(string $previousBrgy, string $previousCity, string $currentBrgy, string $currentCity): void
     {
-        $same = MigrationClassifier::sameAsCurrentResidence($previousBrgy, $previousCity, $currentBrgy, $currentCity);
-
-        $this->assertTrue($same);
-        $this->assertSame(
-            ResidentType::NON_MIGRANT,
-            MigrationClassifier::classify($same, true, 2),
+        $this->assertTrue(
+            MigrationClassifier::sameAsCurrentResidence($previousBrgy, $previousCity, $currentBrgy, $currentCity),
         );
+    }
+
+    public function test_since_birth_is_non_migrant_even_when_stay_is_long(): void
+    {
+        $this->assertSame(ResidentType::NON_MIGRANT, MigrationClassifier::classify(true, 240));
+        $this->assertSame(ResidentType::NON_MIGRANT, MigrationClassifier::classify(true, 2));
     }
 
     public function test_different_barangays_with_the_same_city_are_not_the_same_address(): void
@@ -36,32 +38,17 @@ class MigrationClassifierTest extends TestCase
         );
     }
 
-    public function test_different_address_with_six_months_or_more_is_migrant(): void
+    public function test_six_months_or_more_is_migrant(): void
     {
-        $this->assertSame(
-            ResidentType::MIGRANT,
-            MigrationClassifier::classify(false, true, 6),
-        );
-        $this->assertSame(
-            ResidentType::MIGRANT,
-            MigrationClassifier::classify(false, false, 18),
-        );
+        $this->assertSame(ResidentType::MIGRANT, MigrationClassifier::classify(false, 6));
+        $this->assertSame(ResidentType::MIGRANT, MigrationClassifier::classify(false, 18));
     }
 
-    public function test_different_address_under_six_months_is_transient(): void
+    public function test_under_six_months_is_transient(): void
     {
-        $this->assertSame(
-            ResidentType::TRANSIENT,
-            MigrationClassifier::classify(false, true, 0),
-        );
-        $this->assertSame(
-            ResidentType::TRANSIENT,
-            MigrationClassifier::classify(false, false, 5),
-        );
-        $this->assertSame(
-            ResidentType::TRANSIENT,
-            MigrationClassifier::classify(true, false, null),
-        );
+        $this->assertSame(ResidentType::TRANSIENT, MigrationClassifier::classify(false, 0));
+        $this->assertSame(ResidentType::TRANSIENT, MigrationClassifier::classify(false, 5));
+        $this->assertSame(ResidentType::TRANSIENT, MigrationClassifier::classify(false, null));
     }
 
     public function test_length_of_stay_is_computed_from_transfer_month(): void

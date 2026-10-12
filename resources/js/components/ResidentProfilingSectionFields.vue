@@ -477,65 +477,33 @@
         </template>
 
         <template v-else-if="section === 'migration'">
-            <p class="sm:col-span-2 text-sm text-slate-500">
-                Current household address: {{ location.barangay || '—' }}, {{ location.city || '—' }}.
-                Resident type is identified by comparing previous residence 5 years ago and 6 months ago with this address.
-            </p>
             <div>
-                <label class="rbim-label" :for="`${idPrefix}-previous_residence_6mos_brgy`">
-                    Previous Residence 6 Months Ago (Barangay)<span class="rbim-required" aria-hidden="true">*</span>
-                </label>
-                <input
-                    :id="`${idPrefix}-previous_residence_6mos_brgy`"
-                    v-model="form.previous_residence_6mos_brgy"
-                    type="text"
-                    maxlength="45"
-                    class="rbim-input"
-                    :class="{ 'rbim-input-error': errors.previous_residence_6mos_brgy }"
-                >
-                <p v-if="errors.previous_residence_6mos_brgy" class="rbim-error">{{ errors.previous_residence_6mos_brgy }}</p>
-            </div>
-            <div>
-                <label class="rbim-label" :for="`${idPrefix}-previous_residence_6mos_city_municipality`">
-                    Previous Residence 6 Months Ago (City / Municipality)<span class="rbim-required" aria-hidden="true">*</span>
-                </label>
-                <input
-                    :id="`${idPrefix}-previous_residence_6mos_city_municipality`"
-                    v-model="form.previous_residence_6mos_city_municipality"
-                    type="text"
-                    maxlength="45"
-                    class="rbim-input"
-                    :class="{ 'rbim-input-error': errors.previous_residence_6mos_city_municipality }"
-                >
-                <p v-if="errors.previous_residence_6mos_city_municipality" class="rbim-error">{{ errors.previous_residence_6mos_city_municipality }}</p>
-            </div>
-            <div>
-                <label class="rbim-label" :for="`${idPrefix}-previous_residence_5yrs_brgy`">
-                    Previous Residence 5 Years Ago (Barangay)<span class="rbim-required" aria-hidden="true">*</span>
-                </label>
-                <input
-                    :id="`${idPrefix}-previous_residence_5yrs_brgy`"
-                    v-model="form.previous_residence_5yrs_brgy"
-                    type="text"
-                    maxlength="45"
-                    class="rbim-input"
-                    :class="{ 'rbim-input-error': errors.previous_residence_5yrs_brgy }"
-                >
-                <p v-if="errors.previous_residence_5yrs_brgy" class="rbim-error">{{ errors.previous_residence_5yrs_brgy }}</p>
-            </div>
-            <div>
-                <label class="rbim-label" :for="`${idPrefix}-previous_residence_5yrs_city_municipality`">
-                    Previous Residence 5 Years Ago (City / Municipality)<span class="rbim-required" aria-hidden="true">*</span>
-                </label>
-                <input
-                    :id="`${idPrefix}-previous_residence_5yrs_city_municipality`"
-                    v-model="form.previous_residence_5yrs_city_municipality"
-                    type="text"
-                    maxlength="45"
-                    class="rbim-input"
-                    :class="{ 'rbim-input-error': errors.previous_residence_5yrs_city_municipality }"
-                >
-                <p v-if="errors.previous_residence_5yrs_city_municipality" class="rbim-error">{{ errors.previous_residence_5yrs_city_municipality }}</p>
+                <div class="flex items-start gap-3">
+                    <div class="min-w-0 flex-1">
+                        <BirthDateField
+                            v-model="form.date_of_transfer_in_brgy"
+                            label="Date of Transfer into Barangay"
+                            :input-id="`${idPrefix}-date_of_transfer_in_brgy`"
+                            placeholder="MM/YYYY"
+                            precision="month"
+                            required
+                            :disabled="form.since_birth === true"
+                            :max="todayIso"
+                            :show-age="false"
+                            :error="errors.date_of_transfer_in_brgy"
+                        />
+                    </div>
+                    <label class="mt-7 flex shrink-0 items-center gap-2 text-sm font-medium text-slate-700">
+                        <input
+                            :id="`${idPrefix}-since_birth`"
+                            type="checkbox"
+                            class="h-4 w-4 rounded border-slate-400 text-brand focus:ring-brand"
+                            :checked="form.since_birth === true"
+                            @change="setSinceBirth($event.target.checked)"
+                        >
+                        Since Birth
+                    </label>
+                </div>
             </div>
             <div>
                 <label class="rbim-label">Length of Stay in the Barangay</label>
@@ -555,35 +523,8 @@
                     :value="migrationClassification.typeLabel || '—'"
                     disabled
                 >
-                <p class="mt-1 text-xs text-slate-500">Automatically determined from previous and current residence.</p>
             </div>
-            <template v-if="!migrationClassification.nonMigrant">
-                <div>
-                    <BirthDateField
-                        v-model="form.date_of_transfer_in_brgy"
-                        label="Date of Transfer into Barangay"
-                        :input-id="`${idPrefix}-date_of_transfer_in_brgy`"
-                        placeholder="MM/YYYY"
-                        precision="month"
-                        required
-                        :min="migrationClassification.transferDateMin"
-                        :max="todayIso"
-                        :show-age="false"
-                        :error="errors.date_of_transfer_in_brgy"
-                    />
-                </div>
-                <div>
-                    <BirthDateField
-                        v-model="form.duration_of_stay"
-                        label="Until When Does the Resident Intend to Stay"
-                        :input-id="`${idPrefix}-duration_of_stay`"
-                        placeholder="MM/YYYY"
-                        precision="month"
-                        :max="intendStayMax"
-                        :show-age="false"
-                        :error="errors.duration_of_stay"
-                    />
-                </div>
+            <template v-if="migrationClassification.migrantOrTransient">
                 <div>
                     <label class="rbim-label" :for="`${idPrefix}-reason_for_leaving_id`">
                         Reason for Leaving Previous Residence<span class="rbim-required" aria-hidden="true">*</span>
@@ -631,10 +572,20 @@
                     </select>
                     <p v-if="errors.will_return_to_previous_residence" class="rbim-error">{{ errors.will_return_to_previous_residence }}</p>
                 </div>
+                <div v-if="form.will_return_to_previous_residence === true">
+                    <BirthDateField
+                        v-model="form.duration_of_stay"
+                        label="Until When Does the Resident Intend to Stay"
+                        :input-id="`${idPrefix}-duration_of_stay`"
+                        placeholder="MM/YYYY"
+                        precision="month"
+                        required
+                        :max="intendStayMax"
+                        :show-age="false"
+                        :error="errors.duration_of_stay"
+                    />
+                </div>
             </template>
-            <p v-else class="sm:col-span-2 text-sm text-slate-500">
-                Previous residence matches the current barangay. Date of transfer, reasons, return plan, and intended stay are skipped for non-migrants.
-            </p>
         </template>
 
         <template v-else-if="section === 'ctc'">
@@ -713,7 +664,7 @@ import BirthDateField from '@/components/BirthDateField.vue';
 import LookupCombobox from '@/components/LookupCombobox.vue';
 import { extractErrorMessage } from '@/services/http';
 import * as lookupService from '@/services/lookupService';
-import { classifyMigrationForm } from '@/utils/migration';
+import { classifyMigrationForm, transferMonthFromDate } from '@/utils/migration';
 import {
     educationFieldRelevance,
     hasDisability,
@@ -887,7 +838,58 @@ const soloParentIsRegistered = computed(() => (
     isRegisteredSoloParent(props.form.solo_parent_status_id, props.lookups.soloParentStatus ?? [])
 ));
 
-const migrationClassification = computed(() => classifyMigrationForm(props.form, props.location));
+const migrationClassification = computed(() => classifyMigrationForm(props.form, {
+    dateOfBirth: props.resident?.date_of_birth,
+}));
+
+function setSinceBirth(checked) {
+    props.form.since_birth = checked;
+
+    if (checked) {
+        props.form.date_of_transfer_in_brgy = transferMonthFromDate(props.resident?.date_of_birth);
+        delete props.errors.date_of_transfer_in_brgy;
+
+        return;
+    }
+
+    props.form.date_of_transfer_in_brgy = '';
+    delete props.errors.date_of_transfer_in_brgy;
+}
+
+watch(
+    () => [props.section, props.form.since_birth, props.resident?.date_of_birth],
+    () => {
+        if (props.section !== 'migration' || props.form.since_birth !== true) {
+            return;
+        }
+
+        const birth = transferMonthFromDate(props.resident?.date_of_birth);
+
+        if (birth && props.form.date_of_transfer_in_brgy !== birth) {
+            props.form.date_of_transfer_in_brgy = birth;
+        }
+    },
+    { immediate: true },
+);
+
+watch(
+    () => [props.section, props.form.will_return_to_previous_residence, migrationClassification.value.migrantOrTransient],
+    () => {
+        if (props.section !== 'migration') {
+            return;
+        }
+
+        if (migrationClassification.value.migrantOrTransient && props.form.will_return_to_previous_residence === true) {
+            return;
+        }
+
+        if (props.form.duration_of_stay) {
+            props.form.duration_of_stay = '';
+        }
+
+        delete props.errors.duration_of_stay;
+    },
+);
 
 function booleanSelectValue(value) {
     if (value === true) {

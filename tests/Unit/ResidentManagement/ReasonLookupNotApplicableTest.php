@@ -9,7 +9,6 @@ use App\Models\ResidentManagement\Migration\ReasonForTransfer;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Migration\MigrationRepositoryInterface;
 use App\Services\ResidentManagement\Migration\MigrationService;
-use App\Services\SystemSetting\SystemSettingService;
 use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -48,10 +47,7 @@ class ReasonLookupNotApplicableTest extends TestCase
     public function test_format_record_hides_not_applicable_fields_for_non_migrants(): void
     {
         $migration = new Migration([
-            'previous_residence_6mos_brgy' => 'Happy Hallow',
-            'previous_residence_6mos_city_municipality' => 'Baguio',
-            'previous_residence_5yrs_brgy' => 'Happy Hallow',
-            'previous_residence_5yrs_city_municipality' => 'Baguio',
+            'date_of_transfer_in_brgy' => '1990-04-15',
             'resident_type_id' => ResidentType::NON_MIGRANT,
             'reason_for_leaving_id' => 16,
             'will_return_to_previous_residence' => false,
@@ -76,7 +72,6 @@ class ReasonLookupNotApplicableTest extends TestCase
         $service = new MigrationService(
             Mockery::mock(MigrationRepositoryInterface::class),
             Mockery::mock(AuditLogRepositoryInterface::class),
-            Mockery::mock(SystemSettingService::class),
         );
 
         $formatted = $service->formatRecord($migration);
@@ -86,7 +81,9 @@ class ReasonLookupNotApplicableTest extends TestCase
         $this->assertNull($formatted['reason_for_transfer_id']);
         $this->assertNull($formatted['reason_for_transfer']);
         $this->assertNull($formatted['will_return_to_previous_residence']);
-        $this->assertNull($formatted['date_of_transfer_in_brgy']);
+        $this->assertSame('1990-04-15', $formatted['date_of_transfer_in_brgy']);
+        $this->assertTrue($formatted['since_birth']);
+        $this->assertNotNull($formatted['length_of_stay_label']);
         $this->assertNull($formatted['duration_of_stay']);
         $this->assertSame(ResidentType::NON_MIGRANT, $formatted['resident_type_id']);
     }

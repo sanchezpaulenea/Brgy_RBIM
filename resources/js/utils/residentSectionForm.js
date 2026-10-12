@@ -106,10 +106,7 @@ export function emptySectionForm(key) {
             registered_barangay_voter: '',
         },
         migration: {
-            previous_residence_6mos_brgy: '',
-            previous_residence_6mos_city_municipality: '',
-            previous_residence_5yrs_brgy: '',
-            previous_residence_5yrs_city_municipality: '',
+            since_birth: false,
             date_of_transfer_in_brgy: '',
             reason_for_leaving_id: '',
             will_return_to_previous_residence: '',
@@ -261,7 +258,7 @@ function nonSoloParentId(lookups) {
     return match?.id ?? 2;
 }
 
-export function validateSectionForm(key, form, errors, { lookups = {}, resident = {}, location = {} } = {}) {
+export function validateSectionForm(key, form, errors, { lookups = {}, resident = {} } = {}) {
     Object.keys(errors).forEach((field) => {
         delete errors[field];
     });
@@ -447,24 +444,21 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
     }
 
     if (key === 'migration') {
-        requiredPlace(form, errors, 'previous_residence_6mos_brgy', 'Previous residence (6 months) barangay');
-        requiredPlace(form, errors, 'previous_residence_6mos_city_municipality', 'Previous residence (6 months) city / municipality');
-        requiredPlace(form, errors, 'previous_residence_5yrs_brgy', 'Previous residence (5 years) barangay');
-        requiredPlace(form, errors, 'previous_residence_5yrs_city_municipality', 'Previous residence (5 years) city / municipality');
+        const classification = classifyMigrationForm(form, { dateOfBirth: resident?.date_of_birth });
 
-        const classification = classifyMigrationForm(form, location);
-
-        if (!classification.nonMigrant) {
-            if (!form.date_of_transfer_in_brgy) {
-                errors.date_of_transfer_in_brgy = 'Date of transfer is required for migrants and transients.';
-            } else if (String(form.date_of_transfer_in_brgy) > todayDate()) {
-                errors.date_of_transfer_in_brgy = 'Date of transfer cannot be in the future.';
-            } else if (classification.transferDateMin && String(form.date_of_transfer_in_brgy) < classification.transferDateMin) {
-                errors.date_of_transfer_in_brgy = 'When the previous residence 6 months ago differs, date of transfer cannot be more than 6 months ago.';
-            } else {
-                delete errors.date_of_transfer_in_brgy;
+        if (form.since_birth === true) {
+            if (!resident?.date_of_birth) {
+                errors.date_of_transfer_in_brgy = 'Enter the date of birth in demographics before marking Since Birth.';
+            } else if (String(resident.date_of_birth).slice(0, 10) > todayDate()) {
+                errors.date_of_transfer_in_brgy = 'Date of birth cannot be in the future.';
             }
+        } else if (!form.date_of_transfer_in_brgy) {
+            errors.date_of_transfer_in_brgy = 'Date of transfer is required.';
+        } else if (String(form.date_of_transfer_in_brgy) > todayDate()) {
+            errors.date_of_transfer_in_brgy = 'Date of transfer cannot be in the future.';
+        }
 
+        if (classification.migrantOrTransient) {
             requiredSelect(form, errors, 'reason_for_leaving_id', 'Reason for leaving is required for migrants and transients.');
             requiredSelect(form, errors, 'reason_for_transfer_id', 'Reason for transfer is required for migrants and transients.');
             requiredBoolean(
@@ -473,6 +467,10 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
                 'will_return_to_previous_residence',
                 'Indicate whether the resident plans to return to the previous residence.',
             );
+
+            if (form.will_return_to_previous_residence === true && !form.duration_of_stay) {
+                errors.duration_of_stay = 'Indicate until when the resident intends to stay.';
+            }
         }
     }
 
@@ -518,7 +516,7 @@ function toPayloadValue(value) {
     return value;
 }
 
-export function prepareSectionPayload(key, form, { lookups = {}, resident = {}, location = {} } = {}) {
+export function prepareSectionPayload(key, form, { lookups = {}, resident = {} } = {}) {
     const payload = {};
 
     Object.entries(form).forEach(([field, value]) => {
@@ -644,12 +642,19 @@ export function prepareSectionPayload(key, form, { lookups = {}, resident = {}, 
             : false;
     }
 
-    if (key === 'migration' && classifyMigrationForm(form, location).nonMigrant) {
-        payload.date_of_transfer_in_brgy = null;
-        payload.reason_for_leaving_id = notApplicableLookupId(lookups.reasonForLeaving);
-        payload.will_return_to_previous_residence = false;
-        payload.reason_for_transfer_id = notApplicableLookupId(lookups.reasonForTransfer);
-        payload.duration_of_stay = null;
+    if (key === 'migration') {
+        const classification = classifyMigrationForm(form, { dateOfBirth: resident?.date_of_birth });
+        payload.since_birth = form.since_birth === true;
+
+        if (classification.nonMigrant) {
+            payload.date_of_transfer_in_brgy = resident?.date_of_birth || classification.transferDate || null;
+            payload.reason_for_leaving_id = notApplicableLookupId(lookups.reasonForLeaving);
+            payload.will_return_to_previous_residence = false;
+            payload.reason_for_transfer_id = notApplicableLookupId(lookups.reasonForTransfer);
+            payload.duration_of_stay = null;
+        } else if (form.will_return_to_previous_residence !== true) {
+            payload.duration_of_stay = null;
+        }
     }
 
     if (key === 'skills') {
