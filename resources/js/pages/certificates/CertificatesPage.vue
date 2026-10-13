@@ -221,6 +221,7 @@
                             <div class="md:col-span-2">
                                 <label class="rbim-label">Punong Barangay Name</label>
                                 <input :value="preview.document.fields.punong_barangay_name" type="text" class="rbim-input py-2" readonly>
+                                <p class="rbim-hint">This name is changed in Settings, under System settings, in Barangay Information. Only a Super Admin can edit it.</p>
                             </div>
                         </div>
 
@@ -692,12 +693,23 @@ async function generate() {
 
     try {
         const result = await issueCertificate(payload);
+
+        if (!(result.blob instanceof Blob) || result.blob.type.includes('json') || result.blob.type.includes('html')) {
+            throw new Error('The server did not return a PDF.');
+        }
+
         const url = URL.createObjectURL(result.blob);
 
-        if (popup) {
+        if (popup && !popup.closed) {
             popup.location = url;
         } else {
-            window.open(url, '_blank');
+            const link = document.createElement('a');
+            link.href = url;
+            link.target = '_blank';
+            link.download = result.filename || 'certificate.pdf';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
         }
 
         issued.value = true;

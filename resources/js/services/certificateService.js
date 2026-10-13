@@ -53,7 +53,15 @@ export async function certificateErrorMessage(error, fallback) {
 
     if (data instanceof Blob) {
         try {
-            const parsed = JSON.parse(await data.text());
+            const raw = await data.text();
+
+            if (!raw.trim().startsWith('{') && !raw.trim().startsWith('[')) {
+                return raw.includes('Allowed memory size')
+                    ? 'The certificate could not be rendered. A logo image is too large.'
+                    : fallback;
+            }
+
+            const parsed = JSON.parse(raw);
             const firstError = parsed?.errors
                 ? Object.values(parsed.errors).flat().find((message) => typeof message === 'string' && message !== '')
                 : null;

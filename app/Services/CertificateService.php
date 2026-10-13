@@ -526,7 +526,39 @@ class CertificateService
             }
         }
 
-        return $parts;
+        return $this->emphasizeCertification($parts);
+    }
+
+    /**
+     * @param  list<array{text: string, bold: bool}>  $parts
+     * @return list<array{text: string, bold: bool}>
+     */
+    private function emphasizeCertification(array $parts): array
+    {
+        $emphasized = [];
+
+        foreach ($parts as $part) {
+            if ($part['bold'] || ! str_contains($part['text'], 'CERTIFICATION')) {
+                $emphasized[] = $part;
+
+                continue;
+            }
+
+            $pieces = preg_split('/(CERTIFICATION)/', $part['text'], -1, PREG_SPLIT_DELIM_CAPTURE) ?: [];
+
+            foreach ($pieces as $piece) {
+                if ($piece === '') {
+                    continue;
+                }
+
+                $emphasized[] = [
+                    'text' => $piece,
+                    'bold' => $piece === 'CERTIFICATION',
+                ];
+            }
+        }
+
+        return $emphasized;
     }
 
     private function personName(Resident $resident): string
@@ -631,7 +663,12 @@ class CertificateService
                 continue;
             }
 
-            $images[$key] = $this->dataUri($path);
+            $image = $this->dataUri($path);
+            $images[$key] = $image;
+
+            if ($image === null) {
+                $missing[] = (string) $filename;
+            }
         }
 
         return [
@@ -666,7 +703,7 @@ class CertificateService
 
     private function dataUri(string $absolutePath): ?string
     {
-        if (! is_file($absolutePath)) {
+        if (! is_file($absolutePath) || filesize($absolutePath) > 1_500_000) {
             return null;
         }
 

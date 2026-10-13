@@ -4,25 +4,34 @@
     <meta charset="utf-8">
     <title>{{ $document['title'] }}</title>
     <style>
-        @page { margin: 28px 36px; }
-        body { font-family: "DejaVu Serif", serif; font-size: 12px; color: #111; }
+        @page { margin: 36px 46px 40px; }
+        body { font-family: "DejaVu Serif", serif; font-size: 12.5px; color: #111; line-height: 1.35; }
         .center { text-align: center; }
-        .header-line { margin: 0; line-height: 1.3; text-align: center; }
-        .barangay { font-weight: bold; font-size: 14px; letter-spacing: 0.3px; }
-        .title { font-family: "DejaVu Sans", sans-serif; font-weight: bold; font-size: 16px; text-align: center; margin: 18px 0 14px; }
-        .salutation { font-weight: bold; margin: 0 0 8px; }
-        .body { text-align: justify; text-indent: 36px; margin: 0 0 10px; line-height: 1.45; }
+        .header-line { margin: 0; line-height: 1.25; text-align: center; }
+        .republic { font-weight: bold; font-size: 13px; }
+        .barangay { font-weight: bold; font-size: 14px; }
+        .contact { text-decoration: underline; font-size: 11.5px; }
+        .title { font-family: "DejaVu Serif", serif; font-weight: bold; font-size: 18px; text-align: center; letter-spacing: 0.4px; margin: 22px 0 16px; }
+        .salutation { font-weight: bold; margin: 0 0 10px; }
+        .body { text-align: justify; text-indent: 42px; margin: 0 0 12px; line-height: 1.55; }
         .bold { font-weight: bold; }
-        .logo-cell { width: 78px; height: 78px; vertical-align: middle; text-align: center; }
-        .logo-empty { width: 72px; height: 72px; border: 1px solid #999; }
-        .logo-img { width: 72px; height: 72px; }
-        .pb-name { font-weight: bold; text-decoration: underline; text-transform: uppercase; margin-top: 2px; }
-        .sig-space { height: 52px; }
-        .sig-img { height: 52px; }
-        .wet-line { border-bottom: 1px solid #111; width: 210px; height: 28px; margin-top: 18px; }
-        .stamp { border: 1px solid #111; width: 230px; margin: 12px auto 0; padding: 8px 10px; font-size: 10px; text-align: left; }
-        .stamp-title { font-weight: bold; text-align: center; margin-bottom: 8px; }
-        .stamp-line { margin-top: 6px; }
+        .logo-cell { width: 92px; vertical-align: middle; text-align: center; }
+        .logo-gap { width: 8px; }
+        .logo-empty { width: 84px; height: 84px; border: 1px solid #bbb; }
+        .logo-img { width: 84px; height: 84px; }
+        .pb-block { width: 230px; text-align: center; }
+        .pb-name { font-weight: bold; text-decoration: underline; text-transform: uppercase; font-size: 12px; margin: 0 auto; min-width: 170px; display: inline-block; }
+        .pb-title { margin: 1px 0 0; font-size: 12px; }
+        .sig-space { height: 46px; }
+        .sig-img { height: 46px; }
+        .authority { margin-top: 8px; }
+        .wet-line { border-bottom: 1px solid #111; width: 190px; height: 36px; margin-top: 8px; }
+        .officer { margin: 2px 0 0; }
+        .stamp-outer { border: 1.5px solid #9c3b32; border-radius: 8px; padding: 2px; width: 248px; color: #9c3b32; }
+        .stamp-inner { border: 1px solid #9c3b32; border-radius: 6px; padding: 6px 8px 8px; font-size: 8px; line-height: 1.2; }
+        .stamp-title { font-weight: bold; text-align: center; letter-spacing: 0.2px; margin: 0 0 6px; }
+        .stamp-label { font-size: 7.5px; }
+        .stamp-blank { border-bottom: 1px solid #9c3b32; height: 12px; margin-top: 2px; }
     </style>
 </head>
 <body>
@@ -35,6 +44,7 @@
                     <div class="logo-empty">&nbsp;</div>
                 @endif
             </td>
+            <td class="logo-gap">&nbsp;</td>
             <td class="logo-cell">
                 @if (! empty($document['logos']['city_of_baguio']))
                     <img class="logo-img" src="{{ $document['logos']['city_of_baguio'] }}" alt="">
@@ -43,11 +53,11 @@
                 @endif
             </td>
             <td class="center">
-                <p class="header-line">Republic of the Philippines</p>
+                <p class="header-line republic">Republic of the Philippines</p>
                 <p class="header-line">{{ $document['header']['city_name'] }}</p>
                 <p class="header-line barangay">{{ $document['header']['barangay_name'] }}</p>
-                <p class="header-line">Official email address: {{ $document['header']['barangay_email'] }}</p>
-                <p class="header-line">Tel. No. {{ $document['header']['barangay_contact_no'] }}</p>
+                <p class="header-line contact">Official email address: {{ $document['header']['barangay_email'] }}</p>
+                <p class="header-line contact">Tel. No. {{ $document['header']['barangay_contact_no'] }}</p>
             </td>
             <td class="logo-cell">
                 @if (! empty($document['logos']['happy_hallow']))
@@ -74,32 +84,50 @@
         </p>
     @endforeach
 
-    <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 16px;">
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 28px;">
         <tr>
             <td>&nbsp;</td>
-            <td width="250" class="center">
+            <td class="pb-block">
                 @if (! empty($document['signature_data_uri']))
                     <img class="sig-img" src="{{ $document['signature_data_uri'] }}" alt="">
                 @else
                     <div class="sig-space">&nbsp;</div>
                 @endif
-                <div class="pb-name">{{ $document['fields']['punong_barangay_name'] }}</div>
-                <div>Punong Barangay</div>
-                <div class="stamp">
-                    <div class="stamp-title">DOCUMENTARY STAMP TAX PAID</div>
-                    <div class="stamp-line">GOR SERIAL NUMBER: _______________</div>
-                    <div class="stamp-line">DATE: _______________</div>
-                </div>
+                <p class="pb-name">{{ $document['fields']['punong_barangay_name'] !== '' ? $document['fields']['punong_barangay_name'] : ' ' }}</p>
+                <p class="pb-title">Punong Barangay</p>
             </td>
         </tr>
     </table>
 
-    <div style="margin-top: 26px;">
-        <div>By The Authority of the Punong Barangay;</div>
-        <div class="wet-line">&nbsp;</div>
-        <div>{{ $document['fields']['issuer_name'] }}</div>
-        <div>Officer for the day</div>
-        <div>{{ $document['fields']['issuer_position'] }}</div>
-    </div>
+    <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 18px;">
+        <tr>
+            <td class="authority" valign="top">
+                <div>By The Authority of the Punong Barangay;</div>
+                <div class="wet-line">&nbsp;</div>
+                <p class="officer">{{ $document['fields']['issuer_name'] }}</p>
+                <p class="officer">Officer for the day</p>
+                <p class="officer">{{ $document['fields']['issuer_position'] }}</p>
+            </td>
+            <td width="260" valign="top" align="right">
+                <div class="stamp-outer">
+                    <div class="stamp-inner">
+                        <p class="stamp-title">DOCUMENTARY STAMP TAX PAID</p>
+                        <table width="100%" cellspacing="0" cellpadding="0">
+                            <tr>
+                                <td width="58%" valign="top" style="padding-right: 8px;">
+                                    <div class="stamp-label">GOR SERIAL NUMBER:</div>
+                                    <div class="stamp-blank">&nbsp;</div>
+                                </td>
+                                <td width="42%" valign="top" style="border-left: 1px solid #9c3b32; padding-left: 8px;">
+                                    <div class="stamp-label">DATE:</div>
+                                    <div class="stamp-blank">&nbsp;</div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>

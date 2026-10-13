@@ -79,12 +79,24 @@
                         <div v-if="canUpdateSettings" class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="cell">
                             <div v-if="setting.setting_key === 'punong_barangay_signature'" class="flex flex-col items-start gap-2">
                                 <input
+                                    id="punong-barangay-signature"
                                     type="file"
                                     accept="image/png"
-                                    class="text-xs text-slate-600"
+                                    class="sr-only"
                                     :disabled="signatureUploading"
                                     @change="uploadSignature"
                                 >
+                                <label
+                                    for="punong-barangay-signature"
+                                    class="rbim-btn-action"
+                                    :class="signatureUploading ? 'pointer-events-none opacity-60' : ''"
+                                >
+                                    <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path d="M9.25 13.25a.75.75 0 001.5 0V4.81l1.72 1.72a.75.75 0 101.06-1.06l-3-3a.75.75 0 00-1.06 0l-3 3a.75.75 0 101.06 1.06l1.72-1.72v8.44z" />
+                                        <path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" />
+                                    </svg>
+                                    {{ signatureUploading ? 'Uploading...' : 'Choose File' }}
+                                </label>
                                 <button
                                     v-if="setting.setting_value"
                                     type="button"
