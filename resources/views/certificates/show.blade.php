@@ -15,11 +15,15 @@
         .salutation { font-weight: bold; margin: 0 0 10px; }
         .body { text-align: justify; text-indent: 42px; margin: 0 0 12px; line-height: 1.55; }
         .bold { font-weight: bold; }
-        .logo-cell { width: 92px; vertical-align: middle; text-align: center; }
-        .logo-gap { width: 8px; }
-        .logo-empty { width: 84px; height: 84px; border: 1px solid #bbb; }
-        .logo-img { width: 84px; height: 84px; }
-        .pb-block { width: 230px; text-align: center; }
+        .letterhead { position: relative; height: 92px; text-align: center; }
+        .logo-abs { position: absolute; top: 0; width: 78px; height: 78px; }
+        .logo-left { left: 0; }
+        .logo-mid { left: 86px; }
+        .logo-right { right: 72px; }
+        .logo-empty { width: 78px; height: 78px; border: 1px solid #bbb; }
+        .logo-img { width: 78px; height: 78px; }
+        .letterhead-copy { padding-top: 4px; }
+        .pb-block { width: 250px; text-align: center; }
         .pb-name { font-weight: bold; text-decoration: underline; text-transform: uppercase; font-size: 12px; margin: 0 auto; min-width: 170px; display: inline-block; }
         .pb-title { margin: 1px 0 0; font-size: 12px; }
         .sig-space { height: 46px; }
@@ -27,7 +31,7 @@
         .authority { margin-top: 8px; }
         .wet-line { border-bottom: 1px solid #111; width: 190px; height: 36px; margin-top: 8px; }
         .officer { margin: 2px 0 0; }
-        .stamp-outer { border: 1.5px solid #9c3b32; border-radius: 8px; padding: 2px; width: 248px; color: #9c3b32; }
+        .stamp-outer { border: 1.5px solid #9c3b32; border-radius: 8px; padding: 2px; width: 250px; margin-top: 10px; color: #9c3b32; }
         .stamp-inner { border: 1px solid #9c3b32; border-radius: 6px; padding: 6px 8px 8px; font-size: 8px; line-height: 1.2; }
         .stamp-title { font-weight: bold; text-align: center; letter-spacing: 0.2px; margin: 0 0 6px; }
         .stamp-label { font-size: 7.5px; }
@@ -35,39 +39,30 @@
     </style>
 </head>
 <body>
-    <table width="100%" cellspacing="0" cellpadding="0">
-        <tr>
-            <td class="logo-cell">
-                @if (! empty($document['logos']['bagong_pilipinas']))
-                    <img class="logo-img" src="{{ $document['logos']['bagong_pilipinas'] }}" alt="">
-                @else
-                    <div class="logo-empty">&nbsp;</div>
-                @endif
-            </td>
-            <td class="logo-gap">&nbsp;</td>
-            <td class="logo-cell">
-                @if (! empty($document['logos']['city_of_baguio']))
-                    <img class="logo-img" src="{{ $document['logos']['city_of_baguio'] }}" alt="">
-                @else
-                    <div class="logo-empty">&nbsp;</div>
-                @endif
-            </td>
-            <td class="center">
-                <p class="header-line republic">Republic of the Philippines</p>
-                <p class="header-line">{{ $document['header']['city_name'] }}</p>
-                <p class="header-line barangay">{{ $document['header']['barangay_name'] }}</p>
-                <p class="header-line contact">Official email address: {{ $document['header']['barangay_email'] }}</p>
-                <p class="header-line contact">Tel. No. {{ $document['header']['barangay_contact_no'] }}</p>
-            </td>
-            <td class="logo-cell">
-                @if (! empty($document['logos']['happy_hallow']))
-                    <img class="logo-img" src="{{ $document['logos']['happy_hallow'] }}" alt="">
-                @else
-                    <div class="logo-empty">&nbsp;</div>
-                @endif
-            </td>
-        </tr>
-    </table>
+    <div class="letterhead">
+        @if (! empty($document['logos']['bagong_pilipinas']))
+            <img class="logo-abs logo-left" src="{{ $document['logos']['bagong_pilipinas'] }}" alt="">
+        @else
+            <div class="logo-abs logo-left logo-empty">&nbsp;</div>
+        @endif
+        @if (! empty($document['logos']['city_of_baguio']))
+            <img class="logo-abs logo-mid" src="{{ $document['logos']['city_of_baguio'] }}" alt="">
+        @else
+            <div class="logo-abs logo-mid logo-empty">&nbsp;</div>
+        @endif
+        @if (! empty($document['logos']['happy_hallow']))
+            <img class="logo-abs logo-right" src="{{ $document['logos']['happy_hallow'] }}" alt="">
+        @else
+            <div class="logo-abs logo-right logo-empty">&nbsp;</div>
+        @endif
+        <div class="letterhead-copy">
+            <p class="header-line republic">Republic of the Philippines</p>
+            <p class="header-line">{{ $document['header']['city_name'] }}</p>
+            <p class="header-line barangay">{{ $document['header']['barangay_name'] }}</p>
+            <p class="header-line contact">Official email address: {{ $document['header']['barangay_email'] }}</p>
+            <p class="header-line contact">Tel. No. {{ $document['header']['barangay_contact_no'] }}</p>
+        </div>
+    </div>
 
     <p class="title">{{ $document['title'] }}</p>
     <p class="salutation">To Whom It May Concern:</p>
@@ -87,7 +82,7 @@
     <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 28px;">
         <tr>
             <td>&nbsp;</td>
-            <td class="pb-block">
+            <td class="pb-block" valign="top">
                 @if (! empty($document['signature_data_uri']))
                     <img class="sig-img" src="{{ $document['signature_data_uri'] }}" alt="">
                 @else
@@ -97,18 +92,9 @@
                 <p class="pb-title">Punong Barangay</p>
             </td>
         </tr>
-    </table>
-
-    <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 18px;">
         <tr>
-            <td class="authority" valign="top">
-                <div>By The Authority of the Punong Barangay;</div>
-                <div class="wet-line">&nbsp;</div>
-                <p class="officer">{{ $document['fields']['issuer_name'] }}</p>
-                <p class="officer">Officer for the day</p>
-                <p class="officer">{{ $document['fields']['issuer_position'] }}</p>
-            </td>
-            <td width="260" valign="top" align="right">
+            <td class="authority" valign="middle">By The Authority of the Punong Barangay;</td>
+            <td class="pb-block" valign="top">
                 <div class="stamp-outer">
                     <div class="stamp-inner">
                         <p class="stamp-title">DOCUMENTARY STAMP TAX PAID</p>
@@ -129,5 +115,12 @@
             </td>
         </tr>
     </table>
+
+    <div>
+        <div class="wet-line">&nbsp;</div>
+        <p class="officer">{{ $document['fields']['issuer_name'] }}</p>
+        <p class="officer">Officer for the day</p>
+        <p class="officer">{{ $document['fields']['issuer_position'] }}</p>
+    </div>
 </body>
 </html>
