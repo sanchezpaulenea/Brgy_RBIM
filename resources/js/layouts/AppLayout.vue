@@ -249,6 +249,15 @@
                                 User log
                             </RouterLink>
                             <RouterLink
+                                v-if="canViewLogRetention"
+                                :to="{ name: 'log-retention' }"
+                                class="block rounded-lg px-2 py-1.5 text-[13px] transition"
+                                :class="route.name === 'log-retention' ? 'bg-white/15 text-white' : 'text-white/85 hover:bg-white/10'"
+                                @click="sidebarOpen = false"
+                            >
+                                Log Retention and Archiving
+                            </RouterLink>
+                            <RouterLink
                                 v-if="canViewSystemSettings"
                                 :to="{ name: 'settings' }"
                                 class="block rounded-lg px-2 py-1.5 text-[13px] transition"
@@ -303,10 +312,11 @@ const canViewSystemSettings = computed(() => (
 
 const canViewAuditLogs = computed(() => hasPermission('auditlog.view'));
 const canViewUserLogs = computed(() => hasPermission('userlog.view'));
+const canViewLogRetention = computed(() => hasPermission('retention.view'));
 const canViewLogs = computed(() => canViewAuditLogs.value || canViewUserLogs.value);
 
 const canViewSettingsMenu = computed(() => (
-    canViewSystemSettings.value || canViewLogs.value
+    canViewSystemSettings.value || canViewLogs.value || canViewLogRetention.value
 ));
 
 const isHouseholdRoute = computed(() => String(route.path).startsWith('/households'));
@@ -365,6 +375,7 @@ function defaultRouteFor(section) {
         settings: [
             canViewAuditLogs.value ? 'audit-logs' : null,
             canViewUserLogs.value ? 'user-logs' : null,
+            canViewLogRetention.value ? 'log-retention' : null,
             canViewSystemSettings.value ? 'settings' : null,
         ].find(Boolean),
     }[section];

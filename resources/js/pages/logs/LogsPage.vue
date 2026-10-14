@@ -5,6 +5,30 @@
                 {{ error }}
             </div>
 
+            <div v-if="canViewCurrentLog" class="flex flex-wrap items-center gap-2">
+                <span class="text-sm font-medium text-slate-700">Records</span>
+                <button
+                    type="button"
+                    :class="source === 'active' ? 'rbim-btn py-2' : 'rbim-btn-outline py-2'"
+                    @click="setSource('active')"
+                >
+                    Active
+                </button>
+                <button
+                    type="button"
+                    :class="source === 'archive' ? 'rbim-btn py-2' : 'rbim-btn-outline py-2'"
+                    @click="setSource('archive')"
+                >
+                    Archived
+                </button>
+            </div>
+            <p v-else class="text-sm text-slate-600">
+                You do not have permission to view these logs.
+            </p>
+            <p v-if="source === 'archive'" class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Archived records. This view is read-only.
+            </p>
+
             <form v-if="isAudit" class="rbim-card grid gap-3 p-4 sm:grid-cols-5">
                 <div>
                     <label for="audit-entity" class="rbim-label">Affected Record</label>
@@ -80,6 +104,7 @@
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Target</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Old value</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">New value</th>
+                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Record ID</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Description</th>
                             </tr>
                         </thead>
@@ -92,10 +117,13 @@
                                 <td class="px-4 py-3 text-slate-600">{{ formatRecordLabel(log.target) }}</td>
                                 <td class="px-4 py-3 text-slate-600">{{ log.old_value || '—' }}</td>
                                 <td class="px-4 py-3 text-slate-600">{{ log.new_value || '—' }}</td>
+                                <td class="px-4 py-3 text-slate-600">{{ formatRecordId(log.record_id) }}</td>
                                 <td class="px-4 py-3 text-slate-600">{{ log.description }}</td>
                             </tr>
                             <tr v-if="!auditLogs.length">
-                                <td colspan="8" class="px-4 py-8 text-center text-slate-500">No audit logs found.</td>
+                                <td colspan="9" class="px-4 py-8 text-center text-slate-500">
+                                    {{ source === 'archive' ? 'No archived audit logs found.' : 'No audit logs found.' }}
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -120,7 +148,7 @@
                             </tr>
                             <tr v-if="!filteredLoginLogs.length">
                                 <td colspan="5" class="px-4 py-8 text-center text-slate-500">
-                                    {{ loginLogs.length ? 'No login history matches the filters.' : 'No login history found.' }}
+                                    {{ emptyUserLogMessage }}
                                 </td>
                             </tr>
                         </tbody>
@@ -135,17 +163,23 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { useAuth } from '@/composables/useAuth';
 import { extractErrorMessage } from '@/services/http';
 import * as auditLogService from '@/services/auditLogService';
 import * as userLogService from '@/services/userLogService';
 import { formatDateTime, formatRecordLabel, matchesSearch } from '@/utils/format';
 
 const route = useRoute();
+const { hasPermission } = useAuth();
 const isAudit = computed(() => route.meta.logType !== 'login');
 const pageTitle = computed(() => (isAudit.value ? 'Audit log' : 'User log'));
+const canViewCurrentLog = computed(() => (
+    isAudit.value ? hasPermission('auditlog.view') : hasPermission('userlog.view')
+));
 
 const loading = ref(false);
 const error = ref('');
+const source = ref('active');
 const auditLogs = ref([]);
 const loginLogs = ref([]);
 const filters = reactive({
@@ -163,6 +197,18 @@ const loginFilters = reactive({
     date_from: '',
     date_to: '',
 });
+
+const emptyUserLogMessage = computed(() => {
+    if (loginLogs.value.length && !filteredLoginLogs.value.length) {
+        return 'No login history matches the filters.';
+    }
+
+    return source.value === 'archive' ? 'No archived login history found.' : 'No login history found.';
+});
+
+function formatRecordId(value) {
+    return Number(value) === 0 ? 'N/A' : value;
+}
 
 const filteredLoginLogs = computed(() => (
     loginLogs.value.filter((log) => {
@@ -203,6 +249,8 @@ async function loadAuditLogs() {
             params.date_to = filters.date_to;
         }
 
+        params.source = source.value;
+
         auditLogs.value = await auditLogService.fetchAuditLogs(params);
     } catch (err) {
         error.value = extractErrorMessage(err, 'Unable to load audit logs.');
@@ -216,7 +264,7 @@ async function loadLoginLogs() {
     error.value = '';
 
     try {
-        loginLogs.value = await userLogService.fetchUserLogs();
+        loginLogs.value = await userLogService.fetchUserLogs({ source: source.value });
     } catch (err) {
         error.value = extractErrorMessage(err, 'Unable to load user logs.');
     } finally {
@@ -236,6 +284,20 @@ function clearLoginFilters() {
     loadLoginLogs();
 }
 
+function setSource(next) {
+    if (source.value === next) {
+        return;
+    }
+
+    source.value = next;
+
+    if (isAudit.value) {
+        loadAuditLogs();
+    } else {
+        loadLoginLogs();
+    }
+}
+
 let auditFilterTimer = null;
 
 watch(
@@ -253,6 +315,8 @@ watch(
 );
 
 watch(() => route.meta.logType, () => {
+    source.value = 'active';
+
     if (isAudit.value) {
         loadAuditLogs();
     } else {

@@ -3,6 +3,7 @@
 namespace App\Services\Logs;
 
 use App\Models\Logs\UserLog;
+use App\Models\Logs\UserLogArchive;
 use App\Repositories\Interfaces\Logs\UserLogRepositoryInterface;
 use Carbon\Carbon;
 
@@ -15,18 +16,18 @@ class UserLogService
     /**
      * @return array<int, array<string, mixed>>
      */
-    public function listLoginHistory(): array
+    public function listLoginHistory(string $source = 'active'): array
     {
         return $this->userLogRepository
-            ->all()
-            ->map(fn (UserLog $log) => $this->formatUserLog($log))
+            ->all($source)
+            ->map(fn (UserLog|UserLogArchive $log) => $this->formatUserLog($log))
             ->all();
     }
 
     /**
      * @return array<string, mixed>
      */
-    public function formatUserLog(UserLog $log): array
+    public function formatUserLog(UserLog|UserLogArchive $log): array
     {
         $log->loadMissing(['user', 'loginStatus']);
 

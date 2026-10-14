@@ -95,6 +95,12 @@ class SystemSettingService
      */
     public function updateSetting(User $performedBy, Setting $setting, string $value): array
     {
+        if (in_array($setting->setting_key, ['audit_log_retention_days', 'user_log_retention_days'], true)) {
+            throw ValidationException::withMessages([
+                'setting_value' => 'Retention days are changed on Log Retention and Archiving.',
+            ]);
+        }
+
         if ($setting->setting_key === 'punong_barangay_name') {
             $value = Str::of($value)->squish()->title()->toString();
         }

@@ -3,6 +3,7 @@
 namespace App\Repositories\Logs;
 
 use App\Models\Logs\AuditLog;
+use App\Models\Logs\AuditLogArchive;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -33,12 +34,16 @@ class AuditLogRepository implements AuditLogRepositoryInterface
     }
 
     /**
-     * @param  array{user_id?: int, username?: string, entity?: string, target?: string, date_from?: string, date_to?: string}  $filters
-     * @return Collection<int, AuditLog>
+     * @param  array{user_id?: int, username?: string, entity?: string, target?: string, date_from?: string, date_to?: string, source?: string}  $filters
+     * @return Collection<int, AuditLog|AuditLogArchive>
      */
     public function list(array $filters = []): Collection
     {
-        $query = AuditLog::query()
+        $model = ($filters['source'] ?? 'active') === 'archive'
+            ? AuditLogArchive::class
+            : AuditLog::class;
+
+        $query = $model::query()
             ->with(['user', 'action'])
             ->orderByDesc('performed_at');
 

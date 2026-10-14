@@ -4,6 +4,7 @@ namespace App\Repositories\Logs;
 
 use App\Models\Authentication\LoginStatus;
 use App\Models\Logs\UserLog;
+use App\Models\Logs\UserLogArchive;
 use App\Repositories\Interfaces\Logs\UserLogRepositoryInterface;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -101,11 +102,13 @@ class UserLogRepository implements UserLogRepositoryInterface
     }
 
     /**
-     * @return Collection<int, UserLog>
+     * @return Collection<int, UserLog|UserLogArchive>
      */
-    public function all(): Collection
+    public function all(string $source = 'active'): Collection
     {
-        return UserLog::query()
+        $model = $source === 'archive' ? UserLogArchive::class : UserLog::class;
+
+        return $model::query()
             ->with(['user', 'loginStatus'])
             ->orderByDesc('login_time')
             ->get();

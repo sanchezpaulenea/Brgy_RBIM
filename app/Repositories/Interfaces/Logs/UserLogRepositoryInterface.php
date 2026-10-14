@@ -3,6 +3,7 @@
 namespace App\Repositories\Interfaces\Logs;
 
 use App\Models\Logs\UserLog;
+use App\Models\Logs\UserLogArchive;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -30,7 +31,7 @@ interface UserLogRepositoryInterface
     public function getLastLockTime(int $userId): ?Carbon;
 
     /**
-     * @return Collection<int, UserLog>
+     * @return Collection<int, UserLog|UserLogArchive>
      */
-    public function all(): Collection;
+    public function all(string $source = 'active'): Collection;
 }

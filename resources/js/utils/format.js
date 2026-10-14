@@ -83,6 +83,7 @@ const SETTING_LABELS = {
     default_password: 'Default Password',
     session_timeout_minutes: 'Session Timeout Minutes',
     audit_log_retention_days: 'Audit Log Retention Days',
+    user_log_retention_days: 'User Log Retention Days',
     punong_barangay_name: 'Punong Barangay Name',
     punong_barangay_signature: 'Punong Barangay Signature',
 };

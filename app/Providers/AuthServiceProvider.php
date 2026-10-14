@@ -22,6 +22,7 @@ use App\Models\HouseholdManagement\Street;
 use App\Models\HouseholdManagement\ToiletFacilityType;
 use App\Models\HouseholdManagement\WaterSource;
 use App\Models\Logs\AuditLog;
+use App\Models\Logs\AuditLogArchive;
 use App\Models\Logs\UserLog;
 use App\Models\Report;
 use App\Models\ResidentManagement\Ctc\Ctc;
@@ -71,6 +72,7 @@ use App\Policies\HouseholdManagement\HouseholdQuestionsPolicy;
 use App\Policies\HouseholdManagement\PetCensusPolicy;
 use App\Policies\HouseholdManagement\PetLookupWritePolicy;
 use App\Policies\HouseholdManagement\StreetPolicy;
+use App\Policies\LogRetention\LogRetentionPolicy;
 use App\Policies\Logs\AuditLogPolicy;
 use App\Policies\Logs\UserLogPolicy;
 use App\Policies\Lookups\ReferenceLookupPolicy;
@@ -111,6 +113,7 @@ class AuthServiceProvider extends ServiceProvider
         UserRole::class => UserRolePolicy::class,
         UserLog::class => UserLogPolicy::class,
         AuditLog::class => AuditLogPolicy::class,
+        AuditLogArchive::class => LogRetentionPolicy::class,
         PersonnelPosition::class => BarangayPersonnelPolicy::class,
         BarangayPersonnel::class => PersonnelPolicy::class,
         Setting::class => SystemSettingPolicy::class,

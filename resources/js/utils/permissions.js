@@ -4,6 +4,9 @@
  */
 const PERMISSION_LABELS = {
     'auditlog.view': { group: 'System logs', label: 'View the audit log' },
+    'retention.view': { group: 'Log retention', label: 'View log retention and archives' },
+    'retention.update': { group: 'Log retention', label: 'Update log retention periods' },
+    'retention.archive': { group: 'Log retention', label: 'Archive expired logs' },
     'user.create': { group: 'User accounts', label: 'Create user accounts' },
     'user.view': { group: 'User accounts', label: 'View user accounts' },
     'user.delete': { group: 'User accounts', label: 'Delete user accounts' },
@@ -90,6 +93,7 @@ const OTHER_GROUP = 'Other';
 const PERMISSION_GROUP_ORDER = [
     'Own account',
     'System logs',
+    'Log retention',
     'System settings',
     'User accounts',
     'User roles',

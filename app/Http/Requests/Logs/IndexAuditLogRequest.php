@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Logs;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class IndexAuditLogRequest extends FormRequest
 {
@@ -23,6 +24,17 @@ class IndexAuditLogRequest extends FormRequest
             'target' => ['sometimes', 'string', 'max:45'],
             'date_from' => ['sometimes', 'date'],
             'date_to' => ['sometimes', 'date', 'after_or_equal:date_from'],
+            'source' => ['sometimes', 'string', Rule::in(['active', 'archive'])],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'source.in' => 'Source must be active or archive.',
         ];
     }
 
@@ -31,6 +43,9 @@ class IndexAuditLogRequest extends FormRequest
      */
     public function filters(): array
     {
-        return $this->validated();
+        $filters = $this->validated();
+        $filters['source'] = $filters['source'] ?? 'active';
+
+        return $filters;
     }
 }

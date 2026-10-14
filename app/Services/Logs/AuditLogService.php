@@ -3,6 +3,7 @@
 namespace App\Services\Logs;
 
 use App\Models\Logs\AuditLog;
+use App\Models\Logs\AuditLogArchive;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 
 class AuditLogService
@@ -12,21 +13,21 @@ class AuditLogService
     ) {}
 
     /**
-     * @param  array{user_id?: int, entity?: string, target?: string, date_from?: string, date_to?: string}  $filters
+     * @param  array{user_id?: int, entity?: string, target?: string, date_from?: string, date_to?: string, source?: string}  $filters
      * @return array<int, array<string, mixed>>
      */
     public function listAuditLogs(array $filters = []): array
     {
         return $this->auditLogRepository
             ->list($filters)
-            ->map(fn (AuditLog $log) => $this->formatAuditLog($log))
+            ->map(fn (AuditLog|AuditLogArchive $log) => $this->formatAuditLog($log))
             ->all();
     }
 
     /**
      * @return array<string, mixed>
      */
-    public function formatAuditLog(AuditLog $log): array
+    public function formatAuditLog(AuditLog|AuditLogArchive $log): array
     {
         $log->loadMissing(['user', 'action']);
 
@@ -36,7 +37,7 @@ class AuditLogService
             'username' => $log->user?->username,
             'action_id' => $log->action_id,
             'action' => $log->action?->action,
-            'record_id' => $log->record_id,
+            'record_id' => (int) $log->record_id,
             'description' => $log->description,
             'old_value' => $log->old_value,
             'new_value' => $log->new_value,

@@ -1,7 +1,7 @@
 import http from '@/services/http';
 
-export async function fetchUserLogs() {
-    const { data } = await http.get('/user-logs');
+export async function fetchUserLogs(params = {}) {
+    const { data } = await http.get('/user-logs', { params });
 
     return data.logs;
 }

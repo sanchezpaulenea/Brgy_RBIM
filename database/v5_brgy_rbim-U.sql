@@ -129,6 +129,33 @@ INSERT INTO `audit_log` (`audit_id`, `user_id`, `action_id`, `record_id`, `descr
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `audit_log_archive`
+--
+
+DROP TABLE IF EXISTS `audit_log_archive`;
+CREATE TABLE IF NOT EXISTS `audit_log_archive` (
+  `audit_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `action_id` int NOT NULL,
+  `record_id` int NOT NULL,
+  `description` varchar(255) NOT NULL,
+  `old_value` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `new_value` varchar(45) NOT NULL,
+  `performed_at` datetime NOT NULL,
+  `target` varchar(45) NOT NULL,
+  `entity` varchar(45) NOT NULL,
+  `archived_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `archived_by` int NOT NULL,
+  PRIMARY KEY (`audit_id`),
+  KEY `audit_archive_user` (`user_id`),
+  KEY `audit_archive_action` (`action_id`),
+  KEY `audit_archive_performed_at` (`performed_at`),
+  KEY `audit_archive_archiver` (`archived_by`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `barangay_personnel`
 --
 
@@ -1105,7 +1132,7 @@ CREATE TABLE IF NOT EXISTS `permission` (
   `permission` varchar(45) NOT NULL,
   PRIMARY KEY (`permission_id`),
   UNIQUE KEY `uq_permission` (`permission`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=77 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=80 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `permission`
@@ -1186,7 +1213,10 @@ INSERT INTO `permission` (`permission_id`, `permission`) VALUES
 (7, 'userrole.view'),
 (53, 'womanhealth.create'),
 (54, 'womanhealth.update'),
-(52, 'womanhealth.view');
+(52, 'womanhealth.view'),
+(77, 'retention.view'),
+(78, 'retention.update'),
+(79, 'retention.archive');
 
 -- --------------------------------------------------------
 
@@ -1644,7 +1674,7 @@ CREATE TABLE IF NOT EXISTS `role_permission` (
   PRIMARY KEY (`role_permission_id`),
   UNIQUE KEY `uq_permission_assignment` (`role_id`,`permission_id`),
   KEY `permission_role` (`permission_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=180 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=183 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `role_permission`
@@ -1815,7 +1845,10 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (152, 4, 64),
 (153, 4, 65),
 (166, 4, 70),
-(167, 4, 72);
+(167, 4, 72),
+(180, 2, 77),
+(181, 2, 78),
+(182, 2, 79);
 
 -- --------------------------------------------------------
 
@@ -2113,7 +2146,7 @@ CREATE TABLE IF NOT EXISTS `system_setting` (
   `description` varchar(255) NOT NULL,
   PRIMARY KEY (`setting_id`),
   UNIQUE KEY `uq_setting_key` (`setting_key`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `system_setting`
@@ -2133,7 +2166,8 @@ INSERT INTO `system_setting` (`setting_id`, `setting_key`, `setting_value`, `dat
 (11, 'session_timeout_minutes', '30', 'int', 'Session timeout minutes when idle'),
 (12, 'audit_log_retention_days', '365', 'int', 'Audit log retention days'),
 (13, 'punong_barangay_name', 'Soriano A. Palunan', 'string', 'Punong Barangay Name'),
-(14, 'punong_barangay_signature', '', 'string', 'Punong Barangay Signature File Path');
+(14, 'punong_barangay_signature', '', 'string', 'Punong Barangay Signature File Path'),
+(15, 'user_log_retention_days', '365', 'int', 'User log retention days');
 
 -- --------------------------------------------------------
 
@@ -2273,6 +2307,30 @@ INSERT INTO `user_log` (`user_log_id`, `user_id`, `login_time`, `logout_time`, `
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `user_log_archive`
+--
+
+DROP TABLE IF EXISTS `user_log_archive`;
+CREATE TABLE IF NOT EXISTS `user_log_archive` (
+  `user_log_id` int NOT NULL,
+  `user_id` int DEFAULT NULL,
+  `login_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `logout_time` datetime DEFAULT NULL,
+  `login_status_id` int NOT NULL,
+  `ip_address` varchar(45) NOT NULL,
+  `device` varchar(45) NOT NULL,
+  `archived_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `archived_by` int NOT NULL,
+  PRIMARY KEY (`user_log_id`),
+  KEY `user_log_archive_user` (`user_id`),
+  KEY `user_log_archive_status` (`login_status_id`),
+  KEY `user_log_archive_login_time` (`login_time`),
+  KEY `user_log_archive_archiver` (`archived_by`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `user_role`
 --
 
@@ -2389,6 +2447,14 @@ CREATE TABLE IF NOT EXISTS `women_health` (
 ALTER TABLE `audit_log`
   ADD CONSTRAINT `action` FOREIGN KEY (`action_id`) REFERENCES `action` (`action_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `audit_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `audit_log_archive`
+--
+ALTER TABLE `audit_log_archive`
+  ADD CONSTRAINT `audit_archive_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `audit_archive_action` FOREIGN KEY (`action_id`) REFERENCES `action` (`action_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `audit_archive_archiver` FOREIGN KEY (`archived_by`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 --
 -- Constraints for table `barangay_personnel`
@@ -2570,6 +2636,14 @@ ALTER TABLE `user`
 ALTER TABLE `user_log`
   ADD CONSTRAINT `login_status` FOREIGN KEY (`login_status_id`) REFERENCES `login_status` (`login_status_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `user_log` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `user_log_archive`
+--
+ALTER TABLE `user_log_archive`
+  ADD CONSTRAINT `user_log_archive_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `user_log_archive_status` FOREIGN KEY (`login_status_id`) REFERENCES `login_status` (`login_status_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `user_log_archive_archiver` FOREIGN KEY (`archived_by`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 --
 -- Constraints for table `user_role`

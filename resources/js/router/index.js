@@ -253,6 +253,15 @@ const routes = [
         },
     },
     {
+        path: '/settings/log-retention',
+        name: 'log-retention',
+        component: () => import('@/pages/settings/LogRetentionPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresPermissions: ['retention.view'],
+        },
+    },
+    {
         path: '/settings/logs',
         redirect: { name: 'audit-logs' },
     },

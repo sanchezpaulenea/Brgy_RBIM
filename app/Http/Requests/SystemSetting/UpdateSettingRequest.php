@@ -102,6 +102,14 @@ class UpdateSettingRequest extends FormRequest
      */
     private function rulesForSetting(Setting $setting): array
     {
+        if (in_array($setting->setting_key, ['audit_log_retention_days', 'user_log_retention_days'], true)) {
+            return [
+                function (string $attribute, mixed $value, Closure $fail): void {
+                    $fail('Retention days are changed on Log Retention and Archiving.');
+                },
+            ];
+        }
+
         return match ($setting->setting_key) {
             'barangay_name' => ['required', 'string', 'max:45', new ValidPlaceName('Barangay name')],
             'city_name' => ['required', 'string', 'max:45', new ValidPlaceName('City name')],
@@ -135,7 +143,6 @@ class UpdateSettingRequest extends FormRequest
             'max_login_attempts' => ['required', 'integer', 'between:3,10'],
             'account_lockout_minutes' => ['required', 'integer', 'between:1,1440'],
             'session_timeout_minutes' => ['required', 'integer', 'between:5,480'],
-            'audit_log_retention_days' => ['required', 'integer', 'between:30,3650'],
             default => match ($setting->data_type) {
                 'int' => ['required', 'integer', 'min:1'],
                 'bool' => ['required', 'boolean'],

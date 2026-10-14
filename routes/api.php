@@ -10,6 +10,7 @@ use App\Http\Controllers\HouseholdManagament\HouseholdQuestionsController;
 use App\Http\Controllers\HouseholdManagament\PetCensusController;
 use App\Http\Controllers\HouseholdManagament\PetLookupWriteController;
 use App\Http\Controllers\HouseholdManagament\StreetController;
+use App\Http\Controllers\LogRetention\LogRetentionController;
 use App\Http\Controllers\Logs\AuditLogController;
 use App\Http\Controllers\Logs\UserLogController;
 use App\Http\Controllers\Lookups\LookupController;
@@ -179,6 +180,11 @@ Route::prefix('v1')->group(function () {
             Route::delete('nationalities/{nationality}', [NationalityController::class, 'destroy'])->name('nationalities.destroy');
             Route::delete('ethnicities/{ethnicity}', [EthnicityController::class, 'destroy'])->name('ethnicities.destroy');
             Route::delete('religions/{religion}', [ReligionController::class, 'destroy'])->name('religions.destroy');
+
+            Route::get('log-retention', [LogRetentionController::class, 'index'])->name('log-retention.index');
+            Route::put('log-retention', [LogRetentionController::class, 'update'])->name('log-retention.update');
+            Route::get('log-retention/preview', [LogRetentionController::class, 'preview'])->name('log-retention.preview');
+            Route::post('log-retention/archive', [LogRetentionController::class, 'archive'])->name('log-retention.archive');
 
             Route::get('settings', [SystemSettingController::class, 'index'])->name('settings.index');
             Route::post('settings/punong-barangay-signature', [SystemSettingController::class, 'storePunongBarangaySignature'])->name('settings.punong-barangay-signature.store');

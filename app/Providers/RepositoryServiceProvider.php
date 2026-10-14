@@ -16,6 +16,7 @@ use App\Repositories\Interfaces\HouseholdManagement\HouseholdQuestionsRepository
 use App\Repositories\Interfaces\HouseholdManagement\HouseholdRepositoryInterface;
 use App\Repositories\Interfaces\HouseholdManagement\PetCensusRepositoryInterface;
 use App\Repositories\Interfaces\HouseholdManagement\StreetRepositoryInterface;
+use App\Repositories\Interfaces\LogRetention\LogRetentionRepositoryInterface;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\Logs\UserLogRepositoryInterface;
 use App\Repositories\Interfaces\Lookups\LookupRepositoryInterface;
@@ -39,6 +40,7 @@ use App\Repositories\Interfaces\UserManagement\RoleInterface;
 use App\Repositories\Interfaces\UserManagement\UserRepositoryInterface;
 use App\Repositories\Interfaces\UserManagement\UserRoleRepositoryInterface;
 use App\Repositories\Interfaces\UserManagement\UserStatusInterface;
+use App\Repositories\LogRetention\LogRetentionRepository;
 use App\Repositories\Logs\AuditLogRepository;
 use App\Repositories\Logs\UserLogRepository;
 use App\Repositories\Lookups\LookupRepository;
@@ -75,6 +77,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(UserLogRepositoryInterface::class, UserLogRepository::class);
         $this->app->bind(SettingRepositoryInterface::class, SettingRepository::class);
         $this->app->bind(AuditLogRepositoryInterface::class, AuditLogRepository::class);
+        $this->app->bind(LogRetentionRepositoryInterface::class, LogRetentionRepository::class);
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
         $this->app->bind(UserRoleRepositoryInterface::class, UserRoleRepository::class);
         $this->app->bind(PersonnelPositionRepositoryInterface::class, PersonnelPositionRepository::class);

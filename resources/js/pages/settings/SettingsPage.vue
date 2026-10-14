@@ -69,9 +69,14 @@
                                 <p v-if="editError" class="rbim-error">{{ editError }}</p>
                                 <p v-else-if="hintFor(setting)" class="rbim-hint">{{ hintFor(setting) }}</p>
                             </template>
-                            <span v-else class="font-medium text-slate-900">
-                                {{ setting.typed_value ?? setting.setting_value }}
-                            </span>
+                            <template v-else>
+                                <span class="font-medium text-slate-900">
+                                    {{ setting.typed_value ?? setting.setting_value }}
+                                </span>
+                                <p v-if="isRetentionSetting(setting)" class="rbim-hint">
+                                    Changed on Log Retention and Archiving.
+                                </p>
+                            </template>
                         </div>
                         <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left break-words text-slate-600" role="cell">
                             {{ setting.description }}
@@ -107,6 +112,9 @@
                                     Remove
                                 </button>
                             </div>
+                            <p v-else-if="isRetentionSetting(setting)" class="text-xs text-slate-500">
+                                Read only here.
+                            </p>
                             <div v-else-if="editingId === setting.setting_id" class="flex flex-wrap gap-2">
                                 <button
                                     type="button"
@@ -227,10 +235,11 @@ const SETTING_GROUPS = [
     },
     {
         title: 'Session and Audit Settings',
-        description: 'Idle session handling and how long activity records are kept.',
+        description: 'Idle session handling. Retention periods are changed on Log Retention and Archiving.',
         keys: [
             'session_timeout_minutes',
             'audit_log_retention_days',
+            'user_log_retention_days',
         ],
     },
 ];
@@ -283,6 +292,12 @@ const settingGroups = computed(() => {
 
     return grouped.filter((group) => group.settings.length);
 });
+
+const RETENTION_SETTING_KEYS = ['audit_log_retention_days', 'user_log_retention_days'];
+
+function isRetentionSetting(setting) {
+    return RETENTION_SETTING_KEYS.includes(setting.setting_key);
+}
 
 function rangeFor(setting) {
     return SETTING_INT_RANGES[setting.setting_key] ?? null;
