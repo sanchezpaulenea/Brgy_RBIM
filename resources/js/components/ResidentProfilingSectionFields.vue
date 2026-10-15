@@ -584,6 +584,7 @@
                         :show-age="false"
                         :error="errors.duration_of_stay"
                     />
+                    <p v-if="!errors.duration_of_stay" class="rbim-hint">Must be after the date of transfer.</p>
                 </div>
             </template>
         </template>

@@ -47,19 +47,20 @@
                 :hint="canCreateStreet ? 'Choose an existing street or type a new name and press Enter.' : ''"
             />
             <div>
-                <label class="rbim-label" for="house_lot">House Lot</label>
+                <label class="rbim-label" for="house_number">House Number</label>
                 <input
-                    id="house_lot"
-                    :value="form.house_lot"
+                    id="house_number"
+                    :value="form.house_number"
                     type="text"
                     inputmode="numeric"
-                    maxlength="45"
+                    maxlength="10"
                     placeholder="Leave blank if not applicable"
                     class="rbim-input"
-                    :class="{ 'rbim-input-error': errors.house_lot }"
-                    @input="form.house_lot = digitsOnly($event.target.value)"
+                    :class="{ 'rbim-input-error': errors.house_number }"
+                    @input="onHouseNumberInput"
                 >
-                <p v-if="errors.house_lot" class="rbim-error">{{ errors.house_lot }}</p>
+                <p v-if="errors.house_number" class="rbim-error">{{ errors.house_number }}</p>
+                <p v-else class="rbim-hint">Numbers only.</p>
             </div>
             <div>
                 <label class="rbim-label" for="block_num">Block No.</label>
@@ -240,11 +241,11 @@
 import FormSectionCard from '@/components/FormSectionCard.vue';
 import HelpTip from '@/components/HelpTip.vue';
 import LookupCombobox from '@/components/LookupCombobox.vue';
-import { digitsOnly } from '@/utils/validation';
+import { assignHouseNumber } from '@/utils/validation';
 
 const form = defineModel({ type: Object, required: true });
 
-defineProps({
+const props = defineProps({
     location: {
         type: Object,
         default: () => ({ province: '', city: '', barangay: '' }),
@@ -270,4 +271,8 @@ defineProps({
         default: () => ({}),
     },
 });
+
+function onHouseNumberInput(event) {
+    assignHouseNumber(form.value, props.errors, event.target.value);
+}
 </script>

@@ -45,6 +45,29 @@ trait NormalizesHouseholdAddress
         return (bool) preg_match('/^(n\/?a|n\.a\.?|not applicable)$/i', $value);
     }
 
+    protected function normalizeHouseNumber(mixed $value): mixed
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if (! is_string($value)) {
+            return $value;
+        }
+
+        $formatted = Str::of($value)->squish()->toString();
+
+        if ($formatted === '' || $this->isNotApplicableAddress($formatted)) {
+            return null;
+        }
+
+        if (preg_match('/^\d+$/', $formatted) === 1) {
+            return (int) $formatted;
+        }
+
+        return $formatted;
+    }
+
     protected function mergeBasementLevelFromAnswer(): void
     {
         if (! $this->exists('has_basement')) {

@@ -232,8 +232,16 @@ class MigrationService
         }
 
         $willReturn = filter_var($merged['will_return_to_previous_residence'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        if ($willReturn && $this->normalizeMonthDate($merged['duration_of_stay'] ?? null) === null) {
+        $stayDate = $this->normalizeMonthDate($merged['duration_of_stay'] ?? null);
+
+        if ($willReturn && $stayDate === null) {
             $errors['duration_of_stay'] = 'Indicate until when the resident intends to stay.';
+        }
+
+        if ($willReturn
+            && $stayDate !== null
+            && ! MigrationClassifier::intendStayIsAfterTransfer($stayDate, $merged['date_of_transfer_in_brgy'] ?? null)) {
+            $errors['duration_of_stay'] = 'Intend of stay date must be after the date of transfer.';
         }
 
         if ($errors !== []) {

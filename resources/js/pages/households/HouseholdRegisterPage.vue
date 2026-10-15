@@ -111,18 +111,19 @@
                                 <p v-if="householdErrors.street_id" class="rbim-error">{{ householdErrors.street_id }}</p>
                             </div>
                             <div>
-                                <label for="house_lot" class="rbim-label">House/Lot Number</label>
+                                <label for="house_number" class="rbim-label">House Number</label>
                                 <input
-                                    id="house_lot"
-                                    :value="household.house_lot"
+                                    id="house_number"
+                                    :value="household.house_number"
                                     type="text"
                                     inputmode="numeric"
-                                    maxlength="45"
+                                    maxlength="10"
                                     class="rbim-input"
-                                    :class="{ 'rbim-input-error': householdErrors.house_lot }"
-                                    @input="household.house_lot = digitsOnly($event.target.value)"
+                                    :class="{ 'rbim-input-error': householdErrors.house_number }"
+                                    @input="assignHouseNumber(household, householdErrors, $event.target.value)"
                                 >
-                                <p v-if="householdErrors.house_lot" class="rbim-error">{{ householdErrors.house_lot }}</p>
+                                <p v-if="householdErrors.house_number" class="rbim-error">{{ householdErrors.house_number }}</p>
+                                <p v-else class="rbim-hint">Numbers only.</p>
                             </div>
                             <div>
                                 <label for="number_of_house_story" class="rbim-label">
@@ -251,12 +252,11 @@ import {
     assignResidentNameError,
     duplicateResidentMatch,
     emptyResidentForm,
-    optionalAddressText,
     residentPayload,
     toId,
     validateResidentForm,
 } from '@/utils/residentForm';
-import { digitsOnly, houseLotValidationError } from '@/utils/validation';
+import { assignHouseNumber, houseNumberValidationError, optionalHouseNumber } from '@/utils/validation';
 import {
     HOUSEHOLD_REGISTER_DRAFT_KEY,
     clearFormDraft,
@@ -332,7 +332,7 @@ function emptyHousehold() {
     return {
         clan_id: '',
         street_id: '',
-        house_lot: '',
+        house_number: '',
         ...emptyHouseholdStructure(),
     };
 }
@@ -351,7 +351,13 @@ function restoreHouseholdRegisterDraft() {
     }
 
     if (draft.household && typeof draft.household === 'object') {
-        Object.assign(household, emptyHousehold(), draft.household);
+        const saved = { ...draft.household };
+
+        if ((saved.house_number === undefined || saved.house_number === null || saved.house_number === '') && saved.house_lot) {
+            saved.house_number = saved.house_lot;
+        }
+
+        Object.assign(household, emptyHousehold(), saved);
     }
 
     if (draft.head && typeof draft.head === 'object') {
@@ -450,10 +456,10 @@ function validateHousehold() {
 
     validateHouseholdStructure(household, householdErrors);
 
-    const houseLotError = houseLotValidationError(household.house_lot);
+    const houseNumberError = houseNumberValidationError(household.house_number);
 
-    if (houseLotError) {
-        householdErrors.house_lot = houseLotError;
+    if (houseNumberError) {
+        householdErrors.house_number = houseNumberError;
     }
 
     return Object.keys(householdErrors).length === 0;
@@ -557,7 +563,7 @@ async function handleSave() {
         createdHousehold.value = await householdService.createHousehold({
             clan_id: toId(household.clan_id),
             street_id: toId(household.street_id),
-            house_lot: optionalAddressText(household.house_lot),
+            house_number: optionalHouseNumber(household.house_number),
             ...householdStructurePayload(household),
             head: headData,
         });

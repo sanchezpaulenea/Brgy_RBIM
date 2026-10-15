@@ -1,6 +1,6 @@
 import * as residentService from '@/services/residentService';
 import { todayDate } from '@/utils/format';
-import { classifyMigrationForm } from '@/utils/migration';
+import { classifyMigrationForm, transferMonthFromDate } from '@/utils/migration';
 import { toId } from '@/utils/residentForm';
 import {
     ENROLLMENT_NOT_ENROLLED_ID,
@@ -470,6 +470,15 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
 
             if (form.will_return_to_previous_residence === true && !form.duration_of_stay) {
                 errors.duration_of_stay = 'Indicate until when the resident intends to stay.';
+            } else if (form.will_return_to_previous_residence === true && form.duration_of_stay) {
+                const transfer = transferMonthFromDate(
+                    form.since_birth === true ? resident?.date_of_birth : form.date_of_transfer_in_brgy,
+                );
+                const stay = transferMonthFromDate(form.duration_of_stay);
+
+                if (transfer && stay && stay <= transfer) {
+                    errors.duration_of_stay = 'Intend of stay date must be after the date of transfer.';
+                }
             }
         }
     }

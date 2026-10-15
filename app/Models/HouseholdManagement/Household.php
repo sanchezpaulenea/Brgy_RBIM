@@ -22,7 +22,7 @@ class Household extends Model
         'street_id',
         'number_of_house_story',
         'number_of_basement_level',
-        'house_lot',
+        'house_number',
         'registration_date',
         'household_status_id',
     ];
@@ -34,6 +34,7 @@ class Household extends Model
         'registration_date' => 'datetime',
         'number_of_house_story' => 'integer',
         'number_of_basement_level' => 'integer',
+        'house_number' => 'integer',
     ];
 
     public function getRouteKeyName(): string

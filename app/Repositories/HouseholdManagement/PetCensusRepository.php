@@ -63,7 +63,7 @@ class PetCensusRepository implements PetCensusRepositoryInterface
                         ->orWhereHas('household', function ($householdQuery) use ($term) {
                             $householdQuery
                                 ->whereRaw('CAST(household_id AS CHAR) LIKE ? ESCAPE \'\\\\\'', [$term])
-                                ->orWhereRaw('LOWER(COALESCE(house_lot, \'\')) LIKE ? ESCAPE \'\\\\\'', [$term])
+                                ->orWhereRaw('CAST(house_number AS CHAR) LIKE ? ESCAPE \'\\\\\'', [$term])
                                 ->orWhereHas(
                                     'street',
                                     fn ($streetQuery) => $streetQuery->whereRaw(

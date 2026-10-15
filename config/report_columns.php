@@ -34,9 +34,9 @@ return [
             'is_group' => false,
         ],
         [
-            'key' => 'house_lot',
-            'label' => 'House Lot/Number',
-            'source' => 'house_lot',
+            'key' => 'house_number',
+            'label' => 'House Number',
+            'source' => 'house_number',
             'is_group' => false,
         ],
         [
@@ -334,9 +334,9 @@ return [
             'is_group' => false,
         ],
         [
-            'key' => 'house_lot',
-            'label' => 'House Lot/Number',
-            'source' => 'household.house_lot',
+            'key' => 'house_number',
+            'label' => 'House Number',
+            'source' => 'household.house_number',
             'is_group' => false,
         ],
         [

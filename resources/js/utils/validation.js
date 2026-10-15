@@ -90,18 +90,47 @@ export function digitsOnly(value) {
     return String(value ?? '').replace(/\D/g, '');
 }
 
-export function houseLotValidationError(value) {
+export const HOUSE_NUMBER_ERROR = 'House number must contain numbers only.';
+
+const NOT_APPLICABLE_HOUSE_NUMBER = /^(n\/?a|n\.a\.?|not applicable)$/i;
+
+export function houseNumberValidationError(value) {
     const text = String(value ?? '').trim();
 
-    if (!text) {
+    if (!text || NOT_APPLICABLE_HOUSE_NUMBER.test(text)) {
         return '';
     }
 
-    if (!/^\d+$/.test(text)) {
-        return 'House number may only contain numbers.';
+    if (!/^\d+$/.test(text) || Number(text) > 2147483647) {
+        return HOUSE_NUMBER_ERROR;
     }
 
     return '';
+}
+
+export function assignHouseNumber(target, errors, value) {
+    target.house_number = value;
+    const message = houseNumberValidationError(value);
+
+    if (message) {
+        errors.house_number = message;
+    } else {
+        delete errors.house_number;
+    }
+}
+
+export function optionalHouseNumber(value) {
+    const text = String(value ?? '').trim();
+
+    if (!text || NOT_APPLICABLE_HOUSE_NUMBER.test(text)) {
+        return null;
+    }
+
+    if (/^\d+$/.test(text) && Number(text) <= 2147483647) {
+        return Number(text);
+    }
+
+    return text;
 }
 
 export function pwdIdValidationError(value, required = false) {

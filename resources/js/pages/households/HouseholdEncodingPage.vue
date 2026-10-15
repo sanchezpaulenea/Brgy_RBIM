@@ -91,7 +91,7 @@ import {
     ensureResidentDemographicLookups,
 } from '@/utils/demographicLookups';
 import { HOUSEHOLD_HEAD_MIN_AGE, optionalAddressText, toId, toOptionalLookupId } from '@/utils/residentForm';
-import { personnelNameValidationError } from '@/utils/validation';
+import { houseNumberValidationError, optionalHouseNumber, personnelNameValidationError } from '@/utils/validation';
 
 const HEAD_RELATIONSHIP_ID = 1;
 const DEFAULT_BIRTH_COUNTRY = 'Philippines';
@@ -167,7 +167,7 @@ function blankIdentification() {
     return {
         street_id: null,
         street_name: '',
-        house_lot: '',
+        house_number: '',
         block_num: '',
         unit_num: '',
         clan_id: '',
@@ -310,6 +310,12 @@ function validateIdentification() {
 
     if (!identification.clan_id) {
         errors.clan_id = 'Clan is required.';
+    }
+
+    const houseNumberError = houseNumberValidationError(identification.house_number);
+
+    if (houseNumberError) {
+        errors.house_number = houseNumberError;
     }
 
     const informantLast = personnelNameValidationError(identification.informant.last_name, 'Last name', true);
@@ -585,7 +591,7 @@ async function saveHousehold() {
         const household = await householdService.createHousehold({
             clan_id: toId(identification.clan_id),
             street_id: streetId,
-            house_lot: optionalAddressText(identification.house_lot),
+            house_number: optionalHouseNumber(identification.house_number),
             block_num: optionalAddressText(identification.block_num),
             unit_num: optionalAddressText(identification.unit_num),
             head: residentPayload(head),
@@ -602,7 +608,7 @@ async function saveHousehold() {
 
         successMessage.value = 'Household registered successfully.';
         identification.street_id = streetId;
-        identification.house_lot = '';
+        identification.house_number = '';
         identification.block_num = '';
         identification.unit_num = '';
         identification.clan_id = '';

@@ -23,9 +23,11 @@ class StoreHouseholdRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->mergeNormalizedAddressFields([
-            'house_lot',
-        ]);
+        if ($this->exists('house_number')) {
+            $this->merge([
+                'house_number' => $this->normalizeHouseNumber($this->input('house_number')),
+            ]);
+        }
         $this->mergeBasementLevelFromAnswer();
 
         $head = $this->input('head');
@@ -59,7 +61,7 @@ class StoreHouseholdRequest extends FormRequest
         return [
             'clan_id' => ['required', 'integer', Rule::exists('clan', 'clan_id')],
             'street_id' => ['required', 'integer', Rule::exists('street', 'street_id')],
-            'house_lot' => ['nullable', 'string', 'max:45', 'regex:/^\\d+$/'],
+            'house_number' => ['nullable', 'integer', 'min:0', 'max:2147483647'],
             'number_of_house_story' => ['required', 'integer', 'min:1', 'max:50'],
             'has_basement' => ['required', 'boolean'],
             'number_of_basement_level' => [
@@ -112,7 +114,9 @@ class StoreHouseholdRequest extends FormRequest
             'clan_id.exists' => 'The selected clan does not exist.',
             'street_id.required' => 'Street is required.',
             'street_id.exists' => 'The selected street does not exist.',
-            'house_lot.regex' => 'House number may only contain numbers.',
+            'house_number.integer' => 'House number must contain numbers only.',
+            'house_number.min' => 'House number must contain numbers only.',
+            'house_number.max' => 'House number is too large.',
             'number_of_house_story.required' => 'Number of house stories is required.',
             'number_of_house_story.min' => 'Number of house stories must be at least 1.',
             'has_basement.required' => 'Please indicate whether the house has a basement.',

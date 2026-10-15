@@ -181,12 +181,12 @@ export function householdIdentitySearchText(household, includeHead = false) {
             household.head_name || household.head?.full_name,
             household.household_id,
             household.street_name,
-            household.house_lot,
+            household.house_number,
         ]
         : [
             household.household_id,
             household.street_name,
-            household.house_lot,
+            household.house_number,
         ];
 
     return parts.filter((part) => part !== null && part !== undefined && String(part).trim() !== '').join(' ');
@@ -197,7 +197,9 @@ export function householdDisplayLabel(household) {
         return '—';
     }
 
-    const address = [household.street_name, household.house_lot].filter(Boolean).join(', ');
+    const address = [household.street_name, household.house_number]
+        .filter((part) => part !== null && part !== undefined && String(part).trim() !== '')
+        .join(', ');
     const head = household.head_name || household.head?.full_name || personDisplayName(household.head);
     const id = household.household_id;
 

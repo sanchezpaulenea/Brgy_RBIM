@@ -589,7 +589,7 @@ class CertificateService
 
     private function address(Resident $resident, string $barangayName, string $cityName): string
     {
-        $houseLot = trim((string) ($resident->household?->house_lot ?? ''));
+        $houseLot = trim((string) ($resident->household?->house_number ?? ''));
         $street = trim((string) ($resident->household?->street?->street_name ?? ''));
 
         return collect([

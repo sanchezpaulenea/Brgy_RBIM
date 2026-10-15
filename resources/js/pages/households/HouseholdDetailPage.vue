@@ -46,8 +46,8 @@
                             <dd class="mt-1 text-sm text-slate-900">{{ household.street_name || '—' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">House/Lot Number</dt>
-                            <dd class="mt-1 text-sm text-slate-900">{{ household.house_lot || '—' }}</dd>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">House Number</dt>
+                            <dd class="mt-1 text-sm text-slate-900">{{ household.house_number ?? '—' }}</dd>
                         </div>
                         <div>
                             <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Number of House Story</dt>
@@ -216,18 +216,19 @@
                             <p v-if="editErrors.street_id" class="rbim-error">{{ editErrors.street_id }}</p>
                         </div>
                         <div>
-                            <label for="detail_house_lot" class="rbim-label">House/Lot Number</label>
+                            <label for="detail_house_number" class="rbim-label">House Number</label>
                             <input
-                                id="detail_house_lot"
-                                :value="editForm.house_lot"
+                                id="detail_house_number"
+                                :value="editForm.house_number"
                                 type="text"
                                 inputmode="numeric"
-                                maxlength="45"
+                                maxlength="10"
                                 class="rbim-input"
-                                :class="{ 'rbim-input-error': editErrors.house_lot }"
-                                @input="editForm.house_lot = digitsOnly($event.target.value)"
+                                :class="{ 'rbim-input-error': editErrors.house_number }"
+                                @input="assignHouseNumber(editForm, editErrors, $event.target.value)"
                             >
-                            <p v-if="editErrors.house_lot" class="rbim-error">{{ editErrors.house_lot }}</p>
+                            <p v-if="editErrors.house_number" class="rbim-error">{{ editErrors.house_number }}</p>
+                            <p v-else class="rbim-hint">Numbers only.</p>
                         </div>
                         <div>
                             <label for="detail_number_of_house_story" class="rbim-label">
@@ -385,8 +386,8 @@ import * as householdService from '@/services/householdService';
 import * as lookupService from '@/services/lookupService';
 import { ageFromDateOfBirth, formatDate, formatDateTime } from '@/utils/format';
 import { canPerformUpdate } from '@/utils/residentProfiling';
-import { applyValidationErrors, householdStructureFromRecord, householdStructurePayload, optionalAddressText, toId, validateHouseholdStructure } from '@/utils/residentForm';
-import { digitsOnly, houseLotValidationError } from '@/utils/validation';
+import { applyValidationErrors, householdStructureFromRecord, householdStructurePayload, toId, validateHouseholdStructure } from '@/utils/residentForm';
+import { assignHouseNumber, houseNumberValidationError, optionalHouseNumber } from '@/utils/validation';
 import {
     emptyHouseholdQuestionLookups,
     emptyHouseholdQuestionsForm,
@@ -447,7 +448,7 @@ const canUpdatePets = computed(() => hasPermission('petcensus.update'));
 function emptyEditForm() {
     return {
         street_id: '',
-        house_lot: '',
+        house_number: '',
         number_of_house_story: 1,
         has_basement: '',
         number_of_basement_level: '',
@@ -538,7 +539,7 @@ function startEdit() {
     editing.value = true;
     Object.assign(editForm, {
         street_id: household.value.street_id ?? '',
-        house_lot: household.value.house_lot ?? '',
+        house_number: household.value.house_number ?? '',
         ...householdStructureFromRecord(household.value),
         household_status_id: household.value.household_status_id ?? '',
     });
@@ -637,10 +638,10 @@ async function handleUpdate() {
 
     validateHouseholdStructure(editForm, editErrors);
 
-    const houseLotError = houseLotValidationError(editForm.house_lot);
+    const houseNumberError = houseNumberValidationError(editForm.house_number);
 
-    if (houseLotError) {
-        editErrors.house_lot = houseLotError;
+    if (houseNumberError) {
+        editErrors.house_number = houseNumberError;
     }
 
     if (canUpdateQuestions.value) {
@@ -670,7 +671,7 @@ async function handleUpdate() {
     try {
         await householdService.updateHousehold(route.params.id, {
             street_id: toId(editForm.street_id),
-            house_lot: optionalAddressText(editForm.house_lot),
+            house_number: optionalHouseNumber(editForm.house_number),
             ...householdStructurePayload(editForm),
             household_status_id: toId(editForm.household_status_id),
         });

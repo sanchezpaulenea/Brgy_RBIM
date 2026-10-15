@@ -140,6 +140,17 @@ class MigrationClassifier
         return $parsed?->toDateString() ?? $value;
     }
 
+    /**
+     * Intend-of-stay is month precision and must fall in a later month than the transfer.
+     */
+    public static function intendStayIsAfterTransfer(mixed $intendStay, mixed $transferDate): bool
+    {
+        $stay = self::parseTransferDate($intendStay);
+        $transfer = self::parseTransferDate($transferDate);
+
+        return $stay !== null && $transfer !== null && $stay->greaterThan($transfer);
+    }
+
     private static function comparablePlace(mixed $value): string
     {
         if (! is_string($value)) {

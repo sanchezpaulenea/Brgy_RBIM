@@ -19,9 +19,11 @@ class UpdateHouseholdRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->mergeNormalizedAddressFields([
-            'house_lot',
-        ]);
+        if ($this->exists('house_number')) {
+            $this->merge([
+                'house_number' => $this->normalizeHouseNumber($this->input('house_number')),
+            ]);
+        }
         $this->mergeBasementLevelFromAnswer();
     }
 
@@ -33,7 +35,7 @@ class UpdateHouseholdRequest extends FormRequest
         return [
             'clan_id' => ['sometimes', 'integer', Rule::exists('clan', 'clan_id')],
             'street_id' => ['sometimes', 'integer', Rule::exists('street', 'street_id')],
-            'house_lot' => ['sometimes', 'nullable', 'string', 'max:45', 'regex:/^\\d+$/'],
+            'house_number' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:2147483647'],
             'number_of_house_story' => ['sometimes', 'required', 'integer', 'min:1', 'max:50'],
             'has_basement' => ['sometimes', 'required', 'boolean'],
             'number_of_basement_level' => [
@@ -68,7 +70,9 @@ class UpdateHouseholdRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'house_lot.regex' => 'House number may only contain numbers.',
+            'house_number.integer' => 'House number must contain numbers only.',
+            'house_number.min' => 'House number must contain numbers only.',
+            'house_number.max' => 'House number is too large.',
             'clan_id.exists' => 'The selected clan does not exist.',
             'street_id.exists' => 'The selected street does not exist.',
             'household_status_id.exists' => 'The selected household status does not exist.',
@@ -93,7 +97,7 @@ class UpdateHouseholdRequest extends FormRequest
                 $updatable = [
                     'clan_id',
                     'street_id',
-                    'house_lot',
+                    'house_number',
                     'number_of_house_story',
                     'has_basement',
                     'number_of_basement_level',

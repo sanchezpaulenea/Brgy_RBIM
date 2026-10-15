@@ -54,7 +54,7 @@ class HouseholdServices
                     'street_id' => $data['street_id'],
                     'number_of_house_story' => $data['number_of_house_story'],
                     'number_of_basement_level' => $this->basementLevelFromData($data),
-                    'house_lot' => $data['house_lot'] ?? null,
+                    'house_number' => $data['house_number'] ?? null,
                     'registration_date' => now(),
                     'household_status_id' => $data['household_status_id'] ?? HouseholdStatus::ACTIVE,
                     'head_resident_id' => 0,
@@ -263,7 +263,7 @@ class HouseholdServices
             'clan_name' => $household->clan?->clan_name,
             'street_id' => $household->street_id,
             'street_name' => $household->street?->street_name,
-            'house_lot' => $household->house_lot,
+            'house_number' => $household->house_number,
             'number_of_house_story' => $household->number_of_house_story,
             'number_of_basement_level' => $household->number_of_basement_level,
             'registration_date' => $household->registration_date?->toDateTimeString(),
@@ -318,7 +318,7 @@ class HouseholdServices
             'clan_name' => $household->clan?->clan_name,
             'street_id' => $household->street_id,
             'street_name' => $household->street?->street_name,
-            'house_lot' => $household->house_lot,
+            'house_number' => $household->house_number,
             'number_of_house_story' => $household->number_of_house_story,
             'number_of_basement_level' => $household->number_of_basement_level,
             'registration_date' => $household->registration_date?->toDateTimeString(),
@@ -431,7 +431,7 @@ class HouseholdServices
      * @return array{
      *     clan: string,
      *     street: string,
-     *     house lot: string,
+     *     house number: string,
      *     house stories: string,
      *     basement levels: string,
      *     status: string
@@ -444,7 +444,7 @@ class HouseholdServices
         return [
             'clan' => (string) ($household->clan?->clan_name ?? $household->clan_id),
             'street' => (string) ($household->street?->street_name ?? $household->street_id),
-            'house lot' => (string) ($household->house_lot ?? ''),
+            'house number' => (string) ($household->house_number ?? ''),
             'house stories' => (string) ($household->number_of_house_story ?? ''),
             'basement levels' => (string) ($household->number_of_basement_level ?? ''),
             'status' => (string) ($household->status?->household_status ?? $household->household_status_id),
@@ -455,7 +455,7 @@ class HouseholdServices
      * @param  array{
      *     clan: string,
      *     street: string,
-     *     house lot: string,
+     *     house number: string,
      *     house stories: string,
      *     basement levels: string,
      *     status: string
@@ -501,12 +501,14 @@ class HouseholdServices
     {
         $message = strtolower($exception->getMessage());
 
-        if (! str_contains($message, 'uq_lot_blk') && ! str_contains($message, 'house_lot')) {
+        if (! str_contains($message, 'uq_lot_blk')
+            && ! str_contains($message, 'uq_address')
+            && ! str_contains($message, 'house_number')) {
             throw $exception;
         }
 
         throw ValidationException::withMessages([
-            'house_lot' => 'A household with this house/lot number already exists.',
+            'house_number' => 'A household with this house number already exists.',
         ]);
     }
 

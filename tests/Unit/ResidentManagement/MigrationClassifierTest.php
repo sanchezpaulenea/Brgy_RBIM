@@ -63,6 +63,15 @@ class MigrationClassifierTest extends TestCase
         Carbon::setTestNow();
     }
 
+    public function test_intend_of_stay_must_be_after_the_transfer_month(): void
+    {
+        $this->assertTrue(MigrationClassifier::intendStayIsAfterTransfer('2024-05-01', '2024-04-01'));
+        $this->assertTrue(MigrationClassifier::intendStayIsAfterTransfer('2024-05', '2024-04-18'));
+        $this->assertFalse(MigrationClassifier::intendStayIsAfterTransfer('2024-04-01', '2024-04-18'));
+        $this->assertFalse(MigrationClassifier::intendStayIsAfterTransfer('2024-03-01', '2024-04-01'));
+        $this->assertFalse(MigrationClassifier::intendStayIsAfterTransfer(null, '2024-04-01'));
+    }
+
     public function test_place_normalization_title_cases_and_collapses_spaces(): void
     {
         $this->assertSame('Baguio City', MigrationClassifier::normalizePlace('  baguio   city '));
