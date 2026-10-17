@@ -36,7 +36,10 @@ interface PetCensusRepositoryInterface
 
     public function findOrCreateSpecieId(string $label): int;
 
-    public function findOrCreateBreedId(string $label): int;
+    /**
+     * A newly created breed is recorded under the given species.
+     */
+    public function findOrCreateBreed(string $label, int $specieId): Breed;
 
     /**
      * @param  array<string, mixed>  $attributes

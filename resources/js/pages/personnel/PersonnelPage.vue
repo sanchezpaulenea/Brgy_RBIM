@@ -86,6 +86,22 @@
                         :error="formErrors.personnel_date_of_birth"
                         @update:model-value="clearDateOfBirthError"
                     />
+                    <div>
+                        <label for="personnel_sex" class="rbim-label">Sex<span class="rbim-required">*</span></label>
+                        <select
+                            id="personnel_sex"
+                            v-model="form.sex_id"
+                            class="rbim-input"
+                            :class="{ 'rbim-input-error': formErrors.sex_id }"
+                            @change="delete formErrors.sex_id"
+                        >
+                            <option value="" disabled>Select sex</option>
+                            <option v-for="option in SEX_OPTIONS" :key="option.id" :value="option.id">
+                                {{ option.label }}
+                            </option>
+                        </select>
+                        <p v-if="formErrors.sex_id" class="rbim-error">{{ formErrors.sex_id }}</p>
+                    </div>
                     <div class="sm:col-span-2">
                         <PositionCombobox
                             v-model="form.position_id"
@@ -211,12 +227,18 @@ import * as personnelService from '@/services/personnelService';
 import { todayDate, matchesSearch } from '@/utils/format';
 import { personnelNameValidationError, positionNameValidationError } from '@/utils/validation';
 
+const SEX_OPTIONS = [
+    { id: 1, label: 'Male' },
+    { id: 2, label: 'Female' },
+];
+
 const emptyForm = () => ({
     personnel_last_name: '',
     personnel_first_name: '',
     personnel_middle_name: '',
     personnel_suffix: '',
     personnel_date_of_birth: '',
+    sex_id: '',
     personnel_status_id: 1,
     position_id: '',
     position_name: '',
@@ -331,6 +353,7 @@ function startEdit(person) {
         personnel_middle_name: person.personnel_middle_name ?? '',
         personnel_suffix: person.personnel_suffix ?? '',
         personnel_date_of_birth: person.personnel_date_of_birth?.slice?.(0, 10) ?? '',
+        sex_id: person.sex_id ?? '',
         personnel_status_id: person.personnel_status_id ?? 1,
         position_id: person.position_id ?? '',
         position_name: person.position_name ?? '',
@@ -368,6 +391,7 @@ function buildPayload(confirmDuplicate = false) {
         personnel_middle_name: form.personnel_middle_name.trim(),
         personnel_suffix: form.personnel_suffix.trim(),
         personnel_date_of_birth: form.personnel_date_of_birth,
+        sex_id: Number(form.sex_id),
         confirm_duplicate: confirmDuplicate,
     };
 
@@ -486,6 +510,10 @@ async function handleSave() {
         formErrors.personnel_date_of_birth = 'Date of birth is required.';
     }
 
+    if (!form.sex_id) {
+        formErrors.sex_id = 'Sex is required.';
+    }
+
     if (!form.position_id && !form.position_name.trim()) {
         formErrors.position_name = 'Position is required.';
     }
@@ -575,6 +603,7 @@ async function handleStatusChange(person, event) {
             personnel_middle_name: person.personnel_middle_name ?? '',
             personnel_suffix: person.personnel_suffix ?? '',
             personnel_date_of_birth: person.personnel_date_of_birth?.slice?.(0, 10) ?? '',
+            ...(person.sex_id ? { sex_id: Number(person.sex_id) } : {}),
             position_id: Number(person.position_id),
             personnel_status_id: nextStatusId,
             confirm_duplicate: true,

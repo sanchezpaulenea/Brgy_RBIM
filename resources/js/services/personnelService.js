@@ -14,6 +14,8 @@ function asPersonnelRecord(person, extra = {}) {
         personnel_suffix: person.personnel_suffix ?? '',
         personnel_status_id: person.personnel_status_id ?? extra.personnel_status_id ?? 1,
         personnel_date_of_birth: person.personnel_date_of_birth ?? '',
+        sex_id: person.sex_id ?? null,
+        sex: person.sex ?? null,
         username: extra.username ?? person.username ?? null,
         linked: Boolean(extra.username ?? person.username),
         label: personnelDisplayName({
@@ -85,6 +87,7 @@ export async function createPersonnel(payload) {
         personnel_middle_name: payload.personnel_middle_name || null,
         personnel_suffix: payload.personnel_suffix || null,
         personnel_date_of_birth: payload.personnel_date_of_birth,
+        sex_id: payload.sex_id ? Number(payload.sex_id) : null,
         personnel_status_id: Number(payload.personnel_status_id || 1),
         confirm_duplicate: Boolean(payload.confirm_duplicate),
     };

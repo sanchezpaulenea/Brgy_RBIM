@@ -30,6 +30,19 @@ export function allowedSpeciesOptions(species = []) {
     });
 }
 
+/**
+ * Breeds without a species (such as "Not Applicable") fit every species.
+ */
+export function breedsForSpecie(breeds = [], specieId = null) {
+    if (specieId === null || specieId === undefined || specieId === '') {
+        return breeds ?? [];
+    }
+
+    return (breeds ?? []).filter((breed) => (
+        breed.specie_id === null || breed.specie_id === undefined || String(breed.specie_id) === String(specieId)
+    ));
+}
+
 export function emptyPetForm(record = null) {
     return {
         pet_census_id: record?.pet_census_id ?? null,

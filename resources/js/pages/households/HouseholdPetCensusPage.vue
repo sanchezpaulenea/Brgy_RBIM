@@ -57,7 +57,7 @@
                     <label for="pet-breed" class="rbim-label">Breed</label>
                     <select id="pet-breed" v-model="filters.breed_id" class="rbim-input py-2">
                         <option value="">All breeds</option>
-                        <option v-for="breed in options.breeds" :key="breed.id" :value="String(breed.id)">
+                        <option v-for="breed in filterBreeds" :key="breed.id" :value="String(breed.id)">
                             {{ breed.label }}
                         </option>
                     </select>
@@ -180,7 +180,7 @@ import { useSectionTabs } from '@/composables/useSectionTabs';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
 import { formatDate } from '@/utils/format';
-import { emptyPetForm, emptyPetLookups, isAllowedPetSpecies, petPayload, validatePetForm, yesNoLabel } from '@/utils/petCensus';
+import { breedsForSpecie, emptyPetForm, emptyPetLookups, isAllowedPetSpecies, petPayload, validatePetForm, yesNoLabel } from '@/utils/petCensus';
 import { applyValidationErrors } from '@/utils/residentForm';
 
 const { hasPermission } = useAuth();
@@ -211,6 +211,17 @@ const filters = reactive({
     specie_id: '',
     breed_id: '',
 });
+
+const filterBreeds = computed(() => breedsForSpecie(options.breeds, filters.specie_id));
+
+watch(
+    () => filters.specie_id,
+    () => {
+        if (filters.breed_id && !filterBreeds.value.some((breed) => String(breed.id) === filters.breed_id)) {
+            filters.breed_id = '';
+        }
+    },
+);
 
 const filtersAreActive = computed(() => (
     Boolean(filters.search || filters.pet_status_id || filters.specie_id || filters.breed_id)

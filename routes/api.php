@@ -5,6 +5,7 @@ use App\Http\Controllers\Authentication\PasswordController;
 use App\Http\Controllers\BarangayPersonnel\BarangayPersonnelController;
 use App\Http\Controllers\BarangayPersonnel\PersonnelController;
 use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HouseholdManagament\HouseholdController;
 use App\Http\Controllers\HouseholdManagament\HouseholdQuestionsController;
 use App\Http\Controllers\HouseholdManagament\PetCensusController;
@@ -153,6 +154,8 @@ Route::prefix('v1')->group(function () {
         Route::get('toilet-facility-types', [LookupController::class, 'index'])->defaults('lookup', 'toilet-facility-type')->name('toilet-facility-types.index');
         Route::get('building-house-types', [LookupController::class, 'index'])->defaults('lookup', 'building-house-type')->name('building-house-types.index');
         Route::get('construction-material-outer-walls', [LookupController::class, 'index'])->defaults('lookup', 'construction-material-outer-wall')->name('construction-material-outer-walls.index');
+
+        Route::get('dashboard/statistics', [DashboardController::class, 'statistics'])->name('dashboard.statistics');
 
         Route::middleware('system.admin')->group(function () {
             Route::get('users/create-options', [UserController::class, 'createOptions'])->name('users.create-options');

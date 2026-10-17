@@ -302,12 +302,18 @@ enum LookupType: string
         $labelColumn = $this->labelColumn();
 
         if ($idColumn !== null && $labelColumn !== null) {
-            return [
+            $formatted = [
                 'id' => $model->getKey(),
                 'label' => (string) $model->getAttribute($labelColumn),
                 $idColumn => $model->getKey(),
                 $labelColumn => $model->getAttribute($labelColumn),
             ];
+
+            if ($this === self::Breed) {
+                $formatted['specie_id'] = $model->getAttribute('specie_id');
+            }
+
+            return $formatted;
         }
 
         return match ($this) {

@@ -38,6 +38,7 @@ class StorePersonnelRequest extends FormRequest
             'personnel_middle_name' => ['nullable', 'string', 'max:45', new ValidPersonnelName],
             'personnel_suffix' => ['nullable', 'string', 'max:10', new ValidPersonnelName],
             'personnel_date_of_birth' => ['required', 'date', 'before_or_equal:today'],
+            'sex_id' => ['required', 'integer', Rule::exists('sex', 'sex_id')],
             'personnel_status_id' => ['sometimes', 'integer', Rule::exists('personnel_status', 'personnel_status_id')],
             'confirm_duplicate' => ['sometimes', 'boolean'],
             'position_id' => [
@@ -67,6 +68,8 @@ class StorePersonnelRequest extends FormRequest
             'personnel_first_name.required' => 'First name is required.',
             'personnel_date_of_birth.required' => 'Date of birth is required.',
             'personnel_date_of_birth.before_or_equal' => 'Date of birth cannot be in the future.',
+            'sex_id.required' => 'Sex is required.',
+            'sex_id.exists' => 'The selected sex does not exist.',
             'personnel_status_id.exists' => 'The selected personnel status does not exist.',
             'position_id.required_without' => 'Select an existing position or enter a new position name.',
             'position_id.exists' => 'The selected personnel position does not exist.',

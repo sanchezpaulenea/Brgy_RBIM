@@ -4,6 +4,7 @@ namespace App\Models\UserManagement;
 
 use App\Models\BarangayPersonnel\BarangayPersonnel;
 use App\Models\Logs\UserLog;
+use App\Models\ResidentManagement\Demographic\Sex;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -174,6 +175,19 @@ class User extends Authenticatable
             : substr(md5($this->avatar_path), 0, 8);
 
         return '/api/v1/auth/profile/avatar?v='.$version;
+    }
+
+    /**
+     * The avatar follows the sex on the linked personnel record. Accounts
+     * without one keep their stored preset.
+     */
+    public function resolvedAvatarPreset(): ?string
+    {
+        return match ((int) $this->personnel?->sex_id) {
+            Sex::MALE => self::AVATAR_MALE,
+            Sex::FEMALE => self::AVATAR_FEMALE,
+            default => $this->avatar_preset,
+        };
     }
 
     /**
