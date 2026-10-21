@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Oct 18, 2026 at 08:55 PM
+-- Generation Time: Oct 20, 2026 at 11:37 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.4.0
 
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS `audit_log` (
   PRIMARY KEY (`audit_id`),
   KEY `action` (`action_id`),
   KEY `audit_user` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=57 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=78 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `audit_log`
@@ -120,7 +120,28 @@ INSERT INTO `audit_log` (`audit_id`, `user_id`, `action_id`, `record_id`, `descr
 (53, 2, 2, 23, 'Session ended because the account was signed in on another device.', NULL, 'concurrent_login', '2026-10-09 20:55:24', 'session', 'user_log'),
 (54, 2, 1, 4, 'Create education', NULL, 'College level', '2026-10-09 21:01:45', 'record', 'education'),
 (55, 2, 1, 3, 'Create health', NULL, 'GSIS', '2026-10-09 21:10:56', 'record', 'health'),
-(56, 1, 2, 6, 'Update system setting', 'brgyhappyhallow@gmail.com', 'bchallowhappy@gmail.com', '2026-10-09 23:51:25', 'barangay_email', 'system_setting');
+(56, 1, 2, 6, 'Update system setting', 'brgyhappyhallow@gmail.com', 'bchallowhappy@gmail.com', '2026-10-09 23:51:25', 'barangay_email', 'system_setting'),
+(57, 2, 2, 608, 'Updated household head', 'Abuan, Frederick Segundo', 'ABUAN, LIBERTY CASTILLONES', '2026-10-19 22:24:43', 'head', 'household'),
+(58, 2, 2, 813, 'Updated resident name', 'ABUAN, FREDERICK SEGUNDO', 'Abuan, Frederick Segundo', '2026-10-19 22:24:43', 'name', 'resident'),
+(59, 2, 2, 813, 'Updated resident relationship', 'Head', 'Spouse', '2026-10-19 22:24:43', 'relationship', 'resident'),
+(60, 2, 2, 813, 'Updated resident birth city', '', 'Baguio', '2026-10-19 22:24:43', 'birth city', 'resident'),
+(61, 2, 2, 813, 'Updated resident birth province', '', 'Benguet', '2026-10-19 22:24:43', 'birth province', 'resident'),
+(62, 2, 2, 813, 'Updated resident birth country', '', 'Province', '2026-10-19 22:24:43', 'birth country', 'resident'),
+(63, 2, 2, 813, 'Updated resident status', 'Active', 'Deceased', '2026-10-19 22:24:43', 'status', 'resident'),
+(64, 2, 2, 447, 'Updated household status', 'Active', 'Inactive', '2026-10-19 22:30:34', 'status', 'household'),
+(65, 2, 2, 167, 'Updated resident name', 'COBEBE, DOMINGO A.', 'Cobebe, Domingo A.', '2026-10-19 22:30:34', 'name', 'resident'),
+(66, 2, 2, 167, 'Updated resident birth city', '', 'Baguio City', '2026-10-19 22:30:34', 'birth city', 'resident'),
+(67, 2, 2, 167, 'Updated resident birth province', '', 'Benguet', '2026-10-19 22:30:34', 'birth province', 'resident'),
+(68, 2, 2, 167, 'Updated resident birth country', '', 'Philippines', '2026-10-19 22:30:34', 'birth country', 'resident'),
+(69, 2, 2, 167, 'Updated resident marital status', '', 'Married', '2026-10-19 22:30:34', 'marital status', 'resident'),
+(70, 2, 2, 167, 'Updated resident status', 'Active', 'Deceased', '2026-10-19 22:30:34', 'status', 'resident'),
+(71, 2, 2, 388, 'Updated resident name', 'LAYOG, ZHAIDER JHED PELINGAN', 'Layog, Zhaiden Jhed Pelingan', '2026-10-19 22:32:51', 'name', 'resident'),
+(72, 2, 2, 388, 'Updated resident birth city', '', 'Baguio City', '2026-10-19 22:32:51', 'birth city', 'resident'),
+(73, 2, 2, 388, 'Updated resident birth province', '', 'Benguet', '2026-10-19 22:32:51', 'birth province', 'resident'),
+(74, 2, 2, 388, 'Updated resident birth country', '', 'Philippines', '2026-10-19 22:32:51', 'birth country', 'resident'),
+(75, 2, 1, 2049, 'Create resident', NULL, 'Layog, Zhaira Gae Kimmayong', '2026-10-19 22:41:28', 'record', 'resident'),
+(76, 2, 2, 31, 'Session ended because the account was signed in on another device.', NULL, 'concurrent_login', '2026-10-20 00:34:38', 'session', 'user_log'),
+(77, 1, 2, 14, 'Update system setting', 'Uploaded', 'Uploaded', '2026-10-20 19:34:39', 'punong_barangay_signature', 'system_setting');
 
 -- --------------------------------------------------------
 
@@ -1747,7 +1768,7 @@ INSERT INTO `household` (`household_id`, `clan_id`, `head_resident_id`, `street_
 (444, NULL, 158, 1, NULL, NULL, '218', '2026-10-19 03:57:44', 1),
 (445, NULL, 159, 1, NULL, NULL, '106-B', '2026-10-19 03:57:44', 1),
 (446, NULL, 162, 1, NULL, NULL, '161', '2026-10-19 03:57:44', 1),
-(447, NULL, 167, 1, NULL, NULL, '181', '2026-10-19 03:57:44', 1),
+(447, NULL, 167, 1, NULL, NULL, '181', '2026-10-19 03:57:44', 2),
 (448, NULL, 168, 1, NULL, NULL, '175', '2026-10-19 03:57:44', 1),
 (449, NULL, 174, 1, NULL, NULL, '135', '2026-10-19 03:57:44', 1),
 (450, NULL, 175, 1, NULL, NULL, '49', '2026-10-19 03:57:44', 1),
@@ -1908,7 +1929,7 @@ INSERT INTO `household` (`household_id`, `clan_id`, `head_resident_id`, `street_
 (605, NULL, 804, 2, NULL, NULL, '68', '2026-10-19 03:57:44', 1),
 (606, NULL, 809, 2, NULL, NULL, '15', '2026-10-19 03:57:44', 1),
 (607, NULL, 1095, 3, NULL, NULL, '5', '2026-10-19 03:57:44', 1),
-(608, NULL, 813, 3, NULL, NULL, '10', '2026-10-19 03:57:44', 1),
+(608, NULL, 815, 3, NULL, NULL, '10', '2026-10-19 03:57:44', 1),
 (609, NULL, 819, 3, NULL, NULL, '51', '2026-10-19 03:57:44', 1),
 (610, NULL, 827, 3, NULL, NULL, '73', '2026-10-19 03:57:44', 1),
 (611, NULL, 824, 3, NULL, NULL, '193', '2026-10-19 03:57:44', 1),
@@ -2703,7 +2724,7 @@ CREATE TABLE IF NOT EXISTS `resident` (
   KEY `resident_clan` (`clan_id`),
   KEY `resident_status` (`resident_status_id`),
   KEY `sex` (`sex_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2049 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2050 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `resident`
@@ -2875,7 +2896,7 @@ INSERT INTO `resident` (`resident_id`, `last_name`, `first_name`, `middle_name`,
 (164, 'CIANO', 'JAYSON', 'DONATO', NULL, 3, 1, '1984-06-21', NULL, NULL, NULL, NULL, 3, 18, 1, NULL, 1, 446),
 (165, 'CIANO', 'JASMIN', 'DONATO', NULL, 4, 2, '1988-07-07', NULL, NULL, NULL, NULL, 3, 18, 1, NULL, 1, 446),
 (166, 'CIANO', 'JORDAN', 'DONATO', NULL, 3, 1, '1989-11-22', NULL, NULL, NULL, NULL, 3, 18, 1, NULL, 1, 446),
-(167, 'COBEBE', 'DOMINGO', 'A.', NULL, 1, 1, '1939-06-12', NULL, NULL, NULL, NULL, 1, 9, NULL, NULL, 1, 447),
+(167, 'Cobebe', 'Domingo', 'A.', NULL, 1, 1, '1939-06-12', 'Baguio City', 'Benguet', 'Philippines', NULL, 1, 9, 2, NULL, 3, 447),
 (168, 'COBEBE', 'PETER', 'TACO-ENG', NULL, 1, 1, '1966-06-16', NULL, NULL, NULL, NULL, 1, 50, 2, NULL, 1, 448),
 (169, 'COBEBE', 'DORIS', 'MILLES', NULL, 2, 2, '1974-12-05', NULL, NULL, NULL, NULL, 1, 50, 2, NULL, 1, 448),
 (170, 'COBEBE', 'MELODY', 'BANTASAN', NULL, 4, 2, '1991-11-29', NULL, NULL, NULL, NULL, 1, 50, 1, NULL, 1, 448),
@@ -3096,7 +3117,7 @@ INSERT INTO `resident` (`resident_id`, `last_name`, `first_name`, `middle_name`,
 (385, 'LAYOG', 'GASPAR', 'BALTENG', NULL, 1, 1, '1957-01-06', NULL, NULL, NULL, NULL, NULL, 9, 2, NULL, 1, 509),
 (386, 'LAYOG', 'MARY', 'PELINGAN', NULL, 2, 2, '1963-12-24', NULL, NULL, NULL, NULL, NULL, 55, 2, NULL, 1, 509),
 (387, 'LAYOG', 'GERALDSON', 'PELINGAN', NULL, 3, 1, '1996-11-27', NULL, NULL, NULL, NULL, NULL, 55, 1, NULL, 1, 509),
-(388, 'LAYOG', 'ZHAIDER JHED', 'PELINGAN', NULL, 9, 1, '2019-01-23', NULL, NULL, NULL, NULL, NULL, NULL, 1, NULL, 1, 509),
+(388, 'Layog', 'Zhaiden Jhed', 'Pelingan', NULL, 9, 1, '2019-01-23', 'Baguio City', 'Benguet', 'Philippines', NULL, NULL, NULL, 1, NULL, 1, 509),
 (389, 'PELINGAN', 'GLEIRECA', '', NULL, NULL, 2, '2003-03-03', NULL, NULL, NULL, NULL, NULL, NULL, 1, NULL, 1, 509),
 (390, 'KIMAYONG', 'ANALIZA', '', NULL, NULL, 2, '1992-03-23', NULL, NULL, NULL, NULL, NULL, NULL, 1, NULL, 1, 509),
 (391, 'MAGSINGIT', 'EDNA', 'D.', NULL, NULL, 2, '1958-08-21', NULL, NULL, NULL, NULL, 5, 9, NULL, NULL, 1, 422),
@@ -3522,9 +3543,9 @@ INSERT INTO `resident` (`resident_id`, `last_name`, `first_name`, `middle_name`,
 (810, 'PERALTA', 'FREDDIE', '', NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 563),
 (811, 'PERALTA', 'CECILE', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 563),
 (812, 'ABUAN', 'FLORA', 'S.', NULL, NULL, 2, NULL, NULL, NULL, NULL, NULL, 9, NULL, 2, NULL, 1, 607),
-(813, 'ABUAN', 'FREDERICK', 'SEGUNDO', NULL, 1, 1, '1984-02-02', NULL, NULL, NULL, NULL, NULL, 16, 1, NULL, 1, 608),
+(813, 'Abuan', 'Frederick', 'Segundo', NULL, 2, 1, '1984-02-02', 'Baguio', 'Benguet', 'Province', NULL, NULL, 16, 1, NULL, 3, 608),
 (814, 'ABUAN', 'MARVIN', 'RIMAS', NULL, NULL, 1, '1980-03-05', NULL, NULL, NULL, NULL, NULL, 52, NULL, NULL, 1, 608),
-(815, 'ABUAN', 'LIBERTY', 'CASTILLONES', NULL, NULL, 2, '1989-12-26', NULL, NULL, NULL, NULL, NULL, 52, NULL, NULL, 1, 608),
+(815, 'ABUAN', 'LIBERTY', 'CASTILLONES', NULL, 1, 2, '1989-12-26', NULL, NULL, NULL, NULL, NULL, 52, NULL, NULL, 1, 608),
 (816, 'ABUAN', 'MARK STEVEN', 'CASTILLONES', NULL, NULL, 1, '2010-05-19', NULL, NULL, NULL, NULL, NULL, 52, NULL, NULL, 1, 608),
 (817, 'ABUAN', 'JAMES IVAN', 'CASTILLONES', NULL, NULL, 1, '2012-07-27', NULL, NULL, NULL, NULL, NULL, 52, NULL, NULL, 1, 608),
 (818, 'ABUAN', 'ZOE NATHALIE', 'CASTILLONES', NULL, NULL, 2, '2018-09-25', NULL, NULL, NULL, NULL, NULL, 52, NULL, NULL, 1, 608),
@@ -3601,9 +3622,9 @@ INSERT INTO `resident` (`resident_id`, `last_name`, `first_name`, `middle_name`,
 (889, 'BUSTOS', 'EISEN RUSSEL', 'S.', NULL, NULL, 1, '2004-06-25', NULL, NULL, NULL, NULL, 9, 16, 1, NULL, 1, 625),
 (890, 'BUSTOS', 'REAJEAN', 'S.', NULL, NULL, 2, '2005-10-19', NULL, NULL, NULL, NULL, 9, 16, 1, NULL, 1, 625),
 (891, 'BUSTOS', 'AARON JHONE', 'S.', NULL, NULL, 1, '2006-11-13', NULL, NULL, NULL, NULL, 9, 16, 1, NULL, 1, 625),
-(892, 'BUSTOS', 'REESE REAN', 'S.', NULL, NULL, 2, '2008-12-31', NULL, NULL, NULL, NULL, 9, 16, 1, NULL, 1, 625),
-(893, 'BUSTOS', 'VICREJUL GRANT', 'S.', NULL, NULL, 1, '2011-12-08', NULL, NULL, NULL, NULL, 9, 16, 1, NULL, 1, 625);
+(892, 'BUSTOS', 'REESE REAN', 'S.', NULL, NULL, 2, '2008-12-31', NULL, NULL, NULL, NULL, 9, 16, 1, NULL, 1, 625);
 INSERT INTO `resident` (`resident_id`, `last_name`, `first_name`, `middle_name`, `suffix`, `relationship_to_hh_id`, `sex_id`, `date_of_birth`, `birth_city_municipality`, `birth_province`, `birth_country`, `nationality_id`, `religion_id`, `ethnicity_id`, `marital_status_id`, `clan_id`, `resident_status_id`, `household_id`) VALUES
+(893, 'BUSTOS', 'VICREJUL GRANT', 'S.', NULL, NULL, 1, '2011-12-08', NULL, NULL, NULL, NULL, 9, 16, 1, NULL, 1, 625),
 (894, 'BUSTOS', 'OMEGA ROUN', 'S.', NULL, NULL, 2, '2013-08-05', NULL, NULL, NULL, NULL, 9, 16, 1, NULL, 1, 625),
 (895, 'CATORES', 'ADOR', 'BANTIDING', NULL, 1, 1, '1959-01-15', NULL, NULL, NULL, NULL, 17, 16, 2, NULL, 1, 626),
 (896, 'CATORES', 'JANE', 'PACSI', NULL, 2, 2, '1963-06-01', NULL, NULL, NULL, NULL, 17, 9, 2, NULL, 1, 626),
@@ -3978,7 +3999,8 @@ INSERT INTO `resident` (`resident_id`, `last_name`, `first_name`, `middle_name`,
 (1265, 'WANSI', 'MARY', 'LUCAS', NULL, 2, 2, '1983-04-10', NULL, NULL, NULL, NULL, 2, 60, 2, NULL, 1, 703),
 (1266, 'WANSI', 'KYNSHA', 'LUCAS', NULL, 4, 2, '2010-05-17', NULL, NULL, NULL, NULL, NULL, 60, 1, NULL, 1, 703),
 (1267, 'WANSI', 'EARLIE MAE', 'LUCAS', NULL, 4, 2, '2013-12-27', NULL, NULL, NULL, NULL, NULL, 60, 1, NULL, 1, 703),
-(1268, 'WANSI', 'LOUIE MAR', 'LUCAS', NULL, 3, 1, '2018-12-12', NULL, NULL, NULL, NULL, NULL, 60, 1, NULL, 1, 703);
+(1268, 'WANSI', 'LOUIE MAR', 'LUCAS', NULL, 3, 1, '2018-12-12', NULL, NULL, NULL, NULL, NULL, 60, 1, NULL, 1, 703),
+(2049, 'Layog', 'Zhaira Gae', 'Kimmayong', NULL, 10, 2, '2025-08-20', 'Baguio City', 'Benguet', 'Philippines', NULL, NULL, NULL, 1, NULL, 1, 509);
 
 --
 -- Triggers `resident`
@@ -4296,7 +4318,7 @@ CREATE TABLE IF NOT EXISTS `sex` (
   `sex_id` int NOT NULL AUTO_INCREMENT,
   `sex` varchar(10) NOT NULL,
   PRIMARY KEY (`sex_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `sex`
@@ -4304,7 +4326,8 @@ CREATE TABLE IF NOT EXISTS `sex` (
 
 INSERT INTO `sex` (`sex_id`, `sex`) VALUES
 (1, 'Male'),
-(2, 'Female');
+(2, 'Female'),
+(3, 'Other');
 
 -- --------------------------------------------------------
 
@@ -9824,7 +9847,7 @@ CREATE TABLE IF NOT EXISTS `system_setting` (
   `description` varchar(255) NOT NULL,
   PRIMARY KEY (`setting_id`),
   UNIQUE KEY `uq_setting_key` (`setting_key`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `system_setting`
@@ -9842,7 +9865,10 @@ INSERT INTO `system_setting` (`setting_id`, `setting_key`, `setting_value`, `dat
 (9, 'max_login_attempts', '5', 'int', 'Maximum attempts of login'),
 (10, 'account_lockout_minutes', '10', 'int', 'Account lockout minutes duration'),
 (11, 'session_timeout_minutes', '30', 'int', 'Session timeout minutes when idle'),
-(12, 'audit_log_retention_days', '365', 'int', 'Audit log retention days');
+(12, 'audit_log_retention_days', '365', 'int', 'Audit log retention days'),
+(13, 'punong_barangay_name', 'Soriano A. Palunan', 'string', 'Punong Barangay Name'),
+(14, 'punong_barangay_signature', 'signatures/punong_barangay.png', 'string', 'Punong Barangay Signature File Path'),
+(15, 'user_log_retention_days', '365', 'int', 'User log retention days');
 
 -- --------------------------------------------------------
 
@@ -9943,7 +9969,7 @@ CREATE TABLE IF NOT EXISTS `user_log` (
   PRIMARY KEY (`user_log_id`),
   KEY `user_log` (`user_id`),
   KEY `login_status` (`login_status_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `user_log`
@@ -9976,7 +10002,12 @@ INSERT INTO `user_log` (`user_log_id`, `user_id`, `login_time`, `logout_time`, `
 (28, 1, '2026-10-09 22:47:09', '2026-10-09 22:58:38', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (29, 2, '2026-10-09 23:07:59', '2026-10-09 23:26:24', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
 (30, 1, '2026-10-09 23:50:06', '2026-10-09 23:57:07', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
-(31, 2, '2026-10-15 19:09:26', '2026-10-15 19:09:26', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
+(31, 2, '2026-10-15 19:09:26', '2026-10-20 00:34:38', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(32, 2, '2026-10-20 00:34:36', '2026-10-20 00:45:39', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(33, 2, '2026-10-20 18:50:22', '2026-10-20 19:12:59', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(34, 2, '2026-10-20 19:16:04', '2026-10-20 19:34:01', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(35, 1, '2026-10-20 19:34:11', '2026-10-20 19:35:26', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App'),
+(36, 1, '2026-10-20 19:36:20', '2026-10-20 19:36:47', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) App');
 
 -- --------------------------------------------------------
 
