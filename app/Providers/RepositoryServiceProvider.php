@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Repositories\BarangayPersonnel\BarangayPersonnelRepository;
 use App\Repositories\BarangayPersonnel\PersonnelPositionRepository;
 use App\Repositories\CertificateRepository;
+use App\Repositories\DashboardRepository;
 use App\Repositories\HouseholdManagement\HouseholdQuestionsRepository;
 use App\Repositories\HouseholdManagement\HouseholdRepository;
 use App\Repositories\HouseholdManagement\PetCensusRepository;
@@ -12,6 +13,7 @@ use App\Repositories\HouseholdManagement\StreetRepository;
 use App\Repositories\Interfaces\BarangayPersonnel\BarangayPersonnelRepositoryInterface;
 use App\Repositories\Interfaces\BarangayPersonnel\PersonnelPositionRepositoryInterface;
 use App\Repositories\Interfaces\CertificateRepositoryInterface;
+use App\Repositories\Interfaces\DashboardRepositoryInterface;
 use App\Repositories\Interfaces\HouseholdManagement\HouseholdQuestionsRepositoryInterface;
 use App\Repositories\Interfaces\HouseholdManagement\HouseholdRepositoryInterface;
 use App\Repositories\Interfaces\HouseholdManagement\PetCensusRepositoryInterface;
@@ -103,6 +105,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(CtcRepositoryInterface::class, CtcRepository::class);
         $this->app->bind(SkillRepositoryInterface::class, SkillRepository::class);
         $this->app->bind(ReportRepositoryInterface::class, ReportRepository::class);
+        $this->app->bind(DashboardRepositoryInterface::class, DashboardRepository::class);
         $this->app->bind(CertificateRepositoryInterface::class, CertificateRepository::class);
         $this->app->bind(TypeOfCertificateRepositoryInterface::class, TypeOfCertificateRepository::class);
     }

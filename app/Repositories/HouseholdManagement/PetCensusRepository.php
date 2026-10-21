@@ -114,9 +114,15 @@ class PetCensusRepository implements PetCensusRepositoryInterface
         return Specie::findOrCreateByLabel($label)->specie_id;
     }
 
-    public function findOrCreateBreedId(string $label): int
+    public function findOrCreateBreed(string $label, int $specieId): Breed
     {
-        return Breed::findOrCreateByLabel($label)->breed_id;
+        $breed = Breed::findOrCreateByLabel($label);
+
+        if ($breed->wasRecentlyCreated) {
+            $breed->update(['specie_id' => $specieId]);
+        }
+
+        return $breed;
     }
 
     public function findById(int $petCensusId): ?PetCensus

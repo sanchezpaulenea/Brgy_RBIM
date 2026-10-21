@@ -57,6 +57,7 @@ class PetCensusService
                     ->map(fn ($breed) => [
                         'id' => $breed->breed_id,
                         'label' => $breed->breed,
+                        'specie_id' => $breed->specie_id,
                     ])
                     ->values()
                     ->all(),
@@ -246,9 +247,18 @@ class PetCensusService
             ]);
         }
 
+        $specieId = $this->petCensusRepository->findOrCreateSpecieId($specie);
+        $breed = $this->petCensusRepository->findOrCreateBreed($this->titleCaseLookup((string) $data['breed']), $specieId);
+
+        if ($breed->belongsToOtherSpecie($specieId)) {
+            throw ValidationException::withMessages([
+                'breed' => [$breed->breed.' is not a '.$specie.' breed.'],
+            ]);
+        }
+
         $attributes = [
-            'specie_id' => $this->petCensusRepository->findOrCreateSpecieId($specie),
-            'breed_id' => $this->petCensusRepository->findOrCreateBreedId($this->titleCaseLookup((string) $data['breed'])),
+            'specie_id' => $specieId,
+            'breed_id' => $breed->breed_id,
             'sex_id' => $data['sex_id'],
             'pet_date_of_birth' => $this->nullableDate($data['pet_date_of_birth'] ?? null),
             'is_spay_neuter' => $data['is_spay_neuter'],

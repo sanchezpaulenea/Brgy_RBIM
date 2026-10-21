@@ -18,7 +18,13 @@ class Breed extends Model
 
     protected $fillable = [
         'breed',
+        'specie_id',
     ];
+
+    public function belongsToOtherSpecie(int $specieId): bool
+    {
+        return $this->specie_id !== null && (int) $this->specie_id !== $specieId;
+    }
 
     public function getRouteKeyName(): string
     {

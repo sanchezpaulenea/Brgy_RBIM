@@ -54,6 +54,7 @@ class BarangayPersonnelService
                 'personnel_middle_name' => $data['personnel_middle_name'] ?? null,
                 'personnel_suffix' => $data['personnel_suffix'] ?? null,
                 'personnel_date_of_birth' => $data['personnel_date_of_birth'],
+                'sex_id' => $data['sex_id'],
                 'personnel_status_id' => $data['personnel_status_id'] ?? self::ACTIVE_STATUS_ID,
             ]);
 
@@ -102,7 +103,7 @@ class BarangayPersonnelService
      */
     public function formatRecord(BarangayPersonnel $personnel): array
     {
-        $personnel->loadMissing(['position', 'status', 'user']);
+        $personnel->loadMissing(['position', 'status', 'user', 'sex']);
 
         $fullName = $this->fullName($personnel);
 
@@ -117,6 +118,8 @@ class BarangayPersonnelService
             'personnel_status_id' => $personnel->personnel_status_id,
             'personnel_status' => $personnel->status?->personnel_status,
             'personnel_date_of_birth' => $personnel->personnel_date_of_birth?->format('Y-m-d'),
+            'sex_id' => $personnel->sex_id,
+            'sex' => $personnel->sex?->sex,
             'username' => $personnel->user?->username,
             'linked' => $personnel->user !== null,
             'full_name' => $fullName,
@@ -195,22 +198,23 @@ class BarangayPersonnelService
     }
 
     /**
-     * @return array{name: string, birth date: string, status: string, position: string}
+     * @return array{name: string, birth date: string, sex: string, status: string, position: string}
      */
     private function personnelAuditSnapshot(BarangayPersonnel $personnel): array
     {
-        $personnel->loadMissing(['position', 'status']);
+        $personnel->loadMissing(['position', 'status', 'sex']);
 
         return [
             'name' => $this->fullName($personnel),
             'birth date' => $personnel->personnel_date_of_birth?->format('Y-m-d') ?? '',
+            'sex' => (string) ($personnel->sex?->sex ?? ''),
             'status' => (string) ($personnel->status?->personnel_status ?? $personnel->personnel_status_id),
             'position' => (string) ($personnel->position?->position_name ?? $personnel->position_id),
         ];
     }
 
     /**
-     * @param  array{name: string, birth date: string, status: string, position: string}  $previous
+     * @param  array{name: string, birth date: string, sex: string, status: string, position: string}  $previous
      */
     private function logPersonnelFieldChanges(User $performedBy, BarangayPersonnel $updated, array $previous): void
     {

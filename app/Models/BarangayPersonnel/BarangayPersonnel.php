@@ -2,6 +2,7 @@
 
 namespace App\Models\BarangayPersonnel;
 
+use App\Models\ResidentManagement\Demographic\Sex;
 use App\Models\UserManagement\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,6 +24,7 @@ class BarangayPersonnel extends Model
         'personnel_suffix',
         'personnel_status_id',
         'personnel_date_of_birth',
+        'sex_id',
     ];
 
     /**
@@ -51,6 +53,14 @@ class BarangayPersonnel extends Model
     public function status(): BelongsTo
     {
         return $this->belongsTo(PersonnelStatus::class, 'personnel_status_id', 'personnel_status_id');
+    }
+
+    /**
+     * @return BelongsTo<Sex, $this>
+     */
+    public function sex(): BelongsTo
+    {
+        return $this->belongsTo(Sex::class, 'sex_id', 'sex_id');
     }
 
     /**

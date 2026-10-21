@@ -21,7 +21,7 @@
         <LookupCombobox
             v-model="pet.breed_id"
             v-model:query="pet.breed_name"
-            :options="lookups.breeds"
+            :options="breedOptions"
             :input-id="`${idPrefix}-breed`"
             label="Breed"
             placeholder="Search or type a breed"
@@ -105,7 +105,7 @@
 import { computed } from 'vue';
 import BirthDateField from '@/components/BirthDateField.vue';
 import LookupCombobox from '@/components/LookupCombobox.vue';
-import { allowedSpeciesOptions, PET_LOOKUP_HINT, PET_RABIES_HINT } from '@/utils/petCensus';
+import { allowedSpeciesOptions, breedsForSpecie, PET_LOOKUP_HINT, PET_RABIES_HINT } from '@/utils/petCensus';
 
 const props = defineProps({
     pet: { type: Object, required: true },
@@ -118,6 +118,12 @@ const props = defineProps({
 
 const allowedSpecies = computed(() => allowedSpeciesOptions(props.lookups.species));
 
+const selectedSpecieId = computed(() => (
+    allowedSpecies.value.find((item) => item.label === props.pet.specie_name)?.id ?? props.pet.specie_id ?? null
+));
+
+const breedOptions = computed(() => breedsForSpecie(props.lookups.breeds, selectedSpecieId.value));
+
 function onSpecieSelected(name) {
     const option = allowedSpecies.value.find((item) => item.label === name);
 
@@ -125,11 +131,18 @@ function onSpecieSelected(name) {
     props.pet.specie_id = option?.id ?? null;
     delete props.errors.specie;
     delete props.errors.specie_id;
+
+    const chosenBreed = (props.lookups.breeds ?? []).find((breed) => breed.id === props.pet.breed_id);
+    if (chosenBreed && !breedOptions.value.includes(chosenBreed)) {
+        props.pet.breed_id = null;
+        props.pet.breed_name = '';
+    }
 }
 
 function acceptTypedLookup(listKey, idField, nameField, name) {
     const trimmed = String(name ?? '').trim();
-    const existing = (props.lookups[listKey] ?? []).find((option) => (
+    const pool = listKey === 'breeds' ? breedOptions.value : (props.lookups[listKey] ?? []);
+    const existing = pool.find((option) => (
         String(option.label ?? '').toLowerCase() === trimmed.toLowerCase()
     ));
 

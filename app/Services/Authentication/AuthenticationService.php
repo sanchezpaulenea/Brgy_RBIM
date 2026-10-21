@@ -508,7 +508,7 @@ class AuthenticationService
             'first_name' => $user->profileGivenName() ?: null,
             'last_name' => $user->profileFamilyName() ?: null,
             'position_name' => $user->profilePositionName(),
-            'avatar_preset' => $user->avatar_preset,
+            'avatar_preset' => $user->resolvedAvatarPreset(),
             'avatar_url' => $user->avatarUrl(),
             'must_change_password' => (bool) $user->must_change_password,
         ];
