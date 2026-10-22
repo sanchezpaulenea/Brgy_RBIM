@@ -19,14 +19,21 @@
         .meta { font-size: 10px; }
         .salutation { font-weight: bold; margin: 4px 0 6px; }
         .body { text-align: justify; text-indent: 32px; margin: 0 0 7px; line-height: 1.35; }
-        body.dense { font-size: 10.5px; }
-        body.dense .body { text-indent: 18px; margin: 0 0 3px; line-height: 1.25; }
+        .dense { font-size: 10.5px; }
+        .dense .body { text-indent: 18px; margin: 0 0 3px; line-height: 1.25; }
         .children { width: 100%; border-collapse: collapse; margin: 4px 0 6px; font-size: 10px; }
         .children th, .children td { border: 1px solid #111; padding: 2px 4px; }
         .children th { text-align: center; }
         .footer-note { text-align: center; font-weight: bold; margin: 2px 0 0; font-size: 10px; }
         .sign-label { margin: 8px 0 0; font-weight: bold; }
         .bold { font-weight: bold; }
+        .italic { font-style: italic; }
+        .underline { text-decoration: underline; }
+        .flush { text-indent: 0; margin-bottom: 2px; }
+        .meta-right { text-align: right; font-style: italic; }
+        .meta-key { font-style: italic; text-decoration: underline; }
+        .sheet-break { page-break-before: always; }
+        .footer-left { text-align: left; font-weight: bold; margin: 2px 0 0; font-size: 10px; }
         .letterhead { width: 100%; border-collapse: collapse; margin: 0 0 4px; }
         .logo-cell { width: 118px; vertical-align: top; }
         .logo-cell-right { width: 70px; text-align: right; vertical-align: top; }
@@ -49,7 +56,10 @@
         .stamp-blank { border-bottom: 1px solid #9c3b32; height: 12px; margin-top: 2px; }
     </style>
 </head>
-<body class="{{ ! empty($document['dense']) ? 'dense' : '' }}">
+<body>
+@php $sheets = $document['pages'] ?? [$document]; @endphp
+@foreach ($sheets as $sheetIndex => $document)
+    <div class="{{ $sheetIndex > 0 ? 'sheet-break' : '' }} {{ ! empty($document['dense']) ? 'dense' : '' }}">
     <table class="letterhead" cellspacing="0" cellpadding="0">
         <tr>
             <td class="logo-cell">
@@ -86,10 +96,10 @@
         <p class="office">{{ $document['office'] }}</p>
     @endif
     @if (! empty($document['revised_note']))
-        <p class="meta">{{ $document['revised_note'] }}</p>
+        <p class="meta {{ ! empty($document['meta_right']) ? 'meta-right' : '' }}">{{ $document['revised_note'] }}</p>
     @endif
     @if (! empty($document['show_certificate_number']))
-        <p class="meta">Barangay Certificate Number: {{ $document['certificate_number'] ?? '' }}</p>
+        <p class="meta meta-right meta-key">Barangay Certificate Number: {{ $document['certificate_number'] ?? '' }}</p>
     @endif
 
     <p class="title {{ strlen((string) $document['title']) > 40 ? 'title-long' : '' }}">{{ $document['title'] }}</p>
@@ -104,10 +114,21 @@
         @if (($document['children_after'] ?? null) === $index)
             @include('certificates.partials.children', ['children' => $document['children'] ?? []])
         @endif
-        <p class="body">
-            @foreach ($paragraph as $part)
-                @if ($part['bold'])
-                    <span class="bold">{{ $part['text'] }}</span>
+        @php
+            $parts = $paragraph['parts'] ?? $paragraph;
+            $flush = is_array($paragraph) && ($paragraph['flush'] ?? false);
+        @endphp
+        <p class="body {{ $flush ? 'flush' : '' }}">
+            @foreach ($parts as $part)
+                @php
+                    $partClass = trim(
+                        (($part['bold'] ?? false) ? 'bold ' : '')
+                        .(($part['italic'] ?? false) ? 'italic ' : '')
+                        .(($part['underline'] ?? false) ? 'underline' : '')
+                    );
+                @endphp
+                @if ($partClass !== '')
+                    <span class="{{ $partClass }}">{{ $part['text'] }}</span>
                 @else
                     {{ $part['text'] }}
                 @endif
@@ -132,31 +153,48 @@
             </tr>
         </table>
     @elseif ($style === 'approved')
-        <p class="sign-label">Approved by:</p>
-        <div class="pb-block">
+        <p class="sign-label" style="text-align: center;">Approved by:</p>
+        <div class="pb-block" style="margin-left: auto; margin-right: auto;">
             @include('certificates.partials.punong', ['document' => $document])
         </div>
         <p class="sign-label">Witnessed by:</p>
-        <p class="officer">{{ $document['fields']['issuer_name'] }}</p>
+        <p class="officer bold">{{ $document['fields']['issuer_name'] }}</p>
         <p class="officer">{{ $document['fields']['issuer_position'] !== '' ? $document['fields']['issuer_position'] : 'Barangay Kagawad' }}</p>
-        <p class="officer">Date: {{ $document['fields']['witness_date'] }}</p>
+        <p class="officer">Date: <span class="bold">{{ $document['fields']['witness_date'] }}</span></p>
     @elseif ($style === 'oath')
-        <div class="wet-line">&nbsp;</div>
-        <p class="officer">{{ $document['fields']['resident_name'] }}, FIRST TIME JOB SEEKER</p>
-        <div class="pb-block" style="margin-top: 8px;">
+        <div class="pb-block" style="margin-left: auto;">
             @include('certificates.partials.punong', ['document' => $document, 'inline' => true])
         </div>
-        <p class="officer">Witnessed by: {{ $document['fields']['issuer_name'] }}, {{ $document['fields']['issuer_position'] !== '' ? $document['fields']['issuer_position'] : 'Barangay Kagawad' }}/Officer of the day</p>
+        <p class="officer bold">{{ $document['fields']['resident_name'] }}, FIRST TIME JOB SEEKER</p>
+        <p class="officer">Witnessed by:<span class="bold">{{ $document['fields']['issuer_name'] }}</span>, {{ $document['fields']['issuer_position'] !== '' ? $document['fields']['issuer_position'] : 'Barangay Kagawad' }}/Officer of the day</p>
         <p class="officer">DATE: {{ $document['fields']['witness_date'] }}</p>
+    @elseif ($style === 'income')
+        <p class="authority">{{ $document['authority_line'] }}</p>
+        <p class="officer bold">{{ $document['fields']['issuer_name'] }}</p>
+        <p class="officer">Officer for the day</p>
+        <p class="officer bold">{{ $document['fields']['issuer_position'] !== '' ? $document['fields']['issuer_position'] : 'Barangay Kagawad' }}</p>
+        <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 8px;">
+            <tr>
+                <td>&nbsp;</td>
+                <td class="pb-block" valign="top">
+                    @include('certificates.partials.punong', ['document' => $document])
+                    @if (! empty($document['show_stamp']))
+                        @include('certificates.partials.stamp')
+                    @endif
+                </td>
+            </tr>
+        </table>
     @elseif ($style === 'affidavit')
-        <p class="officer" style="margin-top: 10px;">Barangay Captain: {{ $document['fields']['punong_barangay_name'] }}</p>
-        @if (! empty($document['signature_data_uri']))
-            <img class="sig-img" src="{{ $document['signature_data_uri'] }}" alt="">
-        @endif
+        <div style="text-align: right;">
+            @if (! empty($document['signature_data_uri']))
+                <img class="sig-img" src="{{ $document['signature_data_uri'] }}" alt="">
+            @endif
+            <p class="officer">Barangay Captain: <span class="bold">{{ $document['fields']['punong_barangay_name'] }}</span></p>
+        </div>
         <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 8px;">
             <tr>
                 <td width="50%" valign="top">
-                    <p class="officer">Witness</p>
+                    <p class="officer bold">Witness</p>
                     <p class="officer">Name: {{ $document['affidavit']['president_name'] ?? '' }}</p>
                     <p class="officer">Solo Parent President</p>
                     <p class="officer">Complete Address: {{ $document['affidavit']['president_address'] ?? '' }}</p>
@@ -164,7 +202,7 @@
                     <p class="officer">Signature</p>
                 </td>
                 <td width="50%" valign="top">
-                    <p class="officer">NEIGHBOR:</p>
+                    <p class="officer bold">NEIGHBOR:</p>
                     <p class="officer">Name: {{ $document['affidavit']['neighbor_name'] ?? '' }}</p>
                     <p class="officer">Complete Address: {{ $document['affidavit']['neighbor_address'] ?? '' }}</p>
                     <div class="wet-line">&nbsp;</div>
@@ -176,6 +214,11 @@
         <p class="officer">Kagawad on Social Services</p>
         <div class="wet-line">&nbsp;</div>
         <p class="officer">Signature</p>
+        @if (! empty($document['show_stamp']))
+            <div style="text-align: right;">
+                @include('certificates.partials.stamp')
+            </div>
+        @endif
     @else
         <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 14px;">
             <tr>
@@ -185,26 +228,10 @@
                 </td>
             </tr>
             <tr>
-                <td class="authority" valign="middle">By The Authority of the Punong Barangay;</td>
+                <td class="authority" valign="middle">{{ $document['authority_line'] ?? 'By The Authority of the Punong Barangay;' }}</td>
                 <td class="pb-block" valign="top">
                     @if (! empty($document['show_stamp']))
-                        <div class="stamp-outer">
-                            <div class="stamp-inner">
-                                <p class="stamp-title">DOCUMENTARY STAMP TAX PAID</p>
-                                <table width="100%" cellspacing="0" cellpadding="0">
-                                    <tr>
-                                        <td width="58%" valign="top" style="padding-right: 8px;">
-                                            <div class="stamp-label">GOR SERIAL NUMBER:</div>
-                                            <div class="stamp-blank">&nbsp;</div>
-                                        </td>
-                                        <td width="42%" valign="top" style="border-left: 1px solid #9c3b32; padding-left: 8px;">
-                                            <div class="stamp-label">DATE:</div>
-                                            <div class="stamp-blank">&nbsp;</div>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-                        </div>
+                        @include('certificates.partials.stamp')
                     @endif
                 </td>
             </tr>
@@ -212,14 +239,31 @@
 
         <div>
             <div class="wet-line">&nbsp;</div>
-            <p class="officer">{{ $document['fields']['issuer_name'] }}</p>
+            <p class="officer {{ ! empty($document['bold_issuer']) ? 'bold' : '' }}">{{ $document['fields']['issuer_name'] }}</p>
             <p class="officer">Officer for the day</p>
             <p class="officer">{{ $document['fields']['issuer_position'] }}</p>
         </div>
     @endif
 
-    @foreach ($document['footer_notes'] ?? [] as $note)
-        <p class="footer-note">{{ $note }}</p>
-    @endforeach
+    @if (! empty($document['footer_split']))
+        <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 10px;">
+            <tr>
+                <td valign="bottom">
+                    @foreach ($document['footer_notes'] ?? [] as $note)
+                        <p class="footer-left">{{ $note }}</p>
+                    @endforeach
+                </td>
+                <td valign="bottom" style="text-align: right; font-style: italic; font-size: 10px;">
+                    {{ $document['revised_note'] ?? '' }}
+                </td>
+            </tr>
+        </table>
+    @else
+        @foreach ($document['footer_notes'] ?? [] as $note)
+            <p class="footer-left">{{ $note }}</p>
+        @endforeach
+    @endif
+    </div>
+@endforeach
 </body>
 </html>

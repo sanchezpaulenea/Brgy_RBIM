@@ -955,6 +955,7 @@ class CertificateService
             'purpose_clause' => ($config['print_purpose'] ?? true) ? ' for '.$purpose : '',
             'issued_date' => $this->issuedDateText($issuedAt),
             'issued_on' => $localIssued->format('jS').' day of '.$localIssued->format('F').' '.$localIssued->format('Y'),
+            'issued_on_comma' => $localIssued->format('jS').' day of '.$localIssued->format('F').', '.$localIssued->format('Y'),
             'issued_ordinal' => mb_strtoupper($localIssued->format('jS'), 'UTF-8'),
             'issued_month' => $localIssued->format('F'),
             'issued_year' => $localIssued->format('Y'),
@@ -981,75 +982,7 @@ class CertificateService
             'income_figure' => $incomeAmount !== null ? $this->amountFigure($incomeAmount) : '',
         ];
 
-        $templates = $includeIncome && isset($config['paragraphs_with_amount'])
-            ? $config['paragraphs_with_amount']
-            : ($config['paragraphs'] ?? []);
-        $paragraphs = [];
-        $childrenAfter = null;
-        $replacedRequest = false;
-
-        foreach ($templates as $template) {
-            $template = (string) $template;
-
-            if (trim($template) === '{children_table}') {
-                $childrenAfter = count($paragraphs);
-
-                continue;
-            }
-
-            if ($representativeSentence !== null && str_contains(mb_strtolower($template), 'issued upon the request')) {
-                $paragraphs[] = $this->paragraphParts($representativeSentence, $tokens);
-                $replacedRequest = true;
-
-                continue;
-            }
-
-            if ($representativeSentence !== null && ! $replacedRequest && preg_match('/^(Issued|Signed)\b/', $template) === 1) {
-                $paragraphs[] = $this->paragraphParts($representativeSentence, $tokens);
-                $replacedRequest = true;
-            }
-
-            $paragraphs[] = $this->paragraphParts($template, $tokens);
-        }
-
-        if ($representativeSentence !== null && ! $replacedRequest) {
-            $paragraphs[] = $this->paragraphParts($representativeSentence, $tokens);
-        }
-
-        $title = $includeIncome && isset($config['title_with_amount'])
-            ? (string) $config['title_with_amount']
-            : (string) ($config['title'] ?? $type->type_of_certificate);
-        $salutation = array_key_exists('salutation', $config)
-            ? $config['salutation']
-            : 'To Whom It May Concern:';
-
-        if ($includeIncome && array_key_exists('salutation_with_amount', $config)) {
-            $salutation = $config['salutation_with_amount'];
-        }
-
-        $signatureStyle = (string) ($config['signature'] ?? 'authority');
-
-        return [
-            'title' => mb_strtoupper($title, 'UTF-8'),
-            'subtitle' => isset($config['subtitle']) ? (string) $config['subtitle'] : null,
-            'office' => $config['office'] ?? null,
-            'salutation' => $salutation,
-            'revised_note' => $config['revised_note'] ?? null,
-            'show_certificate_number' => (bool) ($config['show_certificate_number'] ?? false),
-            'certificate_number' => $certificateId,
-            'signature_style' => $signatureStyle,
-            'show_stamp' => (bool) ($config['stamp'] ?? ($signatureStyle === 'authority')),
-            'dense' => (bool) ($config['dense'] ?? false),
-            'footer_notes' => array_values($config['footer_notes'] ?? []),
-            'children_after' => $childrenAfter,
-            'children' => $this->childRows($soloParent['children'] ?? [], $issuedAt),
-            'affidavit' => $signatureStyle === 'affidavit' ? [
-                'president_name' => (string) ($soloParent['president_name'] ?? ''),
-                'president_address' => (string) ($soloParent['president_address'] ?? ''),
-                'neighbor_name' => (string) ($soloParent['neighbor_name'] ?? ''),
-                'neighbor_address' => (string) ($soloParent['neighbor_address'] ?? ''),
-                'kagawad_name' => (string) ($soloParent['kagawad_name'] ?? ''),
-            ] : null,
+        $shared = [
             'header' => [
                 'city_name' => $cityName,
                 'barangay_name' => mb_strtoupper($barangayName, 'UTF-8'),
@@ -1058,7 +991,6 @@ class CertificateService
             ],
             'logos' => $logos['images'],
             'missing_logos' => $logos['missing'],
-            'paragraphs' => $paragraphs,
             'suggestions' => [
                 'ethnic_group' => trim((string) ($resident->ethnicity?->ethnicity ?? '')),
                 'stated_civil_status' => trim((string) ($resident->maritalStatus?->marital_status ?? '')),
@@ -1084,6 +1016,153 @@ class CertificateService
             'signature_available' => $this->signatureIsAvailable(),
             'attach_pb_signature' => $attachSignature,
             'signature_data_uri' => $attachSignature ? $this->signatureDataUri() : null,
+            'certificate_number' => $certificateId,
+        ];
+
+        $sheetConfigs = ! empty($config['packet'])
+            ? [$this->typeConfig(3) ?? [], $this->typeConfig(4) ?? []]
+            : [$config];
+        $sheets = [];
+
+        foreach ($sheetConfigs as $index => $sheetConfig) {
+            $sheets[] = array_merge($shared, $this->sheetContent(
+                $sheetConfig,
+                $tokens,
+                $index === 0 ? $representativeSentence : null,
+                $includeIncome && $index === 0,
+                is_array($soloParent) ? $soloParent : [],
+                $issuedAt,
+                $relationship,
+            ));
+        }
+
+        $document = $sheets[0];
+
+        if (count($sheets) > 1) {
+            $document['pages'] = $sheets;
+        }
+
+        return $document;
+    }
+
+    /**
+     * @param  array<string, mixed>  $config
+     * @param  array<string, string>  $tokens
+     * @param  array<string, mixed>  $soloParent
+     * @return array<string, mixed>
+     */
+    private function sheetContent(
+        array $config,
+        array $tokens,
+        ?string $representativeSentence,
+        bool $includeIncome,
+        array $soloParent,
+        CarbonInterface $issuedAt,
+        ?string $relationship,
+    ): array {
+        $templates = $includeIncome && isset($config['paragraphs_with_amount'])
+            ? $config['paragraphs_with_amount']
+            : ($config['paragraphs'] ?? []);
+        $paragraphs = [];
+        $childrenAfter = null;
+        $replacedRequest = false;
+
+        foreach ($templates as $template) {
+            $template = (string) $template;
+
+            if (trim($template) === '{children_table}') {
+                $childrenAfter = count($paragraphs);
+
+                continue;
+            }
+
+            $isDeathRequest = trim($template) === '{death_request}';
+
+            if ($isDeathRequest) {
+                $asker = ($tokens['representative_name'] ?? '') !== ''
+                    ? '**{representative_name}**'
+                    : '**{requester}**';
+                $relation = mb_strtolower($relationship ?? '');
+                $template = $relation !== ''
+                    ? "This Certification was issued upon the request of {$asker} to process the **DEATH** Certificate of {possessive} {$relation} {owner_name}."
+                    : "This Certification was issued upon the request of {$asker} to process the **DEATH** Certificate of {owner_name}.";
+                $replacedRequest = true;
+            }
+
+            $flush = str_starts_with($template, '~');
+
+            if ($flush) {
+                $template = substr($template, 1);
+            }
+
+            if (! $isDeathRequest && $representativeSentence !== null && str_contains(mb_strtolower($template), 'issued upon the request')) {
+                $replaced = preg_replace(
+                    '/[^.]*issued upon the request[^.]*\./iu',
+                    $representativeSentence,
+                    $template,
+                    1,
+                );
+                $template = is_string($replaced) ? $replaced : $template;
+                $replacedRequest = true;
+            } elseif ($representativeSentence !== null && ! $replacedRequest && preg_match('/^(Issued|Signed)\b/', $template) === 1) {
+                $paragraphs[] = [
+                    'flush' => false,
+                    'parts' => $this->paragraphParts($representativeSentence, $tokens),
+                ];
+                $replacedRequest = true;
+            }
+
+            $paragraphs[] = [
+                'flush' => $flush,
+                'parts' => $this->paragraphParts($template, $tokens),
+            ];
+        }
+
+        if ($representativeSentence !== null && ! $replacedRequest) {
+            $paragraphs[] = [
+                'flush' => false,
+                'parts' => $this->paragraphParts($representativeSentence, $tokens),
+            ];
+        }
+
+        $title = $includeIncome && isset($config['title_with_amount'])
+            ? (string) $config['title_with_amount']
+            : (string) ($config['title'] ?? '');
+        $salutation = array_key_exists('salutation', $config)
+            ? $config['salutation']
+            : 'To Whom It May Concern:';
+
+        if ($includeIncome && array_key_exists('salutation_with_amount', $config)) {
+            $salutation = $config['salutation_with_amount'];
+        }
+
+        $signatureStyle = (string) ($config['signature'] ?? 'authority');
+
+        return [
+            'title' => mb_strtoupper($title, 'UTF-8'),
+            'subtitle' => isset($config['subtitle']) ? (string) $config['subtitle'] : null,
+            'office' => $config['office'] ?? null,
+            'salutation' => $salutation,
+            'revised_note' => $config['revised_note'] ?? null,
+            'meta_right' => (bool) ($config['meta_right'] ?? false),
+            'show_certificate_number' => (bool) ($config['show_certificate_number'] ?? false),
+            'signature_style' => $signatureStyle,
+            'show_stamp' => (bool) ($config['stamp'] ?? ($signatureStyle === 'authority')),
+            'bold_issuer' => (bool) ($config['bold_issuer'] ?? false),
+            'authority_line' => (string) ($config['authority_line'] ?? 'By The Authority of the Punong Barangay;'),
+            'footer_split' => (bool) ($config['footer_split'] ?? false),
+            'dense' => (bool) ($config['dense'] ?? false),
+            'footer_notes' => array_values($config['footer_notes'] ?? []),
+            'children_after' => $childrenAfter,
+            'children' => $this->childRows($soloParent['children'] ?? [], $issuedAt),
+            'affidavit' => $signatureStyle === 'affidavit' ? [
+                'president_name' => (string) ($soloParent['president_name'] ?? ''),
+                'president_address' => (string) ($soloParent['president_address'] ?? ''),
+                'neighbor_name' => (string) ($soloParent['neighbor_name'] ?? ''),
+                'neighbor_address' => (string) ($soloParent['neighbor_address'] ?? ''),
+                'kagawad_name' => (string) ($soloParent['kagawad_name'] ?? ''),
+            ] : null,
+            'paragraphs' => $paragraphs,
         ];
     }
 
@@ -1093,19 +1172,50 @@ class CertificateService
      */
     private function paragraphParts(string $template, array $tokens): array
     {
-        $text = $template;
+        $pieces = preg_split('/(\*\*.*?\*\*|__.*?__|~~.*?~~)/us', $template, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [$template];
+        $parts = [];
 
-        $boldKeys = ['name', 'owner_name'];
+        foreach ($pieces as $piece) {
+            if ($piece === '') {
+                continue;
+            }
+
+            $bold = str_starts_with($piece, '**') && str_ends_with($piece, '**');
+            $underline = str_starts_with($piece, '__') && str_ends_with($piece, '__');
+            $italic = str_starts_with($piece, '~~') && str_ends_with($piece, '~~');
+
+            if ($bold || $underline || $italic) {
+                $piece = substr($piece, 2, -2);
+            }
+
+            foreach ($this->fillTokens($piece, $tokens, $bold) as $part) {
+                $part['bold'] = $part['bold'] || $bold;
+                $part['italic'] = $italic;
+                $part['underline'] = $underline;
+                $parts[] = $part;
+            }
+        }
+
+        return $this->emphasizeCertification($parts);
+    }
+
+    /**
+     * @param  array<string, string>  $tokens
+     * @return list<array{text: string, bold: bool, italic: bool, underline: bool}>
+     */
+    private function fillTokens(string $text, array $tokens, bool $alreadyBold): array
+    {
+        $boldKeys = $alreadyBold ? [] : ['name', 'owner_name', 'representative_name'];
 
         foreach ($tokens as $key => $value) {
             if (in_array($key, $boldKeys, true)) {
                 continue;
             }
 
-            $text = str_replace('{'.$key.'}', $value, $text);
+            $text = str_replace('{'.$key.'}', (string) $value, $text);
         }
 
-        $parts = [['text' => $text, 'bold' => false]];
+        $parts = [['text' => $text, 'bold' => false, 'italic' => false, 'underline' => false]];
 
         foreach ($boldKeys as $key) {
             $next = [];
@@ -1121,11 +1231,11 @@ class CertificateService
 
                 foreach ($chunks as $index => $chunk) {
                     if ($chunk !== '') {
-                        $next[] = ['text' => $chunk, 'bold' => false];
+                        $next[] = ['text' => $chunk, 'bold' => false, 'italic' => false, 'underline' => false];
                     }
 
                     if ($index < count($chunks) - 1) {
-                        $next[] = ['text' => $tokens[$key], 'bold' => true];
+                        $next[] = ['text' => (string) ($tokens[$key] ?? ''), 'bold' => true, 'italic' => false, 'underline' => false];
                     }
                 }
             }
@@ -1133,7 +1243,7 @@ class CertificateService
             $parts = $next;
         }
 
-        return $this->emphasizeCertification($parts);
+        return $parts;
     }
 
     /**
@@ -1161,6 +1271,8 @@ class CertificateService
                 $emphasized[] = [
                     'text' => $piece,
                     'bold' => $piece === 'CERTIFICATION',
+                    'italic' => (bool) ($part['italic'] ?? false),
+                    'underline' => (bool) ($part['underline'] ?? false),
                 ];
             }
         }

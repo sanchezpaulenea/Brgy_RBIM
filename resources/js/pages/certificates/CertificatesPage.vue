@@ -262,21 +262,7 @@
                                 </label>
                                 <input id="date-of-death" v-model="dateOfDeath" type="date" class="rbim-input py-2">
                                 <p v-if="dateOfDeathError" class="rbim-error">{{ dateOfDeathError }}</p>
-                                <p class="rbim-hint">Kept on the certificate record. The barangay form prints the place, cause, and ethnic practice.</p>
-                            </div>
-                            <div>
-                                <label for="place-of-death" class="rbim-label">
-                                    Place of Death<span class="rbim-required" aria-hidden="true">*</span>
-                                </label>
-                                <input id="place-of-death" v-model="placeOfDeath" type="text" maxlength="100" class="rbim-input py-2" placeholder="their residence">
-                                <p v-if="personTextError(placeOfDeath, 'Place of death', 100)" class="rbim-error">{{ personTextError(placeOfDeath, 'Place of death', 100) }}</p>
-                            </div>
-                            <div>
-                                <label for="cause-of-death" class="rbim-label">
-                                    Cause of Death<span class="rbim-required" aria-hidden="true">*</span>
-                                </label>
-                                <input id="cause-of-death" v-model="causeOfDeath" type="text" maxlength="100" class="rbim-input py-2" placeholder="old age">
-                                <p v-if="personTextError(causeOfDeath, 'Cause of death', 100)" class="rbim-error">{{ personTextError(causeOfDeath, 'Cause of death', 100) }}</p>
+                                <p class="rbim-hint">Kept on the certificate record. The barangay form prints the ethnic practice.</p>
                             </div>
                             <div>
                                 <label for="ethnic-group" class="rbim-label">
@@ -644,9 +630,7 @@ const deathDetailError = computed(() => {
         return '';
     }
 
-    return personTextError(placeOfDeath.value, 'Place of death', 100)
-        || personTextError(causeOfDeath.value, 'Cause of death', 100)
-        || personTextError(ethnicGroup.value, 'Ethnic group', 60);
+    return personTextError(ethnicGroup.value, 'Ethnic group', 60);
 });
 
 const canContinue = computed(() => {

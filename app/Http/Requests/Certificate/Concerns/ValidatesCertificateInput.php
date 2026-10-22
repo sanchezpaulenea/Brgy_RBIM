@@ -165,7 +165,6 @@ trait ValidatesCertificateInput
                 'max:99999999.99',
             ],
             'place_of_death' => [
-                Rule::requiredIf(fn (): bool => $strictTypeFields && $this->certificateKind() === 'death'),
                 Rule::prohibitedIf(fn (): bool => $this->filled('place_of_death') && $this->certificateKind() !== 'death'),
                 'nullable',
                 'string',
@@ -173,7 +172,6 @@ trait ValidatesCertificateInput
                 $this->personTextRule('Place of death'),
             ],
             'cause_of_death' => [
-                Rule::requiredIf(fn (): bool => $strictTypeFields && $this->certificateKind() === 'death'),
                 Rule::prohibitedIf(fn (): bool => $this->filled('cause_of_death') && $this->certificateKind() !== 'death'),
                 'nullable',
                 'string',
