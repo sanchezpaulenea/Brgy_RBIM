@@ -1,24 +1,22 @@
 <template>
     <article class="mx-auto max-w-3xl bg-white px-10 py-8 text-[13px] leading-snug text-slate-900 shadow-sm" style="font-family: 'Times New Roman', Times, serif;">
-        <div class="relative h-16 text-center">
-            <div class="absolute top-0 left-0 flex h-14 w-14 items-center justify-center">
+        <div class="flex items-start gap-3">
+            <div class="flex shrink-0 gap-1">
                 <img v-if="document.logos?.bagong_pilipinas" :src="document.logos.bagong_pilipinas" alt="" class="h-14 w-14 object-contain">
                 <div v-else class="h-14 w-14 border border-slate-300" />
-            </div>
-            <div class="absolute top-0 left-16 flex h-14 w-14 items-center justify-center">
                 <img v-if="document.logos?.city_of_baguio" :src="document.logos.city_of_baguio" alt="" class="h-14 w-14 object-contain">
                 <div v-else class="h-14 w-14 border border-slate-300" />
             </div>
-            <div class="absolute top-0 right-12 flex h-14 w-14 items-center justify-center">
-                <img v-if="document.logos?.happy_hallow" :src="document.logos.happy_hallow" alt="" class="h-14 w-14 object-contain">
-                <div v-else class="h-14 w-14 border border-slate-300" />
-            </div>
-            <div class="leading-tight">
+            <div class="min-w-0 flex-1 text-center leading-tight">
                 <p class="text-sm font-bold">Republic of the Philippines</p>
                 <p class="text-sm">{{ document.header?.city_name }}</p>
                 <p class="text-sm font-bold">{{ document.header?.barangay_name }}</p>
                 <p class="text-[11px] underline">Official email address: {{ document.header?.barangay_email }}</p>
                 <p class="text-[11px] underline">Tel. No. {{ document.header?.barangay_contact_no }}</p>
+            </div>
+            <div class="shrink-0">
+                <img v-if="document.logos?.happy_hallow" :src="document.logos.happy_hallow" alt="" class="h-14 w-14 object-contain">
+                <div v-else class="h-14 w-14 border border-slate-300" />
             </div>
         </div>
 
@@ -28,7 +26,7 @@
             Barangay Certificate Number: {{ document.certificate_number || '' }}
         </p>
 
-        <h2 class="mt-3 mb-1 text-center font-bold tracking-wide" :class="document.title?.length > 40 ? 'text-sm' : 'text-lg'">
+        <h2 class="mt-4 mb-1 text-center font-bold tracking-wide" :class="document.title?.length > 40 ? 'text-sm' : 'text-lg'">
             {{ document.title }}
         </h2>
         <p v-if="document.subtitle" class="mb-2 text-center text-xs font-bold">{{ document.subtitle }}</p>

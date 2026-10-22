@@ -11,7 +11,7 @@
         .republic { font-weight: bold; font-size: 11px; }
         .barangay { font-weight: bold; font-size: 12px; }
         .contact { text-decoration: underline; font-size: 10px; }
-        .title { font-family: "DejaVu Serif", serif; font-weight: bold; font-size: 15px; text-align: center; letter-spacing: 0.3px; margin: 8px 0 6px; }
+        .title { font-family: "DejaVu Serif", serif; font-weight: bold; font-size: 15px; text-align: center; letter-spacing: 0.3px; margin: 12px 0 6px; }
         .title-long { font-size: 12px; margin: 4px 0; }
         .subtitle, .office, .meta { text-align: center; margin: 0; line-height: 1.2; }
         .office { font-weight: bold; font-size: 11px; margin-top: 4px; }
@@ -27,14 +27,13 @@
         .footer-note { text-align: center; font-weight: bold; margin: 2px 0 0; font-size: 10px; }
         .sign-label { margin: 8px 0 0; font-weight: bold; }
         .bold { font-weight: bold; }
-        .letterhead { position: relative; height: 62px; text-align: center; }
-        .logo-abs { position: absolute; top: 0; width: 54px; height: 54px; }
-        .logo-left { left: 0; }
-        .logo-mid { left: 60px; }
-        .logo-right { right: 48px; }
-        .logo-empty { width: 54px; height: 54px; border: 1px solid #bbb; }
-        .logo-img { width: 54px; height: 54px; }
-        .letterhead-copy { padding-top: 0; }
+        .letterhead { width: 100%; border-collapse: collapse; margin: 0 0 4px; }
+        .logo-cell { width: 118px; vertical-align: top; }
+        .logo-cell-right { width: 70px; text-align: right; vertical-align: top; }
+        .logo-img { width: 52px; height: 52px; }
+        .logo-gap { width: 6px; }
+        .logo-empty { width: 52px; height: 52px; border: 1px solid #bbb; }
+        .letterhead-copy { text-align: center; vertical-align: top; }
         .pb-block { width: 230px; text-align: center; }
         .pb-name { font-weight: bold; text-decoration: underline; text-transform: uppercase; font-size: 11px; margin: 0 auto; min-width: 150px; display: inline-block; }
         .pb-title { margin: 1px 0 0; font-size: 11px; }
@@ -51,30 +50,37 @@
     </style>
 </head>
 <body class="{{ ! empty($document['dense']) ? 'dense' : '' }}">
-    <div class="letterhead">
-        @if (! empty($document['logos']['bagong_pilipinas']))
-            <img class="logo-abs logo-left" src="{{ $document['logos']['bagong_pilipinas'] }}" alt="">
-        @else
-            <div class="logo-abs logo-left logo-empty">&nbsp;</div>
-        @endif
-        @if (! empty($document['logos']['city_of_baguio']))
-            <img class="logo-abs logo-mid" src="{{ $document['logos']['city_of_baguio'] }}" alt="">
-        @else
-            <div class="logo-abs logo-mid logo-empty">&nbsp;</div>
-        @endif
-        @if (! empty($document['logos']['happy_hallow']))
-            <img class="logo-abs logo-right" src="{{ $document['logos']['happy_hallow'] }}" alt="">
-        @else
-            <div class="logo-abs logo-right logo-empty">&nbsp;</div>
-        @endif
-        <div class="letterhead-copy">
-            <p class="header-line republic">Republic of the Philippines</p>
-            <p class="header-line">{{ $document['header']['city_name'] }}</p>
-            <p class="header-line barangay">{{ $document['header']['barangay_name'] }}</p>
-            <p class="header-line contact">Official email address: {{ $document['header']['barangay_email'] }}</p>
-            <p class="header-line contact">Tel. No. {{ $document['header']['barangay_contact_no'] }}</p>
-        </div>
-    </div>
+    <table class="letterhead" cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="logo-cell">
+                @if (! empty($document['logos']['bagong_pilipinas']))
+                    <img class="logo-img" src="{{ $document['logos']['bagong_pilipinas'] }}" alt="">
+                @else
+                    <div class="logo-empty">&nbsp;</div>
+                @endif
+                <span class="logo-gap">&nbsp;</span>
+                @if (! empty($document['logos']['city_of_baguio']))
+                    <img class="logo-img" src="{{ $document['logos']['city_of_baguio'] }}" alt="">
+                @else
+                    <div class="logo-empty">&nbsp;</div>
+                @endif
+            </td>
+            <td class="letterhead-copy">
+                <p class="header-line republic">Republic of the Philippines</p>
+                <p class="header-line">{{ $document['header']['city_name'] }}</p>
+                <p class="header-line barangay">{{ $document['header']['barangay_name'] }}</p>
+                <p class="header-line contact">Official email address: {{ $document['header']['barangay_email'] }}</p>
+                <p class="header-line contact">Tel. No. {{ $document['header']['barangay_contact_no'] }}</p>
+            </td>
+            <td class="logo-cell-right">
+                @if (! empty($document['logos']['happy_hallow']))
+                    <img class="logo-img" src="{{ $document['logos']['happy_hallow'] }}" alt="">
+                @else
+                    <div class="logo-empty">&nbsp;</div>
+                @endif
+            </td>
+        </tr>
+    </table>
 
     @if (! empty($document['office']))
         <p class="office">{{ $document['office'] }}</p>
