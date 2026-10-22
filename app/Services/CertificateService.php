@@ -1149,6 +1149,8 @@ class CertificateService
             'signature_style' => $signatureStyle,
             'show_stamp' => (bool) ($config['stamp'] ?? ($signatureStyle === 'authority')),
             'bold_issuer' => (bool) ($config['bold_issuer'] ?? false),
+            'title_bold' => (bool) ($config['title_bold'] ?? true),
+            'officer_line' => (bool) ($config['officer_line'] ?? true),
             'authority_line' => (string) ($config['authority_line'] ?? 'By The Authority of the Punong Barangay;'),
             'footer_split' => (bool) ($config['footer_split'] ?? false),
             'dense' => (bool) ($config['dense'] ?? false),

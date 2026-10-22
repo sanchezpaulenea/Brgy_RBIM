@@ -12,13 +12,14 @@
         .barangay { font-weight: bold; font-size: 12px; }
         .contact { text-decoration: underline; font-size: 10px; }
         .title { font-family: "DejaVu Serif", serif; font-weight: bold; font-size: 15px; text-align: center; letter-spacing: 0.3px; margin: 12px 0 6px; }
+        .title-plain { font-weight: normal; font-size: 13px; }
         .title-long { font-size: 12px; margin: 4px 0; }
         .subtitle, .office, .meta { text-align: center; margin: 0; line-height: 1.2; }
         .office { font-weight: bold; font-size: 11px; margin-top: 4px; }
         .subtitle { font-weight: bold; font-size: 11px; margin-bottom: 4px; }
         .meta { font-size: 10px; }
         .salutation { font-weight: bold; margin: 4px 0 6px; }
-        .body { text-align: justify; text-indent: 32px; margin: 0 0 7px; line-height: 1.35; }
+        .body { text-align: justify; text-indent: 32px; margin: 0 0 7px; line-height: 1.35; font-weight: normal; }
         .dense { font-size: 10.5px; }
         .dense .body { text-indent: 18px; margin: 0 0 3px; line-height: 1.25; }
         .children { width: 100%; border-collapse: collapse; margin: 4px 0 6px; font-size: 10px; }
@@ -27,6 +28,7 @@
         .footer-note { text-align: center; font-weight: bold; margin: 2px 0 0; font-size: 10px; }
         .sign-label { margin: 8px 0 0; font-weight: bold; }
         .bold { font-weight: bold; }
+        .regular { font-weight: normal; }
         .italic { font-style: italic; }
         .underline { text-decoration: underline; }
         .flush { text-indent: 0; margin-bottom: 2px; }
@@ -59,7 +61,7 @@
 <body>
 @php $sheets = $document['pages'] ?? [$document]; @endphp
 @foreach ($sheets as $sheetIndex => $document)
-    <div class="{{ $sheetIndex > 0 ? 'sheet-break' : '' }} {{ ! empty($document['dense']) ? 'dense' : '' }}">
+    <div class="{{ $sheetIndex > 0 ? 'sheet-break' : '' }} {{ ! empty($document['dense']) ? 'dense' : '' }}" style="font-weight: normal;">
     <table class="letterhead" cellspacing="0" cellpadding="0">
         <tr>
             <td class="logo-cell">
@@ -102,7 +104,7 @@
         <p class="meta meta-right meta-key">Barangay Certificate Number: {{ $document['certificate_number'] ?? '' }}</p>
     @endif
 
-    <p class="title {{ strlen((string) $document['title']) > 40 ? 'title-long' : '' }}">{{ $document['title'] }}</p>
+    <p class="title {{ strlen((string) $document['title']) > 40 ? 'title-long' : '' }} {{ ($document['title_bold'] ?? true) ? '' : 'title-plain' }}">{{ $document['title'] }}</p>
     @if (! empty($document['subtitle']))
         <p class="subtitle">{{ $document['subtitle'] }}</p>
     @endif
@@ -130,7 +132,7 @@
                 @if ($partClass !== '')
                     <span class="{{ $partClass }}">{{ $part['text'] }}</span>
                 @else
-                    {{ $part['text'] }}
+                    <span class="regular">{{ $part['text'] }}</span>
                 @endif
             @endforeach
         </p>
@@ -175,14 +177,19 @@
         <p class="officer bold">{{ $document['fields']['issuer_position'] !== '' ? $document['fields']['issuer_position'] : 'Barangay Kagawad' }}</p>
         <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 8px;">
             <tr>
-                <td>&nbsp;</td>
-                <td class="pb-block" valign="top">
+                <td valign="top">&nbsp;</td>
+                <td class="pb-block" valign="bottom">
                     @include('certificates.partials.punong', ['document' => $document])
-                    @if (! empty($document['show_stamp']))
-                        @include('certificates.partials.stamp')
-                    @endif
                 </td>
             </tr>
+            @if (! empty($document['show_stamp']))
+                <tr>
+                    <td>&nbsp;</td>
+                    <td valign="top" align="right" style="padding-top: 6px;">
+                        @include('certificates.partials.stamp')
+                    </td>
+                </tr>
+            @endif
         </table>
     @elseif ($style === 'affidavit')
         <div style="text-align: right;">
@@ -210,15 +217,21 @@
                 </td>
             </tr>
         </table>
-        <p class="officer" style="margin-top: 8px;">Name: {{ $document['affidavit']['kagawad_name'] ?? '' }}</p>
-        <p class="officer">Kagawad on Social Services</p>
-        <div class="wet-line">&nbsp;</div>
-        <p class="officer">Signature</p>
-        @if (! empty($document['show_stamp']))
-            <div style="text-align: right;">
-                @include('certificates.partials.stamp')
-            </div>
-        @endif
+        <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 8px;">
+            <tr>
+                <td width="55%" valign="top">
+                    <p class="officer">Name: {{ $document['affidavit']['kagawad_name'] ?? '' }}</p>
+                    <p class="officer">Kagawad on Social Services</p>
+                    <div class="wet-line">&nbsp;</div>
+                    <p class="officer">Signature</p>
+                </td>
+                <td valign="bottom" align="right">
+                    @if (! empty($document['show_stamp']))
+                        @include('certificates.partials.stamp')
+                    @endif
+                </td>
+            </tr>
+        </table>
     @else
         <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 14px;">
             <tr>
@@ -238,7 +251,9 @@
         </table>
 
         <div>
-            <div class="wet-line">&nbsp;</div>
+            @if ($document['officer_line'] ?? true)
+                <div class="wet-line">&nbsp;</div>
+            @endif
             <p class="officer {{ ! empty($document['bold_issuer']) ? 'bold' : '' }}">{{ $document['fields']['issuer_name'] }}</p>
             <p class="officer">Officer for the day</p>
             <p class="officer">{{ $document['fields']['issuer_position'] }}</p>

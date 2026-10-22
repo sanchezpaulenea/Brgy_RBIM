@@ -28,7 +28,10 @@
             Barangay Certificate Number: {{ sheet.certificate_number || '' }}
         </p>
 
-        <h2 class="mt-4 mb-1 text-center font-bold tracking-wide" :class="sheet.title?.length > 40 ? 'text-sm' : 'text-lg'">
+        <h2
+            class="mt-4 mb-1 text-center tracking-wide"
+            :class="[sheet.title?.length > 40 ? 'text-sm' : 'text-lg', sheet.title_bold === false ? 'font-normal' : 'font-bold']"
+        >
             {{ sheet.title }}
         </h2>
         <p v-if="sheet.subtitle" class="mb-2 text-center text-xs font-bold">{{ sheet.subtitle }}</p>
@@ -56,7 +59,7 @@
                     </tr>
                 </tbody>
             </table>
-            <p class="mt-2 text-justify leading-snug" :class="paragraph.flush ? '' : (sheet.dense ? 'indent-4' : 'indent-8')">
+            <p class="mt-2 text-justify font-normal leading-snug" :class="paragraph.flush ? '' : (sheet.dense ? 'indent-4' : 'indent-8')">
                 <template v-for="(part, partIndex) in (paragraph.parts || paragraph)" :key="partIndex">
                     <span
                         v-if="part.bold || part.italic || part.underline"
@@ -115,6 +118,23 @@
                     <p>Punong Barangay</p>
                 </div>
             </div>
+            <div v-if="sheet.show_stamp" class="mt-2 flex justify-end">
+                <div class="w-60 rounded-lg border-2 border-[#9c3b32] p-0.5 text-left text-[#9c3b32]">
+                    <div class="rounded-md border border-[#9c3b32] px-2 py-1.5 text-[10px] leading-tight">
+                        <p class="text-center font-bold">DOCUMENTARY STAMP TAX PAID</p>
+                        <div class="mt-1.5 grid grid-cols-[1.3fr_1fr]">
+                            <div class="pr-2">
+                                <p>GOR SERIAL NUMBER:</p>
+                                <div class="mt-2 border-b border-[#9c3b32]" />
+                            </div>
+                            <div class="border-l border-[#9c3b32] pl-2">
+                                <p>DATE:</p>
+                                <div class="mt-2 border-b border-[#9c3b32]" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div v-else-if="sheet.signature_style === 'affidavit'" class="mt-4 text-[12px]">
@@ -139,10 +159,29 @@
                     <p>Signature</p>
                 </div>
             </div>
-            <p class="mt-3">Name: {{ sheet.affidavit?.kagawad_name }}</p>
-            <p>Kagawad on Social Services</p>
-            <div class="mt-2 h-6 w-40 border-b border-slate-900" />
-            <p>Signature</p>
+            <div class="mt-3 flex items-end justify-between gap-4">
+                <div>
+                    <p>Name: {{ sheet.affidavit?.kagawad_name }}</p>
+                    <p>Kagawad on Social Services</p>
+                    <div class="mt-2 h-6 w-40 border-b border-slate-900" />
+                    <p>Signature</p>
+                </div>
+                <div v-if="sheet.show_stamp" class="w-60 shrink-0 rounded-lg border-2 border-[#9c3b32] p-0.5 text-left text-[#9c3b32]">
+                    <div class="rounded-md border border-[#9c3b32] px-2 py-1.5 text-[10px] leading-tight">
+                        <p class="text-center font-bold">DOCUMENTARY STAMP TAX PAID</p>
+                        <div class="mt-1.5 grid grid-cols-[1.3fr_1fr]">
+                            <div class="pr-2">
+                                <p>GOR SERIAL NUMBER:</p>
+                                <div class="mt-2 border-b border-[#9c3b32]" />
+                            </div>
+                            <div class="border-l border-[#9c3b32] pl-2">
+                                <p>DATE:</p>
+                                <div class="mt-2 border-b border-[#9c3b32]" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <template v-else>
@@ -173,7 +212,7 @@
                 </div>
             </div>
             <div class="mt-2">
-                <div class="h-8 w-48 border-b border-slate-900" />
+                <div v-if="sheet.officer_line !== false" class="h-8 w-48 border-b border-slate-900" />
                 <p class="mt-1" :class="{ 'font-bold': sheet.bold_issuer }">{{ sheet.fields?.issuer_name }}</p>
                 <p>Officer for the day</p>
                 <p>{{ sheet.fields?.issuer_position }}</p>

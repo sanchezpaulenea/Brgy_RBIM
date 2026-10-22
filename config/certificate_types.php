@@ -77,6 +77,7 @@ return [
         'salutation' => null,
         'signature' => 'oath',
         'stamp' => false,
+        'title_bold' => false,
         'dense' => true,
         'packet' => true,
         'footer_notes' => [
@@ -154,6 +155,7 @@ return [
         'salutation' => 'To Whom It May Concern:',
         'signature' => 'authority',
         'stamp' => true,
+        'officer_line' => false,
         'bold_issuer' => true,
         'authority_line' => 'By the Authority of the Punong Barangay:',
         'allows_signature' => true,

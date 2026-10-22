@@ -73,6 +73,8 @@
                         v-for="resident in matches"
                         :key="resident.resident_id"
                         class="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+                        :class="resident.eligible ? 'cursor-pointer' : ''"
+                        @click="selectResident(resident)"
                     >
                         <div>
                             <p class="text-sm font-medium text-slate-900">{{ resident.name }}</p>
@@ -85,7 +87,7 @@
                             type="button"
                             class="rbim-btn-outline px-3 py-1.5 text-xs"
                             :disabled="!resident.eligible"
-                            @click="selectResident(resident)"
+                            @click.stop="selectResident(resident)"
                         >
                             {{ selectedResident?.resident_id === resident.resident_id ? 'Selected' : 'Select' }}
                         </button>
