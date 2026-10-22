@@ -42,6 +42,7 @@ class StoreCertificateRequest extends FormRequest
     {
         return [
             $this->signatureAfter(),
+            $this->typeSpecificAfter(),
         ];
     }
 }

@@ -33,7 +33,7 @@ export async function exportReport(payload) {
 
     const disposition = response.headers?.['content-disposition'] ?? '';
     const match = /filename="?([^"]+)"?/i.exec(disposition);
-    const filename = match?.[1] ?? `report.${payload.format === 'pdf' ? 'pdf' : 'xlsx'}`;
+    const filename = match?.[1] ?? 'report.xlsx';
     const url = URL.createObjectURL(response.data);
     const link = document.createElement('a');
     link.href = url;

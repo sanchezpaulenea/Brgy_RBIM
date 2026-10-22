@@ -39,9 +39,12 @@ class CertificateController extends Controller
     {
         $this->authorize('viewAny', Certificate::class);
 
+        $typeId = $request->validated('type_of_certificate_id');
+
         return response()->json([
             'residents' => $this->certificateService->searchResidents(
                 $request->string('search')->toString(),
+                is_numeric($typeId) ? (int) $typeId : null,
             ),
         ]);
     }
@@ -90,11 +93,24 @@ class CertificateController extends Controller
 
         $issued = $this->certificateService->issue($payload, $user);
 
-        return response($issued['pdf'], 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="'.$issued['filename'].'"',
-            'X-Certificate-Id' => (string) $issued['certificate_id'],
-        ]);
+        return $this->pdfResponse($issued);
+    }
+
+    /**
+     * PATCH /api/v1/certificates/{certificate}
+     */
+    public function update(StoreCertificateRequest $request, Certificate $certificate): Response
+    {
+        $this->authorize('edit', Certificate::class);
+        $this->authorizeOverrides($request);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        $payload = $request->validated();
+        $payload['attach_pb_signature'] = $request->boolean('attach_pb_signature');
+
+        return $this->pdfResponse($this->certificateService->revise($payload, $certificate, $user));
     }
 
     /**
@@ -105,6 +121,26 @@ class CertificateController extends Controller
         $this->authorize('viewAny', Certificate::class);
 
         return $this->certificateService->signatureResponse();
+    }
+
+    /**
+     * @param  array{pdf: string, certificate_id: int, filename: string, warnings?: list<string>}  $issued
+     */
+    private function pdfResponse(array $issued): Response
+    {
+        $headers = [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$issued['filename'].'"',
+            'X-Certificate-Id' => (string) $issued['certificate_id'],
+        ];
+
+        $warnings = $issued['warnings'] ?? [];
+
+        if ($warnings !== []) {
+            $headers['X-Certificate-Warning'] = implode(' ', $warnings);
+        }
+
+        return response($issued['pdf'], 200, $headers);
     }
 
     private function authorizeOverrides(CertificatePreviewRequest|StoreCertificateRequest $request): void

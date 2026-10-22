@@ -93,7 +93,7 @@ class ReportPreviewRequest extends FormRequest
                 Rule::excludeIf(fn (): bool => ! $this->isExport()),
                 'required',
                 'string',
-                Rule::in(['pdf', 'excel']),
+                Rule::in(['excel']),
             ],
             'title' => [
                 Rule::excludeIf(fn (): bool => ! $this->isExport()),
@@ -147,7 +147,7 @@ class ReportPreviewRequest extends FormRequest
             'title.required' => 'Report title is required.',
             'title.max' => 'Report title may not be longer than 100 characters.',
             'subtitle.max' => 'Report subtitle may not be longer than 100 characters.',
-            'format.in' => 'Choose PDF or Excel.',
+            'format.in' => 'Choose Excel.',
         ];
     }
 

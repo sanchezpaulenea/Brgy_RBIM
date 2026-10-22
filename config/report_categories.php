@@ -21,7 +21,6 @@ use App\Models\ResidentManagement\Demographic\RelationshipToHouseholdHead;
 use App\Models\ResidentManagement\Demographic\Religion;
 use App\Models\ResidentManagement\Demographic\ResidentStatus;
 use App\Models\ResidentManagement\Demographic\ResidentType;
-use App\Models\ResidentManagement\Demographic\Sex;
 use App\Models\ResidentManagement\Economic\Economic;
 use App\Models\ResidentManagement\Economic\SourceOfIncome;
 use App\Models\ResidentManagement\Economic\StatusOfWorkBusiness;
@@ -212,6 +211,7 @@ $choices = static function (
         'visible_when' => $extra['visible_when'] ?? null,
         'sentinel_model' => $extra['sentinel_model'] ?? null,
         'force_owned' => $extra['force_owned'] ?? null,
+        'choice_source' => $extra['choice_source'] ?? null,
     ];
 };
 
@@ -749,7 +749,7 @@ return [
     ], [
         'questions' => true,
         'default_columns' => $diseaseDefaults,
-        'extra_columns' => ['total_diseases_recorded', 'household_members_health'],
+        'extra_columns' => ['total_diseases_recorded', 'diseases_recorded_list', 'household_members_health'],
         'counts' => [[
             'column' => 'total_diseases_recorded',
             'alias' => 'matching_diseases_count',
@@ -793,7 +793,7 @@ return [
     ], [
         'questions' => true,
         'default_columns' => $needDefaults,
-        'extra_columns' => ['total_primary_needs_recorded', 'household_members_health'],
+        'extra_columns' => ['total_primary_needs_recorded', 'primary_needs_recorded_list', 'household_members_health'],
         'counts' => [[
             'column' => 'total_primary_needs_recorded',
             'alias' => 'matching_needs_count',
@@ -851,8 +851,6 @@ return [
             'pet',
             [
                 ['value' => 'all', 'label' => 'All', 'op' => 'any', 'singular' => false],
-                ['value' => 'male', 'label' => 'Male', 'op' => 'eq', 'operand' => Sex::MALE, 'singular' => true],
-                ['value' => 'female', 'label' => 'Female', 'op' => 'eq', 'operand' => Sex::FEMALE, 'singular' => true],
             ],
             ['pet_details.sex'],
             [
@@ -864,6 +862,7 @@ return [
             ],
             'pet_census.sex_id',
             'sex_id',
+            ['choice_source' => 'sex'],
         ),
         $choices(
             'spay_neuter',
@@ -1636,13 +1635,12 @@ return [
             'resident',
             [
                 ['value' => 'all', 'label' => 'All', 'op' => 'any', 'singular' => false],
-                ['value' => 'male', 'label' => 'Male', 'op' => 'eq', 'operand' => Sex::MALE, 'singular' => true],
-                ['value' => 'female', 'label' => 'Female', 'op' => 'eq', 'operand' => Sex::FEMALE, 'singular' => true],
             ],
             ['resident_demographic.sex'],
             $sortLookup('sex', 'sort_age_sex', 'sex_id', 'sex', 'resident.sex_id'),
             'resident.sex_id',
             'sex_id',
+            ['choice_source' => 'sex'],
         ),
         $lookup(
             'marital_status',

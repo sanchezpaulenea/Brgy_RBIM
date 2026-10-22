@@ -24,7 +24,7 @@ class CertificatePreviewRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->certificateRules();
+        return $this->certificateRules(strictTypeFields: false);
     }
 
     /**
@@ -33,5 +33,15 @@ class CertificatePreviewRequest extends FormRequest
     public function messages(): array
     {
         return $this->certificateMessages();
+    }
+
+    /**
+     * @return array<int, \Closure>
+     */
+    public function after(): array
+    {
+        return [
+            $this->typeSpecificAfter(),
+        ];
     }
 }

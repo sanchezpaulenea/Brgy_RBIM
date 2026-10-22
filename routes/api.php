@@ -109,6 +109,7 @@ Route::prefix('v1')->group(function () {
         Route::get('certificates/residents/{resident}/history', [CertificateController::class, 'history'])->name('certificates.residents.history');
         Route::post('certificates/preview', [CertificateController::class, 'preview'])->name('certificates.preview');
         Route::post('certificates', [CertificateController::class, 'store'])->name('certificates.store');
+        Route::patch('certificates/{certificate}', [CertificateController::class, 'update'])->name('certificates.update');
         Route::get('certificates/signature', [CertificateController::class, 'signature'])->name('certificates.signature');
 
         Route::get('streets', [StreetController::class, 'index'])->name('streets.index');

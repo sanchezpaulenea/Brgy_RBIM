@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Certificate;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class SearchCertificateResidentRequest extends FormRequest
 {
@@ -27,6 +28,11 @@ class SearchCertificateResidentRequest extends FormRequest
     {
         return [
             'search' => ['required', 'string', 'min:2', 'max:100'],
+            'type_of_certificate_id' => [
+                'sometimes',
+                'integer',
+                Rule::exists('type_of_certificate', 'type_of_certificate_id'),
+            ],
         ];
     }
 

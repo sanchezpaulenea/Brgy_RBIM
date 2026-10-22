@@ -7,7 +7,6 @@ use App\Models\Logs\Action;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ReportRepositoryInterface;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -95,20 +94,10 @@ class ReportService
             ? $report['header'].': '.$report['total']
             : null;
 
-        if ($format === 'pdf') {
-            $response = Pdf::loadView('reports.master-list', [
-                'title' => $report['title'],
-                'subtitle' => $report['subtitle'],
-                'header' => $headerLine,
-                'headings' => $headings,
-                'rows' => $rows,
-            ])->setPaper('a4', 'landscape')->download($filename.'.pdf');
-        } else {
-            $response = Excel::download(
-                new ReportWorkbookExport($report['title'], $report['subtitle'], $headerLine, $headings, $rows),
-                $filename.'.xlsx',
-            );
-        }
+        $response = Excel::download(
+            new ReportWorkbookExport($report['title'], $report['subtitle'], $headerLine, $headings, $rows),
+            $filename.'.xlsx',
+        );
 
         $this->auditLogRepository->log(
             performedByUserId: $performedBy->user_id,

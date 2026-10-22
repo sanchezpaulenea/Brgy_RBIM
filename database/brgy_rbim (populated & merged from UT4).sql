@@ -267,18 +267,64 @@ INSERT INTO `building_house_type` (`building_house_type_id`, `building_house_typ
 -- Table structure for table `certificate`
 --
 
+DROP TABLE IF EXISTS `certificate_solo_parent_child`;
+DROP TABLE IF EXISTS `certificate_solo_parent`;
 DROP TABLE IF EXISTS `certificate`;
 CREATE TABLE IF NOT EXISTS `certificate` (
   `certificate_id` int NOT NULL AUTO_INCREMENT,
   `resident_id` int NOT NULL,
   `date_of_issue` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `purpose_of_request` varchar(45) NOT NULL,
+  `purpose_of_request` varchar(255) NOT NULL,
   `type_of_certificate_id` int NOT NULL,
   `issuer_id` int NOT NULL,
+  `representative_name` varchar(100) DEFAULT NULL,
+  `representative_relationship` varchar(45) DEFAULT NULL,
+  `date_of_death` date DEFAULT NULL,
+  `include_income_amount` tinyint(1) NOT NULL DEFAULT 0,
+  `stated_income_amount` decimal(10,2) DEFAULT NULL,
+  `place_of_death` varchar(100) DEFAULT NULL,
+  `cause_of_death` varchar(100) DEFAULT NULL,
+  `ethnic_group` varchar(60) DEFAULT NULL,
+  `resident_since_year` smallint DEFAULT NULL,
+  `stated_civil_status` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`certificate_id`),
   KEY `requester` (`resident_id`),
   KEY `issuer` (`issuer_id`),
   KEY `certificate_type` (`type_of_certificate_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `certificate_solo_parent`
+--
+
+DROP TABLE IF EXISTS `certificate_solo_parent`;
+CREATE TABLE IF NOT EXISTS `certificate_solo_parent` (
+  `certificate_id` int NOT NULL,
+  `circumstance` varchar(120) NOT NULL,
+  `president_name` varchar(100) NOT NULL,
+  `president_address` varchar(255) NOT NULL,
+  `neighbor_name` varchar(100) NOT NULL,
+  `neighbor_address` varchar(255) NOT NULL,
+  `kagawad_name` varchar(100) NOT NULL,
+  PRIMARY KEY (`certificate_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `certificate_solo_parent_child`
+--
+
+DROP TABLE IF EXISTS `certificate_solo_parent_child`;
+CREATE TABLE IF NOT EXISTS `certificate_solo_parent_child` (
+  `certificate_solo_parent_child_id` int NOT NULL AUTO_INCREMENT,
+  `certificate_id` int NOT NULL,
+  `child_name` varchar(100) NOT NULL,
+  `date_of_birth` date NOT NULL,
+  PRIMARY KEY (`certificate_solo_parent_child_id`),
+  KEY `certificate_solo_parent_child_certificate` (`certificate_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -9907,7 +9953,7 @@ CREATE TABLE IF NOT EXISTS `type_of_certificate` (
   `type_of_certificate_id` int NOT NULL AUTO_INCREMENT,
   `type_of_certificate` varchar(45) NOT NULL,
   PRIMARY KEY (`type_of_certificate_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `type_of_certificate`
@@ -9918,8 +9964,10 @@ INSERT INTO `type_of_certificate` (`type_of_certificate_id`, `type_of_certificat
 (2, 'Barangay Clearance'),
 (3, 'First Time Job Seeker'),
 (4, 'Oath of Undertaking'),
-(5, 'Certificate of Indigency'),
-(6, 'Solo Parent Certificate');
+(6, 'Affidavit of Solo Parent'),
+(7, 'Low Income Certification'),
+(8, 'Death Certificate'),
+(9, 'Good Moral Certification');
 
 -- --------------------------------------------------------
 
@@ -10144,6 +10192,18 @@ ALTER TABLE `certificate`
   ADD CONSTRAINT `certificate_type` FOREIGN KEY (`type_of_certificate_id`) REFERENCES `type_of_certificate` (`type_of_certificate_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `issuer` FOREIGN KEY (`issuer_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   ADD CONSTRAINT `requester` FOREIGN KEY (`resident_id`) REFERENCES `resident` (`resident_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `certificate_solo_parent`
+--
+ALTER TABLE `certificate_solo_parent`
+  ADD CONSTRAINT `certificate_solo_parent_certificate` FOREIGN KEY (`certificate_id`) REFERENCES `certificate` (`certificate_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `certificate_solo_parent_child`
+--
+ALTER TABLE `certificate_solo_parent_child`
+  ADD CONSTRAINT `certificate_solo_parent_child_certificate` FOREIGN KEY (`certificate_id`) REFERENCES `certificate` (`certificate_id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 --
 -- Constraints for table `child_hhm_died`

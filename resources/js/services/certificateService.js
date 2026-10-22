@@ -6,9 +6,12 @@ export async function fetchCertificateTypes() {
     return data.types ?? [];
 }
 
-export async function searchCertificateResidents(search) {
+export async function searchCertificateResidents(search, typeOfCertificateId) {
     const { data } = await http.get('/certificates/residents', {
-        params: { search },
+        params: {
+            search,
+            type_of_certificate_id: typeOfCertificateId || undefined,
+        },
     });
 
     return data.residents ?? [];
@@ -37,6 +40,20 @@ export async function issueCertificate(payload) {
         blob: response.data,
         certificateId: response.headers?.['x-certificate-id'] ?? null,
         filename: filenameFromDisposition(response.headers?.['content-disposition']),
+        warning: response.headers?.['x-certificate-warning'] ?? '',
+    };
+}
+
+export async function updateCertificate(certificateId, payload) {
+    const response = await http.patch(`/certificates/${certificateId}`, payload, {
+        responseType: 'blob',
+    });
+
+    return {
+        blob: response.data,
+        certificateId: response.headers?.['x-certificate-id'] ?? certificateId,
+        filename: filenameFromDisposition(response.headers?.['content-disposition']),
+        warning: response.headers?.['x-certificate-warning'] ?? '',
     };
 }
 

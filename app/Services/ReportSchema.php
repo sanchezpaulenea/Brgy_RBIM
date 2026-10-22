@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\HouseholdManagement\Household;
 use App\Models\ResidentManagement\Demographic\Resident;
+use App\Models\ResidentManagement\Demographic\Sex;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -18,11 +19,30 @@ class ReportSchema
     public const PREVIEW_PER_PAGE = 25;
 
     /**
+     * @var array<string, array<string, mixed>>|null
+     */
+    private static ?array $hydratedCategories = null;
+
+    /**
      * @return array<string, array<string, mixed>>
      */
     public static function categories(): array
     {
-        return config('report_categories', []);
+        if (self::$hydratedCategories !== null) {
+            return self::$hydratedCategories;
+        }
+
+        $categories = config('report_categories', []);
+
+        foreach ($categories as $key => $category) {
+            if (is_array($category)) {
+                $categories[$key] = self::withSexChoices($category);
+            }
+        }
+
+        self::$hydratedCategories = $categories;
+
+        return self::$hydratedCategories;
     }
 
     /**
@@ -30,13 +50,77 @@ class ReportSchema
      */
     public static function category(string $key): array
     {
-        $category = config("report_categories.{$key}");
+        $category = self::categories()[$key] ?? null;
 
         if (! is_array($category)) {
             throw new InvalidArgumentException("Unknown report category [{$key}].");
         }
 
         return $category;
+    }
+
+    /**
+     * Sex filters keep their All choice in config. Male, Female, and Other
+     * are appended from the sex lookup so the labels are not copied by hand.
+     *
+     * @param  array<string, mixed>  $category
+     * @return array<string, mixed>
+     */
+    private static function withSexChoices(array $category): array
+    {
+        $filters = $category['filters'] ?? null;
+
+        if (! is_array($filters)) {
+            return $category;
+        }
+
+        foreach ($filters as $index => $filter) {
+            if (! is_array($filter) || ($filter['choice_source'] ?? null) !== 'sex') {
+                continue;
+            }
+
+            $choices = [];
+
+            foreach ($filter['choices'] ?? [] as $choice) {
+                if (is_array($choice) && ($choice['op'] ?? null) === 'any') {
+                    $choices[] = $choice;
+                }
+            }
+
+            foreach (self::sexChoices() as $choice) {
+                $choices[] = $choice;
+            }
+
+            $filters[$index]['choices'] = $choices;
+        }
+
+        $category['filters'] = $filters;
+
+        return $category;
+    }
+
+    /**
+     * @return list<array{value: string, label: string, op: string, operand: int, singular: bool}>
+     */
+    private static function sexChoices(): array
+    {
+        return Sex::query()
+            ->orderBy('sex_id')
+            ->get(['sex_id', 'sex'])
+            ->map(function (Sex $sex): array {
+                $label = trim((string) $sex->sex);
+
+                return [
+                    'value' => Str::lower($label),
+                    'label' => $label,
+                    'op' => 'eq',
+                    'operand' => (int) $sex->sex_id,
+                    'singular' => true,
+                ];
+            })
+            ->filter(fn (array $choice): bool => $choice['value'] !== '' && $choice['label'] !== '')
+            ->values()
+            ->all();
     }
 
     /**

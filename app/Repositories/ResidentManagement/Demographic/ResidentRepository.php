@@ -134,7 +134,7 @@ class ResidentRepository implements ResidentRepositoryInterface
     public function findForCertificate(int $residentId): ?Resident
     {
         return Resident::query()
-            ->with(['status', 'sex', 'household.street'])
+            ->with(['status', 'sex', 'household.street', 'nationality', 'maritalStatus', 'ethnicity'])
             ->where('resident_id', $residentId)
             ->first();
     }

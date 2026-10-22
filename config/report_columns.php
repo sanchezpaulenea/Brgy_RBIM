@@ -474,6 +474,32 @@ return [
             'count_via' => 'repository',
             'is_group' => false,
         ],
+        'diseases_recorded_list' => [
+            'key' => 'diseases_recorded_list',
+            'label' => 'List of Diseases Recorded',
+            'source' => 'questions.commonDiseases',
+            'is_group' => true,
+            'columns' => [
+                [
+                    'key' => 'common_disease',
+                    'label' => 'Disease',
+                    'source' => 'common_disease',
+                ],
+            ],
+        ],
+        'primary_needs_recorded_list' => [
+            'key' => 'primary_needs_recorded_list',
+            'label' => 'List of Primary Needs Recorded',
+            'source' => 'questions.primaryNeeds',
+            'is_group' => true,
+            'columns' => [
+                [
+                    'key' => 'primary_need',
+                    'label' => 'Primary Need',
+                    'source' => 'primary_need',
+                ],
+            ],
+        ],
         'female_death_details' => [
             'key' => 'female_death_details',
             'label' => 'Female Death Details',

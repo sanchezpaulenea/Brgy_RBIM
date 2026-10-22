@@ -101,15 +101,15 @@
                     id="purpose-of-request"
                     v-model="purpose"
                     type="text"
-                    maxlength="45"
+                    maxlength="255"
                     class="rbim-input py-2"
                     :class="{ 'rbim-input-error': purposeError }"
                     @input="purposeTouched = true"
                 >
                 <div class="flex items-start justify-between gap-3">
                     <p v-if="purposeTouched && purposeError" class="rbim-error">{{ purposeError }}</p>
-                    <p v-else class="rbim-hint">Enter the reason for this certificate, from 3 to 45 characters.</p>
-                    <p class="text-xs text-slate-500">{{ purpose.trim().length }}/45</p>
+                    <p v-else class="rbim-hint">Enter the reason for this certificate, from 3 to 255 characters.</p>
+                    <p class="text-xs text-slate-500">{{ purpose.trim().length }}/255</p>
                 </div>
             </section>
 
@@ -141,6 +141,7 @@
                                     <th class="px-4 py-3 text-left font-semibold text-slate-600">Purpose of Request</th>
                                     <th class="px-4 py-3 text-left font-semibold text-slate-600">Date of Issue</th>
                                     <th class="px-4 py-3 text-left font-semibold text-slate-600">Issuer</th>
+                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
@@ -149,6 +150,17 @@
                                     <td class="px-4 py-3">{{ row.purpose_of_request }}</td>
                                     <td class="px-4 py-3">{{ formatDateTime(row.date_of_issue) }}</td>
                                     <td class="px-4 py-3">{{ row.issuer_name }}</td>
+                                    <td class="px-4 py-3">
+                                        <button
+                                            type="button"
+                                            class="rbim-btn-outline px-3 py-1.5 text-xs"
+                                            :disabled="!canEdit"
+                                            @click="editIssued(row)"
+                                        >
+                                            Edit
+                                        </button>
+                                        <p v-if="!canEdit" class="mt-1 text-xs text-slate-500">You do not have permission to edit certificates.</p>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -167,7 +179,7 @@
 
             <section v-else class="space-y-4">
                 <div v-if="issued" class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                    Certificate issued. The PDF opened in a new tab for printing or download.
+                    {{ editingCertificateId ? 'Certificate updated.' : 'Certificate issued.' }} The PDF opened in a new tab for printing or download.
                     <button type="button" class="rbim-btn ml-3 py-2" @click="issueAnother">
                         Issue Another Certificate
                     </button>
@@ -206,22 +218,163 @@
                             </div>
                             <div>
                                 <label for="edit-purpose" class="rbim-label">Purpose of Request</label>
-                                <input id="edit-purpose" v-model="purpose" type="text" maxlength="45" class="rbim-input py-2" :readonly="!canEdit">
+                                <input id="edit-purpose" v-model="purpose" type="text" maxlength="255" class="rbim-input py-2" :readonly="!canEdit">
                                 <p v-if="purposeError" class="rbim-error">{{ purposeError }}</p>
-                                <p class="text-xs text-slate-500">{{ purpose.trim().length }}/45</p>
+                                <p class="text-xs text-slate-500">{{ purpose.trim().length }}/255</p>
                             </div>
                             <div>
                                 <label class="rbim-label">Issue Date</label>
                                 <input :value="preview.document.fields.issued_date" type="text" class="rbim-input py-2" readonly>
                             </div>
-                            <div>
-                                <label class="rbim-label">Issuer</label>
-                                <input :value="issuerLine" type="text" class="rbim-input py-2" readonly>
+                        </div>
+
+                        <div class="rounded-lg border border-slate-200 p-4">
+                            <label class="flex items-center gap-2 text-sm text-slate-800">
+                                <input v-model="representativeRequested" type="checkbox">
+                                Request made by a representative
+                            </label>
+                            <div v-if="representativeRequested" class="mt-4 grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label for="representative-name" class="rbim-label">
+                                        Representative Name<span class="rbim-required" aria-hidden="true">*</span>
+                                    </label>
+                                    <input id="representative-name" v-model="representativeName" type="text" maxlength="100" class="rbim-input py-2">
+                                    <p v-if="personTextError(representativeName, 'Representative name', 100)" class="rbim-error">
+                                        {{ personTextError(representativeName, 'Representative name', 100) }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label for="representative-relationship" class="rbim-label">
+                                        Relationship to the Certificate Owner<span class="rbim-required" aria-hidden="true">*</span>
+                                    </label>
+                                    <input id="representative-relationship" v-model="representativeRelationship" type="text" maxlength="45" class="rbim-input py-2">
+                                    <p v-if="personTextError(representativeRelationship, 'Relationship', 45)" class="rbim-error">
+                                        {{ personTextError(representativeRelationship, 'Relationship', 45) }}
+                                    </p>
+                                </div>
                             </div>
-                            <div class="md:col-span-2">
-                                <label class="rbim-label">Punong Barangay Name</label>
-                                <input :value="preview.document.fields.punong_barangay_name" type="text" class="rbim-input py-2" readonly>
-                                <p class="rbim-hint">This name is changed in Settings, under System settings, in Barangay Information. Only a Super Admin can edit it.</p>
+                        </div>
+
+                        <div v-if="selectedType?.kind === 'death'" class="grid gap-4 md:grid-cols-2">
+                            <div>
+                                <label for="date-of-death" class="rbim-label">
+                                    Date of Death<span class="rbim-required" aria-hidden="true">*</span>
+                                </label>
+                                <input id="date-of-death" v-model="dateOfDeath" type="date" class="rbim-input py-2">
+                                <p v-if="dateOfDeathError" class="rbim-error">{{ dateOfDeathError }}</p>
+                                <p class="rbim-hint">Kept on the certificate record. The barangay form prints the place, cause, and ethnic practice.</p>
+                            </div>
+                            <div>
+                                <label for="place-of-death" class="rbim-label">
+                                    Place of Death<span class="rbim-required" aria-hidden="true">*</span>
+                                </label>
+                                <input id="place-of-death" v-model="placeOfDeath" type="text" maxlength="100" class="rbim-input py-2" placeholder="their residence">
+                                <p v-if="personTextError(placeOfDeath, 'Place of death', 100)" class="rbim-error">{{ personTextError(placeOfDeath, 'Place of death', 100) }}</p>
+                            </div>
+                            <div>
+                                <label for="cause-of-death" class="rbim-label">
+                                    Cause of Death<span class="rbim-required" aria-hidden="true">*</span>
+                                </label>
+                                <input id="cause-of-death" v-model="causeOfDeath" type="text" maxlength="100" class="rbim-input py-2" placeholder="old age">
+                                <p v-if="personTextError(causeOfDeath, 'Cause of death', 100)" class="rbim-error">{{ personTextError(causeOfDeath, 'Cause of death', 100) }}</p>
+                            </div>
+                            <div>
+                                <label for="ethnic-group" class="rbim-label">
+                                    Ethnic Group<span class="rbim-required" aria-hidden="true">*</span>
+                                </label>
+                                <input id="ethnic-group" v-model="ethnicGroup" type="text" maxlength="60" class="rbim-input py-2" placeholder="Kankanaey">
+                                <p v-if="personTextError(ethnicGroup, 'Ethnic group', 60)" class="rbim-error">{{ personTextError(ethnicGroup, 'Ethnic group', 60) }}</p>
+                            </div>
+                        </div>
+
+                        <div v-if="selectedType?.kind === 'low_income'" class="space-y-3">
+                            <label class="flex items-center gap-2 text-sm text-slate-800">
+                                <input v-model="includeIncomeAmount" type="checkbox">
+                                Include stated annual income
+                            </label>
+                            <div v-if="includeIncomeAmount">
+                                <label for="stated-income" class="rbim-label">
+                                    Annual Income Threshold<span class="rbim-required" aria-hidden="true">*</span>
+                                </label>
+                                <input id="stated-income" v-model="statedIncomeAmount" type="text" inputmode="decimal" class="rbim-input py-2 md:max-w-xs" placeholder="0.00">
+                                <p class="rbim-hint">Printed in words and in figures as the regional annual threshold.</p>
+                                <p v-if="incomeError" class="rbim-error">{{ incomeError }}</p>
+                            </div>
+                            <div v-else class="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label for="resident-since" class="rbim-label">
+                                        Resident Since<span class="rbim-required" aria-hidden="true">*</span>
+                                    </label>
+                                    <input id="resident-since" v-model="residentSinceYear" type="text" inputmode="numeric" maxlength="4" class="rbim-input py-2" placeholder="1998">
+                                    <p v-if="sinceYearError" class="rbim-error">{{ sinceYearError }}</p>
+                                </div>
+                                <div>
+                                    <label for="civil-status" class="rbim-label">
+                                        Civil Status<span class="rbim-required" aria-hidden="true">*</span>
+                                    </label>
+                                    <input id="civil-status" v-model="statedCivilStatus" type="text" maxlength="45" class="rbim-input py-2">
+                                    <p v-if="personTextError(statedCivilStatus, 'Civil status', 45)" class="rbim-error">{{ personTextError(statedCivilStatus, 'Civil status', 45) }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="selectedType?.kind === 'good_moral'">
+                            <label for="good-moral-civil-status" class="rbim-label">
+                                Civil Status<span class="rbim-required" aria-hidden="true">*</span>
+                            </label>
+                            <input id="good-moral-civil-status" v-model="statedCivilStatus" type="text" maxlength="45" class="rbim-input py-2 md:max-w-xs">
+                            <p v-if="personTextError(statedCivilStatus, 'Civil status', 45)" class="rbim-error">{{ personTextError(statedCivilStatus, 'Civil status', 45) }}</p>
+                        </div>
+
+                        <div v-if="selectedType?.kind === 'solo_parent'" class="space-y-4 rounded-lg border border-slate-200 p-4">
+                            <div>
+                                <label for="solo-circumstance" class="rbim-label">
+                                    Solo Parent Circumstance<span class="rbim-required" aria-hidden="true">*</span>
+                                </label>
+                                <input id="solo-circumstance" v-model="soloParentCircumstance" type="text" maxlength="120" class="rbim-input py-2" placeholder="abandonment, unmarried">
+                                <p class="rbim-hint">Printed as (SOLO PARENT-circumstance).</p>
+                                <p v-if="personTextError(soloParentCircumstance, 'Solo parent circumstance', 120)" class="rbim-error">
+                                    {{ personTextError(soloParentCircumstance, 'Solo parent circumstance', 120) }}
+                                </p>
+                            </div>
+                            <div>
+                                <p class="rbim-label">Children under custody<span class="rbim-required" aria-hidden="true">*</span></p>
+                                <div v-for="(child, index) in children" :key="index" class="mt-2 grid gap-3 md:grid-cols-[1fr_180px_auto]">
+                                    <input v-model="child.child_name" type="text" maxlength="100" class="rbim-input py-2" placeholder="Child name">
+                                    <input v-model="child.date_of_birth" type="date" class="rbim-input py-2">
+                                    <button type="button" class="rbim-btn-outline" @click="removeChild(index)">Remove</button>
+                                </div>
+                                <button type="button" class="rbim-btn-outline mt-3" :disabled="children.length >= 10" @click="addChild">
+                                    Add Child
+                                </button>
+                                <p v-if="childrenError" class="rbim-error">{{ childrenError }}</p>
+                            </div>
+                            <div class="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label for="president-name" class="rbim-label">Solo Parent President<span class="rbim-required" aria-hidden="true">*</span></label>
+                                    <input id="president-name" v-model="presidentName" type="text" maxlength="100" class="rbim-input py-2">
+                                    <p v-if="personTextError(presidentName, 'Solo Parent President name', 100)" class="rbim-error">{{ personTextError(presidentName, 'Solo Parent President name', 100) }}</p>
+                                </div>
+                                <div>
+                                    <label for="president-address" class="rbim-label">President Address<span class="rbim-required" aria-hidden="true">*</span></label>
+                                    <input id="president-address" v-model="presidentAddress" type="text" maxlength="255" class="rbim-input py-2">
+                                    <p v-if="addressError(presidentAddress, 'Solo Parent President address')" class="rbim-error">{{ addressError(presidentAddress, 'Solo Parent President address') }}</p>
+                                </div>
+                                <div>
+                                    <label for="neighbor-name" class="rbim-label">Neighbor<span class="rbim-required" aria-hidden="true">*</span></label>
+                                    <input id="neighbor-name" v-model="neighborName" type="text" maxlength="100" class="rbim-input py-2">
+                                    <p v-if="personTextError(neighborName, 'Neighbor name', 100)" class="rbim-error">{{ personTextError(neighborName, 'Neighbor name', 100) }}</p>
+                                </div>
+                                <div>
+                                    <label for="neighbor-address" class="rbim-label">Neighbor Address<span class="rbim-required" aria-hidden="true">*</span></label>
+                                    <input id="neighbor-address" v-model="neighborAddress" type="text" maxlength="255" class="rbim-input py-2">
+                                    <p v-if="addressError(neighborAddress, 'Neighbor address')" class="rbim-error">{{ addressError(neighborAddress, 'Neighbor address') }}</p>
+                                </div>
+                                <div>
+                                    <label for="kagawad-name" class="rbim-label">Kagawad on Social Services<span class="rbim-required" aria-hidden="true">*</span></label>
+                                    <input id="kagawad-name" v-model="kagawadName" type="text" maxlength="100" class="rbim-input py-2">
+                                    <p v-if="personTextError(kagawadName, 'Kagawad name', 100)" class="rbim-error">{{ personTextError(kagawadName, 'Kagawad name', 100) }}</p>
+                                </div>
                             </div>
                         </div>
 
@@ -234,7 +387,7 @@
                                 >
                                 Attach Punong Barangay digital signature
                             </label>
-                            <p v-if="signatureReason" class="rbim-hint">{{ signatureReason }}</p>
+                            <p v-if="signatureReason || signatureWarning" class="rbim-hint">{{ signatureWarning || signatureReason }}</p>
                         </div>
                     </div>
 
@@ -279,6 +432,7 @@ import {
     issueCertificate,
     previewCertificate,
     searchCertificateResidents,
+    updateCertificate,
 } from '@/services/certificateService';
 import { formatDateTime } from '@/utils/format';
 
@@ -319,10 +473,30 @@ const edits = reactive({
     requested_by: '',
 });
 const editsReady = ref(false);
+const editingCertificateId = ref(null);
+const representativeRequested = ref(false);
+const representativeName = ref('');
+const representativeRelationship = ref('');
+const dateOfDeath = ref('');
+const placeOfDeath = ref('');
+const causeOfDeath = ref('');
+const ethnicGroup = ref('');
+const includeIncomeAmount = ref(false);
+const statedIncomeAmount = ref('');
+const residentSinceYear = ref('');
+const statedCivilStatus = ref('');
+const soloParentCircumstance = ref('');
+const children = ref([{ child_name: '', date_of_birth: '' }]);
+const presidentName = ref('');
+const presidentAddress = ref('');
+const neighborName = ref('');
+const neighborAddress = ref('');
+const kagawadName = ref('');
 const attachSignature = ref(false);
 const signatureUrl = ref('');
 const generating = ref(false);
 const generateError = ref('');
+const signatureWarning = ref('');
 const issued = ref(false);
 let previewTimer = null;
 
@@ -349,26 +523,130 @@ const nextIssueLine = computed(() => {
 
 const signatureReason = computed(() => {
     if (!selectedType.value?.allows_signature) {
-        return 'Not available for this certificate type';
+        return 'Not available for this certificate type.';
     }
 
-    if (preview.value?.document && !preview.value.document.signature_available) {
-        return 'No Punong Barangay signature uploaded. Ask a Super Admin to upload it in Settings.';
+    if (attachSignature.value && preview.value?.document && !preview.value.document.signature_available) {
+        return 'No Punong Barangay signature file is on record. The certificate will show a blank signature line.';
     }
 
     return '';
 });
 
-const signatureDisabled = computed(() => signatureReason.value !== '');
+const signatureDisabled = computed(() => selectedType.value?.allows_signature === false);
 
-const issuerLine = computed(() => {
-    const fields = preview.value?.document?.fields;
-
-    if (!fields) {
+const dateOfDeathError = computed(() => {
+    if (selectedType.value?.kind !== 'death') {
         return '';
     }
 
-    return [fields.issuer_name, fields.issuer_position].filter(Boolean).join(', ');
+    if (!dateOfDeath.value) {
+        return 'Date of death is required.';
+    }
+
+    const chosen = new Date(`${dateOfDeath.value}T00:00:00`);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (Number.isNaN(chosen.getTime()) || chosen > today) {
+        return 'Date of death cannot be in the future.';
+    }
+
+    return '';
+});
+
+const incomeError = computed(() => {
+    if (selectedType.value?.kind !== 'low_income' || !includeIncomeAmount.value) {
+        return '';
+    }
+
+    const text = String(statedIncomeAmount.value ?? '').trim();
+
+    if (!/^\d+(\.\d{1,2})?$/.test(text) || Number(text) <= 0) {
+        return 'The annual income threshold must be a number greater than zero, with at most 2 decimal places.';
+    }
+
+    return '';
+});
+
+const sinceYearError = computed(() => {
+    if (selectedType.value?.kind !== 'low_income' || includeIncomeAmount.value) {
+        return '';
+    }
+
+    if (!/^\d{4}$/.test(String(residentSinceYear.value).trim())) {
+        return 'Resident since must be a 4-digit year.';
+    }
+
+    const year = Number(residentSinceYear.value);
+    const current = new Date().getFullYear();
+
+    if (year < 1900 || year > current) {
+        return 'Resident since year must be from 1900 through the current year.';
+    }
+
+    return '';
+});
+
+const needsCivilStatus = computed(() => selectedType.value?.kind === 'good_moral'
+    || (selectedType.value?.kind === 'low_income' && !includeIncomeAmount.value));
+
+const civilStatusError = computed(() => {
+    if (!needsCivilStatus.value) {
+        return '';
+    }
+
+    return personTextError(statedCivilStatus.value, 'Civil status', 45);
+});
+
+const childrenError = computed(() => {
+    if (selectedType.value?.kind !== 'solo_parent') {
+        return '';
+    }
+
+    const rows = children.value.filter((child) => String(child.child_name).trim() || child.date_of_birth);
+
+    if (rows.length === 0) {
+        return 'Add at least one child.';
+    }
+
+    for (const child of rows) {
+        const nameError = personTextError(child.child_name, 'Child name', 100);
+
+        if (nameError) {
+            return nameError;
+        }
+
+        if (!child.date_of_birth) {
+            return 'Child date of birth is required.';
+        }
+    }
+
+    return '';
+});
+
+const soloParentError = computed(() => {
+    if (selectedType.value?.kind !== 'solo_parent') {
+        return '';
+    }
+
+    return personTextError(soloParentCircumstance.value, 'Solo parent circumstance', 120)
+        || childrenError.value
+        || personTextError(presidentName.value, 'Solo Parent President name', 100)
+        || addressError(presidentAddress.value, 'Solo Parent President address')
+        || personTextError(neighborName.value, 'Neighbor name', 100)
+        || addressError(neighborAddress.value, 'Neighbor address')
+        || personTextError(kagawadName.value, 'Kagawad name', 100);
+});
+
+const deathDetailError = computed(() => {
+    if (selectedType.value?.kind !== 'death') {
+        return '';
+    }
+
+    return personTextError(placeOfDeath.value, 'Place of death', 100)
+        || personTextError(causeOfDeath.value, 'Cause of death', 100)
+        || personTextError(ethnicGroup.value, 'Ethnic group', 60);
 });
 
 const canContinue = computed(() => {
@@ -400,7 +678,23 @@ const generateReason = computed(() => {
         return preview.value.reason;
     }
 
-    if (purposeError.value || overrideError(edits.resident_name, 'Resident name') || overrideError(edits.address, 'Address') || overrideError(edits.requested_by, 'Requester')) {
+    if (editingCertificateId.value && !canEdit.value) {
+        return 'You do not have permission to edit certificates.';
+    }
+
+    if (
+        purposeError.value
+        || overrideError(edits.resident_name, 'Resident name')
+        || overrideError(edits.address, 'Address')
+        || overrideError(edits.requested_by, 'Requester')
+        || representativeError()
+        || dateOfDeathError.value
+        || deathDetailError.value
+        || incomeError.value
+        || sinceYearError.value
+        || civilStatusError.value
+        || soloParentError.value
+    ) {
         return 'Fix the highlighted fields before generating.';
     }
 
@@ -424,8 +718,8 @@ function purposeValidationError(value) {
         return 'Purpose of request must be at least 3 characters.';
     }
 
-    if (text.length > 45) {
-        return 'Purpose of request must not exceed 45 characters.';
+    if (text.length > 255) {
+        return 'Purpose of request must not exceed 255 characters.';
     }
 
     if (!/\p{L}/u.test(text)) {
@@ -433,6 +727,69 @@ function purposeValidationError(value) {
     }
 
     return '';
+}
+
+function personTextError(value, label, max) {
+    const text = String(value ?? '').trim();
+
+    if (!text) {
+        return `${label} is required.`;
+    }
+
+    if (text.length > max) {
+        return `${label} must not exceed ${max} characters.`;
+    }
+
+    if (!/\p{L}/u.test(text) || /\p{N}/u.test(text) || !/^[\p{L}\s.'’\-,]+$/u.test(text)) {
+        return `${label} may contain only letters, spaces, periods, hyphens, apostrophes, and commas.`;
+    }
+
+    return '';
+}
+
+function addressError(value, label) {
+    const text = String(value ?? '').trim();
+
+    if (!text) {
+        return `${label} is required.`;
+    }
+
+    if (text.length > 255) {
+        return `${label} must not exceed 255 characters.`;
+    }
+
+    if (!/\p{L}/u.test(text)) {
+        return `${label} must contain at least one letter.`;
+    }
+
+    return '';
+}
+
+function addChild() {
+    if (children.value.length >= 10) {
+        return;
+    }
+
+    children.value.push({ child_name: '', date_of_birth: '' });
+}
+
+function removeChild(index) {
+    if (children.value.length === 1) {
+        children.value[0] = { child_name: '', date_of_birth: '' };
+
+        return;
+    }
+
+    children.value.splice(index, 1);
+}
+
+function representativeError() {
+    if (!representativeRequested.value) {
+        return '';
+    }
+
+    return personTextError(representativeName.value, 'Representative name', 100)
+        || personTextError(representativeRelationship.value, 'Relationship', 45);
 }
 
 function overrideError(value, label) {
@@ -475,12 +832,35 @@ function resetAfterType() {
     clearReview();
 }
 
+function clearIssuanceFields() {
+    representativeRequested.value = false;
+    representativeName.value = '';
+    representativeRelationship.value = '';
+    dateOfDeath.value = '';
+    placeOfDeath.value = '';
+    causeOfDeath.value = '';
+    ethnicGroup.value = '';
+    includeIncomeAmount.value = false;
+    statedIncomeAmount.value = '';
+    residentSinceYear.value = '';
+    statedCivilStatus.value = '';
+    soloParentCircumstance.value = '';
+    children.value = [{ child_name: '', date_of_birth: '' }];
+    presidentName.value = '';
+    presidentAddress.value = '';
+    neighborName.value = '';
+    neighborAddress.value = '';
+    kagawadName.value = '';
+    editingCertificateId.value = null;
+}
+
 function clearReview() {
     preview.value = null;
     editsReady.value = false;
     attachSignature.value = false;
     issued.value = false;
     generateError.value = '';
+    clearIssuanceFields();
     clearSignature();
 }
 
@@ -570,7 +950,7 @@ async function runSearch() {
     pageError.value = '';
 
     try {
-        matches.value = await searchCertificateResidents(term);
+        matches.value = await searchCertificateResidents(term, selectedType.value?.type_of_certificate_id);
         searched.value = true;
     } catch (err) {
         pageError.value = await certificateErrorMessage(err, 'Unable to search residents.');
@@ -609,11 +989,7 @@ async function loadPreview(useOverrides) {
     previewLoading.value = true;
     pageError.value = '';
 
-    const payload = {
-        type_of_certificate_id: selectedType.value.type_of_certificate_id,
-        resident_id: selectedResident.value.resident_id,
-        purpose_of_request: purpose.value.trim(),
-    };
+    const payload = certificatePayload();
 
     if (useOverrides && canEdit.value) {
         payload.overrides = {
@@ -631,6 +1007,21 @@ async function loadPreview(useOverrides) {
             edits.resident_name = data.document?.fields?.resident_name ?? '';
             edits.address = data.document?.fields?.address ?? '';
             edits.requested_by = data.document?.fields?.requested_by ?? '';
+
+            if (!editingCertificateId.value) {
+                if (!ethnicGroup.value && data.document?.suggestions?.ethnic_group) {
+                    ethnicGroup.value = data.document.suggestions.ethnic_group;
+                }
+
+                if (!statedCivilStatus.value && data.document?.suggestions?.stated_civil_status) {
+                    statedCivilStatus.value = data.document.suggestions.stated_civil_status;
+                }
+
+                if (!soloParentCircumstance.value && data.document?.suggestions?.solo_parent_circumstance) {
+                    soloParentCircumstance.value = data.document.suggestions.solo_parent_circumstance;
+                }
+            }
+
             editsReady.value = true;
         }
 
@@ -644,10 +1035,10 @@ async function loadPreview(useOverrides) {
     }
 }
 
-function schedulePreview() {
+function schedulePreview(useOverrides = true) {
     clearTimeout(previewTimer);
     previewTimer = setTimeout(() => {
-        loadPreview(true);
+        loadPreview(useOverrides);
     }, 400);
 }
 
@@ -677,9 +1068,7 @@ async function generate() {
     generateError.value = '';
 
     const payload = {
-        type_of_certificate_id: selectedType.value.type_of_certificate_id,
-        resident_id: selectedResident.value.resident_id,
-        purpose_of_request: purpose.value.trim(),
+        ...certificatePayload(),
         attach_pb_signature: attachSignature.value,
     };
 
@@ -692,7 +1081,9 @@ async function generate() {
     }
 
     try {
-        const result = await issueCertificate(payload);
+        const result = editingCertificateId.value
+            ? await updateCertificate(editingCertificateId.value, payload)
+            : await issueCertificate(payload);
 
         if (!(result.blob instanceof Blob) || result.blob.type.includes('json') || result.blob.type.includes('html')) {
             throw new Error('The server did not return a PDF.');
@@ -713,6 +1104,7 @@ async function generate() {
         }
 
         issued.value = true;
+        signatureWarning.value = result.warning || '';
     } catch (err) {
         popup?.close();
         generateError.value = await certificateErrorMessage(err, 'Unable to generate the certificate.');
@@ -747,27 +1139,134 @@ async function refresh() {
     }
 }
 
+async function editIssued(row) {
+    if (!canEdit.value) {
+        return;
+    }
+
+    const type = types.value.find((item) => item.type_of_certificate_id === row.type_of_certificate_id);
+
+    if (type) {
+        selectedType.value = type;
+    }
+
+    editingCertificateId.value = row.certificate_id;
+    purpose.value = row.purpose_of_request ?? '';
+    representativeRequested.value = Boolean(row.representative_name);
+    representativeName.value = row.representative_name ?? '';
+    representativeRelationship.value = row.representative_relationship ?? '';
+    dateOfDeath.value = row.date_of_death ?? '';
+    placeOfDeath.value = row.place_of_death ?? '';
+    causeOfDeath.value = row.cause_of_death ?? '';
+    ethnicGroup.value = row.ethnic_group ?? '';
+    includeIncomeAmount.value = Boolean(row.include_income_amount);
+    statedIncomeAmount.value = row.stated_income_amount ?? '';
+    residentSinceYear.value = row.resident_since_year ?? '';
+    statedCivilStatus.value = row.stated_civil_status ?? '';
+    soloParentCircumstance.value = row.solo_parent_circumstance ?? '';
+    presidentName.value = row.solo_parent_president_name ?? '';
+    presidentAddress.value = row.solo_parent_president_address ?? '';
+    neighborName.value = row.solo_parent_neighbor_name ?? '';
+    neighborAddress.value = row.solo_parent_neighbor_address ?? '';
+    kagawadName.value = row.solo_parent_kagawad_name ?? '';
+    children.value = Array.isArray(row.children) && row.children.length
+        ? row.children.map((child) => ({
+            child_name: child.child_name ?? '',
+            date_of_birth: child.date_of_birth ?? '',
+        }))
+        : [{ child_name: '', date_of_birth: '' }];
+    editsReady.value = false;
+    issued.value = false;
+    step.value = 5;
+    await loadPreview(false);
+}
+
+function certificatePayload() {
+    return {
+        type_of_certificate_id: selectedType.value.type_of_certificate_id,
+        resident_id: selectedResident.value.resident_id,
+        purpose_of_request: purpose.value.trim(),
+        representative_requested: representativeRequested.value,
+        representative_name: representativeRequested.value ? representativeName.value.trim() : null,
+        representative_relationship: representativeRequested.value ? representativeRelationship.value.trim() : null,
+        date_of_death: selectedType.value?.kind === 'death' ? dateOfDeath.value : null,
+        place_of_death: selectedType.value?.kind === 'death' ? placeOfDeath.value.trim() : null,
+        cause_of_death: selectedType.value?.kind === 'death' ? causeOfDeath.value.trim() : null,
+        ethnic_group: selectedType.value?.kind === 'death' ? ethnicGroup.value.trim() : null,
+        include_income_amount: selectedType.value?.kind === 'low_income' && includeIncomeAmount.value,
+        stated_income_amount: selectedType.value?.kind === 'low_income' && includeIncomeAmount.value
+            ? statedIncomeAmount.value.trim()
+            : null,
+        resident_since_year: selectedType.value?.kind === 'low_income' && !includeIncomeAmount.value
+            ? residentSinceYear.value.trim()
+            : null,
+        stated_civil_status: needsCivilStatus.value ? statedCivilStatus.value.trim() : null,
+        solo_parent_circumstance: selectedType.value?.kind === 'solo_parent' ? soloParentCircumstance.value.trim() : null,
+        solo_parent_president_name: selectedType.value?.kind === 'solo_parent' ? presidentName.value.trim() : null,
+        solo_parent_president_address: selectedType.value?.kind === 'solo_parent' ? presidentAddress.value.trim() : null,
+        solo_parent_neighbor_name: selectedType.value?.kind === 'solo_parent' ? neighborName.value.trim() : null,
+        solo_parent_neighbor_address: selectedType.value?.kind === 'solo_parent' ? neighborAddress.value.trim() : null,
+        solo_parent_kagawad_name: selectedType.value?.kind === 'solo_parent' ? kagawadName.value.trim() : null,
+        children: selectedType.value?.kind === 'solo_parent'
+            ? children.value
+                .map((child) => ({
+                    child_name: String(child.child_name ?? '').trim(),
+                    date_of_birth: child.date_of_birth || null,
+                }))
+                .filter((child) => child.child_name || child.date_of_birth)
+            : null,
+    };
+}
+
 watch(attachSignature, async (enabled) => {
-    if (!enabled) {
+    if (!enabled || preview.value?.document?.signature_available === false) {
         return;
     }
 
     try {
         await ensureSignature();
     } catch (err) {
-        attachSignature.value = false;
-        generateError.value = await certificateErrorMessage(err, 'Unable to load the Punong Barangay signature.');
+        generateError.value = await certificateErrorMessage(err, 'No Punong Barangay signature file is on record. The certificate will show a blank signature line.');
     }
 });
 
 watch(
-    () => [purpose.value, edits.resident_name, edits.address, edits.requested_by],
+    () => [
+        purpose.value,
+        edits.resident_name,
+        edits.address,
+        edits.requested_by,
+        representativeRequested.value,
+        representativeName.value,
+        representativeRelationship.value,
+        dateOfDeath.value,
+        placeOfDeath.value,
+        causeOfDeath.value,
+        ethnicGroup.value,
+        includeIncomeAmount.value,
+        statedIncomeAmount.value,
+        residentSinceYear.value,
+        statedCivilStatus.value,
+        soloParentCircumstance.value,
+        JSON.stringify(children.value),
+        presidentName.value,
+        presidentAddress.value,
+        neighborName.value,
+        neighborAddress.value,
+        kagawadName.value,
+    ],
     () => {
-        if (step.value !== 5 || !editsReady.value || !canEdit.value) {
+        if (step.value !== 5 || !editsReady.value) {
             return;
         }
 
-        schedulePreview();
+        if (!canEdit.value) {
+            schedulePreview(false);
+
+            return;
+        }
+
+        schedulePreview(true);
     },
 );
 
