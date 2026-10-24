@@ -261,14 +261,14 @@
                         <p v-if="errors[`child_deaths.${index}.age`]" class="rbim-error">{{ errors[`child_deaths.${index}.age`] }}</p>
                     </div>
                     <div>
-                        <label :for="`${idPrefix}-child_deaths_${index}_sex`" class="rbim-label">Sex</label>
+                        <label :for="`${idPrefix}-child_deaths_${index}_sex`" class="rbim-label">Gender</label>
                         <select
                             :id="`${idPrefix}-child_deaths_${index}_sex`"
                             v-model="death.sex_id"
                             class="rbim-input"
                             :class="{ 'rbim-input-error': errors[`child_deaths.${index}.sex_id`] }"
                         >
-                            <option value="">Select sex</option>
+                            <option value="">Select gender</option>
                             <option v-for="option in (lookups.sex ?? [])" :key="option.id" :value="option.id">{{ option.label }}</option>
                         </select>
                         <p v-if="errors[`child_deaths.${index}.sex_id`]" class="rbim-error">{{ errors[`child_deaths.${index}.sex_id`] }}</p>

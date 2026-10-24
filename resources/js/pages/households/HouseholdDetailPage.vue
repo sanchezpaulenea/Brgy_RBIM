@@ -115,7 +115,7 @@
                                 <dd class="mt-1 text-sm text-slate-900">{{ pet.breed || '—' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Sex</dt>
+                                <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Gender</dt>
                                 <dd class="mt-1 text-sm text-slate-900">{{ pet.sex || '—' }}</dd>
                             </div>
                             <div>
@@ -148,7 +148,7 @@
                                 <tr>
                                     <th class="px-4 py-3 text-left font-semibold text-slate-600">Name</th>
                                     <th class="px-4 py-3 text-left font-semibold text-slate-600">Relationship to Household Head</th>
-                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Sex</th>
+                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Gender</th>
                                     <th class="px-4 py-3 text-left font-semibold text-slate-600">Age</th>
                                     <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
                                 </tr>

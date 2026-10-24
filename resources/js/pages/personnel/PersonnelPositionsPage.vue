@@ -46,6 +46,7 @@
                         type="search"
                         class="rbim-input py-2"
                         placeholder="Search position name"
+                        @keydown.enter.prevent
                     >
                 </div>
                 <div class="w-full overflow-x-auto" role="table">

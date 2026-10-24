@@ -380,7 +380,7 @@ function validateMembers() {
         }
 
         if (!member.sex_id) {
-            errors.sex_id = 'Sex is required.';
+            errors.sex_id = 'Gender is required.';
         }
 
         if (!member.date_of_birth) {

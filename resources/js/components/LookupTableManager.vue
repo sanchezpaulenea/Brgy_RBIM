@@ -43,6 +43,7 @@
                     type="search"
                     class="rbim-input py-2"
                     :placeholder="`Search ${itemLabel} name`"
+                    @keydown.enter.prevent
                 >
             </div>
             <div class="overflow-x-auto">

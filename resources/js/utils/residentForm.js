@@ -185,7 +185,7 @@ export function validateResidentForm(form, errors, { requireRelationship = true,
     }
 
     if (!toId(form.sex_id)) {
-        errors.sex_id = 'Sex is required.';
+        errors.sex_id = 'Gender is required.';
     } else {
         delete errors.sex_id;
     }

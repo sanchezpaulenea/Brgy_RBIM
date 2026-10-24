@@ -10,7 +10,7 @@
                 {{ successMessage }}
             </div>
 
-            <form class="rbim-card grid gap-3 p-4 sm:grid-cols-5">
+            <form class="rbim-card grid gap-3 p-4 sm:grid-cols-5" @submit.prevent>
                 <div>
                     <label for="household-search" class="rbim-label">Search</label>
                     <input
@@ -23,6 +23,7 @@
                         spellcheck="false"
                         class="rbim-input py-2"
                         placeholder="Search household head"
+                        @keydown.enter.prevent
                     >
                 </div>
                 <div>
@@ -78,7 +79,7 @@
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             <tr
-                                v-for="household in filteredItems"
+                                v-for="household in pagedItems"
                                 :key="household.household_id"
                                 class="cursor-pointer hover:bg-slate-50"
                                 @click="openDetail(household.household_id)"
@@ -112,6 +113,20 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+                <div
+                    v-if="pageCount > 1"
+                    class="flex items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 text-sm"
+                >
+                    <span class="text-slate-500">Page {{ page }} of {{ pageCount }}</span>
+                    <div class="flex gap-2">
+                        <button type="button" class="rbim-btn-outline" :disabled="page <= 1" @click="page -= 1">
+                            Previous
+                        </button>
+                        <button type="button" class="rbim-btn-outline" :disabled="page >= pageCount" @click="page += 1">
+                            Next
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -301,11 +316,19 @@ const confirm = reactive({
     onCancel: null,
 });
 
+const PAGE_SIZE = 50;
+const page = ref(1);
 const canUpdate = computed(() => hasPermission('household.update'));
 
 const filteredItems = computed(() => (
     items.value.filter((household) => matchesSearch(household.head_name, filters.search))
 ));
+const pageCount = computed(() => Math.max(1, Math.ceil(filteredItems.value.length / PAGE_SIZE)));
+const pagedItems = computed(() => {
+    const start = (page.value - 1) * PAGE_SIZE;
+
+    return filteredItems.value.slice(start, start + PAGE_SIZE);
+});
 
 function emptyEditForm() {
     return {
@@ -397,6 +420,7 @@ async function loadHouseholds() {
 }
 
 function clearFilters() {
+    page.value = 1;
     filters.search = '';
     filters.clan_id = '';
     filters.street_id = '';
@@ -405,11 +429,24 @@ function clearFilters() {
 }
 
 watch(
+    () => [filters.search, filters.clan_id, filters.street_id, filters.household_status_id],
+    () => {
+        page.value = 1;
+    },
+);
+
+watch(
     () => [filters.clan_id, filters.street_id, filters.household_status_id],
     () => {
         loadHouseholds();
     },
 );
+
+watch(pageCount, (count) => {
+    if (page.value > count) {
+        page.value = count;
+    }
+});
 
 async function handleUpdate() {
     clearEditErrors();

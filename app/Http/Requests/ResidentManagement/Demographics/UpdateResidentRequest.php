@@ -109,7 +109,7 @@ class UpdateResidentRequest extends FormRequest
             'first_name.required' => 'First name is required.',
             'relationship_to_hh_id.exists' => 'The selected relationship does not exist.',
             'relationship_to_hh_id.not_in' => 'A resident cannot be changed to household head on this update.',
-            'sex_id.exists' => 'The selected sex does not exist.',
+            'sex_id.exists' => 'The selected gender does not exist.',
             'date_of_birth.before_or_equal' => 'Date of birth cannot be in the future.',
             'nationality_id.exists' => 'The selected nationality does not exist.',
             'religion_id.exists' => 'The selected religion does not exist.',

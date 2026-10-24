@@ -33,7 +33,7 @@
         />
         <div>
             <label :for="`${idPrefix}-sex`" class="rbim-label">
-                Sex<span class="rbim-required" aria-hidden="true">*</span>
+                Gender<span class="rbim-required" aria-hidden="true">*</span>
             </label>
             <select
                 :id="`${idPrefix}-sex`"

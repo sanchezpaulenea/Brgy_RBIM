@@ -846,7 +846,7 @@ return [
         ),
         $choices(
             'sex',
-            'Sex',
+            'Gender',
             'options',
             'pet',
             [
@@ -1630,7 +1630,7 @@ return [
         ],
         $choices(
             'sex',
-            'Sex',
+            'Gender',
             'options',
             'resident',
             [

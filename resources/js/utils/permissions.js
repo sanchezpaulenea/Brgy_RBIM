@@ -79,9 +79,9 @@ const PERMISSION_LABELS = {
     'report.view': { group: 'Reports', label: 'View reports' },
     'report.create': { group: 'Reports', label: 'Create and export reports' },
     'report.update': { group: 'Reports', label: 'Update reports' },
-    'certificate.view': { group: 'Certificates', label: 'View certificates' },
-    'certificate.create': { group: 'Certificates', label: 'Generate certificates' },
-    'certificate.edit': { group: 'Certificates', label: 'Edit certificate text' },
+    'certificate.view': { group: 'Certificate Generation', label: 'View certificates' },
+    'certificate.create': { group: 'Certificate Generation', label: 'Generate certificates' },
+    'certificate.edit': { group: 'Certificate Generation', label: 'Edit certificate text' },
 };
 
 const OTHER_GROUP = 'Other';
@@ -116,7 +116,7 @@ const PERMISSION_GROUP_ORDER = [
     'Ethnicities',
     'Religions',
     'Reports',
-    'Certificates',
+    'Certificate Generation',
 ];
 
 export function permissionLabel(permission) {

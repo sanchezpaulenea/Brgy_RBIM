@@ -43,7 +43,7 @@ class IndexResidentRequest extends FormRequest
     {
         return [
             'household_id.exists' => 'The selected household does not exist.',
-            'sex_id.exists' => 'The selected sex does not exist.',
+            'sex_id.exists' => 'The selected gender does not exist.',
             'resident_type_id.exists' => 'The selected resident type does not exist.',
             'resident_status_id.exists' => 'The selected resident status does not exist.',
             'age_max.gte' => 'Maximum age must be greater than or equal to minimum age.',

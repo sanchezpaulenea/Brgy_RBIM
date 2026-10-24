@@ -87,7 +87,7 @@
                         @update:model-value="clearDateOfBirthError"
                     />
                     <div>
-                        <label for="personnel_sex" class="rbim-label">Sex<span class="rbim-required">*</span></label>
+                        <label for="personnel_sex" class="rbim-label">Gender<span class="rbim-required">*</span></label>
                         <select
                             id="personnel_sex"
                             v-model="form.sex_id"
@@ -95,7 +95,7 @@
                             :class="{ 'rbim-input-error': formErrors.sex_id }"
                             @change="delete formErrors.sex_id"
                         >
-                            <option value="" disabled>Select sex</option>
+                            <option value="" disabled>Select gender</option>
                             <option v-for="option in SEX_OPTIONS" :key="option.id" :value="option.id">
                                 {{ option.label }}
                             </option>
@@ -138,6 +138,7 @@
                             type="search"
                             class="rbim-input py-2"
                             placeholder="Search personnel name"
+                            @keydown.enter.prevent
                         >
                     </div>
                     <div class="sm:w-48">
@@ -511,7 +512,7 @@ async function handleSave() {
     }
 
     if (!form.sex_id) {
-        formErrors.sex_id = 'Sex is required.';
+        formErrors.sex_id = 'Gender is required.';
     }
 
     if (!form.position_id && !form.position_name.trim()) {

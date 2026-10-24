@@ -20,7 +20,7 @@
                 @cancel="adding = false"
             />
 
-            <form v-else class="rbim-card grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-5">
+            <form v-else class="rbim-card grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-5" @submit.prevent="applyFilters">
                 <div>
                     <label for="pet-search" class="rbim-label">Search</label>
                     <input
@@ -33,6 +33,7 @@
                         spellcheck="false"
                         class="rbim-input py-2"
                         placeholder="Search pets or households"
+                        @keydown.enter.prevent="applyFilters"
                     >
                 </div>
                 <div>
@@ -81,7 +82,7 @@
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Household</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Species</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Breed</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Sex</th>
+                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Gender</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Date of Birth</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Age</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Spay/Neuter</th>
@@ -258,12 +259,17 @@ async function loadPets() {
     }
 }
 
+function applyFilters() {
+    clearTimeout(filterTimer);
+    loadPets();
+}
+
 function clearFilters() {
     filters.search = '';
     filters.pet_status_id = '';
     filters.specie_id = '';
     filters.breed_id = '';
-    loadPets();
+    applyFilters();
 }
 
 async function finishAdd() {

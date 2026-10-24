@@ -531,7 +531,7 @@ const demographicFields = computed(() => {
 
     return [
         { label: 'Full Name', value: item.full_name || '—' },
-        { label: 'Sex', value: item.sex || '—' },
+        { label: 'Gender', value: item.sex || '—' },
         { label: 'Date of Birth', value: item.date_of_birth || '—' },
         { label: 'Age', value: item.age ?? '—' },
         { label: 'Relationship to Household Head', value: item.relationship_to_hh || '—' },

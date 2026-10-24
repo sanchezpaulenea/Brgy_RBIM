@@ -1,6 +1,12 @@
 <template>
     <AppLayout title="Report Generation">
         <div class="space-y-6">
+            <div v-if="step > 0">
+                <button type="button" class="rbim-btn-outline" @click="goBack">
+                    Back
+                </button>
+            </div>
+
             <div>
                 <h1 class="text-xl font-semibold text-slate-900">Report Generation</h1>
                 <p class="mt-1 text-sm text-slate-600">
@@ -12,8 +18,8 @@
                 <li
                     v-for="(label, index) in steps"
                     :key="label"
-                    class="rounded-full px-3 py-1 text-xs font-semibold"
-                    :class="index === step ? 'bg-brand text-white' : 'bg-brand-muted text-slate-600'"
+                    class="rounded-lg px-3 py-2 text-sm font-medium"
+                    :class="index === step ? 'bg-brand text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200'"
                 >
                     {{ index + 1 }}. {{ label }}
                 </li>
@@ -197,7 +203,6 @@
                 </div>
 
                 <div class="flex flex-wrap gap-3">
-                    <button type="button" class="rbim-btn-outline" @click="step = 0">Back</button>
                     <button type="button" class="rbim-btn" :disabled="!filterReady" @click="step = 2">
                         Continue
                     </button>
@@ -237,7 +242,6 @@
                     </label>
                 </div>
                 <div class="flex flex-wrap gap-3">
-                    <button type="button" class="rbim-btn-outline" @click="step = 1">Back</button>
                     <button type="button" class="rbim-btn" :disabled="!selectedColumns.length || previewLoading" @click="runPreview(1, true)">
                         {{ previewLoading ? 'Building preview...' : 'Preview report' }}
                     </button>
@@ -275,7 +279,6 @@
                         </div>
                     </div>
                     <div class="flex flex-wrap gap-3">
-                        <button type="button" class="rbim-btn-outline" @click="step = 2">Back</button>
                         <button
                             v-if="canExport"
                             type="button"
@@ -490,6 +493,12 @@ onMounted(async () => {
 });
 
 watch([hiddenKeys, forcedKeys, pickerColumns], syncLockedColumns);
+
+function goBack() {
+    if (step.value > 0) {
+        step.value -= 1;
+    }
+}
 
 function chooseCategory(category) {
     selectedCategory.value = category;

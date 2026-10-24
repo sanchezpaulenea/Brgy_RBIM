@@ -10,7 +10,7 @@
                 {{ successMessage }}
             </div>
 
-            <form class="rbim-card grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <form class="rbim-card grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5" @submit.prevent="applyFilters">
                 <div>
                     <label for="resident-search" class="rbim-label">Search</label>
                     <input
@@ -23,6 +23,7 @@
                         spellcheck="false"
                         class="rbim-input py-2"
                         placeholder="Search resident name"
+                        @keydown.enter.prevent="applyFilters"
                     >
                 </div>
                 <div>
@@ -85,7 +86,7 @@
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Name</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Household</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Relationship to Household Head</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Sex</th>
+                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Gender</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Age</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Resident Status</th>
                                 <th class="px-4 py-3 text-left font-semibold text-slate-600">Profiling</th>
@@ -93,7 +94,7 @@
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             <tr
-                                v-for="resident in items"
+                                v-for="resident in pagedItems"
                                 :key="resident.resident_id"
                                 class="cursor-pointer hover:bg-slate-50"
                                 @click="openDetail(resident.resident_id)"
@@ -115,11 +116,25 @@
                             </tr>
                             <tr v-if="!items.length">
                                 <td colspan="7" class="px-4 py-8 text-center text-slate-500">
-                                    No resident records found.
+                                    {{ filtersAreActive ? 'No residents match the current filters.' : 'No resident records found.' }}
                                 </td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+                <div
+                    v-if="pageCount > 1"
+                    class="flex items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 text-sm"
+                >
+                    <span class="text-slate-500">Page {{ page }} of {{ pageCount }}</span>
+                    <div class="flex gap-2">
+                        <button type="button" class="rbim-btn-outline" :disabled="page <= 1" @click="page -= 1">
+                            Previous
+                        </button>
+                        <button type="button" class="rbim-btn-outline" :disabled="page >= pageCount" @click="page += 1">
+                            Next
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -150,12 +165,21 @@ const residentStatuses = ref([]);
 const loading = ref(false);
 const error = ref('');
 const successMessage = ref('');
+const PAGE_SIZE = 50;
+const page = ref(1);
 const filters = reactive({
     search: '',
     resident_type_id: '',
     resident_status_id: '',
     age_min: '',
     age_max: '',
+});
+
+const pageCount = computed(() => Math.max(1, Math.ceil(items.value.length / PAGE_SIZE)));
+const pagedItems = computed(() => {
+    const start = (page.value - 1) * PAGE_SIZE;
+
+    return items.value.slice(start, start + PAGE_SIZE);
 });
 
 const householdById = computed(() => {
@@ -203,13 +227,29 @@ async function loadResidents() {
     }
 }
 
+const filtersAreActive = computed(() => (
+    Boolean(
+        filters.search.trim()
+        || filters.resident_type_id
+        || filters.resident_status_id
+        || filters.age_min !== ''
+        || filters.age_max !== '',
+    )
+));
+
+function applyFilters() {
+    clearTimeout(filterTimer);
+    loadResidents();
+}
+
 function clearFilters() {
+    page.value = 1;
     filters.search = '';
     filters.resident_type_id = '';
     filters.resident_status_id = '';
     filters.age_min = '';
     filters.age_max = '';
-    loadResidents();
+    applyFilters();
 }
 
 let filterTimer = null;
@@ -223,12 +263,19 @@ watch(
         filters.age_max,
     ],
     () => {
+        page.value = 1;
         clearTimeout(filterTimer);
         filterTimer = setTimeout(() => {
             loadResidents();
         }, 250);
     },
 );
+
+watch(pageCount, (count) => {
+    if (page.value > count) {
+        page.value = count;
+    }
+});
 
 function profilingSummary(resident) {
     return resident?.profiling_completeness?.summary || '—';

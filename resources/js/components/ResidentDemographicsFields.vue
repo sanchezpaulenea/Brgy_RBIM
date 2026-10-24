@@ -85,7 +85,7 @@
         </div>
         <div>
             <label :for="`${idPrefix}-sex`" class="rbim-label">
-                Sex<span class="rbim-required" aria-hidden="true">*</span>
+                Gender<span class="rbim-required" aria-hidden="true">*</span>
             </label>
             <select
                 :id="`${idPrefix}-sex`"
@@ -94,7 +94,7 @@
                 :class="{ 'rbim-input-error': errors.sex_id }"
                 @change="patch('sex_id', $event.target.value)"
             >
-                <option value="">Select sex</option>
+                <option value="">Select gender</option>
                 <option v-for="option in sexes" :key="option.id" :value="option.id">
                     {{ option.label }}
                 </option>

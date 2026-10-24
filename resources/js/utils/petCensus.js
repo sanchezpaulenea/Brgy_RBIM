@@ -127,7 +127,7 @@ export function validatePetForm(form, errors, { requireStatus = false } = {}) {
     }
 
     if (!Number(form.sex_id)) {
-        errors.sex_id = 'Sex is required.';
+        errors.sex_id = 'Gender is required.';
     }
 
     if (form.pet_date_of_birth && form.pet_date_of_birth > new Date().toISOString().slice(0, 10)) {

@@ -4,7 +4,7 @@
             <header class="mb-8 text-center">
                 <BrandLogos />
                 <h1 class="mt-5 text-xl font-semibold tracking-wide sm:text-2xl">
-                    Registry of Barangay Inhabitants and Migrants
+                    Barangay Happy Hallow Census
                 </h1>
             </header>
 

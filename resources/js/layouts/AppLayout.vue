@@ -16,7 +16,7 @@
                     <BrandLogos size-class="h-11 w-11 sm:h-14 sm:w-14" />
                     <div class="min-w-0">
                         <p class="truncate text-sm font-semibold sm:text-base">
-                            Registry of Barangay Inhabitants and Migrants
+                            Barangay Happy Hallow Census
                         </p>
                         <p v-if="title" class="truncate text-xs text-white/80">
                             {{ title }}
@@ -134,7 +134,7 @@
                         <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 3a1 1 0 000 2h6a1 1 0 100-2H7zm0 4a1 1 0 000 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
                         </svg>
-                        <span>Certificates</span>
+                        <span>Certificate Generation</span>
                     </RouterLink>
 
                     <RouterLink

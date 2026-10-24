@@ -168,7 +168,7 @@ return [
                     'format' => 'records',
                     'fields' => [
                         ['label' => 'Age', 'source' => 'age'],
-                        ['label' => 'Sex', 'source' => 'sex.sex'],
+                        ['label' => 'Gender', 'source' => 'sex.sex'],
                         ['label' => 'Cause of Death', 'source' => 'cause_of_death'],
                     ],
                 ],
@@ -199,7 +199,7 @@ return [
                 ],
                 [
                     'key' => 'sex',
-                    'label' => 'Sex',
+                    'label' => 'Gender',
                     'source' => 'sex.sex',
                 ],
                 [
@@ -244,7 +244,7 @@ return [
             'columns' => [
                 [
                     'key' => 'sex',
-                    'label' => 'Sex',
+                    'label' => 'Gender',
                     'source' => 'sex.sex',
                 ],
                 [
@@ -381,7 +381,7 @@ return [
             'columns' => [
                 [
                     'key' => 'sex',
-                    'label' => 'Sex',
+                    'label' => 'Gender',
                     'source' => 'sex.sex',
                 ],
                 [
@@ -536,7 +536,7 @@ return [
                 ],
                 [
                     'key' => 'sex',
-                    'label' => 'Sex',
+                    'label' => 'Gender',
                     'source' => 'sex.sex',
                 ],
             ],

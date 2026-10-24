@@ -205,7 +205,7 @@ export function validateHouseholdQuestions(form, errors) {
         validateDeathRows(form.child_deaths, errors, 'child_deaths', {
             requireSex: true,
             maxAge: 4,
-            emptyMessage: 'Add the age, sex, and cause of death for each child household member who died.',
+            emptyMessage: 'Add the age, gender, and cause of death for each child household member who died.',
             maxAgeMessage: 'The child must be below 5 years old.',
         });
     }
@@ -312,7 +312,7 @@ function validateDeathRows(rows, errors, prefix, {
         }
 
         if (requireSex && !Number(row?.sex_id)) {
-            errors[`${prefix}.${index}.sex_id`] = 'Sex is required.';
+            errors[`${prefix}.${index}.sex_id`] = 'Gender is required.';
         }
     });
 }

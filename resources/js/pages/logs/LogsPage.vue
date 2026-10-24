@@ -29,7 +29,7 @@
                 Archived records. This view is read-only.
             </p>
 
-            <form v-if="isAudit" class="rbim-card grid gap-3 p-4 sm:grid-cols-5">
+            <form v-if="isAudit" class="rbim-card grid gap-3 p-4 sm:grid-cols-5" @submit.prevent="applyAuditFilters">
                 <div>
                     <label for="audit-entity" class="rbim-label">Affected Record</label>
                     <input
@@ -42,6 +42,7 @@
                         spellcheck="false"
                         class="rbim-input py-2"
                         placeholder="Search affected record"
+                        @keydown.enter.prevent="applyAuditFilters"
                     >
                 </div>
                 <div>
@@ -59,7 +60,7 @@
                 </div>
             </form>
 
-            <form v-else class="rbim-card grid gap-3 p-4 sm:grid-cols-5">
+            <form v-else class="rbim-card grid gap-3 p-4 sm:grid-cols-5" @submit.prevent>
                 <div>
                     <label for="user-name" class="rbim-label">User</label>
                     <input
@@ -72,6 +73,7 @@
                         spellcheck="false"
                         class="rbim-input py-2"
                         placeholder="Search user"
+                        @keydown.enter.prevent
                     >
                 </div>
                 <div>
@@ -122,7 +124,7 @@
                             </tr>
                             <tr v-if="!auditLogs.length">
                                 <td colspan="9" class="px-4 py-8 text-center text-slate-500">
-                                    {{ source === 'archive' ? 'No archived audit logs found.' : 'No audit logs found.' }}
+                                    {{ emptyAuditMessage }}
                                 </td>
                             </tr>
                         </tbody>
@@ -196,6 +198,18 @@ const loginFilters = reactive({
     username: '',
     date_from: '',
     date_to: '',
+});
+
+const auditFiltersAreActive = computed(() => (
+    Boolean(filters.entity.trim() || filters.date_from || filters.date_to)
+));
+
+const emptyAuditMessage = computed(() => {
+    if (auditFiltersAreActive.value) {
+        return 'No audit logs match the current filters.';
+    }
+
+    return source.value === 'archive' ? 'No archived audit logs found.' : 'No audit logs found.';
 });
 
 const emptyUserLogMessage = computed(() => {
@@ -272,11 +286,16 @@ async function loadLoginLogs() {
     }
 }
 
+function applyAuditFilters() {
+    clearTimeout(auditFilterTimer);
+    loadAuditLogs();
+}
+
 function clearFilters() {
     filters.entity = '';
     filters.date_from = '';
     filters.date_to = '';
-    loadAuditLogs();
+    applyAuditFilters();
 }
 
 function clearLoginFilters() {

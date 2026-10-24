@@ -47,6 +47,12 @@
                 Add “{{ newName }}”
             </li>
         </ul>
+        <p
+            v-else-if="open && query.trim() && !itemCount"
+            class="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 shadow-lg"
+        >
+            No result.
+        </p>
         <p v-if="error" class="rbim-error">{{ error }}</p>
         <p v-else-if="hint" class="rbim-hint">{{ hint }}</p>
     </div>
@@ -236,6 +242,12 @@ function onEnter() {
 
     if (newName.value) {
         createFromQuery();
+
+        return;
+    }
+
+    if (query.value.trim()) {
+        open.value = true;
     }
 }
 </script>

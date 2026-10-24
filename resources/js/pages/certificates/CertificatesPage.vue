@@ -1,13 +1,19 @@
 <template>
-    <AppLayout title="Certificates">
+    <AppLayout title="Certificate Generation">
         <div class="space-y-6">
+            <div>
+                <button type="button" class="rbim-btn-outline" :disabled="step === 1 || generating" @click="goBack">
+                    Back
+                </button>
+            </div>
+
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <ol class="flex flex-wrap gap-2">
                     <li v-for="(label, index) in stepLabels" :key="label">
                         <button
                             type="button"
-                            class="rounded-full px-3 py-1.5 text-xs font-medium"
-                            :class="step === index + 1 ? 'bg-brand text-white' : 'bg-white text-slate-600'"
+                            class="rounded-lg px-3 py-2 text-sm font-medium transition"
+                            :class="step === index + 1 ? 'bg-brand text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 disabled:hover:bg-white'"
                             :disabled="index + 1 > step"
                             @click="goToStep(index + 1)"
                         >
@@ -56,7 +62,7 @@
                             type="search"
                             class="rbim-input py-2"
                             placeholder="Search by first, middle, or last name"
-                            @keyup.enter="runSearch"
+                            @keydown.enter.prevent="runSearch"
                         >
                         <button type="button" class="rbim-btn py-2" :disabled="searching" @click="runSearch">
                             Search
@@ -395,11 +401,8 @@
                 </template>
             </section>
 
-            <div class="flex gap-2">
-                <button type="button" class="rbim-btn-outline" :disabled="step === 1 || generating" @click="goBack">
-                    Back
-                </button>
-                <button v-if="step < 5 && !issued" type="button" class="rbim-btn" :disabled="!canContinue" @click="goNext">
+            <div v-if="step < 5 && !issued" class="flex gap-2">
+                <button type="button" class="rbim-btn" :disabled="!canContinue" @click="goNext">
                     Next
                 </button>
             </div>

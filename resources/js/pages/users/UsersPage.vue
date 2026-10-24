@@ -83,6 +83,7 @@
                             type="search"
                             class="rbim-input py-2"
                             placeholder="Search user"
+                            @keydown.enter.prevent
                         >
                     </div>
                     <div class="sm:w-48">
