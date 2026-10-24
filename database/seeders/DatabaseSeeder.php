@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             PersonnelStatusSeeder::class,
             RoleSeeder::class,
             SystemSettingSeeder::class,
+            SystemAdministrationPermissionSeeder::class,
         ]);
     }
 }

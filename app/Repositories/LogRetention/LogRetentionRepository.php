@@ -41,18 +41,47 @@ class LogRetentionRepository implements LogRetentionRepositoryInterface
             return 0;
         }
 
-        $inserted = DB::table($this->archiveTable($log))->insertUsing(
-            $this->archiveColumns($log),
-            (clone $eligible)->select($this->liveColumns($log))->selectRaw('? as archived_by', [$archivedBy]),
-        );
+        $moved = 0;
+        $key = $log === 'audit' ? 'audit_id' : 'user_log_id';
+        $archivedAt = now()->format('Y-m-d H:i:s');
 
-        $deleted = (clone $eligible)->delete();
+        do {
+            $rows = (clone $eligible)
+                ->orderBy($key)
+                ->limit(200)
+                ->get($this->liveColumns($log));
 
-        if ($inserted !== $count || $deleted !== $count) {
+            if ($rows->isEmpty()) {
+                break;
+            }
+
+            $payload = [];
+            $ids = [];
+
+            foreach ($rows as $row) {
+                $record = (array) $row;
+                $ids[] = $record[$key];
+                $record['archived_at'] = $archivedAt;
+                $record['archived_by'] = $archivedBy;
+                $payload[] = $record;
+            }
+
+            DB::table($this->archiveTable($log))->insert($payload);
+
+            $deleted = DB::table($this->tables($log)[0])->whereIn($key, $ids)->delete();
+
+            if ($deleted !== count($ids)) {
+                throw new RuntimeException('Archive move did not finish cleanly.');
+            }
+
+            $moved += $deleted;
+        } while (count($ids) === 200);
+
+        if ($moved !== $count) {
             throw new RuntimeException('Archive move did not finish cleanly.');
         }
 
-        return $deleted;
+        return $moved;
     }
 
     /**
@@ -127,13 +156,5 @@ class LogRetentionRepository implements LogRetentionRepositoryInterface
             ],
             default => throw new InvalidArgumentException('Log must be audit or user.'),
         };
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function archiveColumns(string $log): array
-    {
-        return [...$this->liveColumns($log), 'archived_by'];
     }
 }

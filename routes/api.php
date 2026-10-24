@@ -6,6 +6,7 @@ use App\Http\Controllers\BarangayPersonnel\BarangayPersonnelController;
 use App\Http\Controllers\BarangayPersonnel\PersonnelController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DatabaseBackup\DatabaseBackupController;
 use App\Http\Controllers\HouseholdManagament\HouseholdController;
 use App\Http\Controllers\HouseholdManagament\HouseholdQuestionsController;
 use App\Http\Controllers\HouseholdManagament\PetCensusController;
@@ -190,6 +191,9 @@ Route::prefix('v1')->group(function () {
             Route::put('log-retention', [LogRetentionController::class, 'update'])->name('log-retention.update');
             Route::get('log-retention/preview', [LogRetentionController::class, 'preview'])->name('log-retention.preview');
             Route::post('log-retention/archive', [LogRetentionController::class, 'archive'])->name('log-retention.archive');
+
+            Route::post('database-backups/export', [DatabaseBackupController::class, 'export'])->name('database-backups.export');
+            Route::post('database-backups/restore', [DatabaseBackupController::class, 'restore'])->name('database-backups.restore');
 
             Route::get('settings', [SystemSettingController::class, 'index'])->name('settings.index');
             Route::post('settings/punong-barangay-signature', [SystemSettingController::class, 'storePunongBarangaySignature'])->name('settings.punong-barangay-signature.store');

@@ -280,6 +280,16 @@ const routes = [
         },
     },
     {
+        path: '/settings/database-backup',
+        name: 'database-backup',
+        component: () => import('@/pages/settings/DatabaseBackupPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresSystemAdministrator: true,
+            requiresPermissions: ['backup.export', 'backup.restore'],
+        },
+    },
+    {
         path: '/settings/logs',
         redirect: { name: 'audit-logs' },
     },

@@ -22,6 +22,7 @@ class SystemSettingSeeder extends Seeder
             ['setting_id' => 10, 'setting_key' => 'account_lockout_minutes',  'setting_value' => '10',                                                'data_type' => 'int',    'description' => 'Account lockout minutes duration'],
             ['setting_id' => 11, 'setting_key' => 'session_timeout_minutes',  'setting_value' => '30',                                                'data_type' => 'int',    'description' => 'Session timeout minutes when idle'],
             ['setting_id' => 12, 'setting_key' => 'audit_log_retention_days', 'setting_value' => '365',                                               'data_type' => 'int',    'description' => 'Audit log retention days'],
+            ['setting_id' => 15, 'setting_key' => 'user_log_retention_days',  'setting_value' => '365',                                               'data_type' => 'int',    'description' => 'User log retention days'],
         ], ['setting_id'], ['setting_key', 'setting_value', 'data_type', 'description']);
     }
 }

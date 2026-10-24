@@ -247,6 +247,7 @@ const filteredLoginLogs = computed(() => (
 async function loadAuditLogs() {
     loading.value = true;
     error.value = '';
+    auditLogs.value = [];
 
     try {
         const params = {};
@@ -276,6 +277,7 @@ async function loadAuditLogs() {
 async function loadLoginLogs() {
     loading.value = true;
     error.value = '';
+    loginLogs.value = [];
 
     try {
         loginLogs.value = await userLogService.fetchUserLogs({ source: source.value });
