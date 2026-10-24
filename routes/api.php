@@ -105,6 +105,7 @@ Route::prefix('v1')->group(function () {
         Route::post('reports/export', [ReportController::class, 'export'])->name('reports.export');
 
         Route::get('certificates/types', [CertificateController::class, 'types'])->name('certificates.types');
+        Route::get('certificates/history', [CertificateController::class, 'historyIndex'])->name('certificates.history');
         Route::get('certificates/residents', [CertificateController::class, 'residents'])->name('certificates.residents');
         Route::get('certificates/residents/{resident}/history', [CertificateController::class, 'history'])->name('certificates.residents.history');
         Route::post('certificates/preview', [CertificateController::class, 'preview'])->name('certificates.preview');

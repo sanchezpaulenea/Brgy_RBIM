@@ -6,6 +6,7 @@ use App\Models\Certificate\Certificate;
 use App\Models\Certificate\CertificateSoloParent;
 use App\Models\Certificate\CertificateSoloParentChild;
 use App\Models\Certificate\TypeOfCertificate;
+use App\Models\ResidentManagement\Demographic\Resident;
 use App\Repositories\Interfaces\CertificateRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -57,6 +58,52 @@ class CertificateRepository implements CertificateRepositoryInterface
             ->orderByDesc('date_of_issue')
             ->orderByDesc('certificate_id')
             ->paginate($perPage, ['*'], 'page', max(1, $page));
+    }
+
+    public function paginateResidentsWithCertificates(?string $search, int $perPage = 20, int $page = 1): LengthAwarePaginator
+    {
+        $residents = (new Resident)->getTable();
+
+        $stats = Certificate::query()
+            ->select('resident_id')
+            ->selectRaw('MAX(date_of_issue) as latest_issue_at')
+            ->selectRaw('COUNT(*) as certificate_count')
+            ->groupBy('resident_id');
+
+        $term = trim((string) $search);
+
+        return Resident::query()
+            ->with('status')
+            ->joinSub($stats, 'certificate_stats', 'certificate_stats.resident_id', '=', "{$residents}.resident_id")
+            ->select("{$residents}.*", 'certificate_stats.latest_issue_at', 'certificate_stats.certificate_count')
+            ->when($term !== '', function ($query) use ($term, $residents) {
+                $like = '%'.$this->escapeLike(mb_strtolower($term)).'%';
+
+                $query->where(function ($inner) use ($like, $residents) {
+                    $inner->whereRaw("LOWER({$residents}.first_name) LIKE ? ESCAPE '\\\\'", [$like])
+                        ->orWhereRaw("LOWER(COALESCE({$residents}.middle_name, '')) LIKE ? ESCAPE '\\\\'", [$like])
+                        ->orWhereRaw("LOWER({$residents}.last_name) LIKE ? ESCAPE '\\\\'", [$like]);
+                });
+            })
+            ->orderByDesc('certificate_stats.latest_issue_at')
+            ->orderByDesc("{$residents}.resident_id")
+            ->paginate($perPage, ['*'], 'page', max(1, $page));
+    }
+
+    public function latestForResidents(array $residentIds): Collection
+    {
+        if ($residentIds === []) {
+            return collect();
+        }
+
+        return Certificate::query()
+            ->with('type')
+            ->whereIn('resident_id', $residentIds)
+            ->orderByDesc('date_of_issue')
+            ->orderByDesc('certificate_id')
+            ->get()
+            ->unique('resident_id')
+            ->keyBy('resident_id');
     }
 
     public function countsByTypeForResident(int $residentId): Collection
@@ -127,5 +174,10 @@ class CertificateRepository implements CertificateRepositoryInterface
                 'date_of_birth' => $child['date_of_birth'],
             ]);
         }
+    }
+
+    private function escapeLike(string $value): string
+    {
+        return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value);
     }
 }

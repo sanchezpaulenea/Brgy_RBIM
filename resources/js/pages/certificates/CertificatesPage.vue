@@ -1,6 +1,8 @@
 <template>
     <AppLayout title="Certificate Generation">
         <div class="space-y-6">
+            <PageTabs :tabs="certificateTabs" />
+
             <div>
                 <button type="button" class="rbim-btn-outline" :disabled="step === 1 || generating" @click="goBack">
                     Back
@@ -21,7 +23,13 @@
                         </button>
                     </li>
                 </ol>
-                <button type="button" class="rbim-btn py-2" :disabled="busy" @click="refresh">
+                <button
+                    type="button"
+                    class="rbim-btn py-2"
+                    :disabled="busy"
+                    title="Clear this certificate and start again from Certificate Type"
+                    @click="refresh"
+                >
                     Refresh
                 </button>
             </div>
@@ -407,6 +415,15 @@
                 </button>
             </div>
         </div>
+
+        <ConfirmDialog
+            :open="confirmRefreshOpen"
+            title="Start over?"
+            message="This clears the certificate type, requester, purpose, and any edits, then returns to step 1."
+            confirm-label="Start Over"
+            @confirm="confirmRefresh"
+            @cancel="confirmRefreshOpen = false"
+        />
     </AppLayout>
 </template>
 
@@ -414,7 +431,10 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import CertificatePreview from '@/components/CertificatePreview.vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import PageTabs from '@/components/PageTabs.vue';
 import { useAuth } from '@/composables/useAuth';
+import { useSectionTabs } from '@/composables/useSectionTabs';
 import {
     certificateErrorMessage,
     fetchCertificateHistory,
@@ -436,6 +456,8 @@ const stepLabels = [
 ];
 
 const { hasPermission } = useAuth();
+const { certificateTabs } = useSectionTabs();
+const confirmRefreshOpen = ref(false);
 const canEdit = computed(() => hasPermission('certificate.edit'));
 const canCreate = computed(() => hasPermission('certificate.create'));
 
@@ -1108,24 +1130,25 @@ function issueAnother() {
     step.value = 1;
 }
 
-async function refresh() {
+function refresh() {
+    if (step.value > 1 || selectedType.value) {
+        confirmRefreshOpen.value = true;
+
+        return;
+    }
+
+    confirmRefresh();
+}
+
+async function confirmRefresh() {
+    confirmRefreshOpen.value = false;
+    clearTimeout(previewTimer);
     pageError.value = '';
-
-    if (step.value === 1) {
-        await loadTypes();
-    }
-
-    if (step.value === 2 && search.value.trim().length >= 2) {
-        await runSearch();
-    }
-
-    if (step.value === 4) {
-        await loadHistory();
-    }
-
-    if (step.value === 5) {
-        await loadPreview(canEdit.value && editsReady.value);
-    }
+    searchError.value = '';
+    selectedType.value = null;
+    resetAfterType();
+    step.value = 1;
+    await loadTypes();
 }
 
 async function editIssued(row) {

@@ -87,6 +87,44 @@ class CertificateService
     }
 
     /**
+     * One row per resident, ordered by their most recent certificate.
+     *
+     * @return array<string, mixed>
+     */
+    public function historyResidents(?string $search, int $page = 1): array
+    {
+        $paginator = $this->certificateRepository->paginateResidentsWithCertificates($search, 20, $page);
+        $residents = collect($paginator->items());
+        $latest = $this->certificateRepository->latestForResidents(
+            $residents->pluck('resident_id')->map(fn ($id): int => (int) $id)->all(),
+        );
+
+        return [
+            'residents' => [
+                'data' => $residents->map(function (Resident $resident) use ($latest): array {
+                    $certificate = $latest->get($resident->resident_id);
+
+                    return [
+                        'resident_id' => $resident->resident_id,
+                        'name' => $this->residentListName($resident),
+                        'resident_status' => $resident->status?->resident_status,
+                        'certificate_count' => (int) $resident->getAttribute('certificate_count'),
+                        'latest_type_of_certificate' => $certificate?->type?->type_of_certificate,
+                        'latest_purpose_of_request' => $certificate?->purpose_of_request,
+                        'latest_date_of_issue' => $certificate?->date_of_issue
+                            ?->timezone(config('app.timezone'))
+                            ->format('Y-m-d H:i:s'),
+                    ];
+                })->all(),
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function history(Resident $resident, int $page = 1): array
@@ -126,7 +164,14 @@ class CertificateService
             ];
         })->all();
 
+        $resident->loadMissing('status');
+
         return [
+            'resident' => [
+                'resident_id' => $resident->resident_id,
+                'name' => $this->residentListName($resident),
+                'resident_status' => $resident->status?->resident_status,
+            ],
             'certificates' => [
                 'data' => $items,
                 'current_page' => $paginator->currentPage(),

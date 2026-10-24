@@ -32,6 +32,17 @@ interface CertificateRepositoryInterface
     public function paginateForResident(int $residentId, int $perPage = 10, int $page = 1): LengthAwarePaginator;
 
     /**
+     * Residents who hold at least one certificate, most recently issued first.
+     */
+    public function paginateResidentsWithCertificates(?string $search, int $perPage = 20, int $page = 1): LengthAwarePaginator;
+
+    /**
+     * @param  list<int>  $residentIds
+     * @return Collection<int, Certificate> keyed by resident_id
+     */
+    public function latestForResidents(array $residentIds): Collection;
+
+    /**
      * @return Collection<int, object>
      */
     public function countsByTypeForResident(int $residentId): Collection;

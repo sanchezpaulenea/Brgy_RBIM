@@ -190,6 +190,24 @@ const routes = [
         },
     },
     {
+        path: '/certificates/history',
+        name: 'certificate-history',
+        component: () => import('@/pages/certificates/CertificateHistoryPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresPermissions: ['certificate.view'],
+        },
+    },
+    {
+        path: '/certificates/history/:residentId',
+        name: 'certificate-history-detail',
+        component: () => import('@/pages/certificates/CertificateHistoryDetailPage.vue'),
+        meta: {
+            requiresAuth: true,
+            requiresPermissions: ['certificate.view'],
+        },
+    },
+    {
         path: '/residents/nationalities',
         name: 'nationalities',
         component: () => import('@/pages/lookups/LookupManagementPage.vue'),

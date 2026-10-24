@@ -50,6 +50,28 @@ class CertificateController extends Controller
     }
 
     /**
+     * GET /api/v1/certificates/history
+     */
+    public function historyIndex(Request $request): JsonResponse
+    {
+        $this->authorize('viewAny', Certificate::class);
+
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:100'],
+            'page' => ['nullable', 'integer', 'min:1'],
+        ], [
+            'search.max' => 'Resident search must not exceed 100 characters.',
+        ]);
+
+        return response()->json(
+            $this->certificateService->historyResidents(
+                isset($validated['search']) ? trim((string) $validated['search']) : null,
+                max(1, (int) ($validated['page'] ?? 1)),
+            ),
+        );
+    }
+
+    /**
      * GET /api/v1/certificates/residents/{resident}/history
      */
     public function history(Request $request, Resident $resident): JsonResponse

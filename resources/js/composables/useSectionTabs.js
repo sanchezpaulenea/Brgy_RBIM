@@ -63,5 +63,14 @@ export function useSectionTabs() {
             : null,
     ].filter(Boolean));
 
-    return { personnelTabs, userTabs, householdTabs, residentTabs };
+    const certificateTabs = computed(() => (
+        hasPermission('certificate.view')
+            ? [
+                { name: 'certificates', label: 'Generate Certificate' },
+                { name: 'certificate-history', label: 'View History' },
+            ]
+            : []
+    ));
+
+    return { personnelTabs, userTabs, householdTabs, residentTabs, certificateTabs };
 }

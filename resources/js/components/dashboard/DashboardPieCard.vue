@@ -17,7 +17,7 @@
 
         <div v-if="loading" class="grid animate-pulse grid-cols-1 items-center gap-8 pt-6 @3xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] @3xl:gap-10" aria-hidden="true">
             <div class="mx-auto aspect-square w-full max-w-[34rem] rounded-full bg-slate-100" />
-            <div class="space-y-4">
+            <div class="space-y-4 @3xl:self-start">
                 <div class="h-6 w-48 rounded-full bg-slate-100" />
                 <div v-for="line in 5" :key="line" class="space-y-2">
                     <div class="flex items-center gap-3">
@@ -84,7 +84,7 @@
                     />
                 </div>
 
-                <div>
+                <div class="@3xl:self-start">
                     <div class="flex items-center justify-between px-2 pb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
                         <span>Value</span>
                         <span>Count · Share</span>
@@ -143,6 +143,7 @@
 import { computed, ref, watch } from 'vue';
 import { ArcElement, Chart as ChartJS, Tooltip } from 'chart.js';
 import { Pie } from 'vue-chartjs';
+import { useTheme } from '@/composables/useTheme';
 import { sliceColors } from '@/constants/dashboardCharts';
 
 ChartJS.register(ArcElement, Tooltip);
@@ -171,6 +172,7 @@ const props = defineProps({
 });
 
 const numberFormat = new Intl.NumberFormat('en-PH');
+const { theme } = useTheme();
 
 const chartRef = ref(null);
 const activeKey = ref(props.views[0]?.key ?? null);
@@ -185,7 +187,7 @@ const chartData = computed(() => ({
     datasets: [{
         data: chart.value.slices.map((slice) => slice.count),
         backgroundColor: colors.value,
-        borderColor: '#ffffff',
+        borderColor: theme.value === 'dark' ? '#18201c' : '#ffffff',
         borderWidth: 2,
         hoverOffset: 10,
     }],

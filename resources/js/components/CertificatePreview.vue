@@ -1,5 +1,5 @@
 <template>
-    <article class="mx-auto max-w-3xl bg-white px-10 py-8 text-[13px] leading-snug text-slate-900 shadow-sm" style="font-family: 'Times New Roman', Times, serif;">
+    <article class="rbim-paper mx-auto max-w-3xl bg-white px-10 py-8 text-[13px] leading-snug text-slate-900 shadow-sm" style="font-family: 'Times New Roman', Times, serif;">
         <template v-for="(sheet, sheetIndex) in sheets" :key="sheetIndex">
         <div :class="sheetIndex > 0 ? 'mt-10 border-t border-slate-300 pt-8' : ''">
         <div class="flex items-start gap-3">

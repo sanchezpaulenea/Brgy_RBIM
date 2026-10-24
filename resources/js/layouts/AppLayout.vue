@@ -124,18 +124,33 @@
                         <span>Report Generation</span>
                     </RouterLink>
 
-                    <RouterLink
-                        v-if="canViewCertificates"
-                        :to="{ name: 'certificates' }"
-                        class="flex items-center gap-2.5 min-w-0 rounded-lg px-3 py-2 text-[13px] font-medium transition"
-                        :class="isCertificatesRoute ? 'bg-white/15 text-white' : 'text-white/90 hover:bg-white/10'"
-                        @click="sidebarOpen = false"
-                    >
-                        <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 3a1 1 0 000 2h6a1 1 0 100-2H7zm0 4a1 1 0 000 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
-                        </svg>
-                        <span>Certificate Generation</span>
-                    </RouterLink>
+                    <div v-if="canViewCertificates">
+                        <button
+                            type="button"
+                            class="flex w-full items-center gap-2.5 min-w-0 rounded-lg px-3 py-2 text-left text-[13px] font-medium transition"
+                            :class="isCertificatesRoute ? 'bg-white/15 text-white' : 'text-white/90 hover:bg-white/10'"
+                            @click="openSection('certificates')"
+                        >
+                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 3a1 1 0 000 2h6a1 1 0 100-2H7zm0 4a1 1 0 000 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="min-w-0 flex-1 whitespace-nowrap">Certificate Generation</span>
+                            <span class="ml-auto inline-flex h-4 w-4 shrink-0 items-center justify-center text-xs leading-none">{{ openMenu === 'certificates' ? '▾' : '▸' }}</span>
+                        </button>
+
+                        <div v-show="openMenu === 'certificates'" class="ml-6 mt-1 space-y-1 border-l border-white/20 pl-3">
+                            <RouterLink
+                                v-for="tab in certificateTabs"
+                                :key="tab.name"
+                                :to="{ name: tab.name }"
+                                class="block rounded-lg px-2 py-1.5 text-[13px] transition"
+                                :class="isSidebarTabActive(tab) ? 'bg-white/15 text-white' : 'text-white/85 hover:bg-white/10'"
+                                @click="sidebarOpen = false"
+                            >
+                                {{ tab.label }}
+                            </RouterLink>
+                        </div>
+                    </div>
 
                     <RouterLink
                         v-if="personnelTabs.length === 1"
@@ -296,7 +311,7 @@ defineProps({
 const route = useRoute();
 const router = useRouter();
 const { hasPermission, isSystemAdministrator } = useAuth();
-const { householdTabs, residentTabs, personnelTabs, userTabs } = useSectionTabs();
+const { householdTabs, residentTabs, personnelTabs, userTabs, certificateTabs } = useSectionTabs();
 
 const sidebarOpen = ref(false);
 const openMenu = ref(null);
@@ -325,7 +340,7 @@ const isHouseholdViewRoute = computed(() => (
 ));
 const isResidentRoute = computed(() => String(route.path).startsWith('/residents'));
 const isReportsRoute = computed(() => route.name === 'reports');
-const isCertificatesRoute = computed(() => route.name === 'certificates');
+const isCertificatesRoute = computed(() => String(route.path).startsWith('/certificates'));
 const isSettingsRoute = computed(() => String(route.path).startsWith('/settings'));
 const isPersonnelRoute = computed(() => String(route.path).startsWith('/personnel'));
 const isUsersRoute = computed(() => String(route.path).startsWith('/users'));
@@ -339,6 +354,10 @@ function isSidebarTabActive(tab) {
         return route.name === 'residents' || route.name === 'resident-detail';
     }
 
+    if (tab.name === 'certificate-history') {
+        return route.name === 'certificate-history' || route.name === 'certificate-history-detail';
+    }
+
     return route.name === tab.name;
 }
 
@@ -349,6 +368,10 @@ function menuForRoute() {
 
     if (isResidentRoute.value) {
         return 'resident';
+    }
+
+    if (isCertificatesRoute.value) {
+        return 'certificates';
     }
 
     if (isPersonnelRoute.value) {
@@ -370,6 +393,7 @@ function defaultRouteFor(section) {
     const firstTab = {
         household: householdTabs.value[0]?.name,
         resident: residentTabs.value[0]?.name,
+        certificates: certificateTabs.value[0]?.name,
         personnel: personnelTabs.value[0]?.name,
         users: userTabs.value[0]?.name,
         settings: [

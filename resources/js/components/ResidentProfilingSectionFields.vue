@@ -304,8 +304,10 @@
                     min="0"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.living_children }"
+                    :readonly="hasNoPregnancies"
                 >
                 <p v-if="errors.living_children" class="rbim-error">{{ errors.living_children }}</p>
+                <p v-else-if="hasNoPregnancies" class="rbim-hint">Set to 0 because the number of pregnancies is 0.</p>
             </div>
             <div>
                 <label class="rbim-label" :for="`${idPrefix}-family_planning_method_id`">
@@ -795,6 +797,26 @@ watch(
         props.form.have_intention_to_use_fp = true;
         delete props.errors.have_intention_to_use_fp;
     },
+);
+
+const hasNoPregnancies = computed(() => (
+    props.form.number_pregnancies !== ''
+        && props.form.number_pregnancies !== null
+        && props.form.number_pregnancies !== undefined
+        && Number(props.form.number_pregnancies) === 0
+));
+
+watch(
+    () => [props.section, hasNoPregnancies.value],
+    () => {
+        if (props.section !== 'women_health' || !hasNoPregnancies.value) {
+            return;
+        }
+
+        props.form.living_children = 0;
+        delete props.errors.living_children;
+    },
+    { immediate: true },
 );
 
 const facilityVisitedHasValue = computed(() => (

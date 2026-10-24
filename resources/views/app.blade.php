@@ -7,6 +7,14 @@
 
         <title>{{ config('app.name', 'Barangay Happy Hallow Census') }}</title>
 
+        <script>
+            try {
+                if (localStorage.getItem('rbim-theme') === 'dark') {
+                    document.documentElement.classList.add('dark');
+                }
+            } catch (e) {}
+        </script>
+
         @fonts
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])

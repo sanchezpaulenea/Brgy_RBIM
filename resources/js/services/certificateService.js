@@ -17,6 +17,17 @@ export async function searchCertificateResidents(search, typeOfCertificateId) {
     return data.residents ?? [];
 }
 
+export async function fetchCertificateHistoryResidents({ search = '', page = 1 } = {}) {
+    const { data } = await http.get('/certificates/history', {
+        params: {
+            search: search || undefined,
+            page,
+        },
+    });
+
+    return data.residents ?? { data: [], current_page: 1, last_page: 1, total: 0 };
+}
+
 export async function fetchCertificateHistory(residentId, page = 1) {
     const { data } = await http.get(`/certificates/residents/${residentId}/history`, {
         params: { page },
