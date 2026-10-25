@@ -73,8 +73,9 @@
             </div>
 
             <div v-else class="grid grid-cols-1 items-center gap-8 pt-6 @3xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] @3xl:gap-10">
-                <div class="relative mx-auto aspect-square w-full max-w-[34rem]">
+                <div ref="pieFrameRef" class="relative mx-auto aspect-square w-full max-w-[34rem]">
                     <Pie
+                        v-if="pieInView"
                         :key="renderKey"
                         ref="chartRef"
                         :data="chartData"
@@ -140,7 +141,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { ArcElement, Chart as ChartJS, Tooltip } from 'chart.js';
 import { Pie } from 'vue-chartjs';
 import { useTheme } from '@/composables/useTheme';
@@ -175,6 +176,39 @@ const numberFormat = new Intl.NumberFormat('en-PH');
 const { theme } = useTheme();
 
 const chartRef = ref(null);
+const pieFrameRef = ref(null);
+const pieInView = ref(false);
+let pieObserver = null;
+
+/*
+ * The pie usually sits below the fold, so mounting it on load would play the
+ * opening sweep before anyone scrolls to it. Mount it once it is on screen.
+ */
+watch(pieFrameRef, (frame) => {
+    pieObserver?.disconnect();
+    pieObserver = null;
+
+    if (!frame || pieInView.value) {
+        return;
+    }
+
+    if (typeof IntersectionObserver === 'undefined') {
+        pieInView.value = true;
+
+        return;
+    }
+
+    pieObserver = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+            pieInView.value = true;
+            pieObserver?.disconnect();
+            pieObserver = null;
+        }
+    }, { threshold: 0.3 });
+    pieObserver.observe(frame);
+});
+
+onBeforeUnmount(() => pieObserver?.disconnect());
 const activeKey = ref(props.views[0]?.key ?? null);
 const hidden = ref(new Set());
 const renderKey = ref(0);
