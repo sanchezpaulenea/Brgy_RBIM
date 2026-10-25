@@ -279,15 +279,35 @@
                         </div>
                     </div>
                     <div class="flex flex-wrap gap-3">
-                        <button
-                            v-if="canExport"
-                            type="button"
-                            class="rbim-btn"
-                            :disabled="titleProblem !== '' || subtitleProblem !== '' || exporting !== ''"
-                            @click="download('excel')"
-                        >
-                            {{ exporting === 'excel' ? 'Preparing Excel...' : 'Export Excel' }}
-                        </button>
+                        <template v-if="canExport">
+                            <button
+                                type="button"
+                                class="rbim-btn"
+                                :disabled="titleProblem !== '' || subtitleProblem !== '' || exporting !== ''"
+                                @click="download('excel')"
+                            >
+                                {{ exporting === 'excel' ? 'Preparing Excel...' : 'Export Excel' }}
+                            </button>
+                            <button
+                                type="button"
+                                class="rbim-btn-outline"
+                                :disabled="titleProblem !== '' || subtitleProblem !== '' || exporting !== ''"
+                                @click="download('csv')"
+                            >
+                                {{ exporting === 'csv' ? 'Preparing CSV...' : 'Export CSV' }}
+                            </button>
+                            <button
+                                type="button"
+                                class="rbim-btn-outline"
+                                :disabled="titleProblem !== '' || subtitleProblem !== '' || exporting !== ''"
+                                @click="download('pdf')"
+                            >
+                                {{ exporting === 'pdf' ? 'Preparing PDF...' : 'Export PDF' }}
+                            </button>
+                            <button type="button" class="rbim-btn-outline" @click="printPreview">
+                                Print
+                            </button>
+                        </template>
                         <p v-else class="text-sm text-slate-600">You do not have permission to export reports.</p>
                     </div>
                 </div>
@@ -915,6 +935,10 @@ async function runPreview(page, resetTitle) {
     } finally {
         previewLoading.value = false;
     }
+}
+
+async function printPreview() {
+    window.print();
 }
 
 async function download(format) {

@@ -1,16 +1,19 @@
 <template>
-    <article class="rbim-card @container p-5 sm:p-6">
-        <header class="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-5">
+    <article :class="compact ? '@container rounded-xl border border-slate-200 p-4' : 'rbim-card @container p-5 sm:p-6'">
+        <header
+            v-if="title || subtitle || $slots.controls"
+            :class="compact ? 'flex flex-wrap items-start justify-between gap-3 pb-3' : 'flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-5'"
+        >
             <div class="min-w-0">
-                <h2 class="text-base font-semibold text-slate-900">
+                <component :is="compact ? 'h3' : 'h2'" class="text-base font-semibold text-slate-900">
                     {{ title }}
-                </h2>
-                <p class="mt-0.5 text-sm text-slate-500">
+                </component>
+                <p v-if="subtitle" class="mt-0.5 text-sm text-slate-500">
                     {{ subtitle }}
                 </p>
             </div>
 
-            <div class="flex w-full flex-wrap gap-3 @2xl:w-auto">
+            <div v-if="$slots.controls" class="flex w-full flex-wrap gap-3 @2xl:w-auto">
                 <slot name="controls" />
             </div>
         </header>
@@ -34,7 +37,7 @@
             <div class="flex flex-wrap items-center justify-between gap-3 pt-5">
                 <p class="inline-flex items-center gap-1.5 rounded-full bg-brand-muted px-3 py-1.5 text-sm font-medium text-brand">
                     {{ chart.metric }}:
-                    <span class="font-semibold tabular-nums">{{ formatNumber(chart.total) }}</span>
+                    <span class="font-semibold tabular-nums">{{ formatNumber(displayTotal) }}</span>
                 </p>
 
                 <div
@@ -57,7 +60,7 @@
                 </div>
             </div>
 
-            <div v-if="chart.total === 0" class="flex flex-col items-center justify-center py-16 text-center">
+            <div v-if="displayTotal === 0" class="flex flex-col items-center justify-center py-16 text-center">
                 <span class="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                     <svg class="h-7 w-7" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
@@ -73,7 +76,7 @@
             </div>
 
             <div v-else class="grid grid-cols-1 items-center gap-8 pt-6 @3xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] @3xl:gap-10">
-                <div ref="pieFrameRef" class="relative mx-auto aspect-square w-full max-w-[34rem]">
+                <div ref="pieFrameRef" class="relative mx-auto aspect-square w-full" :class="compact ? 'max-w-[22rem]' : 'max-w-[34rem]'">
                     <Pie
                         v-if="pieInView"
                         :key="renderKey"
@@ -91,14 +94,12 @@
                         <span>Count · Share</span>
                     </div>
                     <ul class="space-y-1">
-                        <li v-for="(slice, index) in chart.slices" :key="slice.label">
+                        <li v-for="(slice, index) in displaySlices" :key="slice.label">
                             <button
                                 type="button"
                                 class="w-full cursor-pointer rounded-lg px-2 py-2 text-left transition hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
-                                :class="hidden.has(index) ? 'opacity-45' : ''"
-                                :aria-pressed="!hidden.has(index)"
-                                :title="hidden.has(index) ? 'Click to show this slice' : 'Click to hide this slice'"
-                                @click="toggleSlice(index)"
+                                :title="'Show matching records for ' + slice.label"
+                                @click="selectSlice(slice)"
                             >
                                 <span class="flex items-center gap-3 text-sm">
                                     <span
@@ -106,10 +107,7 @@
                                         :style="{ backgroundColor: colors[index] }"
                                         aria-hidden="true"
                                     />
-                                    <span
-                                        class="min-w-0 flex-1 text-slate-700"
-                                        :class="hidden.has(index) ? 'line-through' : ''"
-                                    >
+                                    <span class="min-w-0 flex-1 text-slate-700">
                                         {{ slice.label }}
                                         <span v-if="slice.kind === 'others'" class="text-xs text-slate-400">
                                             ({{ slice.grouped }} values)
@@ -119,20 +117,20 @@
                                         {{ formatNumber(slice.count) }}
                                     </span>
                                     <span class="w-14 shrink-0 text-right tabular-nums text-slate-500">
-                                        {{ formatPercent(slice.count, chart.total) }}
+                                        {{ formatPercent(slice.count, displayTotal) }}
                                     </span>
                                 </span>
                                 <span class="mt-1.5 ml-6 block h-1.5 overflow-hidden rounded-full bg-slate-100" aria-hidden="true">
                                     <span
                                         class="block h-full rounded-full"
-                                        :style="{ width: barWidth(slice.count, chart.total), backgroundColor: colors[index] }"
+                                        :style="{ width: barWidth(slice.count, displayTotal), backgroundColor: colors[index] }"
                                     />
                                 </span>
                             </button>
                         </li>
                     </ul>
                     <p class="mt-3 px-2 text-xs text-slate-400">
-                        Click a value to hide or show it in the chart.
+                        Click a value to open the matching records.
                     </p>
                 </div>
             </div>
@@ -170,7 +168,17 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    slices: {
+        type: Array,
+        default: null,
+    },
+    compact: {
+        type: Boolean,
+        default: false,
+    },
 });
+
+const emit = defineEmits(['select-slice']);
 
 const numberFormat = new Intl.NumberFormat('en-PH');
 const { theme } = useTheme();
@@ -210,16 +218,21 @@ watch(pieFrameRef, (frame) => {
 
 onBeforeUnmount(() => pieObserver?.disconnect());
 const activeKey = ref(props.views[0]?.key ?? null);
-const hidden = ref(new Set());
 const renderKey = ref(0);
 
 const chart = computed(() => props.charts?.[activeKey.value] ?? null);
-const colors = computed(() => sliceColors(chart.value?.slices ?? []));
+const displaySlices = computed(() => props.slices ?? chart.value?.slices ?? []);
+const displayTotal = computed(() => (
+    props.slices
+        ? props.slices.reduce((sum, slice) => sum + (slice.count ?? 0), 0)
+        : (chart.value?.total ?? 0)
+));
+const colors = computed(() => sliceColors(displaySlices.value));
 
 const chartData = computed(() => ({
-    labels: chart.value.slices.map((slice) => slice.label),
+    labels: displaySlices.value.map((slice) => slice.label),
     datasets: [{
-        data: chart.value.slices.map((slice) => slice.count),
+        data: displaySlices.value.map((slice) => slice.count),
         backgroundColor: colors.value,
         borderColor: theme.value === 'dark' ? '#18201c' : '#ffffff',
         borderWidth: 2,
@@ -240,14 +253,21 @@ const chartOptions = computed(() => ({
             boxPadding: 4,
             titleFont: { weight: '600' },
             callbacks: {
-                label: (context) => ` ${formatNumber(context.parsed)} (${formatPercent(context.parsed, chart.value.total)})`,
+                label: (context) => ` ${formatNumber(context.parsed)} (${formatPercent(context.parsed, displayTotal.value)})`,
                 footer: (items) => {
-                    const slice = chart.value.slices[items[0]?.dataIndex];
+                    const slice = displaySlices.value[items[0]?.dataIndex];
 
                     return slice?.kind === 'others' ? `${slice.grouped} smaller values combined` : '';
                 },
             },
         },
+    },
+    onClick: (_event, elements) => {
+        const slice = displaySlices.value[elements[0]?.index];
+
+        if (slice) {
+            emit('select-slice', slice);
+        }
     },
 }));
 
@@ -261,7 +281,7 @@ const percentLabels = {
     id: 'percentLabels',
     afterDatasetsDraw(instance) {
         const meta = instance.getDatasetMeta(0);
-        const total = chart.value?.total ?? 0;
+        const total = displayTotal.value;
         const { ctx } = instance;
 
         if (!total) {
@@ -276,7 +296,7 @@ const percentLabels = {
         ctx.textBaseline = 'middle';
 
         meta.data.forEach((arc, index) => {
-            const count = chart.value.slices[index]?.count ?? 0;
+            const count = displaySlices.value[index]?.count ?? 0;
 
             if (!instance.getDataVisibility(index) || count / total < MIN_LABEL_SHARE) {
                 return;
@@ -302,9 +322,9 @@ function labelColor(hex) {
 }
 
 const ariaLabel = computed(() => {
-    const parts = chart.value.slices.map((slice) => `${slice.label} ${formatNumber(slice.count)}`);
+    const parts = displaySlices.value.map((slice) => `${slice.label} ${formatNumber(slice.count)}`);
 
-    return `${props.title} pie chart, ${chart.value.metric} ${formatNumber(chart.value.total)}: ${parts.join(', ')}`;
+    return `${props.title} pie chart, ${chart.value.metric} ${formatNumber(displayTotal.value)}: ${parts.join(', ')}`;
 });
 
 const EMPTY_MESSAGES = {
@@ -312,6 +332,7 @@ const EMPTY_MESSAGES = {
     'Total Resident Records': 'No residents are registered yet. This chart fills in once residents are added.',
     'Total Diseases Recorded': 'No household questionnaire has listed a common disease yet.',
     'Total Primary Needs Recorded': 'No household questionnaire has listed a primary need yet.',
+    'Total Pets Recorded': 'No pets have been recorded yet.',
 };
 
 const emptyMessage = computed(() => (
@@ -327,29 +348,11 @@ watch(() => props.views, (views) => {
  * dataset gets a fresh canvas to match the cleared legend.
  */
 watch(chart, () => {
-    hidden.value = new Set();
     renderKey.value += 1;
 });
 
-function toggleSlice(index) {
-    const instance = chartRef.value?.chart;
-
-    if (!instance) {
-        return;
-    }
-
-    instance.toggleDataVisibility(index);
-    instance.update();
-
-    const next = new Set(hidden.value);
-
-    if (next.has(index)) {
-        next.delete(index);
-    } else {
-        next.add(index);
-    }
-
-    hidden.value = next;
+function selectSlice(slice) {
+    emit('select-slice', slice);
 }
 
 function formatNumber(value) {

@@ -7,9 +7,11 @@ use App\Models\Logs\Action;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ReportRepositoryInterface;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\Response;
@@ -94,10 +96,14 @@ class ReportService
             ? $report['header'].': '.$report['total']
             : null;
 
-        $response = Excel::download(
-            new ReportWorkbookExport($report['title'], $report['subtitle'], $headerLine, $headings, $rows),
-            $filename.'.xlsx',
-        );
+        $response = match ($format) {
+            'csv' => $this->csvDownload($filename, $report['title'], $report['subtitle'], $headerLine, $headings, $rows),
+            'pdf' => $this->pdfDownload($filename, $report['title'], $report['subtitle'], $headerLine, $headings, $rows),
+            default => Excel::download(
+                new ReportWorkbookExport($report['title'], $report['subtitle'], $headerLine, $headings, $rows),
+                $filename.'.xlsx',
+            ),
+        };
 
         $this->auditLogRepository->log(
             performedByUserId: $performedBy->user_id,
@@ -111,6 +117,82 @@ class ReportService
         );
 
         return $response;
+    }
+
+    /**
+     * @param  list<string>  $headings
+     * @param  list<list<string>>  $rows
+     */
+    private function csvDownload(
+        string $filename,
+        string $title,
+        ?string $subtitle,
+        ?string $headerLine,
+        array $headings,
+        array $rows,
+    ): Response {
+        $lines = [$this->csvLine([$title])];
+
+        if ($subtitle !== null && $subtitle !== '') {
+            $lines[] = $this->csvLine([$subtitle]);
+        }
+
+        if ($headerLine !== null && $headerLine !== '') {
+            $lines[] = $this->csvLine([$headerLine]);
+        }
+
+        $lines[] = $this->csvLine($headings);
+
+        foreach ($rows as $row) {
+            $lines[] = $this->csvLine($row);
+        }
+
+        return response(implode("\n", $lines)."\n", 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'.csv"',
+        ]);
+    }
+
+    /**
+     * @param  list<string>  $values
+     */
+    private function csvLine(array $values): string
+    {
+        return implode(',', array_map(function (mixed $value): string {
+            $text = str_replace('"', '""', (string) $value);
+
+            return '"'.$text.'"';
+        }, $values));
+    }
+
+    /**
+     * @param  list<string>  $headings
+     * @param  list<list<string>>  $rows
+     */
+    private function pdfDownload(
+        string $filename,
+        string $title,
+        ?string $subtitle,
+        ?string $headerLine,
+        array $headings,
+        array $rows,
+    ): Response {
+        $barangay = DB::table('system_setting')->where('setting_key', 'barangay_name')->value('setting_value');
+
+        $pdf = Pdf::loadView('reports.export', [
+            'barangay' => is_string($barangay) && $barangay !== '' ? $barangay : 'Barangay',
+            'title' => $title,
+            'subtitle' => $subtitle,
+            'header' => $headerLine,
+            'headings' => $headings,
+            'rows' => $rows,
+            'generatedAt' => now()->timezone((string) config('app.timezone'))->format('F j, Y g:i A'),
+        ])->setPaper('a4', 'landscape');
+
+        return response($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'.pdf"',
+        ]);
     }
 
     /**
