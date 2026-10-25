@@ -181,7 +181,7 @@
             <div class="grid gap-4 sm:grid-cols-3">
                 <div>
                     <label class="rbim-label" :for="`${idPrefix}-birth_city`">
-                        City / municipality<span class="rbim-required" aria-hidden="true">*</span>
+                        City / municipality
                     </label>
                     <input
                         :id="`${idPrefix}-birth_city`"
@@ -196,7 +196,7 @@
                 </div>
                 <div>
                     <label class="rbim-label" :for="`${idPrefix}-birth_province`">
-                        Province<span class="rbim-required" aria-hidden="true">*</span>
+                        Province
                     </label>
                     <input
                         :id="`${idPrefix}-birth_province`"
@@ -211,7 +211,7 @@
                 </div>
                 <div>
                     <label class="rbim-label" :for="`${idPrefix}-birth_country`">
-                        Country<span class="rbim-required" aria-hidden="true">*</span>
+                        Country
                     </label>
                     <input
                         :id="`${idPrefix}-birth_country`"

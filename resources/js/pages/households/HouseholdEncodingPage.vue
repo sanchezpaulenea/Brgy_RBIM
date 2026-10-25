@@ -91,7 +91,12 @@ import {
     ensureResidentDemographicLookups,
 } from '@/utils/demographicLookups';
 import { HOUSEHOLD_HEAD_MIN_AGE, optionalAddressText, toId, toOptionalLookupId } from '@/utils/residentForm';
-import { houseNumberValidationError, optionalHouseNumber, personnelNameValidationError } from '@/utils/validation';
+import {
+    houseNumberValidationError,
+    optionalHouseNumber,
+    personnelNameValidationError,
+    placeNameValidationError,
+} from '@/utils/validation';
 
 const HEAD_RELATIONSHIP_ID = 1;
 const DEFAULT_BIRTH_COUNTRY = 'Philippines';
@@ -399,17 +404,17 @@ function validateMembers() {
             errors.marital_status_id = 'Marital status is required.';
         }
 
-        if (!String(member.birth_city_municipality ?? '').trim()) {
-            errors.birth_city_municipality = 'City / municipality of birth is required.';
-        }
+        [
+            ['birth_city_municipality', 'City / municipality of birth'],
+            ['birth_province', 'Province of birth'],
+            ['birth_country', 'Country of birth'],
+        ].forEach(([field, label]) => {
+            const message = placeNameValidationError(member[field], label, false);
 
-        if (!String(member.birth_province ?? '').trim()) {
-            errors.birth_province = 'Province of birth is required.';
-        }
-
-        if (!String(member.birth_country ?? '').trim()) {
-            errors.birth_country = 'Country of birth is required.';
-        }
+            if (message) {
+                errors[field] = message;
+            }
+        });
 
         if (Object.keys(errors).length) {
             valid = false;
@@ -498,9 +503,9 @@ function residentPayload(member) {
         relationship_to_hh_id: toId(member.relationship_to_hh_id),
         sex_id: toId(member.sex_id),
         date_of_birth: member.date_of_birth,
-        birth_city_municipality: member.birth_city_municipality.trim(),
-        birth_province: member.birth_province.trim(),
-        birth_country: member.birth_country.trim(),
+        birth_city_municipality: optionalText(member.birth_city_municipality),
+        birth_province: optionalText(member.birth_province),
+        birth_country: optionalText(member.birth_country),
         nationality_id: toOptionalLookupId(member.nationality_id),
         religion_id: toOptionalLookupId(member.religion_id),
         ethnicity_id: toOptionalLookupId(member.ethnicity_id),

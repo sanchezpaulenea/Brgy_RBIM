@@ -208,9 +208,9 @@ export function validateResidentForm(form, errors, { requireRelationship = true,
         delete errors.date_of_birth;
     }
 
-    const cityError = placeNameValidationError(form.birth_city_municipality, 'Birth City/Municipality');
-    const provinceError = placeNameValidationError(form.birth_province, 'Birth Province');
-    const countryError = placeNameValidationError(form.birth_country, 'Birth Country');
+    const cityError = placeNameValidationError(form.birth_city_municipality, 'Birth City/Municipality', false);
+    const provinceError = placeNameValidationError(form.birth_province, 'Birth Province', false);
+    const countryError = placeNameValidationError(form.birth_country, 'Birth Country', false);
 
     if (cityError) {
         errors.birth_city_municipality = cityError;
@@ -252,9 +252,9 @@ export function residentPayload(form) {
         relationship_to_hh_id: toId(form.relationship_to_hh_id),
         sex_id: toId(form.sex_id),
         date_of_birth: form.date_of_birth,
-        birth_city_municipality: String(form.birth_city_municipality ?? '').trim(),
-        birth_province: String(form.birth_province ?? '').trim(),
-        birth_country: String(form.birth_country ?? '').trim(),
+        birth_city_municipality: optionalText(form.birth_city_municipality),
+        birth_province: optionalText(form.birth_province),
+        birth_country: optionalText(form.birth_country),
         nationality_id: toOptionalLookupId(form.nationality_id),
         religion_id: toOptionalLookupId(form.religion_id),
         ethnicity_id: toOptionalLookupId(form.ethnicity_id),

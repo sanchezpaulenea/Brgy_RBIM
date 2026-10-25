@@ -112,7 +112,7 @@
         />
         <div>
             <label :for="`${idPrefix}-birth_city`" class="rbim-label whitespace-nowrap">
-                Birth City/Municipality<span class="rbim-required" aria-hidden="true">*</span>
+                Birth City/Municipality
             </label>
             <input
                 :id="`${idPrefix}-birth_city`"
@@ -127,7 +127,7 @@
         </div>
         <div>
             <label :for="`${idPrefix}-birth_province`" class="rbim-label">
-                Birth Province<span class="rbim-required" aria-hidden="true">*</span>
+                Birth Province
             </label>
             <input
                 :id="`${idPrefix}-birth_province`"
@@ -142,7 +142,7 @@
         </div>
         <div>
             <label :for="`${idPrefix}-birth_country`" class="rbim-label">
-                Birth Country<span class="rbim-required" aria-hidden="true">*</span>
+                Birth Country
             </label>
             <input
                 :id="`${idPrefix}-birth_country`"
