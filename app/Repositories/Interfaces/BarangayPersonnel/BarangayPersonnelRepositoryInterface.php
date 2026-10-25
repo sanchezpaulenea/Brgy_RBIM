@@ -14,6 +14,14 @@ interface BarangayPersonnelRepositoryInterface
 
     public function findById(int $personnelId): ?BarangayPersonnel;
 
+    /**
+     * Active personnel whose position name matches one of the given titles.
+     *
+     * @param  list<string>  $positionNames
+     * @return Collection<int, BarangayPersonnel>
+     */
+    public function findActiveByPositionNames(array $positionNames): Collection;
+
     public function findMatchingIdentity(
         string $lastName,
         string $firstName,

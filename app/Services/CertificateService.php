@@ -2,12 +2,15 @@
 
 namespace App\Services;
 
+use App\Models\BarangayPersonnel\BarangayPersonnel;
+use App\Models\BarangayPersonnel\PersonnelPosition;
 use App\Models\Certificate\Certificate;
 use App\Models\Certificate\TypeOfCertificate;
 use App\Models\Logs\Action;
 use App\Models\ResidentManagement\Demographic\Resident;
 use App\Models\ResidentManagement\Migration\Migration;
 use App\Models\UserManagement\User;
+use App\Repositories\Interfaces\BarangayPersonnel\BarangayPersonnelRepositoryInterface;
 use App\Repositories\Interfaces\CertificateRepositoryInterface;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Demographic\ResidentRepositoryInterface;
@@ -17,6 +20,7 @@ use App\Repositories\Interfaces\Setting\SettingRepositoryInterface;
 use App\Repositories\Interfaces\TypeOfCertificateRepositoryInterface;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -31,6 +35,19 @@ class CertificateService
 
     public const SIGNATURE_MISSING_WARNING = 'No Punong Barangay signature file is on record. The certificate was generated with a blank signature line.';
 
+    public const MISSING_SOLO_PARENT_PRESIDENT = 'Register an active President of Solo Parent in Barangay Personnel.';
+
+    public const MISSING_SOLO_PARENT_KAGAWAD = 'Register an active Kagawad on Social Services in Barangay Personnel.';
+
+    private const SOLO_PARENT_PRESIDENT_POSITION = 'President of Solo Parent';
+
+    private const SOLO_PARENT_KAGAWAD_POSITION = 'Kagawad on Social Services';
+
+    /**
+     * @var array{president_name: ?string, kagawad_name: ?string}|null
+     */
+    private ?array $soloParentOfficialNamesCache = null;
+
     public function __construct(
         protected CertificateRepositoryInterface $certificateRepository,
         protected TypeOfCertificateRepositoryInterface $typeOfCertificateRepository,
@@ -39,6 +56,7 @@ class CertificateService
         protected SociocivicRepositoryInterface $sociocivicRepository,
         protected SettingRepositoryInterface $settingRepository,
         protected AuditLogRepositoryInterface $auditLogRepository,
+        protected BarangayPersonnelRepositoryInterface $barangayPersonnelRepository,
     ) {}
 
     /**
@@ -271,6 +289,20 @@ class CertificateService
         $type = $this->requireType((int) $input['type_of_certificate_id']);
         $resident = $this->requireResident((int) $input['resident_id']);
         $eligibility = $this->eligibility($resident, $type);
+        $warnings = $eligibility['warnings'];
+
+        if ($this->kind($type) === 'solo_parent') {
+            $officials = $this->soloParentOfficialNames();
+
+            if ($officials['president_name'] === null) {
+                $warnings[] = self::MISSING_SOLO_PARENT_PRESIDENT;
+            }
+
+            if ($officials['kagawad_name'] === null) {
+                $warnings[] = self::MISSING_SOLO_PARENT_KAGAWAD;
+            }
+        }
+
         $issuedAt = now();
         $issuer?->loadMissing('personnel.position');
         $details = $this->certificateDetails($input, $type);
@@ -289,7 +321,7 @@ class CertificateService
         return [
             'eligible' => $eligibility['eligible'],
             'reason' => $eligibility['reason'],
-            'warnings' => $eligibility['warnings'],
+            'warnings' => $warnings,
             'issue_block' => $this->issuerBlock($issuer),
             'document' => $document,
         ];
@@ -326,7 +358,7 @@ class CertificateService
         $this->assertSignatureAllowed($type, $attachSignature);
         $signature = $this->signatureChoice($attachSignature);
 
-        $details = $this->certificateDetails($input, $type);
+        $details = $this->certificateDetails($input, $type, requireOfficials: true);
         $overrides = $this->overrides($input);
         $issuedAt = now();
 
@@ -411,7 +443,7 @@ class CertificateService
         $attachSignature = (bool) ($input['attach_pb_signature'] ?? false);
         $this->assertSignatureAllowed($type, $attachSignature);
         $signature = $this->signatureChoice($attachSignature);
-        $details = $this->certificateDetails($input, $type);
+        $details = $this->certificateDetails($input, $type, requireOfficials: true);
         $overrides = $this->overrides($input);
         $issuedAt = $certificate->date_of_issue ?? now();
 
@@ -586,7 +618,7 @@ class CertificateService
      *     solo_parent: ?array<string, mixed>
      * }
      */
-    private function certificateDetails(array $input, TypeOfCertificate $type): array
+    private function certificateDetails(array $input, TypeOfCertificate $type, bool $requireOfficials = false): array
     {
         $kind = $this->kind($type);
         $requested = (bool) ($input['representative_requested'] ?? false);
@@ -607,7 +639,7 @@ class CertificateService
 
         if ($kind === 'death') {
             if (! empty($input['date_of_death'])) {
-                $dateOfDeath = \Illuminate\Support\Carbon::parse((string) $input['date_of_death'])->toDateString();
+                $dateOfDeath = Carbon::parse((string) $input['date_of_death'])->toDateString();
             }
 
             $placeOfDeath = $this->lowerText($input['place_of_death'] ?? null);
@@ -616,7 +648,7 @@ class CertificateService
             $ethnicGroup = $ethnicGroup === null ? null : $this->titleCase($ethnicGroup);
         }
 
-        $includeIncome = $kind === 'low_income' && (bool) ($input['include_income_amount'] ?? false);
+        $includeIncome = $kind === 'low_income_amount';
         $amount = null;
 
         if ($includeIncome && isset($input['stated_income_amount']) && $input['stated_income_amount'] !== null && $input['stated_income_amount'] !== '') {
@@ -650,7 +682,7 @@ class CertificateService
             'ethnic_group' => $ethnicGroup,
             'resident_since_year' => $sinceYear,
             'stated_civil_status' => $civilStatus,
-            'solo_parent' => $kind === 'solo_parent' ? $this->soloParentDetails($input) : null,
+            'solo_parent' => $kind === 'solo_parent' ? $this->soloParentDetails($input, $requireOfficials) : null,
         ];
     }
 
@@ -680,7 +712,7 @@ class CertificateService
      * @param  array<string, mixed>  $input
      * @return array<string, mixed>
      */
-    private function soloParentDetails(array $input): array
+    private function soloParentDetails(array $input, bool $requireOfficials = false): array
     {
         $children = [];
 
@@ -698,17 +730,33 @@ class CertificateService
 
             $children[] = [
                 'child_name' => $this->titleCase($name),
-                'date_of_birth' => \Illuminate\Support\Carbon::parse($born)->toDateString(),
+                'date_of_birth' => Carbon::parse($born)->toDateString(),
             ];
+        }
+
+        $officials = $this->soloParentOfficialNames();
+
+        if ($requireOfficials && ($officials['president_name'] === null || $officials['kagawad_name'] === null)) {
+            $errors = [];
+
+            if ($officials['president_name'] === null) {
+                $errors['solo_parent_president_name'] = self::MISSING_SOLO_PARENT_PRESIDENT;
+            }
+
+            if ($officials['kagawad_name'] === null) {
+                $errors['solo_parent_kagawad_name'] = self::MISSING_SOLO_PARENT_KAGAWAD;
+            }
+
+            throw ValidationException::withMessages($errors);
         }
 
         return [
             'circumstance' => $this->lowerText($input['solo_parent_circumstance'] ?? null) ?? '',
-            'president_name' => $this->titleCase((string) ($input['solo_parent_president_name'] ?? '')),
+            'president_name' => $officials['president_name'] ?? '',
             'president_address' => Str::squish((string) ($input['solo_parent_president_address'] ?? '')),
             'neighbor_name' => $this->titleCase((string) ($input['solo_parent_neighbor_name'] ?? '')),
             'neighbor_address' => Str::squish((string) ($input['solo_parent_neighbor_address'] ?? '')),
-            'kagawad_name' => $this->titleCase((string) ($input['solo_parent_kagawad_name'] ?? '')),
+            'kagawad_name' => $officials['kagawad_name'] ?? '',
             'children' => $children,
         ];
     }
@@ -732,7 +780,7 @@ class CertificateService
             return '';
         }
 
-        return \Illuminate\Support\Carbon::parse($value)
+        return Carbon::parse($value)
             ->timezone(config('app.timezone'))
             ->format('F j, Y');
     }
@@ -1040,6 +1088,8 @@ class CertificateService
                 'ethnic_group' => trim((string) ($resident->ethnicity?->ethnicity ?? '')),
                 'stated_civil_status' => trim((string) ($resident->maritalStatus?->marital_status ?? '')),
                 'solo_parent_circumstance' => $this->soloCircumstanceSuggestion($resident),
+                'solo_parent_officials' => $this->kind($type) === 'solo_parent' ? $this->soloParentOfficialNames() : null,
+                'household_children' => $this->kind($type) === 'solo_parent' ? $this->householdChildren($resident) : [],
             ],
             'fields' => [
                 'resident_name' => $residentName,
@@ -1064,9 +1114,12 @@ class CertificateService
             'certificate_number' => $certificateId,
         ];
 
-        $sheetConfigs = ! empty($config['packet'])
-            ? [$this->typeConfig(3) ?? [], $this->typeConfig(4) ?? []]
-            : [$config];
+        $sheetConfigs = [$config];
+
+        if (! empty($config['packet'])) {
+            $oath = config('certificate_types.oath');
+            $sheetConfigs[] = is_array($oath) ? $oath : [];
+        }
         $sheets = [];
 
         foreach ($sheetConfigs as $index => $sheetConfig) {
@@ -1337,6 +1390,88 @@ class CertificateService
         ])->map(fn (mixed $part) => trim((string) $part))->filter()->implode(' ');
     }
 
+    /**
+     * @return array{president_name: ?string, kagawad_name: ?string}
+     */
+    private function soloParentOfficialNames(): array
+    {
+        if ($this->soloParentOfficialNamesCache !== null) {
+            return $this->soloParentOfficialNamesCache;
+        }
+
+        $presidentKey = mb_strtolower(PersonnelPosition::standardizeName(self::SOLO_PARENT_PRESIDENT_POSITION));
+        $kagawadKey = mb_strtolower(PersonnelPosition::standardizeName(self::SOLO_PARENT_KAGAWAD_POSITION));
+        $names = [
+            'president_name' => null,
+            'kagawad_name' => null,
+        ];
+
+        $personnel = $this->barangayPersonnelRepository->findActiveByPositionNames([
+            self::SOLO_PARENT_PRESIDENT_POSITION,
+            self::SOLO_PARENT_KAGAWAD_POSITION,
+        ]);
+
+        foreach ($personnel as $person) {
+            $position = mb_strtolower(PersonnelPosition::standardizeName((string) ($person->position?->position_name ?? '')));
+            $printed = $this->personnelPrintName($person);
+
+            if ($printed === '') {
+                continue;
+            }
+
+            if ($position === $presidentKey && $names['president_name'] === null) {
+                $names['president_name'] = $printed;
+            }
+
+            if ($position === $kagawadKey && $names['kagawad_name'] === null) {
+                $names['kagawad_name'] = $printed;
+            }
+        }
+
+        return $this->soloParentOfficialNamesCache = $names;
+    }
+
+    private function personnelPrintName(BarangayPersonnel $personnel): string
+    {
+        $name = collect([
+            $personnel->personnel_first_name,
+            $personnel->personnel_middle_name,
+            $personnel->personnel_last_name,
+            $personnel->personnel_suffix,
+        ])->map(fn (mixed $part) => trim((string) $part))->filter()->implode(' ');
+
+        return $name === '' ? '' : $this->titleCase($name);
+    }
+
+    /**
+     * @return list<array{resident_id: int, name: string, label: string, date_of_birth: ?string}>
+     */
+    private function householdChildren(Resident $resident): array
+    {
+        $householdId = (int) ($resident->household_id ?? 0);
+
+        if ($householdId === 0) {
+            return [];
+        }
+
+        return $this->residentRepository
+            ->childrenInHousehold($householdId, (int) $resident->resident_id)
+            ->map(function (Resident $child): array {
+                $name = $this->personName($child);
+                $relationship = trim((string) ($child->relationshipToHouseholdHead?->relationship_to_hh ?? ''));
+                $born = $child->date_of_birth?->format('M j, Y');
+                $detail = collect([$relationship, $born])->filter()->implode(' · ');
+
+                return [
+                    'resident_id' => (int) $child->resident_id,
+                    'name' => $name,
+                    'label' => $detail === '' ? $name : $name.' ('.$detail.')',
+                    'date_of_birth' => $child->date_of_birth?->toDateString(),
+                ];
+            })
+            ->all();
+    }
+
     private function residentListName(Resident $resident): string
     {
         $last = trim((string) $resident->last_name);
@@ -1470,7 +1605,7 @@ class CertificateService
                 continue;
             }
 
-            $date = \Illuminate\Support\Carbon::parse($born);
+            $date = Carbon::parse($born);
             $years = $date->diff($issuedAt)->y;
             $age = $years >= 1
                 ? $years.' '.($years === 1 ? 'Year Old' : 'Years Old')

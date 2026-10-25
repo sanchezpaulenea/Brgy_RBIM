@@ -3,7 +3,9 @@
 /*
 | Certificate body copy, keyed by type_of_certificate.type_of_certificate_id.
 |
-| Wording for types 3, 4, 6, 7, 8, and 9 follows the Barangay Happy Hallow forms.
+| Wording for types 3, 6, 7, 8, and 9 follows the Barangay Happy Hallow forms.
+| Type 4 is Low Income Certification with a stated amount. The oath wording
+| lives under the "oath" key and is printed only as page 2 of type 3.
 | Certificate of Residency and Barangay Clearance keep the earlier residency form
 | because those two PDFs were not in the barangay set.
 |
@@ -72,32 +74,21 @@ return [
     ],
 
     4 => [
-        'kind' => 'oath',
-        'title' => 'Oath of Undertaking',
-        'salutation' => null,
-        'signature' => 'oath',
-        'stamp' => false,
-        'title_bold' => false,
-        'dense' => true,
-        'packet' => true,
-        'footer_notes' => [
-            'THIS FORM NEED NOT BE NOTARIZED',
-            'RA 11261 FORM 1',
-        ],
+        'kind' => 'low_income_amount',
+        'title' => 'Certificate of Low Income',
+        'office' => 'OFFICE OF THE SANGGUNIANG BARANGAY',
+        'salutation' => 'To Whom it may concern,',
+        'signature' => 'income',
+        'stamp' => true,
+        'bold_issuer' => true,
+        'authority_line' => 'By the Authority of the Punong Barangay:',
         'allows_signature' => true,
-        'print_purpose' => false,
+        'print_purpose' => true,
         'paragraphs' => [
-            'I, {name}, {years_of_age}, resident of {address} availing the benefits of RA 11261, otherwise known as the First Time Jobseekers Act of 2019, do hereby declare, agree and undertake to abide and be bound by the following:',
-            '1. That this is my first time actively looking for a job, and therefore requesting that a Barangay Certification be issued in my favor to avail the benefits of the law;',
-            '2. That I am aware that the benefit and privilege/s under the said law shall be valid only for one (1) year from the date the Barangay Certification was issued;',
-            '3. That I can avail of the benefit only once;',
-            '4. That I understand that my personal information shall be included in the Roster/List of First Time Jobseekers and will be used for any unlawful purpose;',
-            '5. That I will inform and/or report to the Barangay personally, through text or other means, or through my family/relatives once I got employed;and',
-            '6. That I am not a beneficiary of the JobStart Program under RA.NO.10869 and other laws that give similar exemptions for the documents or transactions exempted under RA. NO. 11261',
-            '7. That if issued the requested Certification, I will not use the same in any fraud, neither falsify nor help and/or assist in the fabrication of the said certification.',
-            '8. That this undertaking is made solely for the purpose of obtaining a Barangay Certification consistent with the objective RA.NO 11261 and not for any other purpose.',
-            '9. That I consent to the use of my personal information pursuant to the DATA PRIVACY ACT and other applicable laws, rules, and regulations.',
-            'Signed this {issued_ordinal} day of {issued_month} {issued_year} in the {city_of}.',
+            'This is to certify that **{courtesy}{name}**, {years_old} , {nationality}, with a residence and postal address at **{address}** is a bona fide resident of this barangay;',
+            'This is to further certify that the above -name person`s source of income or occupation is inadequate to support family basic needs and belongs to the family whose annual income is less than the regional threshold of {income_words} ({income_figure}) pesos.',
+            'This **BARANGAY CERTIFICATION** is issued upon the request of **{courtesy}{requester}** for **{purpose}**.',
+            'Issued this **{issued_on}** at {barangay_short} Barangay, {city}.',
         ],
     ],
 
@@ -124,10 +115,8 @@ return [
     7 => [
         'kind' => 'low_income',
         'title' => 'Low Income Certification',
-        'title_with_amount' => 'Certificate of Low Income',
         'office' => 'OFFICE OF THE SANGGUNIANG BARANGAY',
         'salutation' => 'To Whom It May Concern:',
-        'salutation_with_amount' => 'To Whom it may concern,',
         'signature' => 'income',
         'stamp' => true,
         'bold_issuer' => true,
@@ -140,11 +129,34 @@ return [
             'This BARANGAY CERTIFICATION is being issued upon the request of {requester}{purpose_clause}.',
             'Issued this {issued_on} at {barangay_short} Barangay, {city}.',
         ],
-        'paragraphs_with_amount' => [
-            'This is to certify that **{courtesy}{name}**, {years_old} , {nationality}, with a residence and postal address at **{address}** is a bona fide resident of this barangay;',
-            'This is to further certify that the above -name person`s source of income or occupation is inadequate to support family basic needs and belongs to the family whose annual income is less than the regional threshold of {income_words} ({income_figure}) pesos.',
-            'This **BARANGAY CERTIFICATION** is issued upon the request of **{courtesy}{requester}** for **{purpose}**.',
-            'Issued this **{issued_on}** at {barangay_short} Barangay, {city}.',
+    ],
+
+    'oath' => [
+        'kind' => 'oath',
+        'title' => 'Oath of Undertaking',
+        'salutation' => null,
+        'signature' => 'oath',
+        'stamp' => false,
+        'title_bold' => false,
+        'dense' => true,
+        'footer_notes' => [
+            'THIS FORM NEED NOT BE NOTARIZED',
+            'RA 11261 FORM 1',
+        ],
+        'allows_signature' => true,
+        'print_purpose' => false,
+        'paragraphs' => [
+            'I, {name}, {years_of_age}, resident of {address} availing the benefits of RA 11261, otherwise known as the First Time Jobseekers Act of 2019, do hereby declare, agree and undertake to abide and be bound by the following:',
+            '1. That this is my first time actively looking for a job, and therefore requesting that a Barangay Certification be issued in my favor to avail the benefits of the law;',
+            '2. That I am aware that the benefit and privilege/s under the said law shall be valid only for one (1) year from the date the Barangay Certification was issued;',
+            '3. That I can avail of the benefit only once;',
+            '4. That I understand that my personal information shall be included in the Roster/List of First Time Jobseekers and will be used for any unlawful purpose;',
+            '5. That I will inform and/or report to the Barangay personally, through text or other means, or through my family/relatives once I got employed;and',
+            '6. That I am not a beneficiary of the JobStart Program under RA.NO.10869 and other laws that give similar exemptions for the documents or transactions exempted under RA. NO. 11261',
+            '7. That if issued the requested Certification, I will not use the same in any fraud, neither falsify nor help and/or assist in the fabrication of the said certification.',
+            '8. That this undertaking is made solely for the purpose of obtaining a Barangay Certification consistent with the objective RA.NO 11261 and not for any other purpose.',
+            '9. That I consent to the use of my personal information pursuant to the DATA PRIVACY ACT and other applicable laws, rules, and regulations.',
+            'Signed this {issued_ordinal} day of {issued_month} {issued_year} in the {city_of}.',
         ],
     ],
 

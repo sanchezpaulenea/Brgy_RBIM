@@ -33,6 +33,13 @@ interface ResidentRepositoryInterface
     public function countByHousehold(int $householdId): int;
 
     /**
+     * Household members recorded as children, excluding the certificate owner.
+     *
+     * @return Collection<int, Resident>
+     */
+    public function childrenInHousehold(int $householdId, int $exceptResidentId): Collection;
+
+    /**
      * @param  array<string, mixed>  $attributes
      */
     public function create(array $attributes): Resident;

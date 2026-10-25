@@ -3,6 +3,8 @@
 namespace App\Repositories\BarangayPersonnel;
 
 use App\Models\BarangayPersonnel\BarangayPersonnel;
+use App\Models\BarangayPersonnel\PersonnelPosition;
+use App\Models\BarangayPersonnel\PersonnelStatus;
 use App\Repositories\Interfaces\BarangayPersonnel\BarangayPersonnelRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -56,6 +58,31 @@ class BarangayPersonnelRepository implements BarangayPersonnelRepositoryInterfac
         }
 
         return $query->first();
+    }
+
+    public function findActiveByPositionNames(array $positionNames): Collection
+    {
+        $normalized = collect($positionNames)
+            ->map(fn (string $name): string => mb_strtolower(PersonnelPosition::standardizeName($name)))
+            ->filter(fn (string $name): bool => $name !== '')
+            ->unique()
+            ->values();
+
+        if ($normalized->isEmpty()) {
+            return new Collection;
+        }
+
+        $placeholders = implode(', ', array_fill(0, $normalized->count(), '?'));
+
+        return BarangayPersonnel::query()
+            ->with('position')
+            ->where('personnel_status_id', PersonnelStatus::ACTIVE)
+            ->whereHas('position', function ($query) use ($normalized, $placeholders): void {
+                $query->whereRaw('LOWER(position_name) IN ('.$placeholders.')', $normalized->all());
+            })
+            ->orderBy('personnel_last_name')
+            ->orderBy('personnel_first_name')
+            ->get();
     }
 
     public function findById(int $personnelId): ?BarangayPersonnel
