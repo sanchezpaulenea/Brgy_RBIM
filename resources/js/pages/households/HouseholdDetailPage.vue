@@ -310,6 +310,16 @@
                                 id-prefix="detail-questions"
                             />
                         </fieldset>
+                        <HouseholdPetCensusForm
+                            ref="petForm"
+                            mode="edit"
+                            :household-id="household.household_id"
+                            :existing-pets="household.pets || []"
+                            :can-create="canCreatePets"
+                            :can-add="canCreatePets"
+                            :can-update="canUpdatePets"
+                            id-prefix="detail-questions-pets"
+                        />
                     </section>
                     <div class="flex justify-end gap-2">
                         <button type="button" class="rbim-btn-outline" @click="cancelEdit">
@@ -376,6 +386,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import HouseholdPetCensusForm from '@/components/HouseholdPetCensusForm.vue';
 import HouseholdPetFields from '@/components/HouseholdPetFields.vue';
 import HouseholdQuestionsFields from '@/components/HouseholdQuestionsFields.vue';
 import PageTabs from '@/components/PageTabs.vue';
@@ -444,6 +455,9 @@ const confirm = reactive({
 const canUpdate = computed(() => hasPermission('household.update'));
 const canUpdateQuestions = computed(() => canPerformUpdate(auth, 'householdquestion.update'));
 const canUpdatePets = computed(() => hasPermission('petcensus.update'));
+const canCreatePets = computed(() => hasPermission('petcensus.create'));
+const canEditPets = computed(() => canUpdatePets.value || canCreatePets.value);
+const petForm = ref(null);
 
 function emptyEditForm() {
     return {
@@ -650,7 +664,9 @@ async function handleUpdate() {
         clearQuestionErrors();
     }
 
-    if (Object.keys(editErrors).length || Object.keys(questionErrors).length) {
+    const petsValid = !canEditPets.value || petForm.value?.validateAll?.() !== false;
+
+    if (Object.keys(editErrors).length || Object.keys(questionErrors).length || !petsValid) {
         return;
     }
 
@@ -685,6 +701,10 @@ async function handleUpdate() {
             } else {
                 await householdService.createHouseholdQuestions(route.params.id, questionsPayload);
             }
+        }
+
+        if (canEditPets.value) {
+            await petForm.value?.save?.();
         }
 
         successMessage.value = 'Household updated successfully.';
