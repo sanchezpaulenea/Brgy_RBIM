@@ -107,10 +107,18 @@ export function emptyHouseholdQuestionsForm(defaults = {}) {
         child_deaths: [],
         common_diseases: ['', '', ''],
         primary_needs: ['', '', ''],
-        intend_to_stay_brgy: defaults.barangay ?? '',
+        intend_to_stay_brgy: withoutBarangayPrefix(defaults.barangay),
         intend_to_stay_municipality: defaults.city ?? '',
         intend_to_stay_province: defaults.province ?? '',
     };
+}
+
+/*
+ * The location profile stores the official name ("Barangay Happy Hallow"),
+ * but Q14 already sits under a "Barangay" label, so it takes the bare name.
+ */
+function withoutBarangayPrefix(name) {
+    return String(name ?? '').trim().replace(/^(barangay|brgy\.?)\s+/i, '');
 }
 
 export function householdQuestionsFromRecord(record, defaults = {}) {
@@ -135,7 +143,7 @@ export function householdQuestionsFromRecord(record, defaults = {}) {
         child_deaths: childDeathsFromRecord(record),
         common_diseases: [diseases[0] ?? '', diseases[1] ?? '', diseases[2] ?? ''],
         primary_needs: [needs[0] ?? '', needs[1] ?? '', needs[2] ?? ''],
-        intend_to_stay_brgy: record?.intend_to_stay_brgy ?? defaults.barangay ?? '',
+        intend_to_stay_brgy: record?.intend_to_stay_brgy ?? withoutBarangayPrefix(defaults.barangay),
         intend_to_stay_municipality: record?.intend_to_stay_municipality ?? defaults.city ?? '',
         intend_to_stay_province: record?.intend_to_stay_province ?? defaults.province ?? '',
     };
