@@ -96,31 +96,31 @@
             </div>
             <div v-else class="rbim-card overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table v-if="isAudit" class="min-w-full divide-y divide-slate-200 text-sm">
+                    <table v-if="isAudit" class="min-w-full table-fixed divide-y divide-slate-200 text-sm">
                         <thead class="bg-slate-50">
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">When</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">User</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Action</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Affected Record</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Target</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Old value</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">New value</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Record ID</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Description</th>
+                                <th class="w-[12%] px-3 py-3 text-center font-semibold text-slate-600">When</th>
+                                <th class="w-[10%] px-3 py-3 text-center font-semibold text-slate-600">User</th>
+                                <th class="w-[8%] px-3 py-3 text-center font-semibold text-slate-600">Action</th>
+                                <th class="w-[12%] px-3 py-3 text-center font-semibold text-slate-600">Affected Record</th>
+                                <th class="w-[10%] px-3 py-3 text-center font-semibold text-slate-600">Target</th>
+                                <th class="px-3 py-3 text-center font-semibold text-slate-600">Old value</th>
+                                <th class="px-3 py-3 text-center font-semibold text-slate-600">New value</th>
+                                <th class="w-[8%] px-3 py-3 text-center font-semibold text-slate-600">Record ID</th>
+                                <th class="px-3 py-3 text-center font-semibold text-slate-600">Description</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             <tr v-for="log in auditLogs" :key="log.audit_id">
-                                <td class="px-4 py-3 whitespace-nowrap text-slate-600">{{ formatDateTime(log.performed_at) }}</td>
-                                <td class="px-4 py-3 text-slate-900">{{ log.username || log.user_id }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ log.action }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ formatRecordLabel(log.entity) }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ formatRecordLabel(log.target) }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ log.old_value || '—' }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ log.new_value || '—' }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ formatRecordId(log.record_id) }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ log.description }}</td>
+                                <td class="px-3 py-3 text-center whitespace-nowrap text-slate-600">{{ formatDateTime(log.performed_at) }}</td>
+                                <td class="px-3 py-3 text-center font-medium text-slate-900">{{ log.username || log.user_id }}</td>
+                                <td class="px-3 py-3 text-center text-slate-600">{{ log.action }}</td>
+                                <td class="px-3 py-3 text-center text-slate-600">{{ formatRecordLabel(log.entity) }}</td>
+                                <td class="px-3 py-3 text-center text-slate-600">{{ formatRecordLabel(log.target) }}</td>
+                                <td class="px-3 py-3 text-center text-slate-600">{{ log.old_value || '—' }}</td>
+                                <td class="px-3 py-3 text-center text-slate-600">{{ log.new_value || '—' }}</td>
+                                <td class="px-3 py-3 text-center text-slate-600">{{ formatRecordId(log.record_id) }}</td>
+                                <td class="px-3 py-3 text-center text-slate-600">{{ log.description }}</td>
                             </tr>
                             <tr v-if="!auditLogs.length">
                                 <td colspan="9" class="px-4 py-8 text-center text-slate-500">

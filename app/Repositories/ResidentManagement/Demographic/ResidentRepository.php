@@ -163,6 +163,29 @@ class ResidentRepository implements ResidentRepositoryInterface
             ->count();
     }
 
+    public function childrenInHousehold(int $householdId, int $exceptResidentId): Collection
+    {
+        return Resident::query()
+            ->with('relationshipToHouseholdHead')
+            ->where('household_id', $householdId)
+            ->where('resident_id', '!=', $exceptResidentId)
+            ->whereHas('relationshipToHouseholdHead', function ($query): void {
+                $query->whereIn('relationship_to_hh', [
+                    'Son',
+                    'Daughter',
+                    'Stepson',
+                    'Stepdaughter',
+                    'Grandson',
+                    'Granddaughter',
+                ]);
+            })
+            ->orderByRaw('date_of_birth IS NULL')
+            ->orderBy('date_of_birth')
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+    }
+
     /**
      * @param  array<string, mixed>  $attributes
      */

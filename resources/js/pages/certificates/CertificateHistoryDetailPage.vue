@@ -69,13 +69,15 @@
                     </div>
                     <div
                         v-if="meta.last_page > 1"
-                        class="flex items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 text-sm"
+                        class="grid grid-cols-3 items-center gap-3 border-t border-slate-200 px-4 py-3 text-sm"
                     >
-                        <span class="text-slate-500">Page {{ meta.current_page }} of {{ meta.last_page }}</span>
-                        <div class="flex gap-2">
-                            <button type="button" class="rbim-btn-outline" :disabled="loading || page <= 1" @click="changePage(page - 1)">
+                        <div>
+                            <button v-if="page > 1" type="button" class="rbim-btn-outline" :disabled="loading" @click="changePage(page - 1)">
                                 Previous
                             </button>
+                        </div>
+                        <span class="text-center text-slate-500">Page {{ meta.current_page }} of {{ meta.last_page }}</span>
+                        <div class="flex justify-end">
                             <button type="button" class="rbim-btn-outline" :disabled="loading || page >= meta.last_page" @click="changePage(page + 1)">
                                 Next
                             </button>

@@ -9963,7 +9963,7 @@ INSERT INTO `type_of_certificate` (`type_of_certificate_id`, `type_of_certificat
 (1, 'Certificate of Residency'),
 (2, 'Barangay Clearance'),
 (3, 'First Time Job Seeker'),
-(4, 'Oath of Undertaking'),
+(4, 'Low Income Certification (with amount)'),
 (6, 'Affidavit of Solo Parent'),
 (7, 'Low Income Certification'),
 (8, 'Death Certificate'),

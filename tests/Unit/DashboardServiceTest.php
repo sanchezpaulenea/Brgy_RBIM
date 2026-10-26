@@ -25,6 +25,23 @@ class DashboardServiceTest extends TestCase
         $this->repository->shouldReceive('householdsByNumber')->andReturn([])->byDefault();
         $this->repository->shouldReceive('questionJunctionCounts')->andReturn([])->byDefault();
         $this->repository->shouldReceive('residentsByLookup')->andReturn([])->byDefault();
+        $this->repository->shouldReceive('householdsByQuestionBoolean')->andReturn([])->byDefault();
+        $this->repository->shouldReceive('householdsByPresence')->andReturn([])->byDefault();
+        $this->repository->shouldReceive('petsByLookup')->andReturn([])->byDefault();
+        $this->repository->shouldReceive('residentsByChildLookup')->andReturn([])->byDefault();
+        $this->repository->shouldReceive('residentsByChildBoolean')->andReturn([])->byDefault();
+        $this->repository->shouldReceive('residentsByColumnPresence')->andReturn([])->byDefault();
+        $this->repository->shouldReceive('residentsByChildColumn')->andReturn([])->byDefault();
+        $this->repository->shouldReceive('residentsByAgeBuckets')->andReturn([])->byDefault();
+        $this->repository->shouldReceive('residentsByChildNumberBuckets')->andReturn([])->byDefault();
+        $this->repository->shouldReceive('petsByBoolean')->andReturn([])->byDefault();
+        $this->repository->shouldReceive('petsByRabies')->andReturn([])->byDefault();
+        $this->repository->shouldReceive('residentsBySentinel')->andReturn([])->byDefault();
+        $this->repository->shouldReceive('residentsByCtcStatus')->andReturn([])->byDefault();
+        $this->repository->shouldReceive('residentsByTriState')->andReturn([])->byDefault();
+        $this->repository->shouldReceive('residentsByVoterStatus')->andReturn([])->byDefault();
+        $this->repository->shouldReceive('residentsByChildDistinct')->andReturn([])->byDefault();
+        $this->repository->shouldReceive('residentsByDisability')->andReturn([])->byDefault();
     }
 
     public function test_many_values_keep_top_five_and_group_the_rest_as_others(): void
@@ -114,6 +131,42 @@ class DashboardServiceTest extends TestCase
         $this->assertSame('Total Diseases Recorded', $charts['common_disease']['metric']);
         $this->assertSame('Total Primary Needs Recorded', $charts['primary_need']['metric']);
         $this->assertSame('Total Resident Records', $charts['marital_status']['metric']);
+    }
+
+    public function test_boolean_charts_list_yes_and_no_without_a_pie(): void
+    {
+        $this->repository->shouldReceive('householdsByQuestionBoolean')
+            ->with('perform_garbage_seggragation')
+            ->andReturn([
+                ['key' => 'yes', 'count' => 4, 'items' => [['id' => 1, 'name' => 'Dela Cruz, Ana']]],
+                ['key' => 'no', 'count' => 2, 'items' => [['id' => 2, 'name' => 'Santos, Ben']]],
+            ]);
+
+        $chart = $this->statistics()['charts']['segregate_garbage'];
+
+        $this->assertSame('boolean', $chart['kind']);
+        $this->assertSame(['Segregates', 'Does Not Segregate'], array_column($chart['groups'], 'label'));
+        $this->assertSame(6, $chart['total']);
+    }
+
+    public function test_added_modules_are_present_on_the_dashboard(): void
+    {
+        $charts = $this->statistics()['charts'];
+
+        foreach ([
+            'pets', 'pets_sex', 'pets_rabies', 'pets_spay',
+            'education', 'education_enrollment',
+            'economic', 'economic_source', 'economic_work_status',
+            'health', 'health_facility', 'health_reason', 'health_disability',
+            'infant_health', 'infant_attendant', 'infant_immunization',
+            'women_health', 'women_fp', 'women_fp_source', 'women_fp_intention',
+            'ctc', 'skills_training', 'skills', 'age', 'age_disability',
+            'ownership_unit', 'ownership_lot',
+        ] as $key) {
+            $this->assertArrayHasKey($key, $charts);
+        }
+
+        $this->assertSame('pie', $charts['ctc']['kind']);
     }
 
     /**

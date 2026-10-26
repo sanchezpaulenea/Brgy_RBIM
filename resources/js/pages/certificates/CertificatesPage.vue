@@ -3,24 +3,16 @@
         <div class="space-y-6">
             <PageTabs :tabs="certificateTabs" />
 
-            <div>
-                <button type="button" class="rbim-btn-outline" :disabled="step === 1 || generating" @click="goBack">
-                    Back
-                </button>
-            </div>
-
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <ol class="flex flex-wrap gap-2">
+                <ol class="flex flex-wrap gap-2" aria-label="Certificate progress">
                     <li v-for="(label, index) in stepLabels" :key="label">
-                        <button
-                            type="button"
-                            class="rounded-lg px-3 py-2 text-sm font-medium transition"
-                            :class="step === index + 1 ? 'bg-brand text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 disabled:hover:bg-white'"
-                            :disabled="index + 1 > step"
-                            @click="goToStep(index + 1)"
+                        <span
+                            class="inline-flex rounded-full px-4 py-2 text-sm font-medium"
+                            :class="stepGuideClass(index + 1)"
+                            :aria-current="step === index + 1 ? 'step' : undefined"
                         >
                             {{ index + 1 }}. {{ label }}
-                        </button>
+                        </span>
                     </li>
                 </ol>
                 <button
@@ -64,14 +56,27 @@
                         Requester<span class="rbim-required" aria-hidden="true">*</span>
                     </label>
                     <div class="flex gap-2">
-                        <input
-                            id="certificate-resident-search"
-                            v-model="search"
-                            type="search"
-                            class="rbim-input py-2"
-                            placeholder="Search by first, middle, or last name"
-                            @keydown.enter.prevent="runSearch"
-                        >
+                        <div class="relative min-w-0 flex-1">
+                            <input
+                                id="certificate-resident-search"
+                                v-model="search"
+                                type="text"
+                                autocomplete="off"
+                                class="rbim-input py-2 pr-10"
+                                placeholder="Search by first, middle, or last name"
+                                @keydown.enter.prevent="runSearch"
+                            >
+                            <button
+                                type="button"
+                                class="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-500 hover:text-slate-800"
+                                aria-label="Clear requester"
+                                @click="clearResidentSearch"
+                            >
+                                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                                </svg>
+                            </button>
+                        </div>
                         <button type="button" class="rbim-btn py-2" :disabled="searching" @click="runSearch">
                             Search
                         </button>
@@ -181,14 +186,18 @@
                             </tbody>
                         </table>
                     </div>
-                    <div v-if="historyMeta.last_page > 1" class="flex items-center justify-between border-t border-slate-100 px-4 py-3 text-sm">
-                        <button type="button" class="rbim-btn-outline px-3 py-1.5 text-xs" :disabled="historyPage <= 1" @click="changeHistoryPage(historyPage - 1)">
-                            Previous
-                        </button>
-                        <span>Page {{ historyMeta.current_page }} of {{ historyMeta.last_page }}</span>
-                        <button type="button" class="rbim-btn-outline px-3 py-1.5 text-xs" :disabled="historyPage >= historyMeta.last_page" @click="changeHistoryPage(historyPage + 1)">
-                            Next
-                        </button>
+                    <div v-if="historyMeta.last_page > 1" class="grid grid-cols-3 items-center border-t border-slate-100 px-4 py-3 text-sm">
+                        <div>
+                            <button v-if="historyPage > 1" type="button" class="rbim-btn-outline px-3 py-1.5 text-xs" @click="changeHistoryPage(historyPage - 1)">
+                                Previous
+                            </button>
+                        </div>
+                        <span class="text-center">Page {{ historyMeta.current_page }} of {{ historyMeta.last_page }}</span>
+                        <div class="flex justify-end">
+                            <button type="button" class="rbim-btn-outline px-3 py-1.5 text-xs" :disabled="historyPage >= historyMeta.last_page" @click="changeHistoryPage(historyPage + 1)">
+                                Next
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -249,6 +258,9 @@
                                 <input v-model="representativeRequested" type="checkbox">
                                 Request made by a representative
                             </label>
+                            <p v-if="selectedType?.kind === 'death'" class="rbim-hint mt-2">
+                                A death certificate is requested by a representative.
+                            </p>
                             <div v-if="representativeRequested" class="mt-4 grid gap-4 md:grid-cols-2">
                                 <div>
                                     <label for="representative-name" class="rbim-label">
@@ -289,34 +301,29 @@
                             </div>
                         </div>
 
-                        <div v-if="selectedType?.kind === 'low_income'" class="space-y-3">
-                            <label class="flex items-center gap-2 text-sm text-slate-800">
-                                <input v-model="includeIncomeAmount" type="checkbox">
-                                Include stated annual income
+                        <div v-if="selectedType?.kind === 'low_income_amount'">
+                            <label for="stated-income" class="rbim-label">
+                                Annual Income Threshold<span class="rbim-required" aria-hidden="true">*</span>
                             </label>
-                            <div v-if="includeIncomeAmount">
-                                <label for="stated-income" class="rbim-label">
-                                    Annual Income Threshold<span class="rbim-required" aria-hidden="true">*</span>
+                            <input id="stated-income" v-model="statedIncomeAmount" type="text" inputmode="decimal" class="rbim-input py-2 md:max-w-xs" placeholder="0.00">
+                            <p class="rbim-hint">Printed in words and in figures as the regional annual threshold.</p>
+                            <p v-if="incomeError" class="rbim-error">{{ incomeError }}</p>
+                        </div>
+
+                        <div v-if="selectedType?.kind === 'low_income'" class="grid gap-4 md:grid-cols-2">
+                            <div>
+                                <label for="resident-since" class="rbim-label">
+                                    Resident Since<span class="rbim-required" aria-hidden="true">*</span>
                                 </label>
-                                <input id="stated-income" v-model="statedIncomeAmount" type="text" inputmode="decimal" class="rbim-input py-2 md:max-w-xs" placeholder="0.00">
-                                <p class="rbim-hint">Printed in words and in figures as the regional annual threshold.</p>
-                                <p v-if="incomeError" class="rbim-error">{{ incomeError }}</p>
+                                <input id="resident-since" v-model="residentSinceYear" type="text" inputmode="numeric" maxlength="4" class="rbim-input py-2" placeholder="1998">
+                                <p v-if="sinceYearError" class="rbim-error">{{ sinceYearError }}</p>
                             </div>
-                            <div v-else class="grid gap-4 md:grid-cols-2">
-                                <div>
-                                    <label for="resident-since" class="rbim-label">
-                                        Resident Since<span class="rbim-required" aria-hidden="true">*</span>
-                                    </label>
-                                    <input id="resident-since" v-model="residentSinceYear" type="text" inputmode="numeric" maxlength="4" class="rbim-input py-2" placeholder="1998">
-                                    <p v-if="sinceYearError" class="rbim-error">{{ sinceYearError }}</p>
-                                </div>
-                                <div>
-                                    <label for="civil-status" class="rbim-label">
-                                        Civil Status<span class="rbim-required" aria-hidden="true">*</span>
-                                    </label>
-                                    <input id="civil-status" v-model="statedCivilStatus" type="text" maxlength="45" class="rbim-input py-2">
-                                    <p v-if="personTextError(statedCivilStatus, 'Civil status', 45)" class="rbim-error">{{ personTextError(statedCivilStatus, 'Civil status', 45) }}</p>
-                                </div>
+                            <div>
+                                <label for="civil-status" class="rbim-label">
+                                    Civil Status<span class="rbim-required" aria-hidden="true">*</span>
+                                </label>
+                                <input id="civil-status" v-model="statedCivilStatus" type="text" maxlength="45" class="rbim-input py-2">
+                                <p v-if="personTextError(statedCivilStatus, 'Civil status', 45)" class="rbim-error">{{ personTextError(statedCivilStatus, 'Civil status', 45) }}</p>
                             </div>
                         </div>
 
@@ -341,8 +348,15 @@
                             </div>
                             <div>
                                 <p class="rbim-label">Children under custody<span class="rbim-required" aria-hidden="true">*</span></p>
+                                <p class="rbim-hint">Type a name, or choose a child from this household.</p>
                                 <div v-for="(child, index) in children" :key="index" class="mt-2 grid gap-3 md:grid-cols-[1fr_180px_auto]">
-                                    <input v-model="child.child_name" type="text" maxlength="100" class="rbim-input py-2" placeholder="Child name">
+                                    <HouseholdChildCombobox
+                                        :model-value="child.child_name"
+                                        :options="householdChildren"
+                                        :input-id="`child-name-${index}`"
+                                        @update:model-value="(name) => onChildNameInput(index, name)"
+                                        @select="(option) => onChildSelected(index, option)"
+                                    />
                                     <input v-model="child.date_of_birth" type="date" class="rbim-input py-2">
                                     <button type="button" class="rbim-btn-outline" @click="removeChild(index)">Remove</button>
                                 </div>
@@ -354,8 +368,11 @@
                             <div class="grid gap-4 md:grid-cols-2">
                                 <div>
                                     <label for="president-name" class="rbim-label">Solo Parent President<span class="rbim-required" aria-hidden="true">*</span></label>
-                                    <input id="president-name" v-model="presidentName" type="text" maxlength="100" class="rbim-input py-2">
-                                    <p v-if="personTextError(presidentName, 'Solo Parent President name', 100)" class="rbim-error">{{ personTextError(presidentName, 'Solo Parent President name', 100) }}</p>
+                                    <input id="president-name" :value="presidentName" type="text" maxlength="100" class="rbim-input py-2" readonly>
+                                    <p class="rbim-hint">Filled from the active President of Solo Parent in Barangay Personnel.</p>
+                                    <p v-if="officialNameError(presidentName, 'Register an active President of Solo Parent in Barangay Personnel.')" class="rbim-error">
+                                        {{ officialNameError(presidentName, 'Register an active President of Solo Parent in Barangay Personnel.') }}
+                                    </p>
                                 </div>
                                 <div>
                                     <label for="president-address" class="rbim-label">President Address<span class="rbim-required" aria-hidden="true">*</span></label>
@@ -374,8 +391,11 @@
                                 </div>
                                 <div>
                                     <label for="kagawad-name" class="rbim-label">Kagawad on Social Services<span class="rbim-required" aria-hidden="true">*</span></label>
-                                    <input id="kagawad-name" v-model="kagawadName" type="text" maxlength="100" class="rbim-input py-2">
-                                    <p v-if="personTextError(kagawadName, 'Kagawad name', 100)" class="rbim-error">{{ personTextError(kagawadName, 'Kagawad name', 100) }}</p>
+                                    <input id="kagawad-name" :value="kagawadName" type="text" maxlength="100" class="rbim-input py-2" readonly>
+                                    <p class="rbim-hint">Filled from the active Kagawad on Social Services in Barangay Personnel.</p>
+                                    <p v-if="officialNameError(kagawadName, 'Register an active Kagawad on Social Services in Barangay Personnel.')" class="rbim-error">
+                                        {{ officialNameError(kagawadName, 'Register an active Kagawad on Social Services in Barangay Personnel.') }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -409,8 +429,11 @@
                 </template>
             </section>
 
-            <div v-if="step < 5 && !issued" class="flex gap-2">
-                <button type="button" class="rbim-btn" :disabled="!canContinue" @click="goNext">
+            <div class="flex items-center justify-between gap-3">
+                <button type="button" class="rbim-btn-outline" :disabled="step === 1 || generating" @click="goBack">
+                    Back
+                </button>
+                <button v-if="step < 5 && !issued" type="button" class="rbim-btn" :disabled="!canContinue" @click="goNext">
                     Next
                 </button>
             </div>
@@ -432,6 +455,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue';
 import CertificatePreview from '@/components/CertificatePreview.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import HouseholdChildCombobox from '@/components/HouseholdChildCombobox.vue';
 import PageTabs from '@/components/PageTabs.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useSectionTabs } from '@/composables/useSectionTabs';
@@ -494,12 +518,12 @@ const dateOfDeath = ref('');
 const placeOfDeath = ref('');
 const causeOfDeath = ref('');
 const ethnicGroup = ref('');
-const includeIncomeAmount = ref(false);
 const statedIncomeAmount = ref('');
 const residentSinceYear = ref('');
 const statedCivilStatus = ref('');
 const soloParentCircumstance = ref('');
 const children = ref([{ child_name: '', date_of_birth: '' }]);
+const householdChildren = ref([]);
 const presidentName = ref('');
 const presidentAddress = ref('');
 const neighborName = ref('');
@@ -569,7 +593,7 @@ const dateOfDeathError = computed(() => {
 });
 
 const incomeError = computed(() => {
-    if (selectedType.value?.kind !== 'low_income' || !includeIncomeAmount.value) {
+    if (selectedType.value?.kind !== 'low_income_amount') {
         return '';
     }
 
@@ -583,7 +607,7 @@ const incomeError = computed(() => {
 });
 
 const sinceYearError = computed(() => {
-    if (selectedType.value?.kind !== 'low_income' || includeIncomeAmount.value) {
+    if (selectedType.value?.kind !== 'low_income') {
         return '';
     }
 
@@ -602,7 +626,7 @@ const sinceYearError = computed(() => {
 });
 
 const needsCivilStatus = computed(() => selectedType.value?.kind === 'good_moral'
-    || (selectedType.value?.kind === 'low_income' && !includeIncomeAmount.value));
+    || selectedType.value?.kind === 'low_income');
 
 const civilStatusError = computed(() => {
     if (!needsCivilStatus.value) {
@@ -645,11 +669,11 @@ const soloParentError = computed(() => {
 
     return personTextError(soloParentCircumstance.value, 'Solo parent circumstance', 120)
         || childrenError.value
-        || personTextError(presidentName.value, 'Solo Parent President name', 100)
+        || officialNameError(presidentName.value, 'Register an active President of Solo Parent in Barangay Personnel.')
         || addressError(presidentAddress.value, 'Solo Parent President address')
         || personTextError(neighborName.value, 'Neighbor name', 100)
         || addressError(neighborAddress.value, 'Neighbor address')
-        || personTextError(kagawadName.value, 'Kagawad name', 100);
+        || officialNameError(kagawadName.value, 'Register an active Kagawad on Social Services in Barangay Personnel.');
 });
 
 const deathDetailError = computed(() => {
@@ -776,17 +800,53 @@ function addressError(value, label) {
     return '';
 }
 
+function officialNameError(value, missingMessage) {
+    const text = String(value ?? '').trim();
+
+    if (!text) {
+        return missingMessage;
+    }
+
+    return personTextError(text, 'Name', 100);
+}
+
+function onChildNameInput(index, name) {
+    const child = children.value[index];
+
+    if (!child) {
+        return;
+    }
+
+    child.child_name = name;
+
+    if (child.resident_id && householdChildren.value.every((option) => option.name !== name)) {
+        child.resident_id = null;
+    }
+}
+
+function onChildSelected(index, option) {
+    const child = children.value[index];
+
+    if (!child || !option) {
+        return;
+    }
+
+    child.child_name = option.name ?? '';
+    child.date_of_birth = option.date_of_birth ?? '';
+    child.resident_id = option.resident_id ?? null;
+}
+
 function addChild() {
     if (children.value.length >= 10) {
         return;
     }
 
-    children.value.push({ child_name: '', date_of_birth: '' });
+    children.value.push({ child_name: '', date_of_birth: '', resident_id: null });
 }
 
 function removeChild(index) {
     if (children.value.length === 1) {
-        children.value[0] = { child_name: '', date_of_birth: '' };
+        children.value[0] = { child_name: '', date_of_birth: '', resident_id: null };
 
         return;
     }
@@ -844,19 +904,19 @@ function resetAfterType() {
 }
 
 function clearIssuanceFields() {
-    representativeRequested.value = false;
+    representativeRequested.value = selectedType.value?.kind === 'death';
     representativeName.value = '';
     representativeRelationship.value = '';
     dateOfDeath.value = '';
     placeOfDeath.value = '';
     causeOfDeath.value = '';
     ethnicGroup.value = '';
-    includeIncomeAmount.value = false;
     statedIncomeAmount.value = '';
     residentSinceYear.value = '';
     statedCivilStatus.value = '';
     soloParentCircumstance.value = '';
-    children.value = [{ child_name: '', date_of_birth: '' }];
+    children.value = [{ child_name: '', date_of_birth: '', resident_id: null }];
+    householdChildren.value = [];
     presidentName.value = '';
     presidentAddress.value = '';
     neighborName.value = '';
@@ -884,10 +944,25 @@ function selectType(type) {
     resetAfterType();
 }
 
+function clearResidentSearch() {
+    search.value = '';
+    searchError.value = '';
+    matches.value = [];
+    searched.value = false;
+    selectedResident.value = null;
+    purpose.value = '';
+    purposeTouched.value = false;
+    historyPayload.value = null;
+    historyPage.value = 1;
+    clearReview();
+}
+
 function selectResident(resident) {
     if (!resident.eligible) {
         return;
     }
+
+    search.value = resident.name;
 
     if (selectedResident.value?.resident_id === resident.resident_id) {
         return;
@@ -901,10 +976,16 @@ function selectResident(resident) {
     clearReview();
 }
 
-function goToStep(next) {
-    if (next < step.value) {
-        step.value = next;
+function stepGuideClass(number) {
+    if (number < step.value) {
+        return 'bg-brand text-white';
     }
+
+    if (number === step.value) {
+        return 'bg-brand-light text-white';
+    }
+
+    return 'bg-white text-slate-500 ring-1 ring-slate-300';
 }
 
 function goBack() {
@@ -1031,6 +1112,15 @@ async function loadPreview(useOverrides) {
                 if (!soloParentCircumstance.value && data.document?.suggestions?.solo_parent_circumstance) {
                     soloParentCircumstance.value = data.document.suggestions.solo_parent_circumstance;
                 }
+            }
+
+            if (selectedType.value?.kind === 'solo_parent') {
+                const officials = data.document?.suggestions?.solo_parent_officials ?? {};
+                presidentName.value = officials.president_name ?? '';
+                kagawadName.value = officials.kagawad_name ?? '';
+                householdChildren.value = Array.isArray(data.document?.suggestions?.household_children)
+                    ? data.document.suggestions.household_children
+                    : [];
             }
 
             editsReady.value = true;
@@ -1164,14 +1254,13 @@ async function editIssued(row) {
 
     editingCertificateId.value = row.certificate_id;
     purpose.value = row.purpose_of_request ?? '';
-    representativeRequested.value = Boolean(row.representative_name);
+    representativeRequested.value = type?.kind === 'death' || Boolean(row.representative_name);
     representativeName.value = row.representative_name ?? '';
     representativeRelationship.value = row.representative_relationship ?? '';
     dateOfDeath.value = row.date_of_death ?? '';
     placeOfDeath.value = row.place_of_death ?? '';
     causeOfDeath.value = row.cause_of_death ?? '';
     ethnicGroup.value = row.ethnic_group ?? '';
-    includeIncomeAmount.value = Boolean(row.include_income_amount);
     statedIncomeAmount.value = row.stated_income_amount ?? '';
     residentSinceYear.value = row.resident_since_year ?? '';
     statedCivilStatus.value = row.stated_civil_status ?? '';
@@ -1185,8 +1274,9 @@ async function editIssued(row) {
         ? row.children.map((child) => ({
             child_name: child.child_name ?? '',
             date_of_birth: child.date_of_birth ?? '',
+            resident_id: null,
         }))
-        : [{ child_name: '', date_of_birth: '' }];
+        : [{ child_name: '', date_of_birth: '', resident_id: null }];
     editsReady.value = false;
     issued.value = false;
     step.value = 5;
@@ -1205,11 +1295,11 @@ function certificatePayload() {
         place_of_death: selectedType.value?.kind === 'death' ? placeOfDeath.value.trim() : null,
         cause_of_death: selectedType.value?.kind === 'death' ? causeOfDeath.value.trim() : null,
         ethnic_group: selectedType.value?.kind === 'death' ? ethnicGroup.value.trim() : null,
-        include_income_amount: selectedType.value?.kind === 'low_income' && includeIncomeAmount.value,
-        stated_income_amount: selectedType.value?.kind === 'low_income' && includeIncomeAmount.value
+        include_income_amount: selectedType.value?.kind === 'low_income_amount',
+        stated_income_amount: selectedType.value?.kind === 'low_income_amount'
             ? statedIncomeAmount.value.trim()
             : null,
-        resident_since_year: selectedType.value?.kind === 'low_income' && !includeIncomeAmount.value
+        resident_since_year: selectedType.value?.kind === 'low_income'
             ? residentSinceYear.value.trim()
             : null,
         stated_civil_status: needsCivilStatus.value ? statedCivilStatus.value.trim() : null,
@@ -1255,7 +1345,6 @@ watch(
         placeOfDeath.value,
         causeOfDeath.value,
         ethnicGroup.value,
-        includeIncomeAmount.value,
         statedIncomeAmount.value,
         residentSinceYear.value,
         statedCivilStatus.value,

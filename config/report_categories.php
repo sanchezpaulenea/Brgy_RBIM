@@ -96,9 +96,13 @@ $diseaseDefaults = [
     'household_status',
     'head_resident_name',
     'household_questions',
+    'number_of_pets',
+    'pet_details',
     'total_diseases_recorded',
     'total_household_members',
     'household_members_name',
+    'household_members_demographic',
+    'household_members_health',
 ];
 
 $needDefaults = [
@@ -106,12 +110,18 @@ $needDefaults = [
     'clan',
     'street',
     'house_number',
+    'number_of_house_story',
+    'number_of_basement_level',
     'household_status',
     'head_resident_name',
     'household_questions',
+    'number_of_pets',
+    'pet_details',
     'total_primary_needs_recorded',
     'total_household_members',
     'household_members_name',
+    'household_members_demographic',
+    'household_members_health',
 ];
 
 $deathDefaults = [
@@ -119,10 +129,17 @@ $deathDefaults = [
     'clan',
     'street',
     'house_number',
+    'number_of_house_story',
+    'number_of_basement_level',
+    'household_status',
     'head_resident_name',
     'household_questions',
+    'number_of_pets',
+    'pet_details',
     'total_household_members',
     'household_members_name',
+    'household_members_demographic',
+    'household_members_health',
 ];
 
 $sortLookup = static function (string $table, string $alias, string $idColumn, string $labelColumn, string $left): array {
@@ -220,7 +237,7 @@ $category = static function (string $label, array $filters, array $extra = []) u
         'level' => $extra['level'] ?? 'household',
         'label' => $label,
         'fixed_title' => $extra['fixed_title'] ?? null,
-        'header' => $extra['header'] ?? null,
+        'header' => $extra['header'] ?? 'Total Household Records',
         'questions' => $extra['questions'] ?? false,
         'audience' => $extra['audience'] ?? null,
         'filters' => $filters,
@@ -266,6 +283,14 @@ $residentDefaults = [
     'total_household_members',
     'household_members_name',
     'resident_demographic',
+    'education_details',
+    'economic_details',
+    'health_details',
+    'infant_health_details',
+    'women_health_details',
+    'sociocivic_details',
+    'migration_details',
+    'skills_details',
 ];
 
 $residentExtras = [
@@ -1356,8 +1381,10 @@ return [
             'options',
             'subrecord',
             [
+                ['value' => 'all', 'label' => 'All', 'op' => 'any', 'singular' => false],
                 ['value' => 'yes', 'label' => 'Have Intention', 'op' => 'eq', 'operand' => 1, 'singular' => true],
                 ['value' => 'no', 'label' => 'No Intention', 'op' => 'eq', 'operand' => 0, 'singular' => true],
+                ['value' => 'undecided', 'label' => 'Undecided', 'op' => 'is_null', 'singular' => true],
             ],
             ['women_health_details.have_intention_to_use_fp'],
             null,
@@ -1526,38 +1553,17 @@ return [
         $choices(
             'has_valid_ctc',
             'Has Valid CTC',
-            'boolean',
-            'subrecord',
+            'options',
+            'ctc',
             [
-                ['value' => 'yes', 'label' => 'Yes', 'op' => 'eq', 'operand' => 1, 'singular' => false],
-                ['value' => 'no', 'label' => 'No', 'op' => 'eq', 'operand' => 0, 'singular' => false],
+                ['value' => 'all', 'label' => 'Yes/No', 'op' => 'any', 'singular' => false],
+                ['value' => 'no', 'label' => 'No', 'op' => 'ctc_no', 'singular' => true],
+                ['value' => 'yes', 'label' => 'Yes', 'op' => 'ctc_yes', 'singular' => false],
+                ['value' => 'here', 'label' => 'Yes, issued in this barangay', 'op' => 'ctc_here', 'singular' => true],
+                ['value' => 'other', 'label' => 'Yes, not issued in this barangay', 'op' => 'ctc_other', 'singular' => true],
             ],
-            [],
+            ['ctc_details.has_valid_ctc', 'ctc_details.ctc_issued_here'],
             null,
-            'community_tax_cert.has_valid_ctc',
-            'has_valid_ctc',
-            [
-                'subrecord_table' => 'community_tax_cert',
-                'subrecord_owner' => 'resident_id',
-            ],
-        ),
-        $choices(
-            'ctc_issued_here',
-            'CTC Issued Here',
-            'boolean',
-            'subrecord',
-            [
-                ['value' => 'yes', 'label' => 'Yes', 'op' => 'eq', 'operand' => 1, 'singular' => false],
-                ['value' => 'no', 'label' => 'No', 'op' => 'eq', 'operand' => 0, 'singular' => false],
-            ],
-            [],
-            null,
-            'community_tax_cert.ctc_issued_here',
-            'ctc_issued_here',
-            [
-                'subrecord_table' => 'community_tax_cert',
-                'subrecord_owner' => 'resident_id',
-            ],
         ),
     ], [
         'header' => 'Total Resident Records (scoped to residents 18+)',

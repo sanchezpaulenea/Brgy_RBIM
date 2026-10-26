@@ -280,6 +280,12 @@ class ReportRepository implements ReportRepositoryInterface
             return;
         }
 
+        if ($apply === 'ctc') {
+            $this->whereCtc($query, (string) ($choice['op'] ?? ''));
+
+            return;
+        }
+
         $expression = (string) ($filter['expression'] ?? '');
 
         if ($expression === '') {
@@ -457,6 +463,43 @@ class ReportRepository implements ReportRepositoryInterface
     }
 
     /**
+     * @param  Builder<Model>  $query
+     */
+    private function whereCtc(Builder $query, string $op): void
+    {
+        if (! in_array($op, ['ctc_no', 'ctc_yes', 'ctc_here', 'ctc_other'], true)) {
+            $query->whereRaw('0 = 1');
+
+            return;
+        }
+
+        $valid = function (QueryBuilder $sub): void {
+            $sub->selectRaw('1')
+                ->from('community_tax_cert')
+                ->whereColumn('community_tax_cert.resident_id', 'resident.resident_id')
+                ->where('community_tax_cert.has_valid_ctc', 1);
+        };
+
+        if ($op === 'ctc_no') {
+            $query->whereNotExists($valid);
+
+            return;
+        }
+
+        $query->whereExists(function (QueryBuilder $sub) use ($valid, $op): void {
+            $valid($sub);
+
+            if ($op === 'ctc_here') {
+                $sub->where('community_tax_cert.ctc_issued_here', 1);
+            }
+
+            if ($op === 'ctc_other') {
+                $sub->where('community_tax_cert.ctc_issued_here', 0);
+            }
+        });
+    }
+
+    /**
      * Official barangay name with a leading "Barangay " removed, lowercased.
      */
     private function localBarangayKey(): string
@@ -623,6 +666,12 @@ class ReportRepository implements ReportRepositoryInterface
 
         if ($op === 'not_null') {
             $query->whereRaw($expression.' is not null');
+
+            return;
+        }
+
+        if ($op === 'is_null') {
+            $query->whereRaw($expression.' is null');
 
             return;
         }

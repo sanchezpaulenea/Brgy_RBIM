@@ -32,17 +32,17 @@
                 <div class="overflow-x-auto">
                     <table class="w-full table-fixed divide-y divide-slate-200 text-sm">
                         <colgroup>
-                            <col>
-                            <col class="w-44">
-                            <col class="w-32">
-                            <col class="w-32">
+                            <col class="w-1/4" />
+                            <col class="w-1/4" />
+                            <col class="w-1/4" />
+                            <col class="w-1/4" />
                         </colgroup>
                         <thead class="bg-slate-50">
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">User</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Role</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Action</th>
+                                <th class="px-3 py-3 text-center font-semibold text-slate-600">User</th>
+                                <th class="px-3 py-3 text-center font-semibold text-slate-600">Role</th>
+                                <th class="px-3 py-3 text-center font-semibold text-slate-600">Status</th>
+                                <th class="px-3 py-3 text-center font-semibold text-slate-600">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -54,12 +54,12 @@
                                     <td
                                         v-if="index === 0"
                                         :rowspan="userRowSpan(account)"
-                                        class="px-4 py-3.5 align-top font-medium text-slate-900"
+                                        class="break-words px-3 py-3 text-center align-middle font-medium text-slate-900"
                                     >
                                         {{ account.username }}
                                     </td>
-                                    <td class="px-4 py-3.5 text-slate-600">{{ assignment.role_name }}</td>
-                                    <td class="px-4 py-3.5">
+                                    <td class="break-words px-3 py-3 text-center text-slate-600">{{ assignment.role_name }}</td>
+                                    <td class="px-3 py-3 text-center">
                                         <span
                                             class="rounded-full px-2 py-0.5 text-xs"
                                             :class="assignment.enable ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'"
@@ -67,11 +67,11 @@
                                             {{ assignment.enable ? 'Enabled' : 'Disabled' }}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-3.5 text-left">
+                                    <td class="px-3 py-3 text-center">
                                         <button
                                             v-if="canUpdateRoleStatus"
                                             type="button"
-                                            class="rbim-btn-action w-24"
+                                            class="rbim-btn-action"
                                             :disabled="updatingRoleId === assignment.user_role_id"
                                             @click="handleRoleStatus(account, assignment)"
                                         >
@@ -80,12 +80,12 @@
                                     </td>
                                 </tr>
                                 <tr v-if="!assignmentsOf(account).length">
-                                    <td class="px-4 py-3.5 align-top font-medium text-slate-900">
+                                    <td class="break-words px-3 py-3 text-center align-middle font-medium text-slate-900">
                                         {{ account.username }}
                                     </td>
-                                    <td class="px-4 py-3.5 text-slate-500" colspan="3">
+                                    <td class="px-3 py-3 text-center text-slate-500" colspan="3">
                                         <p>No roles assigned.</p>
-                                        <div v-if="canAssignRoles" class="mt-3 flex flex-wrap items-center gap-2">
+                                        <div v-if="canAssignRoles" class="mt-3 flex flex-wrap items-center justify-center gap-2">
                                             <select
                                                 v-model="selectedRoleByUser[account.user_id]"
                                                 class="rbim-input w-40 py-1.5 text-xs"
@@ -119,8 +119,8 @@
                                     </td>
                                 </tr>
                                 <tr v-else-if="canAssignRoles">
-                                    <td class="px-4 py-3.5" colspan="3">
-                                        <div class="flex flex-wrap items-center gap-2">
+                                    <td class="px-3 py-3 text-center" colspan="3">
+                                        <div class="flex flex-wrap items-center justify-center gap-2">
                                             <select
                                                 v-model="selectedRoleByUser[account.user_id]"
                                                 class="rbim-input w-40 py-1.5 text-xs"

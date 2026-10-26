@@ -3,19 +3,9 @@
         <div class="space-y-6">
             <PageTabs :tabs="residentTabs" active-name="residents" />
 
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <RouterLink :to="{ name: 'residents' }" class="text-sm font-medium text-brand hover:underline">
-                    ← Back to residents
-                </RouterLink>
-                <button
-                    v-if="canUpdateDemographics && resident"
-                    type="button"
-                    class="rbim-btn-action"
-                    @click="startDemographicsEdit"
-                >
-                    Update
-                </button>
-            </div>
+            <RouterLink :to="{ name: 'residents' }" class="text-sm font-medium text-brand hover:underline">
+                ← Back to residents
+            </RouterLink>
 
             <div v-if="error" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {{ error }}
@@ -30,17 +20,27 @@
 
             <template v-else-if="resident">
                 <article class="rbim-card p-6">
-                    <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div class="flex items-start justify-between gap-3">
                         <div>
-                            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">Profile Completeness</h2>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">Profile Completeness</h2>
+                                <span
+                                    class="rounded-full px-2 py-0.5 text-xs"
+                                    :class="completeness.is_complete ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'"
+                                >
+                                    {{ completeness.is_complete ? 'Complete' : 'Incomplete' }}
+                                </span>
+                            </div>
                             <p class="mt-2 text-sm text-slate-900">{{ completeness.summary }}</p>
                         </div>
-                        <span
-                            class="rounded-full px-2 py-0.5 text-xs"
-                            :class="completeness.is_complete ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'"
+                        <button
+                            v-if="canUpdateDemographics"
+                            type="button"
+                            class="rbim-btn-action"
+                            @click="startDemographicsEdit"
                         >
-                            {{ completeness.is_complete ? 'Complete' : 'Incomplete' }}
-                        </span>
+                            Update
+                        </button>
                     </div>
                     <div class="mt-4 grid gap-4 sm:grid-cols-2">
                         <div>

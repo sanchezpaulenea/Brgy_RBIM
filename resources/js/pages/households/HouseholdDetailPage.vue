@@ -3,22 +3,9 @@
         <div class="space-y-6">
             <PageTabs :tabs="householdTabs" active-name="households" />
 
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <RouterLink :to="{ name: 'households' }" class="text-sm font-medium text-brand hover:underline">
-                    ← Back to households
-                </RouterLink>
-                <button
-                    v-if="canUpdate && household"
-                    type="button"
-                    class="rbim-btn-action"
-                    @click="startEdit"
-                >
-                    <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path d="M13.586 2.586a2 2 0 112.828 2.828l-8.5 8.5a1 1 0 01-.44.253l-3 .857a.5.5 0 01-.618-.618l.857-3a1 1 0 01.253-.44l8.62-8.38z" />
-                    </svg>
-                    Update
-                </button>
-            </div>
+            <RouterLink :to="{ name: 'households' }" class="text-sm font-medium text-brand hover:underline">
+                ← Back to households
+            </RouterLink>
 
             <div v-if="error" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {{ error }}
@@ -33,9 +20,19 @@
 
             <template v-else-if="household">
                 <article class="rbim-card p-6">
-                    <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">
-                        Household {{ household.household_id }}
-                    </h2>
+                    <div class="flex items-start justify-between gap-3">
+                        <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                            Household {{ household.household_id }}
+                        </h2>
+                        <button
+                            v-if="canUpdate"
+                            type="button"
+                            class="rbim-btn-action"
+                            @click="startEdit"
+                        >
+                            Update
+                        </button>
+                    </div>
                     <dl class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         <div>
                             <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Clan</dt>
@@ -310,8 +307,18 @@
                                 id-prefix="detail-questions"
                             />
                         </fieldset>
+                        <HouseholdPetCensusForm
+                            ref="petForm"
+                            mode="edit"
+                            :household-id="household.household_id"
+                            :existing-pets="household.pets || []"
+                            :can-create="canCreatePets"
+                            :can-add="canCreatePets"
+                            :can-update="canUpdatePets"
+                            id-prefix="detail-questions-pets"
+                        />
                     </section>
-                    <div class="flex justify-end gap-2">
+                    <div class="flex items-center justify-between gap-2">
                         <button type="button" class="rbim-btn-outline" @click="cancelEdit">
                             Cancel
                         </button>
@@ -376,6 +383,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import HouseholdPetCensusForm from '@/components/HouseholdPetCensusForm.vue';
 import HouseholdPetFields from '@/components/HouseholdPetFields.vue';
 import HouseholdQuestionsFields from '@/components/HouseholdQuestionsFields.vue';
 import PageTabs from '@/components/PageTabs.vue';
@@ -444,6 +452,9 @@ const confirm = reactive({
 const canUpdate = computed(() => hasPermission('household.update'));
 const canUpdateQuestions = computed(() => canPerformUpdate(auth, 'householdquestion.update'));
 const canUpdatePets = computed(() => hasPermission('petcensus.update'));
+const canCreatePets = computed(() => hasPermission('petcensus.create'));
+const canEditPets = computed(() => canUpdatePets.value || canCreatePets.value);
+const petForm = ref(null);
 
 function emptyEditForm() {
     return {
@@ -650,7 +661,9 @@ async function handleUpdate() {
         clearQuestionErrors();
     }
 
-    if (Object.keys(editErrors).length || Object.keys(questionErrors).length) {
+    const petsValid = !canEditPets.value || petForm.value?.validateAll?.() !== false;
+
+    if (Object.keys(editErrors).length || Object.keys(questionErrors).length || !petsValid) {
         return;
     }
 
@@ -685,6 +698,10 @@ async function handleUpdate() {
             } else {
                 await householdService.createHouseholdQuestions(route.params.id, questionsPayload);
             }
+        }
+
+        if (canEditPets.value) {
+            await petForm.value?.save?.();
         }
 
         successMessage.value = 'Household updated successfully.';

@@ -263,3 +263,22 @@
         }
     }
 }
+
+@media print {
+    .print\:hidden {
+        display: none !important;
+    }
+
+    .rbim-card {
+        box-shadow: none;
+        border-color: #cbd5e1;
+    }
+
+    table {
+        page-break-inside: auto;
+    }
+
+    tr {
+        page-break-inside: avoid;
+    }
+}

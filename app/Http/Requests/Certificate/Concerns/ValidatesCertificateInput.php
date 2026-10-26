@@ -135,14 +135,14 @@ trait ValidatesCertificateInput
             ],
             'representative_requested' => ['sometimes', 'boolean'],
             'representative_name' => [
-                Rule::requiredIf(fn (): bool => $this->boolean('representative_requested')),
+                Rule::requiredIf(fn (): bool => $strictTypeFields && $this->boolean('representative_requested')),
                 'nullable',
                 'string',
                 'max:100',
                 $this->personTextRule('Representative name'),
             ],
             'representative_relationship' => [
-                Rule::requiredIf(fn (): bool => $this->boolean('representative_requested')),
+                Rule::requiredIf(fn (): bool => $strictTypeFields && $this->boolean('representative_requested')),
                 'nullable',
                 'string',
                 'max:45',
@@ -273,7 +273,7 @@ trait ValidatesCertificateInput
             'date_of_death.date' => 'Date of death must be a valid date.',
             'date_of_death.before_or_equal' => 'Date of death cannot be in the future.',
             'date_of_death.prohibited' => 'Date of death is only collected for a Death Certificate.',
-            'stated_income_amount.required' => 'The annual income threshold is required when the stated amount is included.',
+            'stated_income_amount.required' => 'The annual income threshold is required for Low Income Certification (with amount).',
             'stated_income_amount.numeric' => 'The annual income threshold must be a number.',
             'stated_income_amount.gt' => 'The annual income threshold must be greater than zero.',
             'stated_income_amount.decimal' => 'The annual income threshold may have at most 2 decimal places.',
@@ -335,17 +335,17 @@ trait ValidatesCertificateInput
             $amount = $this->input('stated_income_amount');
             $hasAmount = $amount !== null && $amount !== '';
 
-            if ($kind === 'low_income' && ! $includeAmount && $hasAmount) {
+            if ($kind === 'low_income' && $hasAmount) {
                 $validator->errors()->add(
                     'stated_income_amount',
-                    'Leave the annual income threshold empty when the amount is not included.',
+                    'Leave the annual income threshold empty for Low Income Certification without an amount.',
                 );
             }
 
-            if ($kind !== 'low_income' && ($includeAmount || $hasAmount)) {
+            if (! in_array($kind, ['low_income', 'low_income_amount'], true) && ($includeAmount || $hasAmount)) {
                 $validator->errors()->add(
                     'include_income_amount',
-                    'A stated income amount is only collected for Low Income Certification.',
+                    'A stated income amount is only collected for Low Income Certification (with amount).',
                 );
             }
         };
@@ -384,12 +384,12 @@ trait ValidatesCertificateInput
 
     private function needsIncomeAmount(): bool
     {
-        return $this->certificateKind() === 'low_income' && $this->boolean('include_income_amount');
+        return $this->certificateKind() === 'low_income_amount';
     }
 
     private function needsResidencyYear(): bool
     {
-        return $this->certificateKind() === 'low_income' && ! $this->boolean('include_income_amount');
+        return $this->certificateKind() === 'low_income';
     }
 
     private function needsCivilStatus(): bool

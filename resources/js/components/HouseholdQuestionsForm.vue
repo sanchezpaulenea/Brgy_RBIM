@@ -4,8 +4,8 @@
             Household questions
         </h2>
         <p class="mt-1 text-xs text-slate-500">
-            Continue saves these household questions. Skip leaves them incomplete.
-            Fields marked with <span class="rbim-required">*</span> are required to continue.
+            Continue saves these household questions and any pets listed below Q14.
+            Skip leaves them incomplete. Fields marked with <span class="rbim-required">*</span> are required to continue.
         </p>
 
         <div v-if="error" class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -18,6 +18,15 @@
                 :errors="errors"
                 :lookups="lookups"
                 id-prefix="register-questions"
+            />
+
+            <HouseholdPetCensusForm
+                ref="petForm"
+                mode="register"
+                embedded
+                :household-id="household.household_id"
+                :can-create="true"
+                id-prefix="register-questions-pets"
             />
 
             <div class="flex flex-wrap items-center justify-between gap-2">
@@ -34,6 +43,7 @@
 
 <script setup>
 import { reactive, ref } from 'vue';
+import HouseholdPetCensusForm from '@/components/HouseholdPetCensusForm.vue';
 import HouseholdQuestionsFields from '@/components/HouseholdQuestionsFields.vue';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
@@ -63,6 +73,7 @@ const emit = defineEmits(['finished', 'skip']);
 
 const saving = ref(false);
 const error = ref('');
+const petForm = ref(null);
 const form = reactive(emptyHouseholdQuestionsForm(props.location));
 const errors = reactive({});
 
@@ -73,6 +84,10 @@ async function onContinue() {
         return;
     }
 
+    if (petForm.value?.validateAll?.() === false) {
+        return;
+    }
+
     saving.value = true;
 
     try {
@@ -80,6 +95,7 @@ async function onContinue() {
             props.household.household_id,
             householdQuestionsPayload(form),
         );
+        await petForm.value?.save?.();
         emit('finished');
     } catch (err) {
         const validationErrors = extractValidationErrors(err);
