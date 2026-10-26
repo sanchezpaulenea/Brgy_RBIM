@@ -3,22 +3,9 @@
         <div class="space-y-6">
             <PageTabs :tabs="householdTabs" active-name="households" />
 
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <RouterLink :to="{ name: 'households' }" class="text-sm font-medium text-brand hover:underline">
-                    ← Back to households
-                </RouterLink>
-                <button
-                    v-if="canUpdate && household"
-                    type="button"
-                    class="rbim-btn-action"
-                    @click="startEdit"
-                >
-                    <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path d="M13.586 2.586a2 2 0 112.828 2.828l-8.5 8.5a1 1 0 01-.44.253l-3 .857a.5.5 0 01-.618-.618l.857-3a1 1 0 01.253-.44l8.62-8.38z" />
-                    </svg>
-                    Update
-                </button>
-            </div>
+            <RouterLink :to="{ name: 'households' }" class="text-sm font-medium text-brand hover:underline">
+                ← Back to households
+            </RouterLink>
 
             <div v-if="error" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {{ error }}
@@ -33,9 +20,19 @@
 
             <template v-else-if="household">
                 <article class="rbim-card p-6">
-                    <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">
-                        Household {{ household.household_id }}
-                    </h2>
+                    <div class="flex items-start justify-between gap-3">
+                        <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                            Household {{ household.household_id }}
+                        </h2>
+                        <button
+                            v-if="canUpdate"
+                            type="button"
+                            class="rbim-btn-action"
+                            @click="startEdit"
+                        >
+                            Update
+                        </button>
+                    </div>
                     <dl class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         <div>
                             <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Clan</dt>
@@ -321,7 +318,7 @@
                             id-prefix="detail-questions-pets"
                         />
                     </section>
-                    <div class="flex justify-end gap-2">
+                    <div class="flex items-center justify-between gap-2">
                         <button type="button" class="rbim-btn-outline" @click="cancelEdit">
                             Cancel
                         </button>

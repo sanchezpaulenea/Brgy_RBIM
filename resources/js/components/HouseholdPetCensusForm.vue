@@ -138,35 +138,37 @@
             {{ error }}
         </div>
 
-        <form v-if="step === 'count'" class="mt-4 max-w-xl space-y-4" novalidate @submit.prevent="confirmCount">
-            <HouseholdSearch
-                v-model="selectedHouseholdId"
-                :options="households"
-                required
-                input-id="add-pet-household"
-                placeholder="Search household head, household ID, street, or house/lot number"
-                hint="Search by household head, household ID, street, or house/lot number."
-                :error="householdError"
-            />
-            <div class="max-w-md">
-                <label for="add_pet_count" class="rbim-label">
-                    How many pets would you like to add?<span class="rbim-required" aria-hidden="true">*</span>
-                </label>
-                <input
-                    id="add_pet_count"
-                    v-model="petCount"
-                    type="number"
-                    min="1"
-                    :max="SEQUENTIAL_RESIDENT_MAX"
-                    step="1"
-                    class="rbim-input"
-                    :class="{ 'rbim-input-error': petCountError }"
-                >
-                <p v-if="petCountError" class="rbim-error">{{ petCountError }}</p>
+        <form v-if="step === 'count'" class="mt-4 space-y-4" novalidate @submit.prevent="confirmCount">
+            <div class="max-w-xl space-y-4">
+                <HouseholdSearch
+                    v-model="selectedHouseholdId"
+                    :options="households"
+                    required
+                    input-id="add-pet-household"
+                    placeholder="Search household head, household ID, street, or house/lot number"
+                    hint="Search by household head, household ID, street, or house/lot number."
+                    :error="householdError"
+                />
+                <div v-if="selectedHouseholdId" class="max-w-md">
+                    <label for="add_pet_count" class="rbim-label">
+                        How many pets would you like to add?<span class="rbim-required" aria-hidden="true">*</span>
+                    </label>
+                    <input
+                        id="add_pet_count"
+                        v-model="petCount"
+                        type="number"
+                        min="1"
+                        :max="SEQUENTIAL_RESIDENT_MAX"
+                        step="1"
+                        class="rbim-input"
+                        :class="{ 'rbim-input-error': petCountError }"
+                    >
+                    <p v-if="petCountError" class="rbim-error">{{ petCountError }}</p>
+                </div>
             </div>
             <div class="flex flex-wrap items-center gap-2">
+                <button type="button" class="rbim-btn-outline" @click="cancelAdd">Cancel</button>
                 <button type="submit" class="rbim-btn">Continue</button>
-                <button type="button" class="rbim-btn-outline" @click="emit('cancel')">Cancel</button>
             </div>
         </form>
 
@@ -199,12 +201,9 @@
                 />
             </section>
 
-            <div class="flex flex-wrap justify-end gap-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
                 <button type="button" class="rbim-btn-outline" :disabled="saving" @click="step = 'count'">
                     Back
-                </button>
-                <button type="button" class="rbim-btn-outline" :disabled="saving" @click="emit('cancel')">
-                    Cancel
                 </button>
                 <button type="submit" class="rbim-btn" :disabled="saving">
                     {{ saving ? 'Saving...' : 'Save' }}
@@ -462,6 +461,23 @@ function validateAll() {
     return valid;
 }
 
+function resetAdd() {
+    step.value = 'count';
+    selectedHouseholdId.value = null;
+    petCount.value = 1;
+    petCountError.value = '';
+    householdError.value = '';
+    error.value = '';
+    pets.value = [];
+    petErrors.value = [];
+    saving.value = false;
+}
+
+function cancelAdd() {
+    resetAdd();
+    emit('cancel');
+}
+
 function confirmCount() {
     error.value = '';
     householdError.value = '';
@@ -565,6 +581,7 @@ async function submitAdd() {
 
     try {
         await householdService.createHouseholdPets(selectedHouseholdId.value, pets.value.map(petPayload));
+        resetAdd();
         emit('finished');
     } catch (err) {
         applyPetErrors(err, 'Unable to add these pets.');
@@ -590,6 +607,19 @@ function applyPetErrors(err, fallback) {
 watch(() => props.existingPets, (records) => {
     if (props.mode === 'edit') {
         loadExisting(records);
+    }
+});
+
+watch(selectedHouseholdId, (householdId) => {
+    if (props.mode !== 'add' || step.value !== 'count') {
+        return;
+    }
+
+    householdError.value = '';
+
+    if (!householdId) {
+        petCount.value = 1;
+        petCountError.value = '';
     }
 });
 

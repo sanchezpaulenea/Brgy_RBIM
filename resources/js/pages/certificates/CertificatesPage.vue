@@ -3,24 +3,16 @@
         <div class="space-y-6">
             <PageTabs :tabs="certificateTabs" />
 
-            <div>
-                <button type="button" class="rbim-btn-outline" :disabled="step === 1 || generating" @click="goBack">
-                    Back
-                </button>
-            </div>
-
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <ol class="flex flex-wrap gap-2">
+                <ol class="flex flex-wrap gap-2" aria-label="Certificate progress">
                     <li v-for="(label, index) in stepLabels" :key="label">
-                        <button
-                            type="button"
-                            class="rounded-lg px-3 py-2 text-sm font-medium transition"
-                            :class="step === index + 1 ? 'bg-brand text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 disabled:hover:bg-white'"
-                            :disabled="index + 1 > step"
-                            @click="goToStep(index + 1)"
+                        <span
+                            class="inline-flex rounded-full px-4 py-2 text-sm font-medium"
+                            :class="stepGuideClass(index + 1)"
+                            :aria-current="step === index + 1 ? 'step' : undefined"
                         >
                             {{ index + 1 }}. {{ label }}
-                        </button>
+                        </span>
                     </li>
                 </ol>
                 <button
@@ -64,14 +56,27 @@
                         Requester<span class="rbim-required" aria-hidden="true">*</span>
                     </label>
                     <div class="flex gap-2">
-                        <input
-                            id="certificate-resident-search"
-                            v-model="search"
-                            type="search"
-                            class="rbim-input py-2"
-                            placeholder="Search by first, middle, or last name"
-                            @keydown.enter.prevent="runSearch"
-                        >
+                        <div class="relative min-w-0 flex-1">
+                            <input
+                                id="certificate-resident-search"
+                                v-model="search"
+                                type="text"
+                                autocomplete="off"
+                                class="rbim-input py-2 pr-10"
+                                placeholder="Search by first, middle, or last name"
+                                @keydown.enter.prevent="runSearch"
+                            >
+                            <button
+                                type="button"
+                                class="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-500 hover:text-slate-800"
+                                aria-label="Clear requester"
+                                @click="clearResidentSearch"
+                            >
+                                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                                </svg>
+                            </button>
+                        </div>
                         <button type="button" class="rbim-btn py-2" :disabled="searching" @click="runSearch">
                             Search
                         </button>
@@ -181,14 +186,18 @@
                             </tbody>
                         </table>
                     </div>
-                    <div v-if="historyMeta.last_page > 1" class="flex items-center justify-between border-t border-slate-100 px-4 py-3 text-sm">
-                        <button type="button" class="rbim-btn-outline px-3 py-1.5 text-xs" :disabled="historyPage <= 1" @click="changeHistoryPage(historyPage - 1)">
-                            Previous
-                        </button>
-                        <span>Page {{ historyMeta.current_page }} of {{ historyMeta.last_page }}</span>
-                        <button type="button" class="rbim-btn-outline px-3 py-1.5 text-xs" :disabled="historyPage >= historyMeta.last_page" @click="changeHistoryPage(historyPage + 1)">
-                            Next
-                        </button>
+                    <div v-if="historyMeta.last_page > 1" class="grid grid-cols-3 items-center border-t border-slate-100 px-4 py-3 text-sm">
+                        <div>
+                            <button v-if="historyPage > 1" type="button" class="rbim-btn-outline px-3 py-1.5 text-xs" @click="changeHistoryPage(historyPage - 1)">
+                                Previous
+                            </button>
+                        </div>
+                        <span class="text-center">Page {{ historyMeta.current_page }} of {{ historyMeta.last_page }}</span>
+                        <div class="flex justify-end">
+                            <button type="button" class="rbim-btn-outline px-3 py-1.5 text-xs" :disabled="historyPage >= historyMeta.last_page" @click="changeHistoryPage(historyPage + 1)">
+                                Next
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -420,8 +429,11 @@
                 </template>
             </section>
 
-            <div v-if="step < 5 && !issued" class="flex gap-2">
-                <button type="button" class="rbim-btn" :disabled="!canContinue" @click="goNext">
+            <div class="flex items-center justify-between gap-3">
+                <button type="button" class="rbim-btn-outline" :disabled="step === 1 || generating" @click="goBack">
+                    Back
+                </button>
+                <button v-if="step < 5 && !issued" type="button" class="rbim-btn" :disabled="!canContinue" @click="goNext">
                     Next
                 </button>
             </div>
@@ -932,10 +944,25 @@ function selectType(type) {
     resetAfterType();
 }
 
+function clearResidentSearch() {
+    search.value = '';
+    searchError.value = '';
+    matches.value = [];
+    searched.value = false;
+    selectedResident.value = null;
+    purpose.value = '';
+    purposeTouched.value = false;
+    historyPayload.value = null;
+    historyPage.value = 1;
+    clearReview();
+}
+
 function selectResident(resident) {
     if (!resident.eligible) {
         return;
     }
+
+    search.value = resident.name;
 
     if (selectedResident.value?.resident_id === resident.resident_id) {
         return;
@@ -949,10 +976,16 @@ function selectResident(resident) {
     clearReview();
 }
 
-function goToStep(next) {
-    if (next < step.value) {
-        step.value = next;
+function stepGuideClass(number) {
+    if (number < step.value) {
+        return 'bg-brand text-white';
     }
+
+    if (number === step.value) {
+        return 'bg-brand-light text-white';
+    }
+
+    return 'bg-white text-slate-500 ring-1 ring-slate-300';
 }
 
 function goBack() {

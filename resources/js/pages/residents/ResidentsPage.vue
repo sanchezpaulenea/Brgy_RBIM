@@ -80,16 +80,16 @@
             </div>
             <div v-else class="rbim-card overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <table class="min-w-full table-fixed divide-y divide-slate-200 text-sm">
                         <thead class="bg-slate-50">
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Name</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Household</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Relationship to Household Head</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Gender</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Age</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Resident Status</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Profiling</th>
+                                <th class="px-3 py-3 text-center font-semibold text-slate-600">Name</th>
+                                <th class="w-[14%] px-3 py-3 text-center font-semibold text-slate-600">Household</th>
+                                <th class="w-[16%] px-3 py-3 text-center font-semibold text-slate-600">Relationship to Household Head</th>
+                                <th class="w-[8%] px-3 py-3 text-center font-semibold text-slate-600">Gender</th>
+                                <th class="w-[6%] px-3 py-3 text-center font-semibold text-slate-600">Age</th>
+                                <th class="w-[12%] px-3 py-3 text-center font-semibold text-slate-600">Resident Status</th>
+                                <th class="w-[18%] px-3 py-3 text-center font-semibold text-slate-600">Profiling</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -99,13 +99,13 @@
                                 class="cursor-pointer hover:bg-slate-50"
                                 @click="openDetail(resident.resident_id)"
                             >
-                                <td class="px-4 py-3 font-medium text-slate-900">{{ resident.full_name || personDisplayName(resident) }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ householdLabelFor(resident) }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ resident.relationship_to_hh || '—' }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ resident.sex || '—' }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ resident.age ?? ageLabel(resident.date_of_birth) }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ resident.resident_status || '—' }}</td>
-                                <td class="px-4 py-3">
+                                <td class="px-3 py-3 text-center font-medium text-slate-900">{{ resident.full_name || personDisplayName(resident) }}</td>
+                                <td class="px-3 py-3 text-center text-slate-600">{{ householdLabelFor(resident) }}</td>
+                                <td class="px-3 py-3 text-center text-slate-600">{{ resident.relationship_to_hh || '—' }}</td>
+                                <td class="px-3 py-3 text-center text-slate-600">{{ resident.sex || '—' }}</td>
+                                <td class="px-3 py-3 text-center text-slate-600">{{ resident.age ?? ageLabel(resident.date_of_birth) }}</td>
+                                <td class="px-3 py-3 text-center text-slate-600">{{ resident.resident_status || '—' }}</td>
+                                <td class="px-3 py-3 text-center text-slate-600">
                                     <span
                                         class="rounded-full px-2 py-0.5 text-xs"
                                         :class="profilingBadgeClass(resident)"
@@ -124,13 +124,15 @@
                 </div>
                 <div
                     v-if="pageCount > 1"
-                    class="flex items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 text-sm"
+                    class="grid grid-cols-3 items-center gap-3 border-t border-slate-200 px-4 py-3 text-sm"
                 >
-                    <span class="text-slate-500">Page {{ page }} of {{ pageCount }}</span>
-                    <div class="flex gap-2">
-                        <button type="button" class="rbim-btn-outline" :disabled="page <= 1" @click="page -= 1">
+                    <div>
+                        <button v-if="page > 1" type="button" class="rbim-btn-outline" @click="page -= 1">
                             Previous
                         </button>
+                    </div>
+                    <span class="text-center text-slate-500">Page {{ page }} of {{ pageCount }}</span>
+                    <div class="flex justify-end">
                         <button type="button" class="rbim-btn-outline" :disabled="page >= pageCount" @click="page += 1">
                             Next
                         </button>

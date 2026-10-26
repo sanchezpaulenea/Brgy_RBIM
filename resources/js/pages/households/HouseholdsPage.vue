@@ -116,13 +116,15 @@
                 </div>
                 <div
                     v-if="pageCount > 1"
-                    class="flex items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 text-sm"
+                    class="grid grid-cols-3 items-center gap-3 border-t border-slate-200 px-4 py-3 text-sm"
                 >
-                    <span class="text-slate-500">Page {{ page }} of {{ pageCount }}</span>
-                    <div class="flex gap-2">
-                        <button type="button" class="rbim-btn-outline" :disabled="page <= 1" @click="page -= 1">
+                    <div>
+                        <button v-if="page > 1" type="button" class="rbim-btn-outline" @click="page -= 1">
                             Previous
                         </button>
+                    </div>
+                    <span class="text-center text-slate-500">Page {{ page }} of {{ pageCount }}</span>
+                    <div class="flex justify-end">
                         <button type="button" class="rbim-btn-outline" :disabled="page >= pageCount" @click="page += 1">
                             Next
                         </button>
@@ -244,7 +246,7 @@
                             <p v-if="editErrors.household_status_id" class="rbim-error">{{ editErrors.household_status_id }}</p>
                         </div>
                     </div>
-                    <div class="flex justify-end gap-2">
+                    <div class="flex w-full items-center justify-between gap-2">
                         <button type="button" class="rbim-btn-outline" @click="cancelEdit">
                             Cancel
                         </button>

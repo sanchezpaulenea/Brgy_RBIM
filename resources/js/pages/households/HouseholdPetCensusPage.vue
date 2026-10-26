@@ -7,20 +7,13 @@
                 {{ error }}
             </div>
 
-            <div v-if="canCreate && !adding" class="flex justify-end">
-                <button type="button" class="rbim-btn" @click="adding = true">
-                    Add Pet
-                </button>
-            </div>
-
             <HouseholdPetCensusForm
-                v-if="adding"
+                v-if="canCreate"
                 mode="add"
                 @finished="finishAdd"
-                @cancel="adding = false"
             />
 
-            <form v-else class="rbim-card grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-5" @submit.prevent="applyFilters">
+            <form class="rbim-card grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-5" @submit.prevent="applyFilters">
                 <div>
                     <label for="pet-search" class="rbim-label">Search</label>
                     <input
@@ -70,10 +63,10 @@
                 </div>
             </form>
 
-            <div v-if="!adding && loading" class="rbim-card p-8 text-center text-sm text-slate-500">
+            <div v-if="loading" class="rbim-card p-8 text-center text-sm text-slate-500">
                 Loading household pets...
             </div>
-            <div v-else-if="!adding" class="rbim-card overflow-hidden">
+            <div v-else class="rbim-card overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
                         <thead class="bg-slate-50">
@@ -132,7 +125,7 @@
         </div>
 
         <div
-            v-if="!adding && canUpdate && editing"
+            v-if="canUpdate && editing"
             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
             @click.self="cancelEdit"
         >
@@ -192,7 +185,6 @@ const canViewHousehold = computed(() => hasPermission('household.view'));
 
 const loading = ref(false);
 const saving = ref(false);
-const adding = ref(false);
 const error = ref('');
 const formError = ref('');
 const pets = ref([]);
@@ -273,7 +265,6 @@ function clearFilters() {
 }
 
 async function finishAdd() {
-    adding.value = false;
     await loadPets();
 }
 
