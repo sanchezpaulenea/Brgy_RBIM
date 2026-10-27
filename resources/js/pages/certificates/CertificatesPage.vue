@@ -156,7 +156,6 @@
                                     <th class="px-4 py-3 text-left font-semibold text-slate-600">Purpose of Request</th>
                                     <th class="px-4 py-3 text-left font-semibold text-slate-600">Date of Issue</th>
                                     <th class="px-4 py-3 text-left font-semibold text-slate-600">Issuer</th>
-                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
@@ -165,17 +164,6 @@
                                     <td class="px-4 py-3">{{ row.purpose_of_request }}</td>
                                     <td class="px-4 py-3">{{ formatDateTime(row.date_of_issue) }}</td>
                                     <td class="px-4 py-3">{{ row.issuer_name }}</td>
-                                    <td class="px-4 py-3">
-                                        <button
-                                            type="button"
-                                            class="rbim-btn-outline px-3 py-1.5 text-xs"
-                                            :disabled="!canEdit"
-                                            @click="editIssued(row)"
-                                        >
-                                            Edit
-                                        </button>
-                                        <p v-if="!canEdit" class="mt-1 text-xs text-slate-500">You do not have permission to edit certificates.</p>
-                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1228,48 +1216,6 @@ async function confirmRefresh() {
     resetAfterType();
     step.value = 1;
     await loadTypes();
-}
-
-async function editIssued(row) {
-    if (!canEdit.value) {
-        return;
-    }
-
-    const type = types.value.find((item) => item.type_of_certificate_id === row.type_of_certificate_id);
-
-    if (type) {
-        selectedType.value = type;
-    }
-
-    editingCertificateId.value = row.certificate_id;
-    purpose.value = row.purpose_of_request ?? '';
-    representativeRequested.value = type?.kind === 'death' || Boolean(row.representative_name);
-    representativeName.value = row.representative_name ?? '';
-    representativeRelationship.value = row.representative_relationship ?? '';
-    dateOfDeath.value = row.date_of_death ?? '';
-    placeOfDeath.value = row.place_of_death ?? '';
-    causeOfDeath.value = row.cause_of_death ?? '';
-    ethnicGroup.value = row.ethnic_group ?? '';
-    statedIncomeAmount.value = row.stated_income_amount ?? '';
-    residentSinceYear.value = row.resident_since_year ?? '';
-    statedCivilStatus.value = row.stated_civil_status ?? '';
-    soloParentCircumstance.value = row.solo_parent_circumstance ?? '';
-    presidentName.value = row.solo_parent_president_name ?? '';
-    presidentAddress.value = row.solo_parent_president_address ?? '';
-    neighborName.value = row.solo_parent_neighbor_name ?? '';
-    neighborAddress.value = row.solo_parent_neighbor_address ?? '';
-    kagawadName.value = row.solo_parent_kagawad_name ?? '';
-    children.value = Array.isArray(row.children) && row.children.length
-        ? row.children.map((child) => ({
-            child_name: child.child_name ?? '',
-            date_of_birth: child.date_of_birth ?? '',
-            resident_id: null,
-        }))
-        : [{ child_name: '', date_of_birth: '', resident_id: null }];
-    editsReady.value = false;
-    issued.value = false;
-    step.value = 5;
-    await loadPreview(false);
 }
 
 function certificatePayload() {
