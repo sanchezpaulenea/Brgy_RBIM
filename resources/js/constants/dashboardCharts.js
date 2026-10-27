@@ -46,7 +46,7 @@ export const CHART_SECTIONS = [
     {
         key: 'household-profile',
         title: 'Household Profile',
-        description: 'How registered households are distributed across the barangay.',
+        description: 'How registered households are distributed across the barangay, including recorded pets.',
         charts: [
             {
                 key: 'clan',
@@ -213,7 +213,7 @@ export const CHART_SECTIONS = [
                 rangeFilter: 'pregnancies',
                 panels: [
                     { key: 'women_health', title: 'Number of Pregnancies' },
-                    { key: 'women_living_children', title: 'Living Children', visualization: 'range', rangeFilter: 'living_children' },
+                    { key: 'women_living_children', title: 'Living Children' },
                     { key: 'women_fp', title: 'Family Planning Method' },
                     { key: 'women_fp_source', title: 'Source of FP' },
                     { key: 'women_fp_intention', title: 'Intention to Use FP' },

@@ -47,7 +47,18 @@ class DashboardService
     /**
      * @var list<array{label: string, min: int|float|null, max: int|float|null}>
      */
-    private const COUNT_BUCKETS = [
+    private const PREGNANCY_BUCKETS = [
+        ['label' => '0', 'min' => 0, 'max' => 0],
+        ['label' => '1', 'min' => 1, 'max' => 1],
+        ['label' => '2', 'min' => 2, 'max' => 2],
+        ['label' => '3–4', 'min' => 3, 'max' => 4],
+        ['label' => '5+', 'min' => 5, 'max' => null],
+    ];
+
+    /**
+     * @var list<array{label: string, min: int|float|null, max: int|float|null}>
+     */
+    private const LIVING_CHILDREN_BUCKETS = [
         ['label' => '0', 'min' => 0, 'max' => 0],
         ['label' => '1', 'min' => 1, 'max' => 1],
         ['label' => '2', 'min' => 2, 'max' => 2],
@@ -147,8 +158,8 @@ class DashboardService
                 'infant_health' => $this->chart(self::RESIDENTS, $repo->residentsByChildLookup('infant_health', 'place_of_delivery_id', 'place_of_delivery', 'place_of_delivery_id', 'place_of_delivery', 'infant'), self::NOT_ANSWERED),
                 'infant_attendant' => $this->chart(self::RESIDENTS, $repo->residentsByChildLookup('infant_health', 'birth_attendant_id', 'birth_attendant', 'birth_attendant_id', 'birth_attendant', 'infant'), self::NOT_ANSWERED),
                 'infant_immunization' => $this->chart(self::RESIDENTS, $repo->residentsByChildLookup('infant_health', 'immunization_id', 'immunization', 'immunization_id', 'immunization', 'infant'), self::NOT_ANSWERED),
-                'women_health' => $this->chart(self::RESIDENTS, $repo->residentsByChildNumberBuckets('women_health', 'number_pregnancies', self::COUNT_BUCKETS, 'women', $womenVia), self::NOT_ANSWERED),
-                'women_living_children' => $this->chart(self::RESIDENTS, $repo->residentsByChildNumberBuckets('women_health', 'living_children', self::COUNT_BUCKETS, 'women', $womenVia), self::NOT_ANSWERED),
+                'women_health' => $this->chart(self::RESIDENTS, $repo->residentsByChildNumberBuckets('women_health', 'number_pregnancies', self::PREGNANCY_BUCKETS, 'women', $womenVia), self::NOT_ANSWERED),
+                'women_living_children' => $this->chart(self::RESIDENTS, $repo->residentsByChildNumberBuckets('women_health', 'living_children', self::LIVING_CHILDREN_BUCKETS, 'women', $womenVia), self::NOT_ANSWERED),
                 'women_fp' => $this->chart(self::RESIDENTS, $repo->residentsByChildLookup('women_health', 'family_planning_method_id', 'family_planning_method', 'family_planning_method_id', 'family_planning_method', 'women', $womenVia), self::NOT_ANSWERED),
                 'women_fp_source' => $this->chart(self::RESIDENTS, $repo->residentsByChildLookup('women_health', 'source_of_fp_method_id', 'source_of_fp_method', 'source_of_fp_method_id', 'source_of_fp_method', 'women', $womenVia), self::NOT_ANSWERED),
                 'women_fp_intention' => $this->chart(self::RESIDENTS, $repo->residentsByTriState('women_health', 'have_intention_to_use_fp', 'women', $womenVia), self::NOT_ANSWERED),

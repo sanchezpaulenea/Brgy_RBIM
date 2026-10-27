@@ -998,6 +998,18 @@ return [
         'resident_demographic.resident_status',
     ),
 
+    'gender' => $residentAttribute(
+        'Gender',
+        'gender',
+        'Gender',
+        'sex_id',
+        Sex::class,
+        'sex',
+        'sex_id',
+        'sex',
+        'resident_demographic.sex',
+    ),
+
     'relationship_to_hh' => $residentAttribute(
         'Relationship to Household',
         'relationship_to_hh',
