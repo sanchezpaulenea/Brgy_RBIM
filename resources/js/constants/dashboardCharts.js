@@ -252,63 +252,6 @@ export const CHART_SECTIONS = [
     },
 ];
 
-export const DASHBOARD_CATEGORY_SECTIONS = [
-    {
-        key: 'household',
-        title: 'Household statistics',
-        cards: [
-            { key: 'clan', label: 'Clan' },
-            { key: 'street', label: 'Street' },
-            { key: 'house_story_basement', label: 'House Story & Basement Level' },
-            { key: 'household_status', label: 'Household Status' },
-            { key: 'ownership', label: 'Ownership of Housing Unit & Lot' },
-            { key: 'fuel', label: 'Fuel for Lighting & Cooking' },
-            { key: 'water_source', label: 'Main Source of Drinking Water' },
-            { key: 'kitchen_garbage', label: 'Kitchen Garbage Disposal' },
-            { key: 'segregate_garbage', label: 'Segregate Garbage' },
-            { key: 'toilet_facility', label: 'Toilet Facility' },
-            { key: 'building_type', label: 'Type of Building/House' },
-            { key: 'construction_material', label: 'Construction Material of Outer Wall' },
-            { key: 'female_died', label: 'Female Member Died' },
-            { key: 'child_died', label: 'Child Below 5 Died' },
-            { key: 'common_disease', label: 'Common Diseases Causing Death' },
-            { key: 'primary_need', label: 'Primary Needs' },
-            { key: 'pets', label: 'Households with Pets' },
-        ],
-    },
-    {
-        key: 'resident',
-        title: 'Resident statistics',
-        cards: [
-            { key: 'relationship_to_hh', label: 'Relationship to Household Head' },
-            { key: 'nationality', label: 'Nationality' },
-            { key: 'marital_status', label: 'Marital Status' },
-            { key: 'education', label: 'Education' },
-            { key: 'economic', label: 'Economic' },
-            { key: 'health', label: 'Health' },
-            { key: 'infant_health', label: 'Infant Health' },
-            { key: 'women_health', label: 'Women’s Health' },
-            { key: 'sociocivic', label: 'Sociocivic' },
-            { key: 'migration', label: 'Migration' },
-            { key: 'ctc', label: 'Community Tax Certificate' },
-            { key: 'skills', label: 'Skills' },
-            { key: 'age', label: 'Age' },
-        ],
-    },
-];
-
-export function findDashboardChart(key) {
-    for (const section of CHART_SECTIONS) {
-        const chart = section.charts.find((item) => item.key === key);
-
-        if (chart) {
-            return { section, chart };
-        }
-    }
-
-    return null;
-}
-
 export const CHART_REPORTS = {
     clan: { category: 'clan', filter: 'clan' },
     street: { category: 'street', filter: 'street' },

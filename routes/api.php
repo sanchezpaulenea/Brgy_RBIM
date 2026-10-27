@@ -4,7 +4,6 @@ use App\Http\Controllers\Authentication\AuthController;
 use App\Http\Controllers\Authentication\PasswordController;
 use App\Http\Controllers\BarangayPersonnel\BarangayPersonnelController;
 use App\Http\Controllers\BarangayPersonnel\PersonnelController;
-use App\Http\Controllers\CensusDashboardController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DatabaseBackup\DatabaseBackupController;
@@ -159,9 +158,6 @@ Route::prefix('v1')->group(function () {
         Route::get('building-house-types', [LookupController::class, 'index'])->defaults('lookup', 'building-house-type')->name('building-house-types.index');
         Route::get('construction-material-outer-walls', [LookupController::class, 'index'])->defaults('lookup', 'construction-material-outer-wall')->name('construction-material-outer-walls.index');
 
-        Route::get('dashboard/tiles', [CensusDashboardController::class, 'tiles'])->name('dashboard.tiles');
-        Route::get('dashboard/stats/{statistic}/export', [CensusDashboardController::class, 'export'])->name('dashboard.stats.export');
-        Route::get('dashboard/stats/{statistic}', [CensusDashboardController::class, 'show'])->name('dashboard.stats.show');
         Route::get('dashboard/statistics', [DashboardController::class, 'statistics'])->name('dashboard.statistics');
 
         Route::middleware('system.admin')->group(function () {

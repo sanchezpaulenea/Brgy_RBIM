@@ -22,19 +22,7 @@ const routes = [
         path: '/dashboard',
         name: 'dashboard',
         component: () => import('@/pages/DashboardPage.vue'),
-        meta: { requiresAuth: true, title: 'Dashboard' },
-    },
-    {
-        path: '/dashboard/category/:chartKey',
-        name: 'dashboard-category',
-        component: () => import('@/pages/dashboard/CategoryChartPage.vue'),
-        meta: { requiresAuth: true, title: 'Statistic' },
-    },
-    {
-        path: '/dashboard/:statId',
-        name: 'dashboard-statistic',
-        component: () => import('@/pages/dashboard/StatisticPage.vue'),
-        meta: { requiresAuth: true, title: 'Statistic' },
+        meta: { requiresAuth: true },
     },
     {
         path: '/personnel',

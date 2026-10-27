@@ -46,7 +46,7 @@
                     <RouterLink
                         :to="{ name: 'dashboard' }"
                         class="flex items-center gap-2.5 min-w-0 rounded-lg px-3 py-2 text-[13px] font-medium transition"
-                        :class="String(route.path).startsWith('/dashboard') ? 'bg-white/15 text-white' : 'text-white/90 hover:bg-white/10'"
+                        :class="route.name === 'dashboard' ? 'bg-white/15 text-white' : 'text-white/90 hover:bg-white/10'"
                         @click="sidebarOpen = false"
                     >
                         <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">

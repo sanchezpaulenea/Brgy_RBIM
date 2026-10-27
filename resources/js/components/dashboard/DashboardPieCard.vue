@@ -116,21 +116,21 @@
                                     <span class="shrink-0 font-semibold tabular-nums text-slate-900">
                                         {{ formatNumber(slice.count) }}
                                     </span>
-                                    <span class="w-16 shrink-0 text-right tabular-nums text-slate-500">
-                                        {{ formatShare(shares[index]) }}
+                                    <span class="w-14 shrink-0 text-right tabular-nums text-slate-500">
+                                        {{ formatPercent(slice.count, displayTotal) }}
                                     </span>
                                 </span>
                                 <span class="mt-1.5 ml-6 block h-1.5 overflow-hidden rounded-full bg-slate-100" aria-hidden="true">
                                     <span
                                         class="block h-full rounded-full"
-                                        :style="{ width: `${barShares[index]}%`, backgroundColor: colors[index] }"
+                                        :style="{ width: barWidth(slice.count, displayTotal), backgroundColor: colors[index] }"
                                     />
                                 </span>
                             </button>
                         </li>
                     </ul>
-                    <p v-if="hint" class="mt-3 px-2 text-xs text-slate-400">
-                        {{ hint }}
+                    <p class="mt-3 px-2 text-xs text-slate-400">
+                        Click a value to open the matching records.
                     </p>
                 </div>
             </div>
@@ -175,10 +175,6 @@ const props = defineProps({
     compact: {
         type: Boolean,
         default: false,
-    },
-    hint: {
-        type: String,
-        default: 'Click a value to open the matching records.',
     },
 });
 
@@ -248,12 +244,6 @@ const chartOptions = computed(() => ({
     responsive: true,
     maintainAspectRatio: false,
     layout: { padding: 10 },
-    animation: {
-        animateRotate: true,
-        animateScale: false,
-        duration: 900,
-        easing: 'easeOutQuart',
-    },
     plugins: {
         legend: { display: false },
         tooltip: {
@@ -263,7 +253,7 @@ const chartOptions = computed(() => ({
             boxPadding: 4,
             titleFont: { weight: '600' },
             callbacks: {
-                label: (context) => ` ${formatNumber(context.parsed)} (${formatShare(shares.value[context.dataIndex])})`,
+                label: (context) => ` ${formatNumber(context.parsed)} (${formatPercent(context.parsed, displayTotal.value)})`,
                 footer: (items) => {
                     const slice = displaySlices.value[items[0]?.dataIndex];
 
@@ -291,7 +281,7 @@ const percentLabels = {
     id: 'percentLabels',
     afterDatasetsDraw(instance) {
         const meta = instance.getDatasetMeta(0);
-        const total = sliceTotal.value;
+        const total = displayTotal.value;
         const { ctx } = instance;
 
         if (!total) {
@@ -314,7 +304,7 @@ const percentLabels = {
 
             const { x, y } = arc.tooltipPosition();
             ctx.fillStyle = labelColor(colors.value[index]);
-            ctx.fillText(formatShare(shares.value[index]), x, y);
+            ctx.fillText(formatPercent(count, total), x, y);
         });
 
         ctx.restore();
@@ -365,59 +355,25 @@ function selectSlice(slice) {
     emit('select-slice', slice);
 }
 
-const sliceTotal = computed(() => displaySlices.value.reduce((sum, slice) => sum + (Number(slice.count) || 0), 0));
-
-/*
- * Shares are portions of the slices on the pie, so the legend, bars, and
- * labels always add up to 100%.
- */
-const shares = computed(() => allocateShares(displaySlices.value.map((slice) => Number(slice.count) || 0)));
-
-const barShares = computed(() => {
-    const total = sliceTotal.value;
-
-    if (!total) {
-        return displaySlices.value.map(() => 0);
-    }
-
-    return displaySlices.value.map((slice) => ((Number(slice.count) || 0) / total) * 100);
-});
-
-function allocateShares(counts) {
-    const total = counts.reduce((sum, count) => sum + count, 0);
-
-    if (!total) {
-        return counts.map(() => 0);
-    }
-
-    const tenths = counts.map((count) => Math.floor((count * 1000) / total));
-    let leftover = 1000 - tenths.reduce((sum, value) => sum + value, 0);
-    const order = counts
-        .map((count, index) => ({ index, remainder: (count * 1000) % total }))
-        .sort((left, right) => right.remainder - left.remainder);
-
-    for (let step = 0; step < leftover; step += 1) {
-        tenths[order[step].index] += 1;
-    }
-
-    return tenths.map((value) => value / 10);
-}
-
 function formatNumber(value) {
     return numberFormat.format(value ?? 0);
 }
 
-function formatShare(percent) {
-    const value = Number(percent) || 0;
-
-    if (value <= 0) {
+function formatPercent(count, total) {
+    if (!total) {
         return '0%';
     }
 
-    if (value < 0.1) {
+    const percent = (count / total) * 100;
+
+    if (percent > 0 && percent < 0.1) {
         return '<0.1%';
     }
 
-    return Number.isInteger(value) ? `${value}%` : `${value.toFixed(1)}%`;
+    return `${percent.toFixed(1)}%`;
+}
+
+function barWidth(count, total) {
+    return total ? `${Math.max((count / total) * 100, 1)}%` : '0%';
 }
 </script>
