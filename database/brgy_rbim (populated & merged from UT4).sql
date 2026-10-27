@@ -2345,7 +2345,7 @@ CREATE TABLE IF NOT EXISTS `permission` (
   `permission` varchar(45) NOT NULL,
   PRIMARY KEY (`permission_id`),
   UNIQUE KEY `uq_permission` (`permission`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=77 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=79 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `permission`
@@ -2353,6 +2353,8 @@ CREATE TABLE IF NOT EXISTS `permission` (
 
 INSERT INTO `permission` (`permission_id`, `permission`) VALUES
 (18, 'auditlog.view'),
+(77, 'backup.export'),
+(78, 'backup.restore'),
 (74, 'certificate.create'),
 (76, 'certificate.edit'),
 (75, 'certificate.view'),
@@ -4154,7 +4156,7 @@ CREATE TABLE IF NOT EXISTS `role_permission` (
   PRIMARY KEY (`role_permission_id`),
   UNIQUE KEY `uq_permission_assignment` (`role_id`,`permission_id`),
   KEY `permission_role` (`permission_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=180 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=183 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `role_permission`
@@ -4273,6 +4275,7 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (174, 2, 74),
 (176, 2, 75),
 (175, 2, 76),
+(180, 2, 77),
 (7, 3, 1),
 (10, 3, 2),
 (8, 3, 3),
@@ -4291,6 +4294,8 @@ INSERT INTO `role_permission` (`role_permission_id`, `role_id`, `permission_id`)
 (59, 3, 16),
 (20, 3, 17),
 (22, 3, 18),
+(181, 3, 77),
+(182, 3, 78),
 (21, 4, 17),
 (124, 4, 19),
 (125, 4, 20),
