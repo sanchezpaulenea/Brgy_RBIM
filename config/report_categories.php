@@ -21,6 +21,7 @@ use App\Models\ResidentManagement\Demographic\RelationshipToHouseholdHead;
 use App\Models\ResidentManagement\Demographic\Religion;
 use App\Models\ResidentManagement\Demographic\ResidentStatus;
 use App\Models\ResidentManagement\Demographic\ResidentType;
+use App\Models\ResidentManagement\Demographic\Sex;
 use App\Models\ResidentManagement\Economic\Economic;
 use App\Models\ResidentManagement\Economic\SourceOfIncome;
 use App\Models\ResidentManagement\Economic\StatusOfWorkBusiness;
@@ -983,6 +984,18 @@ return [
         'resident_status_id',
         'resident_status',
         'resident_demographic.resident_status',
+    ),
+
+    'gender' => $residentAttribute(
+        'Gender',
+        'gender',
+        'Gender',
+        'sex_id',
+        Sex::class,
+        'sex',
+        'sex_id',
+        'sex',
+        'resident_demographic.sex',
     ),
 
     'relationship_to_hh' => $residentAttribute(

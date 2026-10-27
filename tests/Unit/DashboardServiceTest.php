@@ -159,7 +159,8 @@ class DashboardServiceTest extends TestCase
             'economic', 'economic_source', 'economic_work_status',
             'health', 'health_facility', 'health_reason', 'health_disability',
             'infant_health', 'infant_attendant', 'infant_immunization',
-            'women_health', 'women_fp', 'women_fp_source', 'women_fp_intention',
+            'women_health', 'women_living_children', 'women_fp', 'women_fp_source', 'women_fp_intention',
+            'gender', 'religion', 'ethnicity', 'resident_status',
             'ctc', 'skills_training', 'skills', 'age', 'age_disability',
             'ownership_unit', 'ownership_lot',
         ] as $key) {
