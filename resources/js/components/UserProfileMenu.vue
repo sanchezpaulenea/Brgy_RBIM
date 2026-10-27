@@ -61,6 +61,13 @@
                         <p class="truncate text-sm text-black">
                             {{ positionLabel }}
                         </p>
+                        <button
+                            type="button"
+                            class="mt-2 inline-flex w-fit cursor-pointer items-center rounded-lg border border-[#2d4c39] bg-white px-2.5 py-1 text-sm font-semibold leading-none text-[#2d4c39] transition hover:bg-[#2d4c39]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2d4c39]"
+                            @click="openEditor"
+                        >
+                            Edit profile
+                        </button>
                     </div>
                 </div>
             </div>
@@ -121,6 +128,89 @@
                 </button>
             </div>
         </div>
+
+        <Teleport to="body">
+            <div
+                v-if="editingProfile"
+                class="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/40 p-4"
+                @click.self="closeEditor"
+            >
+                <div
+                    class="w-full max-w-sm rounded-xl bg-white shadow-xl"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="edit-profile-title"
+                >
+                    <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
+                        <div>
+                            <h2 id="edit-profile-title" class="text-base font-semibold text-slate-900">
+                                Edit profile
+                            </h2>
+                            <p class="mt-1 text-sm text-slate-600">
+                                Choose a photo for your account.
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            class="cursor-pointer rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                            aria-label="Close"
+                            :disabled="uploading"
+                            @click="closeEditor"
+                        >
+                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M4.22 4.22a.75.75 0 011.06 0L10 8.94l4.72-4.72a.75.75 0 111.06 1.06L11.06 10l4.72 4.72a.75.75 0 11-1.06 1.06L10 11.06l-4.72 4.72a.75.75 0 01-1.06-1.06L8.94 10 4.22 5.28a.75.75 0 010-1.06z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="flex flex-col items-center px-5 py-6 text-center">
+                        <UserAvatar
+                            :src="user?.avatar_url"
+                            :preset="user?.avatar_preset"
+                            size-class="h-24 w-24"
+                            :alt="displayName"
+                        />
+                        <p class="mt-3 max-w-full truncate text-sm font-semibold text-slate-900">
+                            {{ displayName }}
+                        </p>
+                        <input
+                            id="profile-photo"
+                            ref="photoInputRef"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"
+                            class="sr-only"
+                            :disabled="uploading"
+                            @change="onPhotoSelected"
+                        >
+                        <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
+                            <label
+                                for="profile-photo"
+                                class="rbim-btn-action"
+                                :class="uploading ? 'pointer-events-none opacity-60' : ''"
+                                @click="choosingPhoto = true"
+                            >
+                                {{ uploading ? 'Uploading…' : 'Upload photo' }}
+                            </label>
+                            <button
+                                v-if="hasCustomPhoto && canRestorePreset"
+                                type="button"
+                                class="rbim-btn-outline px-3 py-1.5 text-xs"
+                                :disabled="uploading"
+                                @click="restorePreset"
+                            >
+                                Use default
+                            </button>
+                        </div>
+                        <p v-if="photoError" class="rbim-error" role="alert">
+                            {{ photoError }}
+                        </p>
+                        <p v-else class="rbim-hint">
+                            JPEG, PNG, WebP, or GIF. Maximum 2 MB.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
     </div>
 </template>
 
@@ -131,10 +221,14 @@ import UserAvatar from '@/components/UserAvatar.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useTheme } from '@/composables/useTheme';
 import { fetchLocationProfile } from '@/services/householdService';
+import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import { formatDisplayName } from '@/utils/format';
 
+const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const PHOTO_MAX_BYTES = 2 * 1024 * 1024;
+
 const router = useRouter();
-const { user, roles, loading, logout } = useAuth();
+const { user, roles, loading, logout, updateAvatar } = useAuth();
 const { theme, setTheme } = useTheme();
 
 const themeOptions = [
@@ -145,6 +239,17 @@ const themeOptions = [
 const open = ref(false);
 const barangayName = ref('');
 const rootRef = ref(null);
+const photoInputRef = ref(null);
+const uploading = ref(false);
+const photoError = ref('');
+const choosingPhoto = ref(false);
+const editingProfile = ref(false);
+
+const hasCustomPhoto = computed(() => Boolean(user.value?.avatar_url));
+
+const canRestorePreset = computed(() => (
+    user.value?.avatar_preset === 'male' || user.value?.avatar_preset === 'female'
+));
 
 const displayName = computed(() => (
     user.value?.full_name
@@ -178,6 +283,86 @@ const managedByLabel = computed(() => {
     return `Managed by ${barangay}`;
 });
 
+function resetPhotoInput() {
+    if (photoInputRef.value) {
+        photoInputRef.value.value = '';
+    }
+}
+
+function photoIsAllowed(file) {
+    if (PHOTO_TYPES.includes(file.type)) {
+        return true;
+    }
+
+    return /\.(jpe?g|png|webp|gif)$/i.test(file.name);
+}
+
+async function onPhotoSelected(event) {
+    choosingPhoto.value = false;
+    const file = event.target.files?.[0];
+    resetPhotoInput();
+
+    if (!file) {
+        return;
+    }
+
+    if (!photoIsAllowed(file)) {
+        photoError.value = 'The profile photo must be a JPEG, PNG, WebP, or GIF image.';
+
+        return;
+    }
+
+    if (file.size > PHOTO_MAX_BYTES) {
+        photoError.value = 'The profile photo must not be larger than 2 MB.';
+
+        return;
+    }
+
+    photoError.value = '';
+    uploading.value = true;
+
+    try {
+        await updateAvatar({ photo: file });
+    } catch (error) {
+        photoError.value = extractValidationErrors(error).photo
+            || extractErrorMessage(error, 'Unable to upload the profile photo.');
+    } finally {
+        uploading.value = false;
+    }
+}
+
+async function restorePreset() {
+    if (!canRestorePreset.value || uploading.value) {
+        return;
+    }
+
+    photoError.value = '';
+    uploading.value = true;
+
+    try {
+        await updateAvatar({ avatarPreset: user.value.avatar_preset });
+    } catch (error) {
+        photoError.value = extractValidationErrors(error).avatar_preset
+            || extractErrorMessage(error, 'Unable to restore the default photo.');
+    } finally {
+        uploading.value = false;
+    }
+}
+
+function openEditor() {
+    photoError.value = '';
+    editingProfile.value = true;
+}
+
+function closeEditor() {
+    if (uploading.value) {
+        return;
+    }
+
+    editingProfile.value = false;
+    photoError.value = '';
+}
+
 function toggleMenu() {
     open.value = !open.value;
 
@@ -187,6 +372,10 @@ function toggleMenu() {
 }
 
 function closeMenu() {
+    if (editingProfile.value || uploading.value) {
+        return;
+    }
+
     open.value = false;
 }
 
@@ -197,7 +386,7 @@ async function handleLogout() {
 }
 
 function onDocumentPointerDown(event) {
-    if (!open.value) {
+    if (!open.value || choosingPhoto.value || editingProfile.value) {
         return;
     }
 
@@ -207,9 +396,27 @@ function onDocumentPointerDown(event) {
 }
 
 function onEscape(event) {
-    if (event.key === 'Escape') {
-        closeMenu();
+    if (event.key !== 'Escape' || choosingPhoto.value) {
+        return;
     }
+
+    if (editingProfile.value) {
+        closeEditor();
+
+        return;
+    }
+
+    closeMenu();
+}
+
+function onWindowFocus() {
+    if (!choosingPhoto.value) {
+        return;
+    }
+
+    window.setTimeout(() => {
+        choosingPhoto.value = false;
+    }, 400);
 }
 
 async function loadBarangayName() {
@@ -228,10 +435,12 @@ async function loadBarangayName() {
 onMounted(() => {
     document.addEventListener('pointerdown', onDocumentPointerDown);
     document.addEventListener('keydown', onEscape);
+    window.addEventListener('focus', onWindowFocus);
 });
 
 onUnmounted(() => {
     document.removeEventListener('pointerdown', onDocumentPointerDown);
     document.removeEventListener('keydown', onEscape);
+    window.removeEventListener('focus', onWindowFocus);
 });
 </script>
