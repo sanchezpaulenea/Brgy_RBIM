@@ -46,7 +46,7 @@ export const CHART_SECTIONS = [
     {
         key: 'household-profile',
         title: 'Household Profile',
-        description: 'How registered households are distributed across the barangay, including recorded pets.',
+        description: 'How registered households are distributed across the barangay.',
         charts: [
             {
                 key: 'clan',
@@ -66,17 +66,6 @@ export const CHART_SECTIONS = [
                 panels: [
                     { key: 'house_story', title: 'House Story' },
                     { key: 'basement_level', title: 'Basement Level' },
-                ],
-            },
-            {
-                key: 'pets',
-                title: 'Households with Pets',
-                subtitle: 'Recorded pets by specie, sex, rabies vaccination, and spay/neuter',
-                panels: [
-                    { key: 'pets', title: 'Specie' },
-                    { key: 'pets_sex', title: 'Sex' },
-                    { key: 'pets_rabies', title: 'Rabies Vaccination' },
-                    { key: 'pets_spay', title: 'Spay / Neuter', visualization: 'boolean' },
                 ],
             },
         ],
@@ -121,6 +110,17 @@ export const CHART_SECTIONS = [
             { key: 'child_died', title: 'Child Below 5 Household Member Died in the Past 12 Months', subtitle: 'Households that reported a child death', visualization: 'boolean' },
             { key: 'common_disease', title: 'Common Diseases That Cause Death', subtitle: 'Diseases reported across households' },
             { key: 'primary_need', title: 'Primary Needs of This Barangay', subtitle: 'Needs reported across households' },
+            {
+                key: 'pets',
+                title: 'Households with Pets',
+                subtitle: 'Recorded pets by specie, sex, rabies vaccination, and spay/neuter',
+                panels: [
+                    { key: 'pets', title: 'Specie' },
+                    { key: 'pets_sex', title: 'Sex' },
+                    { key: 'pets_rabies', title: 'Rabies Vaccination' },
+                    { key: 'pets_spay', title: 'Spay / Neuter', visualization: 'boolean' },
+                ],
+            },
         ],
     },
     {
@@ -129,12 +129,8 @@ export const CHART_SECTIONS = [
         description: 'Profile of every registered resident.',
         charts: [
             { key: 'relationship_to_hh', title: 'Relationship to Household Head', subtitle: 'Residents by relationship to the head' },
-            { key: 'gender', title: 'Gender', subtitle: 'Residents by gender' },
             { key: 'nationality', title: 'Nationality', subtitle: 'Residents by nationality' },
-            { key: 'religion', title: 'Religion', subtitle: 'Residents by religion' },
-            { key: 'ethnicity', title: 'Ethnicity', subtitle: 'Residents by ethnicity' },
             { key: 'marital_status', title: 'Marital Status', subtitle: 'Residents by marital status' },
-            { key: 'resident_status', title: 'Resident Status', subtitle: 'Residents by resident status' },
             {
                 key: 'age',
                 title: 'Age',
@@ -208,12 +204,11 @@ export const CHART_SECTIONS = [
             {
                 key: 'women_health',
                 title: 'Women’s Health',
-                subtitle: 'Pregnancies, living children, family planning, source, and intention',
+                subtitle: 'Pregnancies, family planning, source, and intention',
                 visualization: 'range',
                 rangeFilter: 'pregnancies',
                 panels: [
                     { key: 'women_health', title: 'Number of Pregnancies' },
-                    { key: 'women_living_children', title: 'Living Children' },
                     { key: 'women_fp', title: 'Family Planning Method' },
                     { key: 'women_fp_source', title: 'Source of FP' },
                     { key: 'women_fp_intention', title: 'Intention to Use FP' },
@@ -280,12 +275,8 @@ export const CHART_REPORTS = {
     pets_rabies: { category: 'pets', filter: 'rabies' },
     pets_spay: { category: 'pets', filter: 'spay_neuter', choices: { yes: 'yes', no: 'no' } },
     relationship_to_hh: { category: 'relationship_to_hh', filter: 'relationship_to_hh' },
-    gender: { category: 'gender', filter: 'gender' },
     nationality: { category: 'nationality', filter: 'nationality' },
-    religion: { category: 'religion', filter: 'religion' },
-    ethnicity: { category: 'ethnicity', filter: 'ethnicity' },
     marital_status: { category: 'marital_status', filter: 'marital_status' },
-    resident_status: { category: 'resident_status', filter: 'resident_status' },
     education: { category: 'education', filter: 'highest_level' },
     education_enrollment: { category: 'education', filter: 'enrollment' },
     economic: { category: 'economic', filter: 'monthly_income' },
@@ -299,7 +290,6 @@ export const CHART_REPORTS = {
     infant_attendant: { category: 'infant_health', filter: 'birth_attendant' },
     infant_immunization: { category: 'infant_health', filter: 'immunization' },
     women_health: { category: 'women_health', filter: 'pregnancies' },
-    women_living_children: { category: 'women_health', filter: 'living_children' },
     women_fp: { category: 'women_health', filter: 'family_planning_method' },
     women_fp_source: { category: 'women_health', filter: 'source_of_fp_method' },
     women_fp_intention: { category: 'women_health', filter: 'fp_intention' },

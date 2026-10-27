@@ -55,17 +55,6 @@ class DashboardService
         ['label' => '5+', 'min' => 5, 'max' => null],
     ];
 
-    /**
-     * @var list<array{label: string, min: int|float|null, max: int|float|null}>
-     */
-    private const LIVING_CHILDREN_BUCKETS = [
-        ['label' => '0', 'min' => 0, 'max' => 0],
-        ['label' => '1', 'min' => 1, 'max' => 1],
-        ['label' => '2', 'min' => 2, 'max' => 2],
-        ['label' => '3–4', 'min' => 3, 'max' => 4],
-        ['label' => '5+', 'min' => 5, 'max' => null],
-    ];
-
     public function __construct(
         protected DashboardRepositoryInterface $dashboardRepository,
     ) {}
@@ -135,12 +124,8 @@ class DashboardService
                 ),
 
                 'relationship_to_hh' => $this->chart(self::RESIDENTS, $repo->residentsByLookup('relationship_to_hh_id', 'relationship_to_hh', 'relationship_to_hh_id', 'relationship_to_hh')),
-                'gender' => $this->chart(self::RESIDENTS, $repo->residentsByLookup('sex_id', 'sex', 'sex_id', 'sex')),
                 'nationality' => $this->chart(self::RESIDENTS, $repo->residentsByLookup('nationality_id', 'nationality', 'nationality_id', 'nationality')),
-                'religion' => $this->chart(self::RESIDENTS, $repo->residentsByLookup('religion_id', 'religion', 'religion_id', 'religion')),
-                'ethnicity' => $this->chart(self::RESIDENTS, $repo->residentsByLookup('ethnicity_id', 'ethnicity', 'ethnicity_id', 'ethnicity')),
                 'marital_status' => $this->chart(self::RESIDENTS, $repo->residentsByLookup('marital_status_id', 'marital_status', 'marital_status_id', 'marital_status')),
-                'resident_status' => $this->chart(self::RESIDENTS, $repo->residentsByLookup('resident_status_id', 'resident_status', 'resident_status_id', 'resident_status')),
                 'education' => $this->chart(self::RESIDENTS, $repo->residentsByChildLookup('education', 'highest_lvl_of_educ_id', 'highest_lvl_of_educ', 'highest_lvl_of_educ_id', 'lvl_of_educ'), self::NOT_ANSWERED),
                 'education_enrollment' => $this->chart(self::RESIDENTS, $repo->residentsByChildLookup('education', 'current_enrollement_status_id', 'current_enrollment_status', 'current_enrollment_status_id', 'current_enrollement_status'), self::NOT_ANSWERED),
                 'economic' => $this->chart(self::RESIDENTS, $repo->residentsByChildNumberBuckets('economic', 'monthly_income', self::INCOME_BUCKETS), self::NOT_ANSWERED),
@@ -159,7 +144,6 @@ class DashboardService
                 'infant_attendant' => $this->chart(self::RESIDENTS, $repo->residentsByChildLookup('infant_health', 'birth_attendant_id', 'birth_attendant', 'birth_attendant_id', 'birth_attendant', 'infant'), self::NOT_ANSWERED),
                 'infant_immunization' => $this->chart(self::RESIDENTS, $repo->residentsByChildLookup('infant_health', 'immunization_id', 'immunization', 'immunization_id', 'immunization', 'infant'), self::NOT_ANSWERED),
                 'women_health' => $this->chart(self::RESIDENTS, $repo->residentsByChildNumberBuckets('women_health', 'number_pregnancies', self::PREGNANCY_BUCKETS, 'women', $womenVia), self::NOT_ANSWERED),
-                'women_living_children' => $this->chart(self::RESIDENTS, $repo->residentsByChildNumberBuckets('women_health', 'living_children', self::LIVING_CHILDREN_BUCKETS, 'women', $womenVia), self::NOT_ANSWERED),
                 'women_fp' => $this->chart(self::RESIDENTS, $repo->residentsByChildLookup('women_health', 'family_planning_method_id', 'family_planning_method', 'family_planning_method_id', 'family_planning_method', 'women', $womenVia), self::NOT_ANSWERED),
                 'women_fp_source' => $this->chart(self::RESIDENTS, $repo->residentsByChildLookup('women_health', 'source_of_fp_method_id', 'source_of_fp_method', 'source_of_fp_method_id', 'source_of_fp_method', 'women', $womenVia), self::NOT_ANSWERED),
                 'women_fp_intention' => $this->chart(self::RESIDENTS, $repo->residentsByTriState('women_health', 'have_intention_to_use_fp', 'women', $womenVia), self::NOT_ANSWERED),
