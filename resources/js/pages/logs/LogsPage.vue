@@ -47,11 +47,37 @@
                 </div>
                 <div>
                     <label for="date_from" class="rbim-label">From</label>
-                    <input id="date_from" v-model="filters.date_from" type="date" class="rbim-input py-2">
+                    <div class="relative">
+                        <input
+                            id="date_from"
+                            v-model="filters.date_from"
+                            type="date"
+                            class="rbim-input peer py-2"
+                            :class="{ 'rbim-date-empty': !filters.date_from }"
+                        >
+                        <span
+                            v-if="!filters.date_from"
+                            class="pointer-events-none absolute inset-0 flex items-center px-3 text-sm text-slate-400 peer-focus:hidden"
+                            aria-hidden="true"
+                        >DD/MM/YYYY</span>
+                    </div>
                 </div>
                 <div>
                     <label for="date_to" class="rbim-label">To</label>
-                    <input id="date_to" v-model="filters.date_to" type="date" class="rbim-input py-2">
+                    <div class="relative">
+                        <input
+                            id="date_to"
+                            v-model="filters.date_to"
+                            type="date"
+                            class="rbim-input peer py-2"
+                            :class="{ 'rbim-date-empty': !filters.date_to }"
+                        >
+                        <span
+                            v-if="!filters.date_to"
+                            class="pointer-events-none absolute inset-0 flex items-center px-3 text-sm text-slate-400 peer-focus:hidden"
+                            aria-hidden="true"
+                        >DD/MM/YYYY</span>
+                    </div>
                 </div>
                 <div class="flex items-end gap-2 sm:col-span-2">
                     <button type="button" class="rbim-btn py-2" :disabled="loading" @click="clearFilters">
@@ -78,11 +104,37 @@
                 </div>
                 <div>
                     <label for="login_from" class="rbim-label">From</label>
-                    <input id="login_from" v-model="loginFilters.date_from" type="date" class="rbim-input py-2">
+                    <div class="relative">
+                        <input
+                            id="login_from"
+                            v-model="loginFilters.date_from"
+                            type="date"
+                            class="rbim-input peer py-2"
+                            :class="{ 'rbim-date-empty': !loginFilters.date_from }"
+                        >
+                        <span
+                            v-if="!loginFilters.date_from"
+                            class="pointer-events-none absolute inset-0 flex items-center px-3 text-sm text-slate-400 peer-focus:hidden"
+                            aria-hidden="true"
+                        >DD/MM/YYYY</span>
+                    </div>
                 </div>
                 <div>
                     <label for="login_to" class="rbim-label">To</label>
-                    <input id="login_to" v-model="loginFilters.date_to" type="date" class="rbim-input py-2">
+                    <div class="relative">
+                        <input
+                            id="login_to"
+                            v-model="loginFilters.date_to"
+                            type="date"
+                            class="rbim-input peer py-2"
+                            :class="{ 'rbim-date-empty': !loginFilters.date_to }"
+                        >
+                        <span
+                            v-if="!loginFilters.date_to"
+                            class="pointer-events-none absolute inset-0 flex items-center px-3 text-sm text-slate-400 peer-focus:hidden"
+                            aria-hidden="true"
+                        >DD/MM/YYYY</span>
+                    </div>
                 </div>
                 <div class="flex items-end gap-2 sm:col-span-2">
                     <button type="button" class="rbim-btn py-2" :disabled="loading" @click="clearLoginFilters">
@@ -111,7 +163,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            <tr v-for="log in auditLogs" :key="log.audit_id">
+                            <tr v-for="log in pagedAuditLogs" :key="log.audit_id">
                                 <td class="px-3 py-3 text-center whitespace-nowrap text-slate-600">{{ formatDateTime(log.performed_at) }}</td>
                                 <td class="px-3 py-3 text-center font-medium text-slate-900">{{ log.username || log.user_id }}</td>
                                 <td class="px-3 py-3 text-center text-slate-600">{{ log.action }}</td>
@@ -156,6 +208,35 @@
                         </tbody>
                     </table>
                 </div>
+                <div
+                    v-if="isAudit && auditLastPage > 1"
+                    class="grid grid-cols-3 items-center gap-3 border-t border-slate-200 px-4 py-3 text-sm"
+                >
+                    <div>
+                        <button
+                            v-if="auditPage > 1"
+                            type="button"
+                            class="rbim-btn-outline"
+                            :disabled="loading"
+                            @click="showAuditPage(auditPage - 1)"
+                        >
+                            Previous
+                        </button>
+                    </div>
+                    <span class="text-center text-slate-500">
+                        Page {{ auditPage }} of {{ auditLastPage }}
+                    </span>
+                    <div class="flex justify-end">
+                        <button
+                            type="button"
+                            class="rbim-btn-outline"
+                            :disabled="auditPage >= auditLastPage || loading"
+                            @click="showAuditPage(auditPage + 1)"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </AppLayout>
@@ -179,10 +260,13 @@ const canViewCurrentLog = computed(() => (
     isAudit.value ? hasPermission('auditlog.view') : hasPermission('userlog.view')
 ));
 
+const AUDIT_LOG_PAGE_SIZE = 50;
+
 const loading = ref(false);
 const error = ref('');
 const source = ref('active');
 const auditLogs = ref([]);
+const auditPage = ref(1);
 const loginLogs = ref([]);
 const filters = reactive({
     entity: '',
@@ -203,6 +287,16 @@ const loginFilters = reactive({
 const auditFiltersAreActive = computed(() => (
     Boolean(filters.entity.trim() || filters.date_from || filters.date_to)
 ));
+
+const auditLastPage = computed(() => (
+    Math.max(1, Math.ceil(auditLogs.value.length / AUDIT_LOG_PAGE_SIZE))
+));
+
+const pagedAuditLogs = computed(() => {
+    const start = (auditPage.value - 1) * AUDIT_LOG_PAGE_SIZE;
+
+    return auditLogs.value.slice(start, start + AUDIT_LOG_PAGE_SIZE);
+});
 
 const emptyAuditMessage = computed(() => {
     if (auditFiltersAreActive.value) {
@@ -244,9 +338,14 @@ const filteredLoginLogs = computed(() => (
     })
 ));
 
+function showAuditPage(page) {
+    auditPage.value = Math.min(Math.max(1, page), auditLastPage.value);
+}
+
 async function loadAuditLogs() {
     loading.value = true;
     error.value = '';
+    auditPage.value = 1;
     auditLogs.value = [];
 
     try {

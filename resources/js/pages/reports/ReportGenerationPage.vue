@@ -1,12 +1,6 @@
 <template>
     <AppLayout title="Report Generation">
         <div class="space-y-6">
-            <div v-if="step > 0">
-                <button type="button" class="rbim-btn-outline" @click="goBack">
-                    Back
-                </button>
-            </div>
-
             <div>
                 <h1 class="text-xl font-semibold text-slate-900">Report Generation</h1>
                 <p class="mt-1 text-sm text-slate-600">
@@ -14,16 +8,11 @@
                 </p>
             </div>
 
-            <ol class="flex flex-wrap gap-2">
-                <li
-                    v-for="(label, index) in steps"
-                    :key="label"
-                    class="rounded-lg px-3 py-2 text-sm font-medium"
-                    :class="index === step ? 'bg-brand text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200'"
-                >
-                    {{ index + 1 }}. {{ label }}
-                </li>
-            </ol>
+            <ProcessSteps
+                :labels="steps"
+                :current="step"
+                aria-label="Report progress"
+            />
 
             <div v-if="error" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {{ error }}
@@ -202,7 +191,10 @@
                     </fieldset>
                 </div>
 
-                <div class="flex flex-wrap gap-3">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <button type="button" class="rbim-btn-outline" @click="goBack">
+                        Back
+                    </button>
                     <button type="button" class="rbim-btn" :disabled="!filterReady" @click="step = 2">
                         Continue
                     </button>
@@ -241,7 +233,10 @@
                         </span>
                     </label>
                 </div>
-                <div class="flex flex-wrap gap-3">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <button type="button" class="rbim-btn-outline" @click="goBack">
+                        Back
+                    </button>
                     <button type="button" class="rbim-btn" :disabled="!selectedColumns.length || previewLoading" @click="runPreview(1, true)">
                         {{ previewLoading ? 'Building preview...' : 'Preview report' }}
                     </button>
@@ -250,7 +245,7 @@
 
             <section v-else-if="step === 3 && preview" class="space-y-4">
                 <div class="rbim-card space-y-4 p-5">
-                    <div class="max-w-xl space-y-4">
+                    <div class="space-y-4">
                         <div>
                             <label for="report-title" class="rbim-label">Report title</label>
                             <input
@@ -278,8 +273,11 @@
                             <p v-else class="rbim-hint">Leave this blank when the report covers every record.</p>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-3">
-                        <template v-if="canExport">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <button type="button" class="rbim-btn-outline" @click="goBack">
+                            Back
+                        </button>
+                        <div v-if="canExport" class="flex flex-wrap justify-end gap-3">
                             <button
                                 type="button"
                                 class="rbim-btn"
@@ -304,10 +302,7 @@
                             >
                                 {{ exporting === 'pdf' ? 'Preparing PDF...' : 'Export PDF' }}
                             </button>
-                            <button type="button" class="rbim-btn-outline" @click="printPreview">
-                                Print
-                            </button>
-                        </template>
+                        </div>
                         <p v-else class="text-sm text-slate-600">You do not have permission to export reports.</p>
                     </div>
                 </div>
@@ -424,6 +419,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
 import LookupCombobox from '@/components/LookupCombobox.vue';
+import ProcessSteps from '@/components/ProcessSteps.vue';
 import { useAuth } from '@/composables/useAuth';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {
@@ -938,10 +934,6 @@ async function runPreview(page, resetTitle) {
     } finally {
         previewLoading.value = false;
     }
-}
-
-async function printPreview() {
-    window.print();
 }
 
 async function download(format) {

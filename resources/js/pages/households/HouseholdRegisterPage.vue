@@ -191,7 +191,7 @@
                         />
                     </section>
 
-                    <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex flex-wrap items-center justify-end gap-2">
                         <button type="submit" class="rbim-btn" :disabled="saving">
                             {{ saving ? 'Saving...' : 'Continue' }}
                         </button>

@@ -50,10 +50,10 @@
                 <table class="min-w-full table-fixed divide-y divide-slate-200 text-sm">
                     <thead class="bg-slate-50">
                         <tr>
-                            <th class="w-[18%] px-4 py-3 text-center font-semibold text-slate-600">{{ idColumnLabel }}</th>
-                            <th class="px-4 py-3 text-center font-semibold text-slate-600">{{ fieldLabel }}</th>
-                            <th class="w-[20%] px-4 py-3 text-center font-semibold text-slate-600">Status</th>
-                            <th v-if="canDelete" class="w-[18%] px-4 py-3 text-center font-semibold text-slate-600">Action</th>
+                            <th class="px-4 py-3 text-center font-semibold text-slate-600" :class="columnWidthClass">{{ idColumnLabel }}</th>
+                            <th class="px-4 py-3 text-center font-semibold text-slate-600" :class="columnWidthClass">{{ fieldLabel }}</th>
+                            <th class="px-4 py-3 text-center font-semibold text-slate-600" :class="columnWidthClass">Status</th>
+                            <th v-if="canDelete" class="px-4 py-3 text-center font-semibold text-slate-600" :class="columnWidthClass">Action</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -174,6 +174,7 @@ const confirm = reactive({
     onCancel: null,
 });
 
+const columnWidthClass = computed(() => (props.canDelete ? 'w-1/4' : 'w-1/3'));
 const inputId = computed(() => `${props.fieldName}-input`);
 const addButtonLabel = computed(() => `Add ${props.itemLabel}`);
 const pluralLabel = computed(() => props.itemLabelPlural || `${props.itemLabel}s`);

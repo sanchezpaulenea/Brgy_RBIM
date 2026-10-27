@@ -139,7 +139,7 @@
         </div>
 
         <form v-if="step === 'count'" class="mt-4 space-y-4" novalidate @submit.prevent="confirmCount">
-            <div class="max-w-xl space-y-4">
+            <div class="space-y-4">
                 <HouseholdSearch
                     v-model="selectedHouseholdId"
                     :options="households"
@@ -149,7 +149,7 @@
                     hint="Search by household head, household ID, street, or house/lot number."
                     :error="householdError"
                 />
-                <div v-if="selectedHouseholdId" class="max-w-md">
+                <div v-if="selectedHouseholdId">
                     <label for="add_pet_count" class="rbim-label">
                         How many pets would you like to add?<span class="rbim-required" aria-hidden="true">*</span>
                     </label>
@@ -166,14 +166,14 @@
                     <p v-if="petCountError" class="rbim-error">{{ petCountError }}</p>
                 </div>
             </div>
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
                 <button type="button" class="rbim-btn-outline" @click="cancelAdd">Cancel</button>
                 <button type="submit" class="rbim-btn">Continue</button>
             </div>
         </form>
 
         <form v-else class="mt-4 space-y-6" novalidate @submit.prevent="submitAdd">
-            <div class="max-w-xl">
+            <div>
                 <label class="rbim-label" for="add-pet-household-locked">
                     Household<span class="rbim-required" aria-hidden="true">*</span>
                 </label>

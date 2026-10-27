@@ -4,17 +4,11 @@
             <PageTabs :tabs="certificateTabs" />
 
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <ol class="flex flex-wrap gap-2" aria-label="Certificate progress">
-                    <li v-for="(label, index) in stepLabels" :key="label">
-                        <span
-                            class="inline-flex rounded-full px-4 py-2 text-sm font-medium"
-                            :class="stepGuideClass(index + 1)"
-                            :aria-current="step === index + 1 ? 'step' : undefined"
-                        >
-                            {{ index + 1 }}. {{ label }}
-                        </span>
-                    </li>
-                </ol>
+                <ProcessSteps
+                    :labels="stepLabels"
+                    :current="step - 1"
+                    aria-label="Certificate progress"
+                />
                 <button
                     type="button"
                     class="rbim-btn py-2"
@@ -419,10 +413,7 @@
                         :signature-url="signatureUrl"
                     />
 
-                    <div class="flex flex-wrap items-center gap-3">
-                        <button type="button" class="rbim-btn" :disabled="generateDisabled" @click="generate">
-                            {{ generating ? 'Generating...' : 'Generate PDF' }}
-                        </button>
+                    <div v-if="generateReason || generateError" class="space-y-1">
                         <p v-if="generateReason" class="text-sm text-slate-600">{{ generateReason }}</p>
                         <p v-if="generateError" class="rbim-error">{{ generateError }}</p>
                     </div>
@@ -435,6 +426,15 @@
                 </button>
                 <button v-if="step < 5 && !issued" type="button" class="rbim-btn" :disabled="!canContinue" @click="goNext">
                     Next
+                </button>
+                <button
+                    v-else-if="step === 5 && preview?.document"
+                    type="button"
+                    class="rbim-btn"
+                    :disabled="generateDisabled"
+                    @click="generate"
+                >
+                    {{ generating ? 'Generating...' : 'Generate PDF' }}
                 </button>
             </div>
         </div>
@@ -457,6 +457,7 @@ import CertificatePreview from '@/components/CertificatePreview.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import HouseholdChildCombobox from '@/components/HouseholdChildCombobox.vue';
 import PageTabs from '@/components/PageTabs.vue';
+import ProcessSteps from '@/components/ProcessSteps.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useSectionTabs } from '@/composables/useSectionTabs';
 import {
@@ -974,18 +975,6 @@ function selectResident(resident) {
     historyPayload.value = null;
     historyPage.value = 1;
     clearReview();
-}
-
-function stepGuideClass(number) {
-    if (number < step.value) {
-        return 'bg-brand text-white';
-    }
-
-    if (number === step.value) {
-        return 'bg-brand-light text-white';
-    }
-
-    return 'bg-white text-slate-500 ring-1 ring-slate-300';
 }
 
 function goBack() {

@@ -55,6 +55,50 @@
         display: none;
     }
 
+    /*
+     * An empty date control paints "dd/mm/yyyy" in the browser's own font, which
+     * ignores placeholder color. Hide that text until focus so a sibling can show
+     * "DD/MM/YYYY" in the same type as other search fields. The picker icon stays.
+     */
+    .rbim-date-empty:not(:focus)::-webkit-datetime-edit,
+    .rbim-date-empty:not(:focus)::-webkit-datetime-edit-fields-wrapper,
+    .rbim-date-empty:not(:focus)::-webkit-datetime-edit-text,
+    .rbim-date-empty:not(:focus)::-webkit-datetime-edit-month-field,
+    .rbim-date-empty:not(:focus)::-webkit-datetime-edit-day-field,
+    .rbim-date-empty:not(:focus)::-webkit-datetime-edit-year-field {
+        color: transparent;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .rbim-date-empty,
+    .rbim-date-empty::-webkit-datetime-edit,
+    .rbim-date-empty::-webkit-datetime-edit-text,
+    .rbim-date-empty::-webkit-datetime-edit-month-field,
+    .rbim-date-empty::-webkit-datetime-edit-day-field,
+    .rbim-date-empty::-webkit-datetime-edit-year-field {
+        text-transform: uppercase;
+    }
+
+    .rbim-date-empty:focus::-webkit-datetime-edit,
+    .rbim-date-empty:focus::-webkit-datetime-edit-text,
+    .rbim-date-empty:focus::-webkit-datetime-edit-month-field,
+    .rbim-date-empty:focus::-webkit-datetime-edit-day-field,
+    .rbim-date-empty:focus::-webkit-datetime-edit-year-field {
+        color: var(--color-slate-400);
+        -webkit-text-fill-color: var(--color-slate-400);
+    }
+
+    @supports not selector(::-webkit-datetime-edit) {
+        .rbim-date-empty:not(:focus) {
+            color: transparent;
+        }
+
+        .rbim-date-empty:focus {
+            color: var(--color-slate-400);
+            text-transform: uppercase;
+        }
+    }
+
     .rbim-input-error {
         @apply border-red-500 focus:border-red-500 focus:ring-red-100;
     }
