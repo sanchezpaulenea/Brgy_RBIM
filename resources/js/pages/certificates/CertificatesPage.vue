@@ -10,6 +10,7 @@
                     aria-label="Certificate progress"
                 />
                 <button
+                    v-if="step === 5"
                     type="button"
                     class="rbim-btn py-2"
                     :disabled="busy"
