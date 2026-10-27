@@ -159,7 +159,8 @@ class DashboardServiceTest extends TestCase
             'economic', 'economic_source', 'economic_work_status',
             'health', 'health_facility', 'health_reason', 'health_disability',
             'infant_health', 'infant_attendant', 'infant_immunization',
-            'women_health', 'women_fp', 'women_fp_source', 'women_fp_intention',
+            'gender', 'religion', 'ethnicity', 'resident_status',
+            'women_health', 'women_living_children', 'women_fp', 'women_fp_source', 'women_fp_intention',
             'ctc', 'skills_training', 'skills', 'age', 'age_disability',
             'ownership_unit', 'ownership_lot',
         ] as $key) {
@@ -167,6 +168,26 @@ class DashboardServiceTest extends TestCase
         }
 
         $this->assertSame('pie', $charts['ctc']['kind']);
+    }
+
+    public function test_demographic_and_living_children_charts_use_resident_lookups_and_count_buckets(): void
+    {
+        $this->repository->shouldReceive('residentsByLookup')
+            ->with('sex_id', 'sex', 'sex_id', 'sex')
+            ->andReturn([['label' => 'Female', 'count' => 4], ['label' => 'Male', 'count' => 3]]);
+        $this->repository->shouldReceive('residentsByLookup')
+            ->with('religion_id', 'religion', 'religion_id', 'religion')
+            ->andReturn([['label' => 'Catholic', 'count' => 5], ['label' => null, 'count' => 2]]);
+        $this->repository->shouldReceive('residentsByChildNumberBuckets')
+            ->with('women_health', 'living_children', Mockery::type('array'), 'women', Mockery::type('array'))
+            ->andReturn([['label' => '0', 'count' => 2, 'min' => 0, 'max' => 0], ['label' => '1', 'count' => 3, 'min' => 1, 'max' => 1]]);
+
+        $charts = $this->statistics()['charts'];
+
+        $this->assertSame(['Female', 'Male'], array_column($charts['gender']['slices'], 'label'));
+        $this->assertSame(['Catholic', 'Not Specified'], array_column($charts['religion']['slices'], 'label'));
+        $this->assertSame(['1', '0'], array_column($charts['women_living_children']['slices'], 'label'));
+        $this->assertSame('Total Resident Records', $charts['women_living_children']['metric']);
     }
 
     /**
