@@ -42,7 +42,7 @@
             id-prefix="continue-member"
             count-input-id="member_count"
             @back="step = 'choice'"
-            @member-added="emit('member-added')"
+            @member-added="emit('member-added', $event)"
             @finished="emit('members-complete')"
             @lookup-created="emit('lookup-created', $event)"
         />

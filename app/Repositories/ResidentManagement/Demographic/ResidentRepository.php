@@ -4,7 +4,9 @@ namespace App\Repositories\ResidentManagement\Demographic;
 
 use App\Models\ResidentManagement\Demographic\Resident;
 use App\Repositories\Interfaces\ResidentManagement\Demographic\ResidentRepositoryInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ResidentRepository implements ResidentRepositoryInterface
 {
@@ -41,9 +43,69 @@ class ResidentRepository implements ResidentRepositoryInterface
      */
     public function list(array $filters = []): Collection
     {
-        return Resident::query()
+        return $this->matchingResidents($filters)
             ->with($this->defaultRelations())
             ->withExists($this->sectionExistsRelations())
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+    }
+
+    public function paginate(array $filters, int $perPage, int $page): LengthAwarePaginator
+    {
+        return $this->paginateMatching($filters, $perPage, $page, false);
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return Collection<int, Resident>
+     */
+    public function listNames(array $filters = []): Collection
+    {
+        return $this->matchingResidents($filters)
+            ->select(['resident_id', 'last_name', 'first_name', 'middle_name', 'suffix'])
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->orderBy('resident_id')
+            ->get();
+    }
+
+    public function paginateNames(array $filters, int $perPage, int $page): LengthAwarePaginator
+    {
+        return $this->paginateMatching($filters, $perPage, $page, true);
+    }
+
+    private function paginateMatching(array $filters, int $perPage, int $page, bool $namesOnly): LengthAwarePaginator
+    {
+        $total = $this->matchingResidents($filters)->count();
+
+        $query = $this->matchingResidents($filters)
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->orderBy('resident_id');
+
+        if ($namesOnly) {
+            $query->select(['resident_id', 'last_name', 'first_name', 'middle_name', 'suffix']);
+        } else {
+            $query->with($this->defaultRelations())
+                ->withExists($this->sectionExistsRelations());
+        }
+
+        return new LengthAwarePaginator(
+            $query->forPage($page, $perPage)->get(),
+            $total,
+            $perPage,
+            $page,
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return Builder<Resident>
+     */
+    private function matchingResidents(array $filters): Builder
+    {
+        return Resident::query()
             ->when(
                 ! empty($filters['household_id']),
                 fn ($query) => $query->where('household_id', $filters['household_id']),
@@ -109,10 +171,7 @@ class ResidentRepository implements ResidentRepositoryInterface
                                 );
                         });
                 });
-            })
-            ->orderBy('last_name')
-            ->orderBy('first_name')
-            ->get();
+            });
     }
 
     /**

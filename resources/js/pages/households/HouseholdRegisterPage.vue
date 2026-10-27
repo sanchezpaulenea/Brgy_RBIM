@@ -50,7 +50,7 @@
                 :existing-residents="existingResidents"
                 :ensure-lookups="ensureLookups"
                 :profiling-lookups="profilingLookups"
-                @member-added="refreshExistingResidents"
+                @member-added="rememberResident"
                 @members-complete="goToHouseholdDetail"
                 @lookup-created="onLookupCreated"
             />
@@ -470,8 +470,6 @@ async function loadLookups() {
             religionItems,
             ethnicityItems,
             maritalItems,
-            sectionLookups,
-            householdQuestionLookups,
         ] = await Promise.all([
             lookupService.fetchLookup('clan'),
             lookupService.fetchStreets(),
@@ -481,8 +479,6 @@ async function loadLookups() {
             lookupService.fetchReligions(),
             lookupService.fetchEthnicities(),
             lookupService.fetchLookup('marital-status'),
-            fetchProfilingLookups(),
-            fetchHouseholdQuestionLookups(),
         ]);
 
         clans.value = clanItems;
@@ -493,14 +489,36 @@ async function loadLookups() {
         religions.value = religionItems;
         ethnicities.value = ethnicityItems;
         maritalStatuses.value = maritalItems;
-        Object.assign(profilingLookups, sectionLookups);
-        Object.assign(questionLookups, householdQuestionLookups);
-        await refreshExistingResidents();
     } catch (err) {
         error.value = extractErrorMessage(err, 'Unable to load the registration form.');
     } finally {
         loadingLookups.value = false;
     }
+
+    startLaterLoads();
+}
+
+let laterLoads = null;
+
+function startLaterLoads() {
+    if (laterLoads) {
+        return laterLoads;
+    }
+
+    laterLoads = Promise.all([
+        fetchProfilingLookups().then((sectionLookups) => {
+            Object.assign(profilingLookups, sectionLookups);
+        }),
+        fetchHouseholdQuestionLookups().then((householdQuestionLookups) => {
+            Object.assign(questionLookups, householdQuestionLookups);
+        }),
+        refreshExistingResidents(),
+    ]).catch((err) => {
+        laterLoads = null;
+        throw err;
+    });
+
+    return laterLoads;
 }
 
 async function handleSave() {
@@ -525,6 +543,14 @@ async function handleSave() {
     Object.assign(headErrors, lookupErrors);
 
     if (!householdValid || !headValid || Object.keys(lookupErrors).length) {
+        return;
+    }
+
+    try {
+        await startLaterLoads();
+    } catch (err) {
+        error.value = extractErrorMessage(err, 'Unable to load the registration form.');
+
         return;
     }
 
@@ -582,7 +608,7 @@ async function handleSave() {
         head.value = emptyHead();
 
         successMessage.value = '';
-        await refreshExistingResidents();
+        rememberResident(createdHousehold.value?.head);
     } catch (err) {
         const validationErrors = extractValidationErrors(err);
 
@@ -600,10 +626,34 @@ async function handleSave() {
 
 async function refreshExistingResidents() {
     try {
-        existingResidents.value = await residentService.fetchResidents();
+        existingResidents.value = await residentService.fetchResidents({ slim: 1 });
     } catch {
         existingResidents.value = [];
     }
+}
+
+function rememberResident(resident) {
+    if (resident == null || resident.resident_id == null || resident.resident_id === '') {
+        return;
+    }
+
+    const id = Number(resident.resident_id);
+
+    if (existingResidents.value.some((item) => Number(item.resident_id) === id)) {
+        return;
+    }
+
+    existingResidents.value = [
+        ...existingResidents.value,
+        {
+            resident_id: resident.resident_id,
+            last_name: resident.last_name,
+            first_name: resident.first_name,
+            middle_name: resident.middle_name,
+            suffix: resident.suffix,
+            full_name: resident.full_name,
+        },
+    ];
 }
 
 function goToHouseholdDetail() {

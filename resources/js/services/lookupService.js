@@ -1,13 +1,34 @@
 import http from '@/services/http';
 
+const inFlightGets = new Map();
+
 function selectable(items) {
     return (items ?? []).filter((item) => Number(item.id) > 0);
 }
 
-export async function fetchPersonnelPositions() {
-    const { data } = await http.get('/personnel-positions');
+function copyItems(items) {
+    if (!Array.isArray(items)) {
+        return items;
+    }
 
-    return data.items;
+    return items.map((item) => (item && typeof item === 'object' ? { ...item } : item));
+}
+
+function getOnce(url, readItems) {
+    let pending = inFlightGets.get(url);
+
+    if (!pending) {
+        pending = http.get(url).finally(() => {
+            inFlightGets.delete(url);
+        });
+        inFlightGets.set(url, pending);
+    }
+
+    return pending.then(({ data }) => copyItems(readItems(data)));
+}
+
+export function fetchPersonnelPositions() {
+    return getOnce('/personnel-positions', (data) => data.items);
 }
 
 export async function createPersonnelPosition(payload) {
@@ -62,16 +83,12 @@ export async function createFacilityVisitReason(payload) {
     return data.item;
 }
 
-export async function fetchLookup(slug) {
-    const { data } = await http.get(`/lookups/${slug}`);
-
-    return selectable(data.items);
+export function fetchLookup(slug) {
+    return getOnce(`/lookups/${slug}`, (data) => selectable(data.items));
 }
 
-export async function fetchStreets() {
-    const { data } = await http.get('/streets');
-
-    return data.items;
+export function fetchStreets() {
+    return getOnce('/streets', (data) => data.items);
 }
 
 export async function createStreet(payload) {
@@ -84,10 +101,8 @@ export async function deleteStreet(id) {
     await http.delete(`/streets/${id}`);
 }
 
-export async function fetchNationalities() {
-    const { data } = await http.get('/nationalities');
-
-    return selectable(data.items);
+export function fetchNationalities() {
+    return getOnce('/nationalities', (data) => selectable(data.items));
 }
 
 export async function createNationality(payload) {
@@ -100,10 +115,8 @@ export async function deleteNationality(id) {
     await http.delete(`/nationalities/${id}`);
 }
 
-export async function fetchEthnicities() {
-    const { data } = await http.get('/ethnicities');
-
-    return selectable(data.items);
+export function fetchEthnicities() {
+    return getOnce('/ethnicities', (data) => selectable(data.items));
 }
 
 export async function createEthnicity(payload) {
@@ -116,10 +129,8 @@ export async function deleteEthnicity(id) {
     await http.delete(`/ethnicities/${id}`);
 }
 
-export async function fetchReligions() {
-    const { data } = await http.get('/religions');
-
-    return selectable(data.items);
+export function fetchReligions() {
+    return getOnce('/religions', (data) => selectable(data.items));
 }
 
 export async function createReligion(payload) {
@@ -156,8 +167,6 @@ export async function createSex(payload) {
     return data.item;
 }
 
-export async function fetchUserStatuses() {
-    const { data } = await http.get('/user-statuses');
-
-    return data.items;
+export function fetchUserStatuses() {
+    return getOnce('/user-statuses', (data) => data.items);
 }

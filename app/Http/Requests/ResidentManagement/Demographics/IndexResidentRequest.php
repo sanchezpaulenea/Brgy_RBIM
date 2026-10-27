@@ -33,6 +33,9 @@ class IndexResidentRequest extends FormRequest
             ],
             'age_min' => ['sometimes', 'integer', 'min:0', 'max:150'],
             'age_max' => ['sometimes', 'integer', 'min:0', 'max:150', 'gte:age_min'],
+            'page' => ['sometimes', 'integer', 'min:1'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
+            'slim' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -47,7 +50,35 @@ class IndexResidentRequest extends FormRequest
             'resident_type_id.exists' => 'The selected resident type does not exist.',
             'resident_status_id.exists' => 'The selected resident status does not exist.',
             'age_max.gte' => 'Maximum age must be greater than or equal to minimum age.',
+            'page.integer' => 'Page must be a whole number.',
+            'page.min' => 'Page must be at least 1.',
+            'per_page.integer' => 'Per page must be a whole number.',
+            'per_page.min' => 'Per page must be at least 1.',
+            'per_page.max' => 'Per page may not be greater than 100.',
+            'slim.boolean' => 'Slim must be true or false.',
         ];
+    }
+
+    public function isPaged(): bool
+    {
+        return array_key_exists('page', $this->validated());
+    }
+
+    public function pageNumber(): int
+    {
+        return (int) $this->validated('page');
+    }
+
+    public function perPage(): int
+    {
+        $perPage = $this->validated('per_page');
+
+        return $perPage === null ? 50 : (int) $perPage;
+    }
+
+    public function wantsSlimNames(): bool
+    {
+        return $this->boolean('slim');
     }
 
     /**
@@ -63,6 +94,9 @@ class IndexResidentRequest extends FormRequest
      */
     public function filters(): array
     {
-        return $this->validated();
+        $filters = $this->validated();
+        unset($filters['page'], $filters['per_page'], $filters['slim']);
+
+        return $filters;
     }
 }

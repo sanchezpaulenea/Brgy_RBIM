@@ -21,15 +21,17 @@
                 :ethnicities="ethnicities"
                 :marital-statuses="maritalStatuses"
                 :existing-residents="existingResidents"
+                :ensure-existing-residents="ensureExistingResidents"
                 :ensure-lookups="ensureLookups"
                 :profiling-lookups="profilingLookups"
+                :prepare-profiling-lookups="prepareProfilingLookups"
                 count-title="Register resident"
                 count-label="How many residents would you like to add?"
                 count-hint="This adds a resident to an existing household. The household head is registered with a new household."
                 noun="residents"
                 id-prefix="resident"
                 count-input-id="resident_count"
-                @member-added="refreshExistingResidents"
+                @member-added="rememberResident"
                 @finished="goToResidentsList"
                 @lookup-created="onLookupCreated"
             >
@@ -115,10 +117,34 @@ function ensureLookups(form) {
 
 async function refreshExistingResidents() {
     try {
-        existingResidents.value = await residentService.fetchResidents();
+        existingResidents.value = await residentService.fetchResidents({ slim: 1 });
     } catch {
         existingResidents.value = [];
     }
+}
+
+function rememberResident(resident) {
+    if (resident == null || resident.resident_id == null || resident.resident_id === '') {
+        return;
+    }
+
+    const id = Number(resident.resident_id);
+
+    if (existingResidents.value.some((item) => Number(item.resident_id) === id)) {
+        return;
+    }
+
+    existingResidents.value = [
+        ...existingResidents.value,
+        {
+            resident_id: resident.resident_id,
+            last_name: resident.last_name,
+            first_name: resident.first_name,
+            middle_name: resident.middle_name,
+            suffix: resident.suffix,
+            full_name: resident.full_name,
+        },
+    ];
 }
 
 function goToResidentsList({ total, householdId } = {}) {
@@ -151,7 +177,6 @@ async function loadLookups() {
             religionItems,
             ethnicityItems,
             maritalItems,
-            sectionLookups,
         ] = await Promise.all([
             householdService.fetchHouseholds(),
             lookupService.fetchLookup('sex'),
@@ -160,7 +185,6 @@ async function loadLookups() {
             lookupService.fetchReligions(),
             lookupService.fetchEthnicities(),
             lookupService.fetchLookup('marital-status'),
-            fetchProfilingLookups(),
         ]);
 
         households.value = householdItems;
@@ -170,14 +194,40 @@ async function loadLookups() {
         religions.value = religionItems;
         ethnicities.value = ethnicityItems;
         maritalStatuses.value = maritalItems;
-        Object.assign(profilingLookups, sectionLookups);
-
-        await refreshExistingResidents();
     } catch (err) {
         error.value = extractErrorMessage(err, 'Unable to load the registration form.');
     } finally {
         loadingLookups.value = false;
     }
+
+    ensureExistingResidents();
+    prepareProfilingLookups();
+}
+
+let existingResidentsRequest = null;
+let profilingRequest = null;
+
+function ensureExistingResidents() {
+    if (!existingResidentsRequest) {
+        existingResidentsRequest = refreshExistingResidents().then(() => existingResidents.value);
+    }
+
+    return existingResidentsRequest;
+}
+
+function prepareProfilingLookups() {
+    if (!profilingRequest) {
+        profilingRequest = fetchProfilingLookups()
+            .then((sectionLookups) => {
+                Object.assign(profilingLookups, sectionLookups);
+            })
+            .catch((err) => {
+                profilingRequest = null;
+                throw err;
+            });
+    }
+
+    return profilingRequest;
 }
 
 onMounted(loadLookups);

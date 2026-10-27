@@ -24,6 +24,23 @@ class ResidentController extends Controller
     {
         $this->authorize('viewAny', Resident::class);
 
+        if ($request->isPaged()) {
+            return response()->json(
+                $this->residentService->paginateResidents(
+                    $request->filters(),
+                    $request->perPage(),
+                    $request->pageNumber(),
+                    $request->wantsSlimNames(),
+                ),
+            );
+        }
+
+        if ($request->wantsSlimNames()) {
+            return response()->json([
+                'items' => $this->residentService->listResidentNames($request->filters()),
+            ]);
+        }
+
         return response()->json([
             'items' => $this->residentService->listResidents($request->filters()),
         ]);

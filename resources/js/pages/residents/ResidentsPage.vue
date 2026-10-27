@@ -169,6 +169,12 @@ const error = ref('');
 const successMessage = ref('');
 const PAGE_SIZE = 50;
 const page = ref(1);
+const listMeta = ref({
+    total: 0,
+    per_page: PAGE_SIZE,
+    current_page: 1,
+    last_page: 1,
+});
 const filters = reactive({
     search: '',
     resident_type_id: '',
@@ -177,12 +183,8 @@ const filters = reactive({
     age_max: '',
 });
 
-const pageCount = computed(() => Math.max(1, Math.ceil(items.value.length / PAGE_SIZE)));
-const pagedItems = computed(() => {
-    const start = (page.value - 1) * PAGE_SIZE;
-
-    return items.value.slice(start, start + PAGE_SIZE);
-});
+const pageCount = computed(() => Math.max(1, Number(listMeta.value.last_page) || 1));
+const pagedItems = computed(() => items.value);
 
 const householdById = computed(() => {
     const map = new Map();
@@ -215,13 +217,22 @@ async function loadResidents() {
     error.value = '';
 
     try {
-        items.value = await residentService.fetchResidents({
+        const payload = await residentService.fetchResidentPage({
             search: filters.search.trim() || undefined,
             resident_type_id: toId(filters.resident_type_id) ?? undefined,
             resident_status_id: toId(filters.resident_status_id) ?? undefined,
             age_min: filters.age_min === '' ? undefined : Number(filters.age_min),
             age_max: filters.age_max === '' ? undefined : Number(filters.age_max),
+            page: page.value,
+            per_page: PAGE_SIZE,
         });
+        items.value = payload.items;
+        listMeta.value = {
+            total: payload.total,
+            per_page: payload.per_page,
+            current_page: payload.current_page,
+            last_page: payload.last_page,
+        };
     } catch (err) {
         error.value = extractErrorMessage(err, 'Unable to load residents.');
     } finally {
@@ -239,12 +250,18 @@ const filtersAreActive = computed(() => (
     )
 ));
 
+let filterTimer = null;
+let ignorePageWatch = false;
+
 function applyFilters() {
     clearTimeout(filterTimer);
     loadResidents();
 }
 
 function clearFilters() {
+    if (page.value !== 1) {
+        ignorePageWatch = true;
+    }
     page.value = 1;
     filters.search = '';
     filters.resident_type_id = '';
@@ -253,8 +270,6 @@ function clearFilters() {
     filters.age_max = '';
     applyFilters();
 }
-
-let filterTimer = null;
 
 watch(
     () => [
@@ -265,13 +280,27 @@ watch(
         filters.age_max,
     ],
     () => {
-        page.value = 1;
+        if (page.value !== 1) {
+            ignorePageWatch = true;
+            page.value = 1;
+        }
         clearTimeout(filterTimer);
         filterTimer = setTimeout(() => {
             loadResidents();
         }, 250);
     },
 );
+
+watch(page, () => {
+    if (ignorePageWatch) {
+        ignorePageWatch = false;
+
+        return;
+    }
+
+    clearTimeout(filterTimer);
+    loadResidents();
+});
 
 watch(pageCount, (count) => {
     if (page.value > count) {

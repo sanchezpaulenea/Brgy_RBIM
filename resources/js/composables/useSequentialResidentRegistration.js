@@ -40,6 +40,7 @@ export function useSequentialResidentRegistration({
     onMemberAdded,
     onFinished,
     ensureLookups,
+    prepareProfilingLookups,
 } = {}) {
     const step = ref('count');
     const saving = ref(false);
@@ -173,7 +174,7 @@ export function useSequentialResidentRegistration({
             return;
         }
 
-        const existing = getExistingResidents?.() ?? [];
+        const existing = await Promise.resolve(getExistingResidents?.() ?? []);
         const duplicate = duplicateResidentMatch(existing, member.value);
 
         if (duplicate) {
@@ -199,8 +200,17 @@ export function useSequentialResidentRegistration({
                 }),
             );
 
-            onMemberAdded?.();
+            onMemberAdded?.(createdResident.value);
             successMessage.value = '';
+
+            if (prepareProfilingLookups) {
+                try {
+                    await prepareProfilingLookups();
+                } catch (lookupErr) {
+                    error.value = extractErrorMessage(lookupErr, 'Unable to load the profile sections.');
+                }
+            }
+
             step.value = 'sections';
         } catch (err) {
             const validationErrors = extractValidationErrors(err);

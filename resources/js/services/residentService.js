@@ -20,6 +20,23 @@ export async function fetchResidents(filters = {}) {
     return data.items;
 }
 
+export async function fetchResidentPage(filters = {}) {
+    const { data } = await http.get('/residents', {
+        params: compactParams({
+            per_page: 50,
+            ...filters,
+        }),
+    });
+
+    return {
+        items: data.items ?? [],
+        total: data.total ?? 0,
+        per_page: data.per_page ?? 50,
+        current_page: data.current_page ?? 1,
+        last_page: data.last_page ?? 1,
+    };
+}
+
 export async function fetchResident(id) {
     const { data } = await http.get(`/residents/${id}`);
 

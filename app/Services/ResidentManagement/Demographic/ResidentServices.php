@@ -63,6 +63,53 @@ class ResidentServices
     }
 
     /**
+     * One page of residents, after the same filters as listResidents().
+     * Completeness and age are computed only for the rows on this page.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array{
+     *     items: array<int, array<string, mixed>>,
+     *     total: int,
+     *     per_page: int,
+     *     current_page: int,
+     *     last_page: int
+     * }
+     */
+    public function paginateResidents(array $filters, int $perPage, int $page, bool $namesOnly = false): array
+    {
+        $paginator = $namesOnly
+            ? $this->residentRepository->paginateNames($filters, $perPage, $page)
+            : $this->residentRepository->paginate($filters, $perPage, $page);
+
+        $items = collect($paginator->items())
+            ->map(fn (Resident $resident) => $namesOnly
+                ? $this->formatName($resident)
+                : $this->formatRecord($resident))
+            ->values()
+            ->all();
+
+        return [
+            'items' => $items,
+            'total' => $paginator->total(),
+            'per_page' => $paginator->perPage(),
+            'current_page' => $paginator->currentPage(),
+            'last_page' => $paginator->lastPage(),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return array<int, array<string, mixed>>
+     */
+    public function listResidentNames(array $filters = []): array
+    {
+        return $this->residentRepository
+            ->listNames($filters)
+            ->map(fn (Resident $resident) => $this->formatName($resident))
+            ->all();
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function getResident(Resident $resident): array
@@ -190,6 +237,8 @@ class ResidentServices
             'relationshipToHouseholdHead',
         ]);
 
+        $applicableSections = $resident->applicableSections();
+
         $payload = [
             'resident_id' => $resident->resident_id,
             'last_name' => $resident->last_name,
@@ -223,8 +272,8 @@ class ResidentServices
             'resident_status' => $resident->status?->resident_status,
             'household_id' => $resident->household_id,
             'is_household_head' => (int) ($resident->household?->head_resident_id ?? 0) === (int) $resident->resident_id,
-            'applicable_sections' => $resident->applicableSections(),
-            'profiling_completeness' => $resident->profilingCompleteness(),
+            'applicable_sections' => $applicableSections,
+            'profiling_completeness' => $resident->profilingCompleteness($applicableSections),
         ];
 
         if ($includeSubRecords) {
@@ -476,6 +525,19 @@ class ResidentServices
                 entity: 'resident',
             );
         }
+    }
+
+    /**
+     * @return array{resident_id: int, last_name: string, first_name: string, full_name: string}
+     */
+    private function formatName(Resident $resident): array
+    {
+        return [
+            'resident_id' => $resident->resident_id,
+            'last_name' => $resident->last_name,
+            'first_name' => $resident->first_name,
+            'full_name' => $this->fullName($resident),
+        ];
     }
 
     private function fullName(Resident $resident): string

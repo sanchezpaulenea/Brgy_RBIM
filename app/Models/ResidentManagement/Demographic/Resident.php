@@ -54,6 +54,18 @@ class Resident extends Model
         'date_of_birth' => 'date',
     ];
 
+    private ?string $ageMemoKey = null;
+
+    private bool $ageMemoReady = false;
+
+    private ?int $ageMemo = null;
+
+    private ?string $ageInMonthsMemoKey = null;
+
+    private bool $ageInMonthsMemoReady = false;
+
+    private ?int $ageInMonthsMemo = null;
+
     public function getRouteKeyName(): string
     {
         return 'resident_id';
@@ -135,22 +147,58 @@ class Resident extends Model
         return $this->belongsTo(ResidentStatus::class, 'resident_status_id', 'resident_status_id');
     }
 
-    public function age(): ?int
+    /**
+     * Raw stored date of birth. The memo invalidates when this value changes.
+     */
+    private function dateOfBirthMemoKey(): string
     {
-        if ($this->date_of_birth === null) {
-            return null;
+        if (! array_key_exists('date_of_birth', $this->attributes) || $this->attributes['date_of_birth'] === null) {
+            return '';
         }
 
-        return $this->date_of_birth->age;
+        $raw = $this->attributes['date_of_birth'];
+
+        if ($raw instanceof \DateTimeInterface) {
+            return $raw->format('Y-m-d');
+        }
+
+        return (string) $raw;
+    }
+
+    public function age(): ?int
+    {
+        $key = $this->dateOfBirthMemoKey();
+
+        if ($this->ageMemoReady && $this->ageMemoKey === $key) {
+            return $this->ageMemo;
+        }
+
+        $age = $this->date_of_birth === null ? null : $this->date_of_birth->age;
+
+        $this->ageMemoKey = $key;
+        $this->ageMemo = $age;
+        $this->ageMemoReady = true;
+
+        return $age;
     }
 
     public function ageInMonths(): ?int
     {
-        if ($this->date_of_birth === null) {
-            return null;
+        $key = $this->dateOfBirthMemoKey();
+
+        if ($this->ageInMonthsMemoReady && $this->ageInMonthsMemoKey === $key) {
+            return $this->ageInMonthsMemo;
         }
 
-        return (int) $this->date_of_birth->diffInMonths(now());
+        $months = $this->date_of_birth === null
+            ? null
+            : (int) $this->date_of_birth->diffInMonths(now());
+
+        $this->ageInMonthsMemoKey = $key;
+        $this->ageInMonthsMemo = $months;
+        $this->ageInMonthsMemoReady = true;
+
+        return $months;
     }
 
     public function isInfant(): bool
@@ -265,6 +313,7 @@ class Resident extends Model
      * Profiling completeness for age/sex-applicable sub-records only.
      * Infant health and women's health are omitted when the resident is outside those gates.
      *
+     * @param  array<string, bool>|null  $applicableSections  Reuse a result already computed by applicableSections().
      * @return array{
      *     completed_count: int,
      *     applicable_count: int,
@@ -274,12 +323,12 @@ class Resident extends Model
      *     missing: list<array{key: string, label: string}>
      * }
      */
-    public function profilingCompleteness(): array
+    public function profilingCompleteness(?array $applicableSections = null): array
     {
         $completed = [];
         $missing = [];
 
-        foreach ($this->applicableSections() as $key => $isApplicable) {
+        foreach ($applicableSections ?? $this->applicableSections() as $key => $isApplicable) {
             if (! $isApplicable) {
                 continue;
             }

@@ -4,6 +4,7 @@ namespace App\Repositories\Interfaces\ResidentManagement\Demographic;
 
 use App\Models\ResidentManagement\Demographic\Resident;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 interface ResidentRepositoryInterface
 {
@@ -20,6 +21,26 @@ interface ResidentRepositoryInterface
      * @return Collection<int, Resident>
      */
     public function list(array $filters = []): Collection;
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return LengthAwarePaginator<int, Resident>
+     */
+    public function paginate(array $filters, int $perPage, int $page): LengthAwarePaginator;
+
+    /**
+     * Name fields used by duplicate detection. No profiling relations.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return Collection<int, Resident>
+     */
+    public function listNames(array $filters = []): Collection;
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return LengthAwarePaginator<int, Resident>
+     */
+    public function paginateNames(array $filters, int $perPage, int $page): LengthAwarePaginator;
 
     public function findById(int $residentId): ?Resident;
 

@@ -182,6 +182,14 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    ensureExistingResidents: {
+        type: Function,
+        default: null,
+    },
+    prepareProfilingLookups: {
+        type: Function,
+        default: null,
+    },
     countTitle: {
         type: String,
         default: 'Register resident',
@@ -253,10 +261,15 @@ const {
     startCount,
 } = useSequentialResidentRegistration({
     getHouseholdId: () => props.household?.household_id,
-    getExistingResidents: () => props.existingResidents,
+    getExistingResidents: () => (
+        props.ensureExistingResidents
+            ? props.ensureExistingResidents()
+            : props.existingResidents
+    ),
     relationships: toRef(props, 'relationships'),
     noun: props.noun,
-    onMemberAdded: () => emit('member-added'),
+    prepareProfilingLookups: props.prepareProfilingLookups,
+    onMemberAdded: (resident) => emit('member-added', resident),
     onFinished: (result) => emit('finished', result),
     ensureLookups: (form) => props.ensureLookups?.(form),
 });
