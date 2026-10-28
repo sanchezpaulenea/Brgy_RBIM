@@ -6,7 +6,7 @@ return [
     | Paper size for every certificate. Dompdf paper names: a4, letter, legal.
     | Orientation is portrait unless this is changed to landscape.
     */
-    'paper' => 'a4',
+    'paper' => 'legal',
 
     'orientation' => 'portrait',
 

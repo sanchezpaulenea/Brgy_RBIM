@@ -17,24 +17,31 @@
         @if (! empty($arialFonts['bold_italic']))
         @@font-face { font-family: "Arial"; font-weight: bold; font-style: italic; src: url("{{ $arialFonts['bold_italic'] }}") format("truetype"); }
         @endif
-        @page { margin: 58px 48px 46px; }
-        body { font-family: Arial, sans-serif; font-size: 12px; color: #111; line-height: 1.4; }
+        @page { margin: 40px 48px 36px; }
+        body { font-family: Arial, sans-serif; font-size: 15px; color: #111; line-height: 1.5; }
+        .sheet-table { width: 100%; border-collapse: collapse; }
+        .sheet-main { vertical-align: top; }
+        .sheet-close { vertical-align: top; }
+        .sheet-gap { height: 56px; font-size: 1px; line-height: 1px; }
+        .dense .sheet-gap { height: 18px; }
         .center { text-align: center; }
-        .header-line { margin: 0; line-height: 1.25; text-align: center; }
-        .republic { font-weight: bold; font-size: 12px; }
-        .barangay { font-weight: bold; font-size: 13px; }
-        .contact { text-decoration: underline; font-size: 11px; }
-        .title { font-family: Arial, sans-serif; font-weight: bold; font-size: 16px; text-align: center; letter-spacing: 0.3px; margin: 20px 0 14px; }
-        .title-plain { font-weight: normal; font-size: 15px; }
-        .title-long { font-size: 13px; margin: 12px 0; }
+        .header-line { margin: 0; line-height: 1.3; text-align: center; }
+        .republic { font-weight: bold; font-size: 14px; }
+        .barangay { font-weight: bold; font-size: 15px; }
+        .contact { text-decoration: underline; font-size: 12px; }
+        .title { font-family: Arial, sans-serif; font-weight: bold; font-size: 22px; text-align: center; letter-spacing: 0.8px; margin: 22px 0 16px; }
+        .title-plain { font-weight: normal; font-size: 18px; }
+        .title-long { font-size: 16px; margin: 14px 0 10px; }
         .subtitle, .office, .meta { text-align: center; margin: 0; line-height: 1.3; }
-        .office { font-weight: bold; font-size: 11px; margin-top: 8px; }
-        .subtitle { font-weight: bold; font-size: 12px; margin-bottom: 8px; }
-        .meta { font-size: 11px; }
-        .salutation { font-weight: bold; margin: 8px 0 10px; }
-        .body { text-align: justify; text-indent: 32px; margin: 0 0 10px; line-height: 1.45; font-weight: normal; }
-        .dense { font-size: 12px; }
-        .dense .body { text-indent: 22px; margin: 0 0 8px; line-height: 1.42; }
+        .office { font-weight: bold; font-size: 13px; margin-top: 8px; }
+        .subtitle { font-weight: bold; font-size: 14px; margin-bottom: 8px; }
+        .meta { font-size: 12px; }
+        .salutation { font-weight: bold; font-size: 16px; margin: 0 0 14px; text-align: left; }
+        .body { text-align: justify; text-indent: 40px; margin: 0 0 16px; line-height: 1.55; font-weight: normal; }
+        .dense { font-size: 13px; }
+        .dense .title { margin: 12px 0 8px; font-size: 18px; }
+        .dense .salutation { font-size: 14px; }
+        .dense .body { text-indent: 24px; margin: 0 0 8px; line-height: 1.4; }
         .children { width: 100%; border-collapse: collapse; margin: 8px 0 10px; font-size: 11px; }
         .children th, .children td { border: 1px solid #111; padding: 3px 5px; }
         .children th { text-align: center; }
@@ -49,22 +56,23 @@
         .meta-key { font-style: italic; text-decoration: underline; }
         .sheet-break { page-break-before: always; }
         .footer-left { text-align: left; font-weight: bold; margin: 8px 0 0; font-size: 11px; }
-        .letterhead { width: 100%; border-collapse: collapse; margin: 0 0 14px; }
-        .logo-cell { width: 196px; vertical-align: middle; }
-        .logo-cell-right { width: 100px; text-align: right; vertical-align: middle; }
-        .logo-img { width: 86px; height: 86px; }
+        .letterhead { width: 100%; border-collapse: collapse; margin: 0 0 8px; }
+        .logo-cell { width: 30%; vertical-align: middle; text-align: left; }
+        .logo-cell-right { width: 30%; text-align: right; vertical-align: middle; }
+        .logo-img { width: 78px; height: 78px; }
         .logo-gap { width: 8px; }
-        .logo-empty { width: 86px; height: 86px; border: 1px solid #bbb; }
-        .letterhead-copy { text-align: center; vertical-align: middle; }
-        .pb-block { width: 240px; text-align: center; }
-        .pb-inline { width: 360px; text-align: right; }
-        .pb-name { font-weight: bold; text-decoration: underline; text-transform: uppercase; font-size: 12px; margin: 0 auto; min-width: 150px; display: inline-block; }
-        .pb-title { margin: 2px 0 0; font-size: 12px; }
+        .logo-empty { width: 78px; height: 78px; border: 1px solid #bbb; }
+        .letterhead-copy { width: 40%; text-align: center; vertical-align: middle; }
+        .pb-block { width: 260px; text-align: center; }
+        .pb-inline { width: 100%; text-align: right; }
+        .pb-name { font-weight: bold; text-decoration: underline; text-transform: uppercase; font-size: 14px; margin: 0 auto; min-width: 150px; display: inline-block; }
+        .pb-title { margin: 2px 0 0; font-size: 14px; }
         .sig-space { height: 42px; }
         .sig-img { height: 42px; }
-        .authority { margin-top: 4px; }
-        .wet-line { border-bottom: 1px solid #111; width: 180px; height: 26px; margin-top: 4px; }
-        .officer { margin: 1px 0 0; }
+        .authority { margin-top: 8px; font-size: 15px; }
+        .wet-line { border-bottom: 1px solid #111; width: 220px; height: 28px; margin-top: 8px; }
+        .officer { margin: 2px 0 0; font-size: 15px; }
+        .dense .authority, .dense .officer { font-size: 13px; }
         .stamp-outer { border: 1.5px solid #9c3b32; border-radius: 8px; padding: 2px; width: 230px; margin-top: 4px; color: #9c3b32; }
         .stamp-inner { border: 1px solid #9c3b32; border-radius: 6px; padding: 6px 8px 8px; font-size: 8px; line-height: 1.2; }
         .stamp-title { font-weight: bold; text-align: center; letter-spacing: 0.2px; margin: 0 0 6px; }
@@ -75,30 +83,41 @@
 <body>
 @php $sheets = $document['pages'] ?? [$document]; @endphp
 @foreach ($sheets as $sheetIndex => $document)
-    <div class="{{ $sheetIndex > 0 ? 'sheet-break' : '' }} {{ ! empty($document['dense']) ? 'dense' : '' }}" style="font-weight: normal;">
+    <div class="sheet {{ $sheetIndex > 0 ? 'sheet-break' : '' }} {{ ! empty($document['dense']) ? 'dense' : '' }}" style="font-weight: normal;">
+    <table class="sheet-table" width="100%" cellspacing="0" cellpadding="0">
+    <tr>
+    <td class="sheet-main" valign="top">
     <table class="letterhead" cellspacing="0" cellpadding="0">
         <tr>
-            <td class="logo-cell">
-                @if (! empty($document['logos']['bagong_pilipinas']))
-                    <img class="logo-img" src="{{ $document['logos']['bagong_pilipinas'] }}" alt="">
-                @else
-                    <div class="logo-empty">&nbsp;</div>
-                @endif
-                <span class="logo-gap">&nbsp;</span>
-                @if (! empty($document['logos']['city_of_baguio']))
-                    <img class="logo-img" src="{{ $document['logos']['city_of_baguio'] }}" alt="">
-                @else
-                    <div class="logo-empty">&nbsp;</div>
-                @endif
+            <td class="logo-cell" width="30%" align="left" valign="middle">
+                <table cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td valign="middle">
+                            @if (! empty($document['logos']['bagong_pilipinas']))
+                                <img class="logo-img" src="{{ $document['logos']['bagong_pilipinas'] }}" alt="">
+                            @else
+                                <div class="logo-empty">&nbsp;</div>
+                            @endif
+                        </td>
+                        <td class="logo-gap">&nbsp;</td>
+                        <td valign="middle">
+                            @if (! empty($document['logos']['city_of_baguio']))
+                                <img class="logo-img" src="{{ $document['logos']['city_of_baguio'] }}" alt="">
+                            @else
+                                <div class="logo-empty">&nbsp;</div>
+                            @endif
+                        </td>
+                    </tr>
+                </table>
             </td>
-            <td class="letterhead-copy">
+            <td class="letterhead-copy" width="40%" align="center" valign="middle">
                 <p class="header-line republic">Republic of the Philippines</p>
                 <p class="header-line">{{ $document['header']['city_name'] }}</p>
                 <p class="header-line barangay">{{ $document['header']['barangay_name'] }}</p>
                 <p class="header-line contact">Official email address: {{ $document['header']['barangay_email'] }}</p>
                 <p class="header-line contact">Tel. No. {{ $document['header']['barangay_contact_no'] }}</p>
             </td>
-            <td class="logo-cell-right">
+            <td class="logo-cell-right" width="30%" align="right" valign="middle">
                 @if (! empty($document['logos']['happy_hallow']))
                     <img class="logo-img" src="{{ $document['logos']['happy_hallow'] }}" alt="">
                 @else
@@ -155,6 +174,11 @@
         @include('certificates.partials.children', ['children' => $document['children'] ?? []])
     @endif
 
+    </td>
+    </tr>
+    <tr>
+    <td class="sheet-close" valign="top">
+    <div class="sheet-gap">&nbsp;</div>
     @php
         $style = $document['signature_style'] ?? 'authority';
     @endphp
@@ -292,6 +316,9 @@
             <p class="footer-left">{{ $note }}</p>
         @endforeach
     @endif
+    </td>
+    </tr>
+    </table>
     </div>
 @endforeach
 </body>
