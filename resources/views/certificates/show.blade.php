@@ -22,8 +22,8 @@
         .sheet-table { width: 100%; border-collapse: collapse; }
         .sheet-main { vertical-align: top; }
         .sheet-close { vertical-align: top; }
-        .sheet-gap { height: 56px; font-size: 1px; line-height: 1px; }
-        .dense .sheet-gap { height: 18px; }
+        .sheet-gap { height: 340px; font-size: 1px; line-height: 1px; }
+        .dense .sheet-gap { height: 160px; }
         .center { text-align: center; }
         .header-line { margin: 0; line-height: 1.3; text-align: center; }
         .republic { font-weight: bold; font-size: 14px; }
