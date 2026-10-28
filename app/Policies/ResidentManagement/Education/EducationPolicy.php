@@ -24,6 +24,6 @@ class EducationPolicy
 
     public function update(User $user, Education $education): bool
     {
-        return $user->isAdmin() || $user->hasPermission('edcuation.update');
+        return $user->isAdmin() || $user->hasPermission('education.update');
     }
 }

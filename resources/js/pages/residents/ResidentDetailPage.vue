@@ -558,7 +558,7 @@ const visibleSections = computed(() => {
             title: 'Education',
             record: item?.education,
             canCreate: canPerformCreate(auth, 'education.create'),
-            canUpdate: canPerformUpdate(auth, ['edcuation.update', 'education.update']),
+            canUpdate: canPerformUpdate(auth, 'education.update'),
             fields: displayEducation(item?.education),
         },
         {

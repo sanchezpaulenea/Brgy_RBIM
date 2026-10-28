@@ -9,12 +9,12 @@ class WomenHealthPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isAdmin() || $user->hasPermission('womenhealth.view');
+        return $user->isAdmin() || $user->hasPermission('womanhealth.view');
     }
 
     public function view(User $user, WomenHealth $womenHealth): bool
     {
-        return $user->isAdmin() || $user->hasPermission('womenhealth.view');
+        return $user->isAdmin() || $user->hasPermission('womanhealth.view');
     }
 
     public function create(User $user): bool
