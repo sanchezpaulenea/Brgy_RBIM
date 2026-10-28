@@ -37,9 +37,16 @@ class ReportService
     public function listCategories(): array
     {
         $categories = [];
+        $definitions = ReportSchema::categories();
+        $keys = array_keys($definitions);
+        $besideClan = ['ethnicity', 'resident_cross_filter'];
+        $ordered = array_values(array_unique([
+            ...array_intersect(['clan', ...$besideClan], $keys),
+            ...array_diff($keys, ['clan', ...$besideClan]),
+        ]));
 
-        foreach (ReportSchema::categories() as $key => $category) {
-            $categories[] = $this->publicCategory((string) $key, $category);
+        foreach ($ordered as $key) {
+            $categories[] = $this->publicCategory((string) $key, $definitions[$key]);
         }
 
         return $categories;

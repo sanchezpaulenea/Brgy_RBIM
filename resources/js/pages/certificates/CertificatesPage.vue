@@ -430,9 +430,9 @@
 
         <ConfirmDialog
             :open="confirmRefreshOpen"
-            title="Start over?"
-            message="This clears the certificate type, requester, purpose, and any edits, then returns to step 1."
-            confirm-label="Start Over"
+            title="Clear review fields?"
+            message="This clears the fields filled in on Review and Edit. The certificate type, requester, and purpose stay as they are."
+            confirm-label="Clear Fields"
             @confirm="confirmRefresh"
             @cancel="confirmRefreshOpen = false"
         />
@@ -1212,11 +1212,11 @@ async function confirmRefresh() {
     confirmRefreshOpen.value = false;
     clearTimeout(previewTimer);
     pageError.value = '';
-    searchError.value = '';
-    selectedType.value = null;
-    resetAfterType();
-    step.value = 1;
-    await loadTypes();
+    generateError.value = '';
+    issued.value = false;
+    editsReady.value = false;
+    clearIssuanceFields();
+    await loadPreview(false);
 }
 
 function certificatePayload() {
