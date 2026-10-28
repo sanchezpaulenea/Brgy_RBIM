@@ -9,6 +9,7 @@ use App\Models\Setting\Setting;
 use App\Models\UserManagement\User;
 use App\Services\SystemSetting\SystemSettingService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class SystemSettingController extends Controller
 {
@@ -31,12 +32,15 @@ class SystemSettingController extends Controller
     /**
      * GET /api/v1/settings
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Setting::class);
 
+        /** @var User|null $performedBy */
+        $performedBy = $request->user();
+
         return response()->json([
-            'settings' => $this->settingService->listSettings(),
+            'settings' => $this->settingService->listSettings($performedBy),
         ]);
     }
 

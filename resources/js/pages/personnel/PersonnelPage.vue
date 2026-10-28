@@ -176,7 +176,7 @@
                                 <td class="px-3 py-3 text-center">
                                     <select
                                         v-if="canUpdate"
-                                        :value="person.personnel_status_id"
+                                        :value="pendingStatus[person.personnel_id] ?? person.personnel_status_id"
                                         class="max-w-full rounded-lg border border-slate-300 px-2 py-1 text-xs outline-none focus:border-brand"
                                         :disabled="updatingStatusId === person.personnel_id"
                                         @change="handleStatusChange(person, $event)"
@@ -214,6 +214,17 @@
             @confirm="confirm.onConfirm?.()"
             @cancel="handleConfirmCancel"
         />
+        <PasswordConfirmDialog
+            :open="passwordPrompt.open"
+            :title="passwordPrompt.title"
+            :message="passwordPrompt.message"
+            :confirm-label="passwordPrompt.confirmLabel"
+            :variant="passwordPrompt.variant"
+            :error="passwordPrompt.error"
+            :submitting="passwordPrompt.submitting"
+            @confirm="confirmAdministratorPassword"
+            @cancel="cancelAdministratorPassword"
+        />
     </AppLayout>
 </template>
 
@@ -222,7 +233,9 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import BirthDateField from '@/components/BirthDateField.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import PasswordConfirmDialog from '@/components/PasswordConfirmDialog.vue';
 import PageTabs from '@/components/PageTabs.vue';
+import { useAdministratorPasswordConfirm } from '@/composables/useAdministratorPasswordConfirm';
 import PositionCombobox from '@/components/PositionCombobox.vue';
 import { PERSONNEL_STATUSES } from '@/constants/roles';
 import { useAuth } from '@/composables/useAuth';
@@ -252,12 +265,19 @@ const emptyForm = () => ({
 
 const { hasPermission } = useAuth();
 const { personnelTabs } = useSectionTabs();
+const {
+    passwordPrompt,
+    askAdministratorPassword,
+    confirmAdministratorPassword,
+    cancelAdministratorPassword,
+} = useAdministratorPasswordConfirm();
 
 const items = ref([]);
 const positions = ref([]);
 const loading = ref(false);
 const saving = ref(false);
 const updatingStatusId = ref(null);
+const pendingStatus = reactive({});
 const editingId = ref(null);
 const error = ref('');
 const successMessage = ref('');
@@ -575,51 +595,57 @@ async function handleSave() {
 }
 
 async function handleStatusChange(person, event) {
-    const select = event.target;
-    const nextStatusId = Number(select.value);
+    const nextStatusId = Number(event.target.value);
 
     if (!nextStatusId || nextStatusId === Number(person.personnel_status_id)) {
-        select.value = person.personnel_status_id;
+        delete pendingStatus[person.personnel_id];
 
         return;
     }
 
-    const allowed = await askConfirm({
-        title: 'Update personnel status',
-        message: `Set "${person.label}" to ${statusLabel(nextStatusId)}?`,
-        confirmLabel: 'Update status',
-    });
-
-    if (!allowed) {
-        select.value = person.personnel_status_id;
-
-        return;
-    }
-
+    pendingStatus[person.personnel_id] = nextStatusId;
     updatingStatusId.value = person.personnel_id;
     error.value = '';
     successMessage.value = '';
 
     try {
-        const updated = await personnelService.updatePersonnel(person.personnel_id, {
-            personnel_last_name: person.personnel_last_name,
-            personnel_first_name: person.personnel_first_name,
-            personnel_middle_name: person.personnel_middle_name ?? '',
-            personnel_suffix: person.personnel_suffix ?? '',
-            personnel_date_of_birth: person.personnel_date_of_birth?.slice?.(0, 10) ?? '',
-            ...(person.sex_id ? { sex_id: Number(person.sex_id) } : {}),
-            position_id: Number(person.position_id),
-            personnel_status_id: nextStatusId,
-            confirm_duplicate: true,
+        const updated = await askAdministratorPassword({
+            title: 'Update personnel status',
+            message: `Set "${person.label}" to ${statusLabel(nextStatusId)}. Enter your Admin or Super Admin password to save this change.`,
+            confirmLabel: 'Update status',
+            run: (password) => personnelService.updatePersonnel(person.personnel_id, {
+                personnel_last_name: person.personnel_last_name,
+                personnel_first_name: person.personnel_first_name,
+                personnel_middle_name: person.personnel_middle_name ?? '',
+                personnel_suffix: person.personnel_suffix ?? '',
+                personnel_date_of_birth: person.personnel_date_of_birth?.slice?.(0, 10) ?? '',
+                ...(person.sex_id ? { sex_id: Number(person.sex_id) } : {}),
+                position_id: Number(person.position_id),
+                personnel_status_id: nextStatusId,
+                confirm_duplicate: true,
+                admin_password: password,
+            }),
         });
+
+        if (!updated) {
+            delete pendingStatus[person.personnel_id];
+
+            return;
+        }
 
         items.value = items.value.map((row) => (
             row.personnel_id === updated.personnel_id ? updated : row
         ));
+
+        if (editingId.value === updated.personnel_id) {
+            form.personnel_status_id = updated.personnel_status_id;
+        }
+
+        delete pendingStatus[person.personnel_id];
         successMessage.value = `Updated status for "${person.label}" to ${statusLabel(nextStatusId)}.`;
     } catch (err) {
+        delete pendingStatus[person.personnel_id];
         error.value = extractErrorMessage(err, 'Unable to update personnel status.');
-        select.value = person.personnel_status_id;
     } finally {
         updatingStatusId.value = null;
     }

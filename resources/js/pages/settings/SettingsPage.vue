@@ -155,6 +155,16 @@
                 @cancel="confirmRemoveSignature = false"
                 @confirm="removeSignature"
             />
+            <PasswordConfirmDialog
+                :open="passwordPrompt.open"
+                :title="passwordPrompt.title"
+                :message="passwordPrompt.message"
+                :confirm-label="passwordPrompt.confirmLabel"
+                :error="passwordPrompt.error"
+                :submitting="passwordPrompt.submitting"
+                @confirm="confirmAdministratorPassword"
+                @cancel="cancelAdministratorPassword"
+            />
         </div>
     </AppLayout>
 </template>
@@ -163,6 +173,8 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import PasswordConfirmDialog from '@/components/PasswordConfirmDialog.vue';
+import { useAdministratorPasswordConfirm } from '@/composables/useAdministratorPasswordConfirm';
 import { useAuth } from '@/composables/useAuth';
 import { fetchSignatureBlob } from '@/services/certificateService';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
@@ -245,6 +257,12 @@ const SETTING_GROUPS = [
 ];
 
 const { hasPermission, isSuperAdmin } = useAuth();
+const {
+    passwordPrompt,
+    askAdministratorPassword,
+    confirmAdministratorPassword,
+    cancelAdministratorPassword,
+} = useAdministratorPasswordConfirm();
 
 const settings = ref([]);
 const loading = ref(false);
@@ -294,6 +312,7 @@ const settingGroups = computed(() => {
 });
 
 const RETENTION_SETTING_KEYS = ['audit_log_retention_days', 'user_log_retention_days'];
+const ACCOUNT_SECURITY_SETTING_KEYS = SETTING_GROUPS.find((group) => group.title === 'Account and Security Settings')?.keys ?? [];
 
 function isRetentionSetting(setting) {
     return RETENTION_SETTING_KEYS.includes(setting.setting_key);
@@ -357,11 +376,34 @@ async function saveSetting(setting) {
         return;
     }
 
+    if (ACCOUNT_SECURITY_SETTING_KEYS.includes(setting.setting_key)) {
+        const current = setting.data_type === 'int' ? setting.typed_value : setting.setting_value;
+
+        if (String(value) === String(current ?? '')) {
+            editingId.value = null;
+            editError.value = '';
+
+            return;
+        }
+    }
+
     editError.value = '';
     savingId.value = setting.setting_id;
 
     try {
-        const updated = await settingService.updateSetting(setting.setting_id, value);
+        const updated = ACCOUNT_SECURITY_SETTING_KEYS.includes(setting.setting_key)
+            ? await askAdministratorPassword({
+                title: 'Update account and security setting',
+                message: `Save the new ${formatSettingLabel(setting.setting_key)} value. Enter your Admin or Super Admin password to continue.`,
+                confirmLabel: 'Save',
+                run: (password) => settingService.updateSetting(setting.setting_id, value, password),
+            })
+            : await settingService.updateSetting(setting.setting_id, value);
+
+        if (!updated) {
+            return;
+        }
+
         settings.value = settings.value.map((row) => (
             row.setting_id === updated.setting_id ? updated : row
         ));

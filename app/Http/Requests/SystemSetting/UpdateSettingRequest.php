@@ -3,6 +3,7 @@
 namespace App\Http\Requests\SystemSetting;
 
 use App\Models\Setting\Setting;
+use App\Rules\CurrentAdministratorPassword;
 use App\Rules\ValidBarangayAddress;
 use App\Rules\ValidBarangayContactNumber;
 use App\Rules\ValidDefaultPassword;
@@ -41,9 +42,15 @@ class UpdateSettingRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'setting_value' => $this->rulesForSetting($this->resolveSetting()),
+        $rules = [
+            'setting_value' => $this->rulesForSetting($setting = $this->resolveSetting()),
         ];
+
+        if ($this->requiresAdministratorPassword($setting)) {
+            $rules['admin_password'] = ['bail', 'required', 'string', 'max:255', new CurrentAdministratorPassword];
+        }
+
+        return $rules;
     }
 
     /**
@@ -62,6 +69,7 @@ class UpdateSettingRequest extends FormRequest
             'setting_value.regex' => 'Barangay code must be exactly 10 digits, following the Philippine Standard Geographic Code (PSGC) format.',
             'setting_value.email' => 'Please enter a valid email address.',
             'setting_value.prohibited' => 'The Punong Barangay signature cannot be edited here. Upload or remove the file instead.',
+            'admin_password.required' => 'Enter your Admin or Super Admin password.',
         ];
     }
 
@@ -95,6 +103,16 @@ class UpdateSettingRequest extends FormRequest
         return Setting::query()
             ->where('setting_id', $parameter)
             ->firstOrFail();
+    }
+
+    private function requiresAdministratorPassword(Setting $setting): bool
+    {
+        return in_array($setting->setting_key, [
+            'password_min_length',
+            'max_login_attempts',
+            'account_lockout_minutes',
+            'default_password',
+        ], true);
     }
 
     /**

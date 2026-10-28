@@ -174,6 +174,17 @@
             @confirm="confirm.onConfirm?.()"
             @cancel="handleConfirmCancel"
         />
+        <PasswordConfirmDialog
+            :open="passwordPrompt.open"
+            :title="passwordPrompt.title"
+            :message="passwordPrompt.message"
+            :confirm-label="passwordPrompt.confirmLabel"
+            :variant="passwordPrompt.variant"
+            :error="passwordPrompt.error"
+            :submitting="passwordPrompt.submitting"
+            @confirm="confirmAdministratorPassword"
+            @cancel="cancelAdministratorPassword"
+        />
     </AppLayout>
 </template>
 
@@ -181,7 +192,9 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import PasswordConfirmDialog from '@/components/PasswordConfirmDialog.vue';
 import PageTabs from '@/components/PageTabs.vue';
+import { useAdministratorPasswordConfirm } from '@/composables/useAdministratorPasswordConfirm';
 import { ROLES } from '@/constants/roles';
 import { useAuth } from '@/composables/useAuth';
 import { useSectionTabs } from '@/composables/useSectionTabs';
@@ -191,6 +204,12 @@ import { matchesSearch } from '@/utils/format';
 
 const { hasPermission, user: currentUser, refreshSession } = useAuth();
 const { userTabs } = useSectionTabs();
+const {
+    passwordPrompt,
+    askAdministratorPassword,
+    confirmAdministratorPassword,
+    cancelAdministratorPassword,
+} = useAdministratorPasswordConfirm();
 
 const users = ref([]);
 const roles = ref([]);
@@ -338,25 +357,26 @@ async function handleAssignRole(account) {
 }
 
 async function handleRoleStatus(account, assignment) {
-    const allowed = await askConfirm({
-        title: assignment.enable ? 'Disable role' : 'Enable role',
-        message: `${assignment.enable ? 'Disable' : 'Enable'} the ${assignment.role_name} role for "${account.username}"?`,
-        confirmLabel: assignment.enable ? 'Disable' : 'Enable',
-        variant: assignment.enable ? 'danger' : 'primary',
-    });
-
-    if (!allowed) {
-        return;
-    }
-
+    const enabling = !assignment.enable;
     updatingRoleId.value = assignment.user_role_id;
     error.value = '';
     successMessage.value = '';
 
     try {
-        await userService.updateUserRoleStatus(assignment.user_role_id, !assignment.enable);
+        const updated = await askAdministratorPassword({
+            title: enabling ? 'Enable role' : 'Disable role',
+            message: `${enabling ? 'Enable' : 'Disable'} the ${assignment.role_name} role for "${account.username}". Enter your Admin or Super Admin password to save this change.`,
+            confirmLabel: enabling ? 'Enable' : 'Disable',
+            variant: enabling ? 'primary' : 'danger',
+            run: (password) => userService.updateUserRoleStatus(assignment.user_role_id, enabling, password),
+        });
+
+        if (!updated) {
+            return;
+        }
+
         replaceUser(await userService.fetchUser(account.user_id));
-        successMessage.value = `${assignment.enable ? 'Disabled' : 'Enabled'} ${assignment.role_name} for "${account.username}".`;
+        successMessage.value = `${enabling ? 'Enabled' : 'Disabled'} ${assignment.role_name} for "${account.username}".`;
         await syncCurrentUserSession(account);
     } catch (err) {
         error.value = extractErrorMessage(err, 'Unable to update role status.');

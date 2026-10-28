@@ -196,6 +196,23 @@
                         <h3 class="text-sm font-semibold text-slate-900">Household Address and Status</h3>
                         <div class="grid gap-4 sm:grid-cols-2">
                         <div>
+                            <label for="detail_clan_id" class="rbim-label">
+                                Clan<span class="rbim-required" aria-hidden="true">*</span>
+                            </label>
+                            <select
+                                id="detail_clan_id"
+                                v-model="editForm.clan_id"
+                                class="rbim-input"
+                                :class="{ 'rbim-input-error': editErrors.clan_id }"
+                            >
+                                <option value="">Select clan</option>
+                                <option v-for="clan in clans" :key="clan.id" :value="clan.id">
+                                    {{ clan.label }}
+                                </option>
+                            </select>
+                            <p v-if="editErrors.clan_id" class="rbim-error">{{ editErrors.clan_id }}</p>
+                        </div>
+                        <div>
                             <label for="detail_street_id" class="rbim-label">
                                 Street<span class="rbim-required" aria-hidden="true">*</span>
                             </label>
@@ -420,6 +437,7 @@ const { hasPermission } = auth;
 const { householdTabs } = useSectionTabs();
 
 const household = ref(null);
+const clans = ref([]);
 const streets = ref([]);
 const householdStatuses = ref([]);
 const questionLookups = reactive(emptyHouseholdQuestionLookups());
@@ -458,6 +476,7 @@ const petForm = ref(null);
 
 function emptyEditForm() {
     return {
+        clan_id: '',
         street_id: '',
         house_number: '',
         number_of_house_story: 1,
@@ -549,6 +568,7 @@ function startEdit() {
 
     editing.value = true;
     Object.assign(editForm, {
+        clan_id: household.value.clan_id ?? '',
         street_id: household.value.street_id ?? '',
         house_number: household.value.house_number ?? '',
         ...householdStructureFromRecord(household.value),
@@ -614,8 +634,9 @@ async function loadHousehold() {
     error.value = '';
 
     try {
-        const [item, streetItems, statusItems, householdQuestionLookups, locationProfile, nextPetLookups] = await Promise.all([
+        const [item, clanItems, streetItems, statusItems, householdQuestionLookups, locationProfile, nextPetLookups] = await Promise.all([
             householdService.fetchHousehold(route.params.id),
+            lookupService.fetchLookup('clan'),
             lookupService.fetchStreets(),
             lookupService.fetchLookup('household-status'),
             fetchHouseholdQuestionLookups(),
@@ -623,6 +644,7 @@ async function loadHousehold() {
             fetchPetLookups(),
         ]);
         household.value = item;
+        clans.value = clanItems;
         streets.value = streetItems;
         householdStatuses.value = statusItems;
         Object.assign(questionLookups, householdQuestionLookups);
@@ -638,6 +660,10 @@ async function loadHousehold() {
 
 async function handleUpdate() {
     clearEditErrors();
+
+    if (!toId(editForm.clan_id)) {
+        editErrors.clan_id = 'Clan is required.';
+    }
 
     if (!toId(editForm.street_id)) {
         editErrors.street_id = 'Street is required.';
@@ -683,6 +709,7 @@ async function handleUpdate() {
 
     try {
         await householdService.updateHousehold(route.params.id, {
+            clan_id: toId(editForm.clan_id),
             street_id: toId(editForm.street_id),
             house_number: optionalHouseNumber(editForm.house_number),
             ...householdStructurePayload(editForm),

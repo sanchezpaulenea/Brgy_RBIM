@@ -4,50 +4,64 @@
     <meta charset="utf-8">
     <title>{{ $document['title'] }}</title>
     <style>
-        @page { margin: 26px 40px 24px; }
-        body { font-family: "DejaVu Serif", serif; font-size: 12px; color: #111; line-height: 1.3; }
+        @php $arialFonts = $arialFonts ?? []; @endphp
+        @if (! empty($arialFonts['regular']))
+        @@font-face { font-family: "Arial"; font-weight: normal; font-style: normal; src: url("{{ $arialFonts['regular'] }}") format("truetype"); }
+        @endif
+        @if (! empty($arialFonts['bold']))
+        @@font-face { font-family: "Arial"; font-weight: bold; font-style: normal; src: url("{{ $arialFonts['bold'] }}") format("truetype"); }
+        @endif
+        @if (! empty($arialFonts['italic']))
+        @@font-face { font-family: "Arial"; font-weight: normal; font-style: italic; src: url("{{ $arialFonts['italic'] }}") format("truetype"); }
+        @endif
+        @if (! empty($arialFonts['bold_italic']))
+        @@font-face { font-family: "Arial"; font-weight: bold; font-style: italic; src: url("{{ $arialFonts['bold_italic'] }}") format("truetype"); }
+        @endif
+        @page { margin: 58px 48px 46px; }
+        body { font-family: Arial, sans-serif; font-size: 12px; color: #111; line-height: 1.4; }
         .center { text-align: center; }
-        .header-line { margin: 0; line-height: 1.15; text-align: center; }
-        .republic { font-weight: bold; font-size: 11px; }
-        .barangay { font-weight: bold; font-size: 12px; }
-        .contact { text-decoration: underline; font-size: 10px; }
-        .title { font-family: "DejaVu Serif", serif; font-weight: bold; font-size: 15px; text-align: center; letter-spacing: 0.3px; margin: 12px 0 6px; }
-        .title-plain { font-weight: normal; font-size: 13px; }
-        .title-long { font-size: 12px; margin: 4px 0; }
-        .subtitle, .office, .meta { text-align: center; margin: 0; line-height: 1.2; }
-        .office { font-weight: bold; font-size: 11px; margin-top: 4px; }
-        .subtitle { font-weight: bold; font-size: 11px; margin-bottom: 4px; }
-        .meta { font-size: 10px; }
-        .salutation { font-weight: bold; margin: 4px 0 6px; }
-        .body { text-align: justify; text-indent: 32px; margin: 0 0 7px; line-height: 1.35; font-weight: normal; }
-        .dense { font-size: 10.5px; }
-        .dense .body { text-indent: 18px; margin: 0 0 3px; line-height: 1.25; }
-        .children { width: 100%; border-collapse: collapse; margin: 4px 0 6px; font-size: 10px; }
-        .children th, .children td { border: 1px solid #111; padding: 2px 4px; }
+        .header-line { margin: 0; line-height: 1.25; text-align: center; }
+        .republic { font-weight: bold; font-size: 12px; }
+        .barangay { font-weight: bold; font-size: 13px; }
+        .contact { text-decoration: underline; font-size: 11px; }
+        .title { font-family: Arial, sans-serif; font-weight: bold; font-size: 16px; text-align: center; letter-spacing: 0.3px; margin: 20px 0 14px; }
+        .title-plain { font-weight: normal; font-size: 15px; }
+        .title-long { font-size: 13px; margin: 12px 0; }
+        .subtitle, .office, .meta { text-align: center; margin: 0; line-height: 1.3; }
+        .office { font-weight: bold; font-size: 11px; margin-top: 8px; }
+        .subtitle { font-weight: bold; font-size: 12px; margin-bottom: 8px; }
+        .meta { font-size: 11px; }
+        .salutation { font-weight: bold; margin: 8px 0 10px; }
+        .body { text-align: justify; text-indent: 32px; margin: 0 0 10px; line-height: 1.45; font-weight: normal; }
+        .dense { font-size: 12px; }
+        .dense .body { text-indent: 22px; margin: 0 0 8px; line-height: 1.42; }
+        .children { width: 100%; border-collapse: collapse; margin: 8px 0 10px; font-size: 11px; }
+        .children th, .children td { border: 1px solid #111; padding: 3px 5px; }
         .children th { text-align: center; }
-        .footer-note { text-align: center; font-weight: bold; margin: 2px 0 0; font-size: 10px; }
-        .sign-label { margin: 8px 0 0; font-weight: bold; }
+        .footer-note { text-align: center; font-weight: bold; margin: 8px 0 0; font-size: 11px; }
+        .sign-label { margin: 12px 0 0; font-weight: bold; }
         .bold { font-weight: bold; }
         .regular { font-weight: normal; }
         .italic { font-style: italic; }
         .underline { text-decoration: underline; }
-        .flush { text-indent: 0; margin-bottom: 2px; }
+        .flush { text-indent: 0; margin-bottom: 4px; }
         .meta-right { text-align: right; font-style: italic; }
         .meta-key { font-style: italic; text-decoration: underline; }
         .sheet-break { page-break-before: always; }
-        .footer-left { text-align: left; font-weight: bold; margin: 2px 0 0; font-size: 10px; }
-        .letterhead { width: 100%; border-collapse: collapse; margin: 0 0 4px; }
-        .logo-cell { width: 118px; vertical-align: top; }
-        .logo-cell-right { width: 70px; text-align: right; vertical-align: top; }
-        .logo-img { width: 52px; height: 52px; }
-        .logo-gap { width: 6px; }
-        .logo-empty { width: 52px; height: 52px; border: 1px solid #bbb; }
-        .letterhead-copy { text-align: center; vertical-align: top; }
-        .pb-block { width: 230px; text-align: center; }
-        .pb-name { font-weight: bold; text-decoration: underline; text-transform: uppercase; font-size: 11px; margin: 0 auto; min-width: 150px; display: inline-block; }
-        .pb-title { margin: 1px 0 0; font-size: 11px; }
-        .sig-space { height: 34px; }
-        .sig-img { height: 34px; }
+        .footer-left { text-align: left; font-weight: bold; margin: 8px 0 0; font-size: 11px; }
+        .letterhead { width: 100%; border-collapse: collapse; margin: 0 0 14px; }
+        .logo-cell { width: 196px; vertical-align: middle; }
+        .logo-cell-right { width: 100px; text-align: right; vertical-align: middle; }
+        .logo-img { width: 86px; height: 86px; }
+        .logo-gap { width: 8px; }
+        .logo-empty { width: 86px; height: 86px; border: 1px solid #bbb; }
+        .letterhead-copy { text-align: center; vertical-align: middle; }
+        .pb-block { width: 240px; text-align: center; }
+        .pb-inline { width: 360px; text-align: right; }
+        .pb-name { font-weight: bold; text-decoration: underline; text-transform: uppercase; font-size: 12px; margin: 0 auto; min-width: 150px; display: inline-block; }
+        .pb-title { margin: 2px 0 0; font-size: 12px; }
+        .sig-space { height: 42px; }
+        .sig-img { height: 42px; }
         .authority { margin-top: 4px; }
         .wet-line { border-bottom: 1px solid #111; width: 180px; height: 26px; margin-top: 4px; }
         .officer { margin: 1px 0 0; }
@@ -146,7 +160,7 @@
     @endphp
 
     @if ($style === 'punong')
-        <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 14px;">
+        <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 22px;">
             <tr>
                 <td>&nbsp;</td>
                 <td class="pb-block" valign="top">
@@ -164,7 +178,7 @@
         <p class="officer">{{ $document['fields']['issuer_position'] !== '' ? $document['fields']['issuer_position'] : 'Barangay Kagawad' }}</p>
         <p class="officer">Date: <span class="bold">{{ $document['fields']['witness_date'] }}</span></p>
     @elseif ($style === 'oath')
-        <div class="pb-block" style="margin-left: auto;">
+        <div class="pb-inline" style="margin-top: 18px; margin-left: auto;">
             @include('certificates.partials.punong', ['document' => $document, 'inline' => true])
         </div>
         <p class="officer bold">{{ $document['fields']['resident_name'] }}, FIRST TIME JOB SEEKER</p>
@@ -175,7 +189,7 @@
         <p class="officer bold">{{ $document['fields']['issuer_name'] }}</p>
         <p class="officer">Officer for the day</p>
         <p class="officer bold">{{ $document['fields']['issuer_position'] !== '' ? $document['fields']['issuer_position'] : 'Barangay Kagawad' }}</p>
-        <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 8px;">
+        <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 16px;">
             <tr>
                 <td valign="top">&nbsp;</td>
                 <td class="pb-block" valign="bottom">
@@ -198,7 +212,7 @@
             @endif
             <p class="officer">Barangay Captain: <span class="bold">{{ $document['fields']['punong_barangay_name'] }}</span></p>
         </div>
-        <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 8px;">
+        <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 16px;">
             <tr>
                 <td width="50%" valign="top">
                     <p class="officer bold">Witness</p>
@@ -217,7 +231,7 @@
                 </td>
             </tr>
         </table>
-        <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 8px;">
+        <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 16px;">
             <tr>
                 <td width="55%" valign="top">
                     <p class="officer">Name: {{ $document['affidavit']['kagawad_name'] ?? '' }}</p>
@@ -233,7 +247,7 @@
             </tr>
         </table>
     @else
-        <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 14px;">
+        <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 22px;">
             <tr>
                 <td>&nbsp;</td>
                 <td class="pb-block" valign="top">

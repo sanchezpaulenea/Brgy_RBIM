@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\BarangayPersonnel;
 
+use App\Models\BarangayPersonnel\BarangayPersonnel;
+use App\Rules\CurrentAdministratorPassword;
 use App\Rules\ValidPersonnelName;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -39,6 +41,14 @@ class UpdatePersonnelRequest extends FormRequest
             'personnel_status_id' => ['required', 'integer', Rule::exists('personnel_status', 'personnel_status_id')],
             'confirm_duplicate' => ['sometimes', 'boolean'],
             'position_id' => ['required', 'integer', Rule::exists('personnel_position', 'position_id')],
+            'admin_password' => [
+                Rule::excludeIf(fn () => ! $this->personnelStatusIsChanging()),
+                'bail',
+                'required',
+                'string',
+                'max:255',
+                new CurrentAdministratorPassword,
+            ],
         ];
     }
 
@@ -56,9 +66,21 @@ class UpdatePersonnelRequest extends FormRequest
             'sex_id.exists' => 'The selected gender does not exist.',
             'personnel_status_id.required' => 'Personnel status is required.',
             'personnel_status_id.exists' => 'The selected personnel status does not exist.',
+            'admin_password.required' => 'Enter your Admin or Super Admin password.',
             'position_id.required' => 'Personnel position is required.',
             'position_id.exists' => 'The selected personnel position does not exist.',
         ];
+    }
+
+    private function personnelStatusIsChanging(): bool
+    {
+        $personnel = $this->route('personnel');
+
+        if (! $personnel instanceof BarangayPersonnel || ! $this->exists('personnel_status_id')) {
+            return false;
+        }
+
+        return (int) $this->input('personnel_status_id') !== (int) $personnel->personnel_status_id;
     }
 
     private function titleCaseName(mixed $value): mixed

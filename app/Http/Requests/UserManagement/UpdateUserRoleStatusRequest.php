@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\UserManagement;
 
+use App\Rules\CurrentAdministratorPassword;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateUserRoleStatusRequest extends FormRequest
@@ -18,6 +19,7 @@ class UpdateUserRoleStatusRequest extends FormRequest
     {
         return [
             'enable' => ['required', 'boolean'],
+            'admin_password' => ['bail', 'required', 'string', 'max:255', new CurrentAdministratorPassword],
         ];
     }
 
@@ -29,6 +31,7 @@ class UpdateUserRoleStatusRequest extends FormRequest
         return [
             'enable.required' => 'Enable status is required.',
             'enable.boolean' => 'Enable status must be true or false.',
+            'admin_password.required' => 'Enter your Admin or Super Admin password.',
         ];
     }
 }

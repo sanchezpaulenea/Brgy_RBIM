@@ -20,10 +20,11 @@ export async function exportDatabase(format) {
     return filename;
 }
 
-export async function restoreDatabase(file, confirmation) {
+export async function restoreDatabase(file, confirmation, adminPassword) {
     const formData = new FormData();
     formData.append('backup', file);
     formData.append('confirmation', confirmation);
+    formData.append('admin_password', adminPassword ?? '');
 
     const { data } = await http.post('/database-backups/restore', formData, {
         transformRequest: [

@@ -7,6 +7,7 @@ use App\Models\Setting\Setting;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\Setting\SettingRepositoryInterface;
+use App\Services\BarangayPersonnel\PunongBarangayName;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -18,6 +19,7 @@ class SystemSettingService
     public function __construct(
         protected SettingRepositoryInterface $settingRepository,
         protected AuditLogRepositoryInterface $auditLogRepository,
+        protected PunongBarangayName $punongBarangayName,
     ) {}
 
     /**
@@ -82,8 +84,12 @@ class SystemSettingService
     /**
      * @return array<int, array<string, mixed>>
      */
-    public function listSettings(): array
+    public function listSettings(?User $performedBy = null): array
     {
+        if ($performedBy instanceof User) {
+            $this->punongBarangayName->alignSettingWithPersonnel($performedBy);
+        }
+
         return $this->settingRepository
             ->all()
             ->map(fn (Setting $setting) => $this->formatSetting($setting))
@@ -120,6 +126,10 @@ class SystemSettingService
                 target: $updated->setting_key,
                 entity: 'system_setting',
             );
+
+            if ($updated->setting_key === PunongBarangayName::SETTING_KEY) {
+                $this->punongBarangayName->alignPersonnelWithSetting($performedBy, (string) $updated->setting_value);
+            }
 
             return $this->formatSetting($updated);
         });

@@ -18,6 +18,7 @@ use App\Repositories\Interfaces\ResidentManagement\Migration\MigrationRepository
 use App\Repositories\Interfaces\ResidentManagement\Sociocivic\SociocivicRepositoryInterface;
 use App\Repositories\Interfaces\Setting\SettingRepositoryInterface;
 use App\Repositories\Interfaces\TypeOfCertificateRepositoryInterface;
+use App\Services\BarangayPersonnel\PunongBarangayName;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
@@ -57,6 +58,7 @@ class CertificateService
         protected SettingRepositoryInterface $settingRepository,
         protected AuditLogRepositoryInterface $auditLogRepository,
         protected BarangayPersonnelRepositoryInterface $barangayPersonnelRepository,
+        protected PunongBarangayName $punongBarangayName,
     ) {}
 
     /**
@@ -503,7 +505,29 @@ class CertificateService
      */
     public function renderPdf(array $document): string
     {
-        return Pdf::loadView('certificates.show', ['document' => $document])
+        $fonts = $this->arialFontSources();
+        $fontDirectory = $fonts['regular'] !== '' ? dirname($fonts['regular']) : null;
+
+        if ($fontDirectory !== null && ! is_dir(storage_path('fonts'))) {
+            mkdir(storage_path('fonts'), 0755, true);
+        }
+
+        $pdf = Pdf::loadView('certificates.show', [
+            'document' => $document,
+            'arialFonts' => $fonts,
+        ]);
+
+        $options = $pdf->getDomPDF()->getOptions();
+        $options->setIsFontSubsettingEnabled(true);
+
+        if ($fontDirectory !== null) {
+            $chroot = $options->getChroot();
+            $chroot[] = $fontDirectory;
+            $options->setChroot($chroot);
+            $options->setDefaultFont('Arial');
+        }
+
+        return $pdf
             ->setPaper(
                 (string) config('certificates.paper', 'a4'),
                 (string) config('certificates.orientation', 'portrait'),
@@ -1103,7 +1127,7 @@ class CertificateService
                 'date_of_issue' => $localIssued->format('Y-m-d H:i:s'),
                 'issuer_name' => $issuerUser instanceof User ? $this->issuerPrintName($issuerUser) : '',
                 'issuer_position' => trim((string) ($issuerUser?->personnel?->position?->position_name ?? '')),
-                'punong_barangay_name' => mb_strtoupper($this->settingValue('punong_barangay_name'), 'UTF-8'),
+                'punong_barangay_name' => $this->resolvedPunongBarangayName($issuerUser),
                 'barangay_short' => $tokens['barangay_short'],
                 'city' => $cityName,
             ],
@@ -1754,6 +1778,57 @@ class CertificateService
         $short = preg_replace('/^barangay\s+/iu', '', trim($barangayName));
 
         return trim(is_string($short) ? $short : $barangayName);
+    }
+
+    private function resolvedPunongBarangayName(?User $issuer): string
+    {
+        if ($issuer instanceof User) {
+            $this->punongBarangayName->alignSettingWithPersonnel($issuer);
+        }
+
+        return mb_strtoupper($this->punongBarangayName->displayName(), 'UTF-8');
+    }
+
+    /**
+     * @return array{regular: string, bold: string, italic: string, bold_italic: string}
+     */
+    private function arialFontSources(): array
+    {
+        $faces = [
+            'regular' => ['arial.ttf', 'Arial.ttf'],
+            'bold' => ['arialbd.ttf', 'Arial_Bold.ttf'],
+            'italic' => ['ariali.ttf', 'Arial_Italic.ttf'],
+            'bold_italic' => ['arialbi.ttf', 'Arial_Bold_Italic.ttf'],
+        ];
+        $directories = [
+            'C:/Windows/Fonts',
+            '/usr/share/fonts/truetype/msttcorefonts',
+        ];
+        $resolved = [
+            'regular' => '',
+            'bold' => '',
+            'italic' => '',
+            'bold_italic' => '',
+        ];
+
+        foreach ($faces as $style => $names) {
+            foreach ($directories as $directory) {
+                foreach ($names as $name) {
+                    $path = $directory.'/'.$name;
+
+                    if (! is_file($path)) {
+                        continue;
+                    }
+
+                    $real = realpath($path);
+                    $resolved[$style] = str_replace('\\', '/', $real !== false ? $real : $path);
+
+                    break 2;
+                }
+            }
+        }
+
+        return $resolved;
     }
 
     private function settingValue(string $key): string

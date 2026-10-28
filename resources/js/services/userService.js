@@ -52,9 +52,10 @@ export async function assignUserRole(userId, roleId) {
     return data.user_role;
 }
 
-export async function updateUserRoleStatus(userRoleId, enable) {
+export async function updateUserRoleStatus(userRoleId, enable, adminPassword) {
     const { data } = await http.patch(`/user-roles/${userRoleId}/status`, {
         enable,
+        admin_password: adminPassword,
     });
 
     return data.user_role;

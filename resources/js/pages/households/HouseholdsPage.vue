@@ -149,6 +149,23 @@
                 <form class="space-y-4 px-5 py-4" novalidate @submit.prevent="handleUpdate">
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div>
+                            <label for="edit_clan_id" class="rbim-label">
+                                Clan<span class="rbim-required" aria-hidden="true">*</span>
+                            </label>
+                            <select
+                                id="edit_clan_id"
+                                v-model="editForm.clan_id"
+                                class="rbim-input"
+                                :class="{ 'rbim-input-error': editErrors.clan_id }"
+                            >
+                                <option value="">Select clan</option>
+                                <option v-for="clan in clans" :key="clan.id" :value="clan.id">
+                                    {{ clan.label }}
+                                </option>
+                            </select>
+                            <p v-if="editErrors.clan_id" class="rbim-error">{{ editErrors.clan_id }}</p>
+                        </div>
+                        <div>
                             <label for="edit_street_id" class="rbim-label">
                                 Street<span class="rbim-required" aria-hidden="true">*</span>
                             </label>
@@ -334,6 +351,7 @@ const pagedItems = computed(() => {
 
 function emptyEditForm() {
     return {
+        clan_id: '',
         street_id: '',
         house_number: '',
         number_of_house_story: 1,
@@ -377,6 +395,7 @@ function startEdit(household) {
     editing.value = true;
     editingId.value = household.household_id;
     Object.assign(editForm, {
+        clan_id: household.clan_id ?? '',
         street_id: household.street_id ?? '',
         house_number: household.house_number ?? '',
         ...householdStructureFromRecord(household),
@@ -453,6 +472,10 @@ watch(pageCount, (count) => {
 async function handleUpdate() {
     clearEditErrors();
 
+    if (!toId(editForm.clan_id)) {
+        editErrors.clan_id = 'Clan is required.';
+    }
+
     if (!toId(editForm.street_id)) {
         editErrors.street_id = 'Street is required.';
     }
@@ -489,6 +512,7 @@ async function handleUpdate() {
 
     try {
         await householdService.updateHousehold(editingId.value, {
+            clan_id: toId(editForm.clan_id),
             street_id: toId(editForm.street_id),
             house_number: optionalHouseNumber(editForm.house_number),
             ...householdStructurePayload(editForm),

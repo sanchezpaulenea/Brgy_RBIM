@@ -6,10 +6,16 @@ export async function fetchSettings() {
     return data.settings;
 }
 
-export async function updateSetting(settingId, settingValue) {
-    const { data } = await http.patch(`/settings/${settingId}`, {
+export async function updateSetting(settingId, settingValue, adminPassword) {
+    const payload = {
         setting_value: settingValue,
-    });
+    };
+
+    if (adminPassword) {
+        payload.admin_password = adminPassword;
+    }
+
+    const { data } = await http.patch(`/settings/${settingId}`, payload);
 
     return data.setting;
 }

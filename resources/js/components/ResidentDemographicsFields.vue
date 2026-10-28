@@ -215,6 +215,24 @@
             </select>
             <p v-if="errors.marital_status_id" class="rbim-error">{{ errors.marital_status_id }}</p>
         </div>
+        <div v-if="clans.length">
+            <label :for="`${idPrefix}-clan`" class="rbim-label">
+                Clan<span class="rbim-required" aria-hidden="true">*</span>
+            </label>
+            <select
+                :id="`${idPrefix}-clan`"
+                :value="form.clan_id"
+                class="rbim-input"
+                :class="{ 'rbim-input-error': errors.clan_id }"
+                @change="patch('clan_id', $event.target.value)"
+            >
+                <option value="">Select clan</option>
+                <option v-for="option in clans" :key="option.id" :value="option.id">
+                    {{ option.label }}
+                </option>
+            </select>
+            <p v-if="errors.clan_id" class="rbim-error">{{ errors.clan_id }}</p>
+        </div>
     </div>
 </template>
 
@@ -238,10 +256,6 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
-    relationships: {
-        type: Array,
-        default: () => [],
-    },
     relationshipOptions: {
         type: Array,
         default: () => [],
@@ -259,6 +273,10 @@ const props = defineProps({
         default: () => [],
     },
     maritalStatuses: {
+        type: Array,
+        default: () => [],
+    },
+    clans: {
         type: Array,
         default: () => [],
     },

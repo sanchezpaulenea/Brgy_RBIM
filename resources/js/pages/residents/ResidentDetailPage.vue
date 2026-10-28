@@ -171,11 +171,12 @@
                             :min-age="resident?.is_household_head ? HOUSEHOLD_HEAD_MIN_AGE : 0"
                             :errors="editErrors"
                             :sexes="lookups.sex"
-                            :relationships="relationshipOptions"
+                            :relationship-options="relationshipOptions"
                             :nationalities="lookups.nationality"
                             :religions="lookups.religion"
                             :ethnicities="lookups.ethnicity"
                             :marital-statuses="lookups.maritalStatus"
+                            :clans="lookups.clan"
                             :relationship-locked="Boolean(resident?.is_household_head)"
                             @validate-name="() => {}"
                         />
@@ -396,6 +397,7 @@ import {
     eligibleHouseholdHeadCandidates,
     residentStatusLabel,
     residentStatusRequiresHeadReplacement,
+    toId,
     toOptionalLookupId,
 } from '@/utils/residentForm';
 import { formatMonthYear } from '@/utils/migration';
@@ -440,6 +442,7 @@ const location = reactive({
 const lookups = reactive({
     sex: [],
     relationship: [],
+    clan: [],
     nationality: [],
     religion: [],
     ethnicity: [],
@@ -912,6 +915,7 @@ function startDemographicsEdit() {
         ethnicity_id: item.ethnicity_id,
         ethnicity_name: item.ethnicity || '',
         marital_status_id: item.marital_status_id,
+        clan_id: item.clan_id ?? '',
         resident_status_id: item.resident_status_id,
     });
     originalResidentStatusId.value = item.resident_status_id;
@@ -1179,6 +1183,11 @@ async function handleSave() {
         }
     }
 
+    if (editing.value === 'demographics' && !toId(editForm.clan_id)) {
+        editErrors.clan_id = 'Clan is required.';
+        return;
+    }
+
     if (editing.value === 'demographics' && resident.value.is_household_head) {
         const age = ageFromDateOfBirth(editForm.date_of_birth);
 
@@ -1332,6 +1341,7 @@ async function loadLookups() {
     const [
         sex,
         relationship,
+        clan,
         nationality,
         religion,
         ethnicity,
@@ -1359,6 +1369,7 @@ async function loadLookups() {
     ] = await Promise.all([
         lookupService.fetchLookup('sex'),
         lookupService.fetchLookup('relationship-to-hh'),
+        lookupService.fetchLookup('clan'),
         lookupService.fetchNationalities(),
         lookupService.fetchReligions(),
         lookupService.fetchEthnicities(),
@@ -1387,6 +1398,7 @@ async function loadLookups() {
 
     lookups.sex = sex;
     lookups.relationship = relationship;
+    lookups.clan = clan;
     lookups.nationality = nationality;
     lookups.religion = religion;
     lookups.ethnicity = ethnicity;

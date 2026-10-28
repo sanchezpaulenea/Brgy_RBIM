@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\DatabaseBackup;
 
+use App\Rules\CurrentAdministratorPassword;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RestoreDatabaseBackupRequest extends FormRequest
@@ -21,6 +22,7 @@ class RestoreDatabaseBackupRequest extends FormRequest
         return [
             'backup' => ['bail', 'required', 'file', 'extensions:sql', 'max:'.$maxKilobytes],
             'confirmation' => ['bail', 'required', 'string', 'in:RESTORE'],
+            'admin_password' => ['bail', 'required', 'string', 'max:255', new CurrentAdministratorPassword],
         ];
     }
 
@@ -36,6 +38,7 @@ class RestoreDatabaseBackupRequest extends FormRequest
             'backup.max' => 'The backup file must not be larger than 32 MB.',
             'confirmation.required' => 'Type RESTORE to confirm.',
             'confirmation.in' => 'Type RESTORE to confirm.',
+            'admin_password.required' => 'Enter your Admin or Super Admin password.',
         ];
     }
 }

@@ -22,6 +22,7 @@ class BarangayPersonnelService
         protected BarangayPersonnelRepositoryInterface $personnelRepository,
         protected PersonnelPositionRepositoryInterface $personnelPositionRepository,
         protected AuditLogRepositoryInterface $auditLogRepository,
+        protected PunongBarangayName $punongBarangayName,
     ) {}
 
     /**
@@ -69,6 +70,10 @@ class BarangayPersonnelService
                 entity: 'barangay_personnel',
             );
 
+            if ($this->punongBarangayName->isPunong($personnel)) {
+                $this->punongBarangayName->alignSettingWithPersonnel($performedBy);
+            }
+
             return $this->formatRecord($personnel);
         });
     }
@@ -84,15 +89,21 @@ class BarangayPersonnelService
         $previous = $this->personnelAuditSnapshot($personnel);
 
         return DB::transaction(function () use ($performedBy, $personnel, $data, $previous) {
+            $wasPunong = $this->punongBarangayName->isPunong($personnel);
+
             if (! empty($data['position_id'])) {
                 $this->assertPositionAvailable((int) $data['position_id'], $personnel->personnel_id);
             }
 
-            unset($data['confirm_duplicate'], $data['position_name']);
+            unset($data['confirm_duplicate'], $data['position_name'], $data['admin_password']);
 
             $updated = $this->personnelRepository->update($personnel, $data);
 
             $this->logPersonnelFieldChanges($performedBy, $updated, $previous);
+
+            if ($wasPunong || $this->punongBarangayName->isPunong($updated)) {
+                $this->punongBarangayName->alignSettingWithPersonnel($performedBy);
+            }
 
             return $this->formatRecord($updated);
         });

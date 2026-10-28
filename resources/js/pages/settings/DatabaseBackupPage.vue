@@ -124,14 +124,16 @@
                 You do not have permission to back up or restore the database.
             </p>
 
-            <ConfirmDialog
-                :open="confirmOpen"
-                title="Restore database"
-                message="Replace the current database records with the selected SQL backup? This cannot be undone from this page except by restoring another backup."
-                confirm-label="Restore Database"
-                variant="danger"
-                @cancel="confirmOpen = false"
-                @confirm="runRestore"
+            <PasswordConfirmDialog
+                :open="passwordPrompt.open"
+                :title="passwordPrompt.title"
+                :message="passwordPrompt.message"
+                :confirm-label="passwordPrompt.confirmLabel"
+                :variant="passwordPrompt.variant"
+                :error="passwordPrompt.error"
+                :submitting="passwordPrompt.submitting"
+                @confirm="confirmAdministratorPassword"
+                @cancel="cancelAdministratorPassword"
             />
         </div>
     </AppLayout>
@@ -139,12 +141,19 @@
 
 <script setup>
 import { computed, ref } from 'vue';
-import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import PasswordConfirmDialog from '@/components/PasswordConfirmDialog.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { useAdministratorPasswordConfirm } from '@/composables/useAdministratorPasswordConfirm';
 import { useAuth } from '@/composables/useAuth';
 import { backupErrorMessage, exportDatabase, restoreDatabase } from '@/services/databaseBackupService';
 
 const { hasPermission, isSuperAdmin } = useAuth();
+const {
+    passwordPrompt,
+    askAdministratorPassword,
+    confirmAdministratorPassword,
+    cancelAdministratorPassword,
+} = useAdministratorPasswordConfirm();
 const canExport = computed(() => hasPermission('backup.export'));
 const canRestore = computed(() => isSuperAdmin.value && hasPermission('backup.restore'));
 
@@ -157,7 +166,6 @@ const confirmationError = ref('');
 const confirmation = ref('');
 const backupFile = ref(null);
 const backupInput = ref(null);
-const confirmOpen = ref(false);
 
 function onFileChange(event) {
     fileError.value = '';
@@ -193,7 +201,11 @@ async function download(format) {
     }
 }
 
-function askRestore() {
+async function askRestore() {
+    if (restoring.value || passwordPrompt.open) {
+        return;
+    }
+
     error.value = '';
     successMessage.value = '';
     fileError.value = backupFile.value ? '' : 'Choose a SQL backup file.';
@@ -203,22 +215,25 @@ function askRestore() {
         return;
     }
 
-    confirmOpen.value = true;
-}
-
-async function runRestore() {
-    confirmOpen.value = false;
-
-    if (!backupFile.value) {
-        return;
-    }
-
+    const file = backupFile.value;
+    const confirmationText = confirmation.value;
+    restoring.value = true;
     error.value = '';
     successMessage.value = '';
-    restoring.value = true;
 
     try {
-        const result = await restoreDatabase(backupFile.value, confirmation.value);
+        const result = await askAdministratorPassword({
+            title: 'Restore database',
+            message: 'Replace the current database records with the selected SQL backup? This cannot be undone from this page except by restoring another backup. Enter your Admin or Super Admin password to continue.',
+            confirmLabel: 'Restore Database',
+            variant: 'danger',
+            run: (password) => restoreDatabase(file, confirmationText, password),
+        });
+
+        if (!result) {
+            return;
+        }
+
         successMessage.value = result.message || 'Database restored from the selected backup.';
         confirmation.value = '';
         backupFile.value = null;
