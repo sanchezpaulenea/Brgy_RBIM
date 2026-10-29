@@ -83,7 +83,7 @@
                     <table class="min-w-full table-fixed divide-y divide-slate-200 text-sm">
                         <thead class="bg-slate-50">
                             <tr>
-                                <th class="px-3 py-3 text-center font-semibold text-slate-600">Name</th>
+                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Name</th>
                                 <th class="w-[14%] px-3 py-3 text-center font-semibold text-slate-600">Household</th>
                                 <th class="w-[16%] px-3 py-3 text-center font-semibold text-slate-600">Relationship to Household Head</th>
                                 <th class="w-[8%] px-3 py-3 text-center font-semibold text-slate-600">Gender</th>
@@ -99,7 +99,7 @@
                                 class="cursor-pointer hover:bg-slate-50"
                                 @click="openDetail(resident.resident_id)"
                             >
-                                <td class="px-3 py-3 text-center font-medium text-slate-900">{{ resident.full_name || personDisplayName(resident) }}</td>
+                                <td class="px-4 py-3 text-left font-medium text-slate-900">{{ resident.full_name || personDisplayName(resident) }}</td>
                                 <td class="px-3 py-3 text-center text-slate-600">{{ householdLabelFor(resident) }}</td>
                                 <td class="px-3 py-3 text-center text-slate-600">{{ resident.relationship_to_hh || '—' }}</td>
                                 <td class="px-3 py-3 text-center text-slate-600">{{ resident.sex || '—' }}</td>

@@ -71,7 +71,7 @@
                                 <th class="w-[12%] px-3 py-3 text-center font-semibold text-slate-600">Household ID</th>
                                 <th class="w-[12%] px-3 py-3 text-center font-semibold text-slate-600">Street</th>
                                 <th class="w-[14%] px-3 py-3 text-center font-semibold text-slate-600">House Number</th>
-                                <th class="px-3 py-3 text-center font-semibold text-slate-600">Head Resident Name</th>
+                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Head Resident Name</th>
                                 <th class="w-[10%] px-3 py-3 text-center font-semibold text-slate-600">Status</th>
                                 <th class="w-[14%] px-3 py-3 text-center font-semibold text-slate-600">Registration Date</th>
                                 <th class="w-[16%] px-3 py-3 text-center font-semibold text-slate-600">Action</th>
@@ -87,7 +87,7 @@
                                 <td class="px-3 py-3 text-center text-slate-700">{{ household.household_id }}</td>
                                 <td class="px-3 py-3 text-center text-slate-900">{{ household.street_name || '—' }}</td>
                                 <td class="px-3 py-3 text-center text-slate-600">{{ household.house_number ?? '—' }}</td>
-                                <td class="px-3 py-3 text-center font-medium text-slate-900">{{ household.head_name || '—' }}</td>
+                                <td class="px-4 py-3 text-left font-medium text-slate-900">{{ household.head_name || '—' }}</td>
                                 <td class="px-3 py-3 text-center text-slate-600">{{ household.household_status || '—' }}</td>
                                 <td class="px-3 py-3 text-center whitespace-nowrap text-slate-600">{{ formatDate(household.registration_date) }}</td>
                                 <td class="px-3 py-3" @click.stop>

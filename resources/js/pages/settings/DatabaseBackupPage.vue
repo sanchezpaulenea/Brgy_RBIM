@@ -37,7 +37,7 @@
                     Excel and PDF leave out password hashes. The SQL file keeps them so accounts can be restored.
                 </p>
 
-                <div class="flex flex-wrap gap-2">
+                <div class="flex flex-wrap justify-end gap-2">
                     <button
                         type="button"
                         class="rbim-btn"

@@ -288,19 +288,11 @@
                             </button>
                             <button
                                 type="button"
-                                class="rbim-btn-outline"
+                                class="rbim-btn"
                                 :disabled="titleProblem !== '' || subtitleProblem !== '' || exporting !== ''"
                                 @click="download('csv')"
                             >
                                 {{ exporting === 'csv' ? 'Preparing CSV...' : 'Export CSV' }}
-                            </button>
-                            <button
-                                type="button"
-                                class="rbim-btn-outline"
-                                :disabled="titleProblem !== '' || subtitleProblem !== '' || exporting !== ''"
-                                @click="download('pdf')"
-                            >
-                                {{ exporting === 'pdf' ? 'Preparing PDF...' : 'Export PDF' }}
                             </button>
                         </div>
                         <p v-else class="text-sm text-slate-600">You do not have permission to export reports.</p>

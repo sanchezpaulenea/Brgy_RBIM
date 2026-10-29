@@ -345,9 +345,11 @@
                         </div>
                     </template>
 
-                    <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+                    <div class="flex items-center justify-between gap-2 border-t border-slate-100 pt-4">
                         <button type="button" class="rbim-btn-outline" :disabled="saving" @click="cancelEdit">Cancel</button>
-                        <button type="submit" class="rbim-btn" :disabled="saving">{{ saving ? 'Saving...' : 'Save' }}</button>
+                        <button type="submit" class="rbim-btn" :disabled="saving">
+                            {{ saving ? 'Saving...' : (editing === 'demographics' ? 'Update resident' : 'Save') }}
+                        </button>
                     </div>
                 </form>
             </div>

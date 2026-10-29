@@ -23,11 +23,11 @@
 
             <form
                 v-if="household"
-                class="mt-4 grid max-w-md gap-4"
+                class="mt-4 grid gap-4"
                 novalidate
                 @submit.prevent="confirmMemberCount"
             >
-                <div>
+                <div class="max-w-md">
                     <label :for="countInputId" class="rbim-label">
                         {{ countLabel }}<span class="rbim-required" aria-hidden="true">*</span>
                     </label>
@@ -43,12 +43,12 @@
                     >
                     <p v-if="countError" class="rbim-error">{{ countError }}</p>
                 </div>
-                <div class="flex flex-wrap items-center gap-2">
-                    <button type="submit" class="rbim-btn">
-                        Continue
-                    </button>
+                <div class="flex flex-wrap items-center justify-end gap-2">
                     <button v-if="showBack" type="button" class="rbim-btn-outline" @click="emit('back')">
                         Back
+                    </button>
+                    <button type="submit" class="rbim-btn">
+                        Continue
                     </button>
                 </div>
             </form>
@@ -104,12 +104,12 @@
                     />
                 </section>
 
-                <div class="flex flex-wrap items-center gap-2">
-                    <button type="submit" class="rbim-btn" :disabled="saving">
-                        {{ saveButtonLabel }}
-                    </button>
+                <div class="flex flex-wrap items-center justify-end gap-2">
                     <button v-if="showBack" type="button" class="rbim-btn-outline" :disabled="saving" @click="emit('back')">
                         Back
+                    </button>
+                    <button type="submit" class="rbim-btn" :disabled="saving">
+                        {{ saveButtonLabel }}
                     </button>
                 </div>
             </form>
