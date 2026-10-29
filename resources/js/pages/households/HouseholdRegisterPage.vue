@@ -555,6 +555,7 @@ async function handleSave() {
     }
 
     const duplicate = duplicateResidentMatch(existingResidents.value, head.value);
+    let duplicateConfirmed = false;
 
     if (duplicate) {
         const proceed = await askConfirm({
@@ -567,6 +568,8 @@ async function handleSave() {
         if (!proceed) {
             return;
         }
+
+        duplicateConfirmed = true;
     }
 
     saving.value = true;
@@ -582,6 +585,7 @@ async function handleSave() {
             street_id: toId(household.street_id),
             house_number: optionalHouseNumber(household.house_number),
             ...householdStructurePayload(household),
+            confirm_duplicate: duplicateConfirmed,
             head: headData,
         });
 

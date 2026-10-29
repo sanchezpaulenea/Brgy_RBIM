@@ -44,6 +44,15 @@ interface ResidentRepositoryInterface
 
     public function findById(int $residentId): ?Resident;
 
+    public function findMatchingIdentity(
+        string $lastName,
+        string $firstName,
+        ?string $middleName,
+        ?string $suffix,
+        string $dateOfBirth,
+        ?int $householdId = null,
+    ): ?Resident;
+
     public function findForCertificate(int $residentId): ?Resident;
 
     /**

@@ -7,9 +7,12 @@ use App\Models\Logs\Action;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\HouseholdManagement\StreetRepositoryInterface;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
+use App\Support\IdenticalWriteLock;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class StreetServices
@@ -36,22 +39,37 @@ class StreetServices
      */
     public function createStreet(User $performedBy, array $data): array
     {
-        return DB::transaction(function () use ($performedBy, $data) {
-            $data['street_name'] = Street::standardizeName($data['street_name']);
-            $street = $this->streetRepository->create($data);
+        return IdenticalWriteLock::acquire('street:'.mb_strtolower(trim((string) $data['street_name'])), function () use ($performedBy, $data) {
+            return DB::transaction(function () use ($performedBy, $data) {
+                $data['street_name'] = Street::standardizeName($data['street_name']);
 
-            $this->auditLogRepository->log(
-                performedByUserId: $performedBy->user_id,
-                actionId: Action::CREATE,
-                recordId: $street->street_id,
-                description: 'Create street',
-                oldValue: null,
-                newValue: $street->street_name,
-                target: 'street_name',
-                entity: 'street',
-            );
+                if (Street::query()->whereRaw('LOWER(street_name) = ?', [mb_strtolower($data['street_name'])])->exists()) {
+                    throw ValidationException::withMessages([
+                        'street_name' => ['This street name already exists.'],
+                    ]);
+                }
 
-            return $this->streetRepository->formatRecord($street);
+                try {
+                    $street = $this->streetRepository->create($data);
+                } catch (UniqueConstraintViolationException) {
+                    throw ValidationException::withMessages([
+                        'street_name' => ['This street name already exists.'],
+                    ]);
+                }
+
+                $this->auditLogRepository->log(
+                    performedByUserId: $performedBy->user_id,
+                    actionId: Action::CREATE,
+                    recordId: $street->street_id,
+                    description: 'Create street',
+                    oldValue: null,
+                    newValue: $street->street_name,
+                    target: 'street_name',
+                    entity: 'street',
+                );
+
+                return $this->streetRepository->formatRecord($street);
+            });
         });
     }
 

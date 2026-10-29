@@ -44,10 +44,15 @@ export function isWellFormedUsername(value) {
     return USERNAME_PATTERN.test(typeof value === 'string' ? value.trim() : '');
 }
 
+/**
+ * Login accepts any non-empty password without spaces, including one shorter
+ * than the account password. The server decides whether it matches and records
+ * a failed attempt. Minimum length applies when a password is created or changed.
+ */
 export function isWellFormedPassword(value) {
     const password = typeof value === 'string' ? value : '';
 
-    return password.length >= LOGIN_PASSWORD_MIN_LENGTH && !/\s/.test(password);
+    return password !== '' && !/\s/.test(password);
 }
 
 export const BARANGAY_ADDRESS_MIN_LENGTH = 10;

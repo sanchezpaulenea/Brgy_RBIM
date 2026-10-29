@@ -7,9 +7,12 @@ use App\Models\ResidentManagement\Demographic\Religion;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Demographic\ReligionRepositoryInterface;
+use App\Support\IdenticalWriteLock;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class ReligionServices
@@ -36,22 +39,37 @@ class ReligionServices
      */
     public function createReligion(User $performedBy, array $data): array
     {
-        return DB::transaction(function () use ($performedBy, $data) {
-            $data['religion'] = Religion::standardizeName($data['religion']);
-            $religion = $this->religionRepository->create($data);
+        return IdenticalWriteLock::acquire('religion:'.mb_strtolower(trim((string) $data['religion'])), function () use ($performedBy, $data) {
+            return DB::transaction(function () use ($performedBy, $data) {
+                $data['religion'] = Religion::standardizeName($data['religion']);
 
-            $this->auditLogRepository->log(
-                performedByUserId: $performedBy->user_id,
-                actionId: Action::CREATE,
-                recordId: $religion->religion_id,
-                description: 'Create religion',
-                oldValue: null,
-                newValue: $religion->religion,
-                target: 'religion',
-                entity: 'religion',
-            );
+                if (Religion::query()->whereRaw('LOWER(religion) = ?', [mb_strtolower($data['religion'])])->exists()) {
+                    throw ValidationException::withMessages([
+                        'religion' => ['This religion already exists.'],
+                    ]);
+                }
 
-            return $this->religionRepository->formatRecord($religion);
+                try {
+                    $religion = $this->religionRepository->create($data);
+                } catch (UniqueConstraintViolationException) {
+                    throw ValidationException::withMessages([
+                        'religion' => ['This religion already exists.'],
+                    ]);
+                }
+
+                $this->auditLogRepository->log(
+                    performedByUserId: $performedBy->user_id,
+                    actionId: Action::CREATE,
+                    recordId: $religion->religion_id,
+                    description: 'Create religion',
+                    oldValue: null,
+                    newValue: $religion->religion,
+                    target: 'religion',
+                    entity: 'religion',
+                );
+
+                return $this->religionRepository->formatRecord($religion);
+            });
         });
     }
 

@@ -2,6 +2,8 @@
 
 namespace App\Models\Concerns;
 
+use App\Support\IdenticalWriteLock;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Str;
 
 trait FindsOrCreatesLookupByLabel
@@ -11,11 +13,23 @@ trait FindsOrCreatesLookupByLabel
         $column = static::lookupLabelColumn();
         $normalized = Str::of($label)->squish()->title()->toString();
 
-        $existing = static::query()
-            ->whereRaw('LOWER('.$column.') = ?', [Str::lower($normalized)])
-            ->first();
+        return IdenticalWriteLock::acquire(static::class.':'.Str::lower($normalized), function () use ($column, $normalized) {
+            $existing = static::query()
+                ->whereRaw('LOWER('.$column.') = ?', [Str::lower($normalized)])
+                ->first();
 
-        return $existing ?? static::query()->create([$column => $normalized]);
+            if ($existing !== null) {
+                return $existing;
+            }
+
+            try {
+                return static::query()->create([$column => $normalized]);
+            } catch (UniqueConstraintViolationException) {
+                return static::query()
+                    ->whereRaw('LOWER('.$column.') = ?', [Str::lower($normalized)])
+                    ->firstOrFail();
+            }
+        });
     }
 
     protected static function lookupLabelColumn(): string

@@ -9,6 +9,7 @@ use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\BarangayPersonnel\BarangayPersonnelRepositoryInterface;
 use App\Repositories\Interfaces\BarangayPersonnel\PersonnelPositionRepositoryInterface;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
+use App\Support\IdenticalWriteLock;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -42,39 +43,40 @@ class BarangayPersonnelService
      */
     public function createPersonnel(User $performedBy, array $data): array
     {
-        $this->assertNoUnconfirmedDuplicate($data);
+        return IdenticalWriteLock::acquire(IdenticalWriteLock::personnel($data), function () use ($performedBy, $data) {
+            return DB::transaction(function () use ($performedBy, $data) {
+                $this->assertNoUnconfirmedDuplicate($data);
+                $positionId = $this->resolvePositionId($performedBy, $data);
+                $this->assertPositionAvailable($positionId);
 
-        return DB::transaction(function () use ($performedBy, $data) {
-            $positionId = $this->resolvePositionId($performedBy, $data);
-            $this->assertPositionAvailable($positionId);
+                $personnel = $this->personnelRepository->create([
+                    'position_id' => $positionId,
+                    'personnel_last_name' => $data['personnel_last_name'],
+                    'personnel_first_name' => $data['personnel_first_name'],
+                    'personnel_middle_name' => $data['personnel_middle_name'] ?? null,
+                    'personnel_suffix' => $data['personnel_suffix'] ?? null,
+                    'personnel_date_of_birth' => $data['personnel_date_of_birth'],
+                    'sex_id' => $data['sex_id'],
+                    'personnel_status_id' => $data['personnel_status_id'] ?? self::ACTIVE_STATUS_ID,
+                ]);
 
-            $personnel = $this->personnelRepository->create([
-                'position_id' => $positionId,
-                'personnel_last_name' => $data['personnel_last_name'],
-                'personnel_first_name' => $data['personnel_first_name'],
-                'personnel_middle_name' => $data['personnel_middle_name'] ?? null,
-                'personnel_suffix' => $data['personnel_suffix'] ?? null,
-                'personnel_date_of_birth' => $data['personnel_date_of_birth'],
-                'sex_id' => $data['sex_id'],
-                'personnel_status_id' => $data['personnel_status_id'] ?? self::ACTIVE_STATUS_ID,
-            ]);
+                $this->auditLogRepository->log(
+                    performedByUserId: $performedBy->user_id,
+                    actionId: Action::CREATE,
+                    recordId: $personnel->personnel_id,
+                    description: 'Create barangay personnel',
+                    oldValue: null,
+                    newValue: $this->fullName($personnel),
+                    target: 'record',
+                    entity: 'barangay_personnel',
+                );
 
-            $this->auditLogRepository->log(
-                performedByUserId: $performedBy->user_id,
-                actionId: Action::CREATE,
-                recordId: $personnel->personnel_id,
-                description: 'Create barangay personnel',
-                oldValue: null,
-                newValue: $this->fullName($personnel),
-                target: 'record',
-                entity: 'barangay_personnel',
-            );
+                if ($this->punongBarangayName->isPunong($personnel)) {
+                    $this->punongBarangayName->alignSettingWithPersonnel($performedBy);
+                }
 
-            if ($this->punongBarangayName->isPunong($personnel)) {
-                $this->punongBarangayName->alignSettingWithPersonnel($performedBy);
-            }
-
-            return $this->formatRecord($personnel);
+                return $this->formatRecord($personnel);
+            });
         });
     }
 
@@ -84,28 +86,29 @@ class BarangayPersonnelService
      */
     public function updatePersonnel(User $performedBy, BarangayPersonnel $personnel, array $data): array
     {
-        $this->assertNoUnconfirmedDuplicate($data, $personnel->personnel_id);
-
         $previous = $this->personnelAuditSnapshot($personnel);
 
-        return DB::transaction(function () use ($performedBy, $personnel, $data, $previous) {
-            $wasPunong = $this->punongBarangayName->isPunong($personnel);
+        return IdenticalWriteLock::acquire(IdenticalWriteLock::personnel($data), function () use ($performedBy, $personnel, $data, $previous) {
+            return DB::transaction(function () use ($performedBy, $personnel, $data, $previous) {
+                $this->assertNoUnconfirmedDuplicate($data, $personnel->personnel_id);
+                $wasPunong = $this->punongBarangayName->isPunong($personnel);
 
-            if (! empty($data['position_id'])) {
-                $this->assertPositionAvailable((int) $data['position_id'], $personnel->personnel_id);
-            }
+                if (! empty($data['position_id'])) {
+                    $this->assertPositionAvailable((int) $data['position_id'], $personnel->personnel_id);
+                }
 
-            unset($data['confirm_duplicate'], $data['position_name'], $data['admin_password']);
+                unset($data['confirm_duplicate'], $data['position_name'], $data['admin_password']);
 
-            $updated = $this->personnelRepository->update($personnel, $data);
+                $updated = $this->personnelRepository->update($personnel, $data);
 
-            $this->logPersonnelFieldChanges($performedBy, $updated, $previous);
+                $this->logPersonnelFieldChanges($performedBy, $updated, $previous);
 
-            if ($wasPunong || $this->punongBarangayName->isPunong($updated)) {
-                $this->punongBarangayName->alignSettingWithPersonnel($performedBy);
-            }
+                if ($wasPunong || $this->punongBarangayName->isPunong($updated)) {
+                    $this->punongBarangayName->alignSettingWithPersonnel($performedBy);
+                }
 
-            return $this->formatRecord($updated);
+                return $this->formatRecord($updated);
+            });
         });
     }
 

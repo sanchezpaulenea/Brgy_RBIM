@@ -64,6 +64,7 @@ class StoreResidentRequest extends FormRequest
                 Rule::exists('resident_status', 'resident_status_id'),
             ],
             'household_id' => ['required', 'integer', Rule::exists('household', 'household_id')],
+            'confirm_duplicate' => ['sometimes', 'boolean'],
         ];
     }
 

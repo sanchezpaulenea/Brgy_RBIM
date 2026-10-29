@@ -122,7 +122,7 @@
                                         :disabled="updatingStatusId === account.user_id"
                                         @change="handleStatusChange(account, $event)"
                                     >
-                                        <option v-for="status in userStatuses" :key="status.id" :value="status.id">
+                                        <option v-for="status in statusesFor(account)" :key="status.id" :value="status.id">
                                             {{ status.label }}
                                         </option>
                                     </select>
@@ -239,6 +239,16 @@ const filteredUsers = computed(() => (
         return matchesUser && matchesStatus;
     })
 ));
+
+function statusesFor(account) {
+    const roles = Array.isArray(account.roles) ? account.roles : [];
+
+    if (!roles.includes(ROLES.SUPER_ADMIN)) {
+        return userStatuses.value;
+    }
+
+    return userStatuses.value.filter((status) => status.label !== 'Locked');
+}
 
 function personnelName(account) {
     return account.personnel?.full_name

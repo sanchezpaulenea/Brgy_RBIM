@@ -2,13 +2,14 @@
 
 namespace App\Models\ResidentManagement\Health;
 
+use App\Models\Concerns\FindsOrCreatesLookupByLabel;
 use App\Models\Concerns\ResolvesLookupSentinel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 
 class Disability extends Model
 {
+    use FindsOrCreatesLookupByLabel;
     use ResolvesLookupSentinel;
 
     protected $table = 'disability';
@@ -24,17 +25,6 @@ class Disability extends Model
     public function getRouteKeyName(): string
     {
         return 'disability_id';
-    }
-
-    public static function findOrCreateByLabel(string $label): self
-    {
-        $normalized = Str::of($label)->squish()->title()->toString();
-
-        $existing = static::query()
-            ->whereRaw('LOWER(disability) = ?', [Str::lower($normalized)])
-            ->first();
-
-        return $existing ?? static::query()->create(['disability' => $normalized]);
     }
 
     /**

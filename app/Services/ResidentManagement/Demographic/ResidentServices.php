@@ -21,6 +21,7 @@ use App\Services\ResidentManagement\Health\WomenHealthService;
 use App\Services\ResidentManagement\Migration\MigrationService;
 use App\Services\ResidentManagement\Skill\SkillService;
 use App\Services\ResidentManagement\Sociocivic\SociocivicService;
+use App\Support\IdenticalWriteLock;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -132,24 +133,30 @@ class ResidentServices
         $data['clan_id'] = $data['clan_id'] ?? $household->clan_id;
         $data['resident_status_id'] = $data['resident_status_id'] ?? ResidentStatus::ACTIVE;
         $data = $this->nullBlankDemographicLookups($data);
+        $confirmDuplicate = ! empty($data['confirm_duplicate']);
+        unset($data['confirm_duplicate']);
 
-        return DB::transaction(function () use ($performedBy, $data, $household) {
-            $this->assertNotAlreadyRegistered($household, $data);
+        return IdenticalWriteLock::acquire($this->householdMemberLock($household, $data), function () use ($performedBy, $data, $household, $confirmDuplicate) {
+            return IdenticalWriteLock::acquire(IdenticalWriteLock::resident($data), function () use ($performedBy, $data, $household, $confirmDuplicate) {
+                return DB::transaction(function () use ($performedBy, $data, $household, $confirmDuplicate) {
+                    $this->assertNotAlreadyRegistered($household, $data, $confirmDuplicate);
 
-            $resident = $this->residentRepository->create($data);
+                    $resident = $this->residentRepository->create($data);
 
-            $this->auditLogRepository->log(
-                performedByUserId: $performedBy->user_id,
-                actionId: Action::CREATE,
-                recordId: $resident->resident_id,
-                description: 'Create resident',
-                oldValue: null,
-                newValue: $this->fullName($resident),
-                target: 'record',
-                entity: 'resident',
-            );
+                    $this->auditLogRepository->log(
+                        performedByUserId: $performedBy->user_id,
+                        actionId: Action::CREATE,
+                        recordId: $resident->resident_id,
+                        description: 'Create resident',
+                        oldValue: null,
+                        newValue: $this->fullName($resident),
+                        target: 'record',
+                        entity: 'resident',
+                    );
 
-            return $this->formatRecord($resident);
+                    return $this->formatRecord($resident);
+                });
+            });
         });
     }
 
@@ -423,31 +430,63 @@ class ResidentServices
     }
 
     /**
-     * A double-clicked Save fires two identical registrations. Locking the
-     * household row makes the second request wait for the first to commit, so
-     * it sees the resident that was just inserted instead of duplicating them.
+     * Two accounts can submit the same member before either row exists. The
+     * caller holds a named lock taken before this transaction, so this check
+     * sees a resident the other account just saved.
      *
      * @param  array<string, mixed>  $data
      */
-    private function assertNotAlreadyRegistered(Household $household, array $data): void
+    private function assertNotAlreadyRegistered(Household $household, array $data, bool $confirmDuplicate): void
     {
         DB::table('household')
             ->where('household_id', $household->household_id)
             ->lockForUpdate()
             ->first();
 
-        $exists = Resident::query()
+        $inHousehold = Resident::query()
             ->where('household_id', $household->household_id)
             ->whereRaw('LOWER(last_name) = ?', [mb_strtolower(trim((string) ($data['last_name'] ?? '')))])
             ->whereRaw('LOWER(first_name) = ?', [mb_strtolower(trim((string) ($data['first_name'] ?? '')))])
-            ->where('date_of_birth', $data['date_of_birth'] ?? null)
+            ->whereDate('date_of_birth', substr((string) ($data['date_of_birth'] ?? ''), 0, 10))
             ->exists();
 
-        if ($exists) {
+        if ($inHousehold) {
             throw ValidationException::withMessages([
-                'resident' => ['This resident is already registered in this household.'],
+                'last_name' => ['This resident is already registered in this household.'],
             ]);
         }
+
+        if ($confirmDuplicate) {
+            return;
+        }
+
+        $samePerson = $this->residentRepository->findMatchingIdentity(
+            (string) ($data['last_name'] ?? ''),
+            (string) ($data['first_name'] ?? ''),
+            isset($data['middle_name']) ? (string) $data['middle_name'] : null,
+            isset($data['suffix']) ? (string) $data['suffix'] : null,
+            (string) ($data['date_of_birth'] ?? ''),
+        );
+
+        if ($samePerson !== null) {
+            throw ValidationException::withMessages([
+                'last_name' => ['This resident is already registered.'],
+            ]);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function householdMemberLock(Household $household, array $data): string
+    {
+        return implode('|', [
+            'household-member',
+            (string) $household->household_id,
+            mb_strtolower(trim((string) ($data['last_name'] ?? ''))),
+            mb_strtolower(trim((string) ($data['first_name'] ?? ''))),
+            substr((string) ($data['date_of_birth'] ?? ''), 0, 10),
+        ]);
     }
 
     /**

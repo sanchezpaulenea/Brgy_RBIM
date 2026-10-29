@@ -182,6 +182,29 @@ class ResidentRepository implements ResidentRepositoryInterface
         return $this->list();
     }
 
+    public function findMatchingIdentity(
+        string $lastName,
+        string $firstName,
+        ?string $middleName,
+        ?string $suffix,
+        string $dateOfBirth,
+        ?int $householdId = null,
+    ): ?Resident {
+        $query = Resident::query()
+            ->whereRaw('LOWER(last_name) = ?', [mb_strtolower(trim($lastName))])
+            ->whereRaw('LOWER(first_name) = ?', [mb_strtolower(trim($firstName))])
+            ->whereDate('date_of_birth', substr($dateOfBirth, 0, 10));
+
+        $this->whereBlankOrEquals($query, 'middle_name', $middleName);
+        $this->whereBlankOrEquals($query, 'suffix', $suffix);
+
+        if ($householdId !== null) {
+            $query->where('household_id', $householdId);
+        }
+
+        return $query->first();
+    }
+
     public function findById(int $residentId): ?Resident
     {
         return Resident::query()
@@ -264,6 +287,24 @@ class ResidentRepository implements ResidentRepositoryInterface
         $resident->save();
 
         return $resident->fresh($this->defaultRelations()) ?? $resident;
+    }
+
+    /**
+     * @param  Builder<Resident>  $query
+     */
+    private function whereBlankOrEquals(Builder $query, string $column, ?string $value): void
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            $query->where(function (Builder $builder) use ($column): void {
+                $builder->whereNull($column)->orWhere($column, '');
+            });
+
+            return;
+        }
+
+        $query->whereRaw('LOWER('.$column.') = ?', [mb_strtolower($value)]);
     }
 
     /**

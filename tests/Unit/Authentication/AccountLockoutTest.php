@@ -4,6 +4,7 @@ namespace Tests\Unit\Authentication;
 
 use App\Models\Authentication\LoginStatus;
 use App\Models\Logs\UserLog;
+use App\Models\UserManagement\Role;
 use App\Models\UserManagement\User;
 use App\Models\UserManagement\UserStatus;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
@@ -157,6 +158,57 @@ class AccountLockoutTest extends TestCase
         $this->assertSame('Too many failed attempts. Your account has been locked.', $errors['username'][0]);
     }
 
+    public function test_super_admin_is_not_locked_after_failed_attempts(): void
+    {
+        $user = $this->makeUser(UserStatus::ACTIVE, superAdmin: true);
+
+        $this->userRepository->shouldReceive('findByUsername')->once()->andReturn($user);
+        $this->userRepository->shouldNotReceive('lockUserAccount');
+        $this->userLogRepository->shouldReceive('countRecentFailedAttempts')->once()->andReturn(99);
+        $this->expectLoginLog(LoginStatus::INVALID_PASSWORD);
+        $this->stubSettings(maxAttempts: 1);
+
+        $errors = $this->attemptLogin($user->username, 'ellen');
+
+        $this->assertArrayNotHasKey('lockout_remaining_seconds', $errors);
+        $this->assertSame('Invalid password, please try again.', $errors['password'][0]);
+    }
+
+    public function test_a_locked_super_admin_is_returned_to_active_before_the_password_is_checked(): void
+    {
+        $locked = $this->makeUser(UserStatus::LOCKED, superAdmin: true);
+        $active = $this->makeUser(UserStatus::ACTIVE, superAdmin: true);
+
+        $this->userRepository->shouldReceive('findByUsername')
+            ->twice()
+            ->andReturn($locked, $active);
+        $this->userRepository->shouldReceive('unlockUserAccount')->once()->with(self::USER_ID);
+        $this->userRepository->shouldNotReceive('lockUserAccount');
+        $this->userLogRepository->shouldReceive('countRecentFailedAttempts')->once()->andReturn(0);
+        $this->expectLoginLog(LoginStatus::INVALID_PASSWORD);
+        $this->stubSettings(maxAttempts: 1);
+
+        $errors = $this->attemptLogin($locked->username, 'ellen1');
+
+        $this->assertSame('Invalid password, please try again.', $errors['password'][0]);
+    }
+
+    public function test_a_password_shorter_than_the_account_password_is_logged_as_a_failed_attempt(): void
+    {
+        $user = $this->makeUser(UserStatus::ACTIVE);
+
+        $this->userRepository->shouldReceive('findByUsername')->once()->andReturn($user);
+        $this->userRepository->shouldNotReceive('lockUserAccount');
+        $this->userLogRepository->shouldReceive('countRecentFailedAttempts')->once()->andReturn(0);
+        $this->expectLoginLog(LoginStatus::INVALID_PASSWORD);
+        $this->stubSettings(maxAttempts: 5);
+
+        $errors = $this->attemptLogin($user->username, 'ellen');
+
+        $this->assertSame('Invalid password, please try again.', $errors['password'][0]);
+        $this->assertArrayNotHasKey('username', $errors);
+    }
+
     public function test_a_failed_attempt_below_the_threshold_does_not_lock_the_account(): void
     {
         $user = $this->makeUser(UserStatus::ACTIVE);
@@ -219,7 +271,7 @@ class AccountLockoutTest extends TestCase
         $this->fail('Expected the login attempt to be rejected.');
     }
 
-    private function makeUser(int $userStatusId): User
+    private function makeUser(int $userStatusId, bool $superAdmin = false): User
     {
         $user = new User([
             'username' => 'victor',
@@ -228,6 +280,14 @@ class AccountLockoutTest extends TestCase
         ]);
 
         $user->user_id = self::USER_ID;
+
+        $roles = collect();
+
+        if ($superAdmin) {
+            $roles->push(new Role(['role_name' => Role::SUPER_ADMIN]));
+        }
+
+        $user->setRelation('roles', $roles);
 
         $user->setRelation('userStatus', new UserStatus([
             'user_status' => match ($userStatusId) {

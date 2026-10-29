@@ -7,9 +7,12 @@ use App\Models\ResidentManagement\Demographic\Nationality;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Demographic\NationalityRepositoryInterface;
+use App\Support\IdenticalWriteLock;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class NationalityServices
@@ -36,22 +39,37 @@ class NationalityServices
      */
     public function createNationality(User $performedBy, array $data): array
     {
-        return DB::transaction(function () use ($performedBy, $data) {
-            $data['nationality'] = Nationality::standardizeName($data['nationality']);
-            $nationality = $this->nationalityRepository->create($data);
+        return IdenticalWriteLock::acquire('nationality:'.mb_strtolower(trim((string) $data['nationality'])), function () use ($performedBy, $data) {
+            return DB::transaction(function () use ($performedBy, $data) {
+                $data['nationality'] = Nationality::standardizeName($data['nationality']);
 
-            $this->auditLogRepository->log(
-                performedByUserId: $performedBy->user_id,
-                actionId: Action::CREATE,
-                recordId: $nationality->nationality_id,
-                description: 'Create nationality',
-                oldValue: null,
-                newValue: $nationality->nationality,
-                target: 'nationality',
-                entity: 'nationality',
-            );
+                if (Nationality::query()->whereRaw('LOWER(nationality) = ?', [mb_strtolower($data['nationality'])])->exists()) {
+                    throw ValidationException::withMessages([
+                        'nationality' => ['This nationality already exists.'],
+                    ]);
+                }
 
-            return $this->nationalityRepository->formatRecord($nationality);
+                try {
+                    $nationality = $this->nationalityRepository->create($data);
+                } catch (UniqueConstraintViolationException) {
+                    throw ValidationException::withMessages([
+                        'nationality' => ['This nationality already exists.'],
+                    ]);
+                }
+
+                $this->auditLogRepository->log(
+                    performedByUserId: $performedBy->user_id,
+                    actionId: Action::CREATE,
+                    recordId: $nationality->nationality_id,
+                    description: 'Create nationality',
+                    oldValue: null,
+                    newValue: $nationality->nationality,
+                    target: 'nationality',
+                    entity: 'nationality',
+                );
+
+                return $this->nationalityRepository->formatRecord($nationality);
+            });
         });
     }
 

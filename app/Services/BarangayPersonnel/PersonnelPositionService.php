@@ -7,9 +7,12 @@ use App\Models\Logs\Action;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\BarangayPersonnel\PersonnelPositionRepositoryInterface;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
+use App\Support\IdenticalWriteLock;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class PersonnelPositionService
@@ -36,22 +39,37 @@ class PersonnelPositionService
      */
     public function createPosition(User $performedBy, array $data): array
     {
-        return DB::transaction(function () use ($performedBy, $data) {
-            $data['position_name'] = PersonnelPosition::standardizeName($data['position_name']);
-            $position = $this->personnelPositionRepository->create($data);
+        return IdenticalWriteLock::acquire('position:'.mb_strtolower(trim((string) $data['position_name'])), function () use ($performedBy, $data) {
+            return DB::transaction(function () use ($performedBy, $data) {
+                $data['position_name'] = PersonnelPosition::standardizeName($data['position_name']);
 
-            $this->auditLogRepository->log(
-                performedByUserId: $performedBy->user_id,
-                actionId: Action::CREATE,
-                recordId: $position->position_id,
-                description: 'Create personnel position',
-                oldValue: null,
-                newValue: $position->position_name,
-                target: 'position_name',
-                entity: 'personnel_position',
-            );
+                if (PersonnelPosition::query()->whereRaw('LOWER(position_name) = ?', [mb_strtolower($data['position_name'])])->exists()) {
+                    throw ValidationException::withMessages([
+                        'position_name' => ['This position name already exists.'],
+                    ]);
+                }
 
-            return $this->personnelPositionRepository->formatRecord($position);
+                try {
+                    $position = $this->personnelPositionRepository->create($data);
+                } catch (UniqueConstraintViolationException) {
+                    throw ValidationException::withMessages([
+                        'position_name' => ['This position name already exists.'],
+                    ]);
+                }
+
+                $this->auditLogRepository->log(
+                    performedByUserId: $performedBy->user_id,
+                    actionId: Action::CREATE,
+                    recordId: $position->position_id,
+                    description: 'Create personnel position',
+                    oldValue: null,
+                    newValue: $position->position_name,
+                    target: 'position_name',
+                    entity: 'personnel_position',
+                );
+
+                return $this->personnelPositionRepository->formatRecord($position);
+            });
         });
     }
 

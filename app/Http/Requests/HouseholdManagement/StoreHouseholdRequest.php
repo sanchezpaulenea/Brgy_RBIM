@@ -76,6 +76,7 @@ class StoreHouseholdRequest extends FormRequest
                 'integer',
                 Rule::exists('household_status', 'household_status_id'),
             ],
+            'confirm_duplicate' => ['sometimes', 'boolean'],
             'head' => ['required', 'array'],
             'head.last_name' => ['required', 'string', 'max:45', new ValidPersonnelName],
             'head.first_name' => ['required', 'string', 'max:45', new ValidPersonnelName],

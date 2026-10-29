@@ -5,6 +5,7 @@ namespace App\Services\Authentication;
 use App\Models\Authentication\LoginStatus;
 use App\Models\BarangayPersonnel\PersonnelStatus;
 use App\Models\Logs\Action;
+use App\Models\UserManagement\Role;
 use App\Models\UserManagement\User;
 use App\Models\UserManagement\UserStatus;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
@@ -71,6 +72,11 @@ class AuthenticationService
             throw ValidationException::withMessages([
                 'username' => ['Invalid username.'],
             ]);
+        }
+
+        if ($this->accountIsSuperAdmin($user) && $this->isLocked($user)) {
+            $this->userRepository->unlockUserAccount($user->user_id);
+            $user = $this->userRepository->findByUsername($username) ?? $user;
         }
 
         if ($this->attemptAutoUnlock($user)) {
@@ -298,7 +304,9 @@ class AuthenticationService
         $lockoutMinutes = (int) $this->settingService->get('account_lockout_minutes');
         $recentFailed = $this->userLogRepository->countRecentFailedAttempts($user->user_id, $lockoutMinutes);
 
-        $locksAccount = $maxAttempts > 0 && $recentFailed + 1 >= $maxAttempts;
+        $locksAccount = ! $this->accountIsSuperAdmin($user)
+            && $maxAttempts > 0
+            && $recentFailed + 1 >= $maxAttempts;
 
         if ($locksAccount) {
             $this->userRepository->lockUserAccount($user->user_id);
@@ -341,6 +349,21 @@ class AuthenticationService
     private function isLocked(User $user): bool
     {
         return (int) $user->user_status_id === UserStatus::LOCKED;
+    }
+
+    /**
+     * Super Admin stays Active. Failed sign-in attempts are still recorded,
+     * and they never move this account to Locked.
+     */
+    private function accountIsSuperAdmin(User $user): bool
+    {
+        if ($user->relationLoaded('roles')) {
+            return $user->roles->contains(
+                fn ($role): bool => ($role->role_name ?? null) === Role::SUPER_ADMIN
+            );
+        }
+
+        return $user->isSuperAdmin();
     }
 
     /**

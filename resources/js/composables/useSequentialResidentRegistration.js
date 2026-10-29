@@ -176,6 +176,7 @@ export function useSequentialResidentRegistration({
 
         const existing = await Promise.resolve(getExistingResidents?.() ?? []);
         const duplicate = duplicateResidentMatch(existing, member.value);
+        let duplicateConfirmed = false;
 
         if (duplicate) {
             const proceed = await askConfirm({
@@ -188,6 +189,8 @@ export function useSequentialResidentRegistration({
             if (!proceed) {
                 return;
             }
+
+            duplicateConfirmed = true;
         }
 
         saving.value = true;
@@ -197,6 +200,7 @@ export function useSequentialResidentRegistration({
                 await residentService.createResident({
                     ...residentPayload(member.value),
                     household_id: householdId,
+                    confirm_duplicate: duplicateConfirmed,
                 }),
             );
 

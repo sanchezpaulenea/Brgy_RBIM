@@ -14,6 +14,7 @@ use App\Repositories\Interfaces\UserManagement\UserStatusInterface;
 use App\Services\SystemSetting\SystemSettingService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class UserService
@@ -95,6 +96,12 @@ class UserService
      */
     public function updateStatus(User $performedBy, User $user, int $userStatusId): array
     {
+        if ($user->isSuperAdmin() && $userStatusId === UserStatus::LOCKED) {
+            throw ValidationException::withMessages([
+                'user_status_id' => ['The Super Admin account cannot be locked.'],
+            ]);
+        }
+
         $oldStatusId = (string) $user->user_status_id;
 
         return DB::transaction(function () use ($performedBy, $user, $userStatusId, $oldStatusId) {

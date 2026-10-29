@@ -12,6 +12,7 @@ use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\HouseholdManagement\HouseholdRepositoryInterface;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Demographic\ResidentRepositoryInterface;
+use App\Support\IdenticalWriteLock;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -41,83 +42,112 @@ class HouseholdServices
     public function createHousehold(User $performedBy, array $data): array
     {
         $headData = $data['head'];
+        $confirmDuplicate = ! empty($data['confirm_duplicate']);
 
-        return DB::transaction(function () use ($performedBy, $data, $headData) {
-            $household = null;
-            $resident = null;
+        return IdenticalWriteLock::acquire(IdenticalWriteLock::resident($headData), function () use ($performedBy, $data, $headData, $confirmDuplicate) {
+            return DB::transaction(function () use ($performedBy, $data, $headData, $confirmDuplicate) {
+                $this->assertHeadIsNotAlreadyRegistered($headData, $confirmDuplicate);
 
-            try {
-                $this->disableForeignKeyChecks();
+                $household = null;
+                $resident = null;
 
-                $household = $this->householdRepository->create([
-                    'clan_id' => $data['clan_id'],
-                    'street_id' => $data['street_id'],
-                    'number_of_house_story' => $data['number_of_house_story'],
-                    'number_of_basement_level' => $this->basementLevelFromData($data),
-                    'house_number' => $data['house_number'] ?? null,
-                    'registration_date' => now(),
-                    'household_status_id' => $data['household_status_id'] ?? HouseholdStatus::ACTIVE,
-                    'head_resident_id' => 0,
-                ]);
+                try {
+                    $this->disableForeignKeyChecks();
 
-                $resident = $this->residentRepository->create([
-                    'last_name' => $headData['last_name'],
-                    'first_name' => $headData['first_name'],
-                    'middle_name' => $headData['middle_name'] ?? null,
-                    'suffix' => $headData['suffix'] ?? null,
-                    'relationship_to_hh_id' => RelationshipToHouseholdHead::HEAD,
-                    'sex_id' => $headData['sex_id'],
-                    'date_of_birth' => $headData['date_of_birth'],
-                    'birth_city_municipality' => $headData['birth_city_municipality'] ?? null,
-                    'birth_province' => $headData['birth_province'] ?? null,
-                    'birth_country' => $headData['birth_country'] ?? null,
-                    'nationality_id' => $this->nullBlankLookupId($headData['nationality_id'] ?? null),
-                    'religion_id' => $this->nullBlankLookupId($headData['religion_id'] ?? null),
-                    'ethnicity_id' => $this->nullBlankLookupId($headData['ethnicity_id'] ?? null),
-                    'marital_status_id' => $headData['marital_status_id'],
-                    'clan_id' => $headData['clan_id'] ?? $data['clan_id'],
-                    'resident_status_id' => $headData['resident_status_id'] ?? ResidentStatus::ACTIVE,
-                    'household_id' => $household->household_id,
-                ]);
+                    $household = $this->householdRepository->create([
+                        'clan_id' => $data['clan_id'],
+                        'street_id' => $data['street_id'],
+                        'number_of_house_story' => $data['number_of_house_story'],
+                        'number_of_basement_level' => $this->basementLevelFromData($data),
+                        'house_number' => $data['house_number'] ?? null,
+                        'registration_date' => now(),
+                        'household_status_id' => $data['household_status_id'] ?? HouseholdStatus::ACTIVE,
+                        'head_resident_id' => 0,
+                    ]);
 
-                $household = $this->householdRepository->updateHeadResident(
-                    $household,
-                    $resident->resident_id,
+                    $resident = $this->residentRepository->create([
+                        'last_name' => $headData['last_name'],
+                        'first_name' => $headData['first_name'],
+                        'middle_name' => $headData['middle_name'] ?? null,
+                        'suffix' => $headData['suffix'] ?? null,
+                        'relationship_to_hh_id' => RelationshipToHouseholdHead::HEAD,
+                        'sex_id' => $headData['sex_id'],
+                        'date_of_birth' => $headData['date_of_birth'],
+                        'birth_city_municipality' => $headData['birth_city_municipality'] ?? null,
+                        'birth_province' => $headData['birth_province'] ?? null,
+                        'birth_country' => $headData['birth_country'] ?? null,
+                        'nationality_id' => $this->nullBlankLookupId($headData['nationality_id'] ?? null),
+                        'religion_id' => $this->nullBlankLookupId($headData['religion_id'] ?? null),
+                        'ethnicity_id' => $this->nullBlankLookupId($headData['ethnicity_id'] ?? null),
+                        'marital_status_id' => $headData['marital_status_id'],
+                        'clan_id' => $headData['clan_id'] ?? $data['clan_id'],
+                        'resident_status_id' => $headData['resident_status_id'] ?? ResidentStatus::ACTIVE,
+                        'household_id' => $household->household_id,
+                    ]);
+
+                    $household = $this->householdRepository->updateHeadResident(
+                        $household,
+                        $resident->resident_id,
+                    );
+                } catch (UniqueConstraintViolationException $exception) {
+                    $this->rethrowUnlessDuplicateLotBlock($exception);
+                } finally {
+                    $this->enableForeignKeyChecks();
+                }
+
+                if ($household === null || $resident === null) {
+                    throw new \RuntimeException('Household registration did not produce both records.');
+                }
+
+                $this->auditLogRepository->log(
+                    performedByUserId: $performedBy->user_id,
+                    actionId: Action::CREATE,
+                    recordId: $household->household_id,
+                    description: 'Create household',
+                    oldValue: null,
+                    newValue: $this->householdAuditLabel($household),
+                    target: 'household',
+                    entity: 'household',
                 );
-            } catch (UniqueConstraintViolationException $exception) {
-                $this->rethrowUnlessDuplicateLotBlock($exception);
-            } finally {
-                $this->enableForeignKeyChecks();
-            }
 
-            if ($household === null || $resident === null) {
-                throw new \RuntimeException('Household registration did not produce both records.');
-            }
+                $this->auditLogRepository->log(
+                    performedByUserId: $performedBy->user_id,
+                    actionId: Action::CREATE,
+                    recordId: $resident->resident_id,
+                    description: 'Create resident',
+                    oldValue: null,
+                    newValue: $this->fullName($resident),
+                    target: 'record',
+                    entity: 'resident',
+                );
 
-            $this->auditLogRepository->log(
-                performedByUserId: $performedBy->user_id,
-                actionId: Action::CREATE,
-                recordId: $household->household_id,
-                description: 'Create household',
-                oldValue: null,
-                newValue: $this->householdAuditLabel($household),
-                target: 'household',
-                entity: 'household',
-            );
-
-            $this->auditLogRepository->log(
-                performedByUserId: $performedBy->user_id,
-                actionId: Action::CREATE,
-                recordId: $resident->resident_id,
-                description: 'Create resident',
-                oldValue: null,
-                newValue: $this->fullName($resident),
-                target: 'record',
-                entity: 'resident',
-            );
-
-            return $this->formatRecord($household);
+                return $this->formatRecord($household);
+            });
         });
+    }
+
+    /**
+     * @param  array<string, mixed>  $headData
+     */
+    private function assertHeadIsNotAlreadyRegistered(array $headData, bool $confirmDuplicate): void
+    {
+        if ($confirmDuplicate) {
+            return;
+        }
+
+        $samePerson = $this->residentRepository->findMatchingIdentity(
+            (string) ($headData['last_name'] ?? ''),
+            (string) ($headData['first_name'] ?? ''),
+            isset($headData['middle_name']) ? (string) $headData['middle_name'] : null,
+            isset($headData['suffix']) ? (string) $headData['suffix'] : null,
+            (string) ($headData['date_of_birth'] ?? ''),
+        );
+
+        if ($samePerson !== null) {
+            throw ValidationException::withMessages([
+                'head.last_name' => ['This resident is already registered.'],
+            ]);
+        }
     }
 
     /**

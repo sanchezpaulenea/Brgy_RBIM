@@ -7,9 +7,12 @@ use App\Models\ResidentManagement\Demographic\Ethnicity;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Repositories\Interfaces\ResidentManagement\Demographic\EthnicityRepositoryInterface;
+use App\Support\IdenticalWriteLock;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class EthnicityServices
@@ -36,22 +39,37 @@ class EthnicityServices
      */
     public function createEthnicity(User $performedBy, array $data): array
     {
-        return DB::transaction(function () use ($performedBy, $data) {
-            $data['ethnicity'] = Ethnicity::standardizeName($data['ethnicity']);
-            $ethnicity = $this->ethnicityRepository->create($data);
+        return IdenticalWriteLock::acquire('ethnicity:'.mb_strtolower(trim((string) $data['ethnicity'])), function () use ($performedBy, $data) {
+            return DB::transaction(function () use ($performedBy, $data) {
+                $data['ethnicity'] = Ethnicity::standardizeName($data['ethnicity']);
 
-            $this->auditLogRepository->log(
-                performedByUserId: $performedBy->user_id,
-                actionId: Action::CREATE,
-                recordId: $ethnicity->ethnicity_id,
-                description: 'Create ethnicity',
-                oldValue: null,
-                newValue: $ethnicity->ethnicity,
-                target: 'ethnicity',
-                entity: 'ethnicity',
-            );
+                if (Ethnicity::query()->whereRaw('LOWER(ethnicity) = ?', [mb_strtolower($data['ethnicity'])])->exists()) {
+                    throw ValidationException::withMessages([
+                        'ethnicity' => ['This ethnicity already exists.'],
+                    ]);
+                }
 
-            return $this->ethnicityRepository->formatRecord($ethnicity);
+                try {
+                    $ethnicity = $this->ethnicityRepository->create($data);
+                } catch (UniqueConstraintViolationException) {
+                    throw ValidationException::withMessages([
+                        'ethnicity' => ['This ethnicity already exists.'],
+                    ]);
+                }
+
+                $this->auditLogRepository->log(
+                    performedByUserId: $performedBy->user_id,
+                    actionId: Action::CREATE,
+                    recordId: $ethnicity->ethnicity_id,
+                    description: 'Create ethnicity',
+                    oldValue: null,
+                    newValue: $ethnicity->ethnicity,
+                    target: 'ethnicity',
+                    entity: 'ethnicity',
+                );
+
+                return $this->ethnicityRepository->formatRecord($ethnicity);
+            });
         });
     }
 

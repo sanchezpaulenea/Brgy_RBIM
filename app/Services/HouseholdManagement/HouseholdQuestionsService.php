@@ -11,7 +11,9 @@ use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\HouseholdManagement\HouseholdQuestionsRepositoryInterface;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
 use App\Services\ResidentManagement\Concerns\LogsAuditableFieldChanges;
+use App\Support\IdenticalWriteLock;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -31,33 +33,46 @@ class HouseholdQuestionsService
      */
     public function create(User $performedBy, Household $household, array $data): array
     {
-        if ($this->householdQuestionsRepository->findByHouseholdId($household->household_id) !== null) {
-            throw ValidationException::withMessages([
-                'questions' => ['Household questions already exist for this household.'],
-            ]);
-        }
+        return IdenticalWriteLock::acquire('household-questions:'.$household->household_id, function () use ($performedBy, $household, $data) {
+            return DB::transaction(function () use ($performedBy, $household, $data) {
+                DB::table('household')
+                    ->where('household_id', $household->household_id)
+                    ->lockForUpdate()
+                    ->first();
 
-        return DB::transaction(function () use ($performedBy, $household, $data) {
-            $questions = $this->householdQuestionsRepository->create(
-                $this->persistableAttributes($data, $household->household_id),
-            );
+                if ($this->householdQuestionsRepository->findByHouseholdId($household->household_id) !== null) {
+                    throw ValidationException::withMessages([
+                        'questions' => ['Household questions already exist for this household.'],
+                    ]);
+                }
 
-            $this->syncRelatedRecords($questions, $data);
+                try {
+                    $questions = $this->householdQuestionsRepository->create(
+                        $this->persistableAttributes($data, $household->household_id),
+                    );
+                } catch (UniqueConstraintViolationException) {
+                    throw ValidationException::withMessages([
+                        'questions' => ['Household questions already exist for this household.'],
+                    ]);
+                }
 
-            $this->auditLogRepository->log(
-                performedByUserId: $performedBy->user_id,
-                actionId: Action::CREATE,
-                recordId: $questions->household_questions_id,
-                description: 'Create household questions',
-                oldValue: null,
-                newValue: 'Household '.$household->household_id,
-                target: 'record',
-                entity: 'household_questions',
-            );
+                $this->syncRelatedRecords($questions, $data);
 
-            return $this->formatRecord(
-                $this->householdQuestionsRepository->findById($questions->household_questions_id) ?? $questions,
-            );
+                $this->auditLogRepository->log(
+                    performedByUserId: $performedBy->user_id,
+                    actionId: Action::CREATE,
+                    recordId: $questions->household_questions_id,
+                    description: 'Create household questions',
+                    oldValue: null,
+                    newValue: 'Household '.$household->household_id,
+                    target: 'record',
+                    entity: 'household_questions',
+                );
+
+                return $this->formatRecord(
+                    $this->householdQuestionsRepository->findById($questions->household_questions_id) ?? $questions,
+                );
+            });
         });
     }
 
