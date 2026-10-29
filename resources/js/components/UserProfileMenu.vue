@@ -48,12 +48,24 @@
 
             <div class="border-t border-[#e3e8e2] px-4 py-4">
                 <div class="flex items-center gap-3">
-                    <UserAvatar
-                        :src="user?.avatar_url"
-                        :preset="user?.avatar_preset"
-                        size-class="h-14 w-14"
-                        :alt="displayName"
-                    />
+                    <div class="relative shrink-0">
+                        <UserAvatar
+                            :src="user?.avatar_url"
+                            :preset="user?.avatar_preset"
+                            size-class="h-14 w-14"
+                            :alt="displayName"
+                        />
+                        <button
+                            type="button"
+                            class="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border-2 border-[#f4f6f1] bg-white text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2d4c39]"
+                            aria-label="Change profile picture"
+                            @click="openEditor"
+                        >
+                            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                            </svg>
+                        </button>
+                    </div>
                     <div class="min-w-0">
                         <p class="truncate text-[15px] font-semibold uppercase tracking-wide text-slate-900">
                             {{ displayName }}
@@ -61,13 +73,6 @@
                         <p class="truncate text-sm text-black">
                             {{ positionLabel }}
                         </p>
-                        <button
-                            type="button"
-                            class="mt-2 inline-flex w-fit cursor-pointer items-center rounded-lg border border-[#2d4c39] bg-white px-2.5 py-1 text-sm font-semibold leading-none text-[#2d4c39] transition hover:bg-[#2d4c39]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2d4c39]"
-                            @click="openEditor"
-                        >
-                            Edit profile
-                        </button>
                     </div>
                 </div>
             </div>
@@ -132,47 +137,55 @@
         <Teleport to="body">
             <div
                 v-if="editingProfile"
-                class="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/40 p-4"
+                class="fixed inset-0 z-[80] flex items-end justify-center bg-black/60 p-4 sm:items-center"
                 @click.self="closeEditor"
             >
                 <div
-                    class="w-full max-w-sm rounded-xl bg-white shadow-xl"
+                    class="w-full max-w-md overflow-hidden rounded-[1.75rem] bg-[#1f1f1f] text-white shadow-2xl"
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="edit-profile-title"
                 >
-                    <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
-                        <div>
-                            <h2 id="edit-profile-title" class="text-base font-semibold text-slate-900">
-                                Edit profile
-                            </h2>
-                            <p class="mt-1 text-sm text-slate-600">
-                                Choose a photo for your account.
-                            </p>
-                        </div>
+                    <div class="relative flex h-14 items-center px-2">
                         <button
                             type="button"
-                            class="cursor-pointer rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                            class="cursor-pointer rounded-full p-2.5 text-white/90 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
                             aria-label="Close"
                             :disabled="uploading"
                             @click="closeEditor"
                         >
-                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M4.22 4.22a.75.75 0 011.06 0L10 8.94l4.72-4.72a.75.75 0 111.06 1.06L11.06 10l4.72 4.72a.75.75 0 11-1.06 1.06L10 11.06l-4.72 4.72a.75.75 0 01-1.06-1.06L8.94 10 4.22 5.28a.75.75 0 010-1.06z" clip-rule="evenodd" />
                             </svg>
                         </button>
+                        <h2 id="edit-profile-title" class="pointer-events-none absolute inset-x-14 text-center text-[1.05rem] font-medium tracking-tight">
+                            Change profile picture
+                        </h2>
                     </div>
 
-                    <div class="flex flex-col items-center px-5 py-6 text-center">
-                        <UserAvatar
-                            :src="user?.avatar_url"
-                            :preset="user?.avatar_preset"
-                            size-class="h-24 w-24"
-                            :alt="displayName"
-                        />
-                        <p class="mt-3 max-w-full truncate text-sm font-semibold text-slate-900">
-                            {{ displayName }}
-                        </p>
+                    <div class="flex justify-center px-6 pb-7 pt-3">
+                        <div class="relative">
+                            <UserAvatar
+                                :src="user?.avatar_url"
+                                :preset="user?.avatar_preset"
+                                size-class="h-44 w-44 ring-1 ring-white/10"
+                                :alt="displayName"
+                            />
+                            <button
+                                type="button"
+                                class="absolute bottom-1 right-1 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-[3px] border-[#1f1f1f] bg-[#3c4043] text-white shadow-md transition hover:bg-[#4e5256] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60"
+                                aria-label="Upload photo"
+                                :disabled="uploading"
+                                @click="choosePhoto"
+                            >
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M9.5 6.5 8.2 8H6.5A2.5 2.5 0 0 0 4 10.5v7A2.5 2.5 0 0 0 6.5 20h11a2.5 2.5 0 0 0 2.5-2.5v-7A2.5 2.5 0 0 0 17.5 8h-1.7l-1.3-1.5h-5Zm2.5 10.25a3.25 3.25 0 1 1 0-6.5 3.25 3.25 0 0 1 0 6.5Z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="px-4 pb-5">
                         <input
                             id="profile-photo"
                             ref="photoInputRef"
@@ -182,29 +195,25 @@
                             :disabled="uploading"
                             @change="onPhotoSelected"
                         >
-                        <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
-                            <label
-                                for="profile-photo"
-                                class="rbim-btn-action"
-                                :class="uploading ? 'pointer-events-none opacity-60' : ''"
-                                @click="choosingPhoto = true"
-                            >
+                        <button
+                            type="button"
+                            class="flex w-full cursor-pointer items-center gap-4 rounded-2xl bg-[#2d2d2d] px-4 py-3.5 text-left transition hover:bg-[#383838] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60"
+                            :disabled="uploading"
+                            @click="choosePhoto"
+                        >
+                            <span class="flex h-10 w-10 shrink-0 items-center justify-center text-white/90">
+                                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M6 4.75A2.75 2.75 0 0 0 3.25 7.5v9A2.75 2.75 0 0 0 6 19.25h12A2.75 2.75 0 0 0 20.75 16.5v-9A2.75 2.75 0 0 0 18 4.75H6Zm1.2 2.1a1.35 1.35 0 1 1 0 2.7 1.35 1.35 0 0 1 0-2.7ZM5.5 16.2l3.15-3.55a.9.9 0 0 1 1.32-.04l1.55 1.58 2.35-2.85a.9.9 0 0 1 1.4 0L18.5 15.4v1.1a1.25 1.25 0 0 1-1.25 1.25H6.75A1.25 1.25 0 0 1 5.5 16.5v-.3Z" />
+                                </svg>
+                            </span>
+                            <span class="text-[15px] font-medium">
                                 {{ uploading ? 'Uploading…' : 'Upload photo' }}
-                            </label>
-                            <button
-                                v-if="hasCustomPhoto && canRestorePreset"
-                                type="button"
-                                class="rbim-btn-outline px-3 py-1.5 text-xs"
-                                :disabled="uploading"
-                                @click="restorePreset"
-                            >
-                                Use default
-                            </button>
-                        </div>
-                        <p v-if="photoError" class="rbim-error" role="alert">
+                            </span>
+                        </button>
+                        <p v-if="photoError" class="mt-3 px-1 text-sm text-red-300" role="alert">
                             {{ photoError }}
                         </p>
-                        <p v-else class="rbim-hint">
+                        <p v-else class="mt-3 px-1 text-xs text-white/50">
                             JPEG, PNG, WebP, or GIF. Maximum 2 MB.
                         </p>
                     </div>
@@ -244,12 +253,6 @@ const uploading = ref(false);
 const photoError = ref('');
 const choosingPhoto = ref(false);
 const editingProfile = ref(false);
-
-const hasCustomPhoto = computed(() => Boolean(user.value?.avatar_url));
-
-const canRestorePreset = computed(() => (
-    user.value?.avatar_preset === 'male' || user.value?.avatar_preset === 'female'
-));
 
 const displayName = computed(() => (
     user.value?.full_name
@@ -297,6 +300,15 @@ function photoIsAllowed(file) {
     return /\.(jpe?g|png|webp|gif)$/i.test(file.name);
 }
 
+function choosePhoto() {
+    if (uploading.value) {
+        return;
+    }
+
+    choosingPhoto.value = true;
+    photoInputRef.value?.click();
+}
+
 async function onPhotoSelected(event) {
     choosingPhoto.value = false;
     const file = event.target.files?.[0];
@@ -326,24 +338,6 @@ async function onPhotoSelected(event) {
     } catch (error) {
         photoError.value = extractValidationErrors(error).photo
             || extractErrorMessage(error, 'Unable to upload the profile photo.');
-    } finally {
-        uploading.value = false;
-    }
-}
-
-async function restorePreset() {
-    if (!canRestorePreset.value || uploading.value) {
-        return;
-    }
-
-    photoError.value = '';
-    uploading.value = true;
-
-    try {
-        await updateAvatar({ avatarPreset: user.value.avatar_preset });
-    } catch (error) {
-        photoError.value = extractValidationErrors(error).avatar_preset
-            || extractErrorMessage(error, 'Unable to restore the default photo.');
     } finally {
         uploading.value = false;
     }
