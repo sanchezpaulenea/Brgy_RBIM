@@ -58,7 +58,7 @@ return [
             'chart' => 'street',
             'table_title' => 'Households Overview',
             'empty' => 'No households match these filters.',
-            'filters' => ['street', 'clan'],
+            'filters' => ['street', 'clan', 'age', 'sex'],
             'columns' => [
                 ['key' => 'record_number', 'label' => 'Record Number'],
                 ['key' => 'name', 'label' => 'Household Head'],
@@ -76,7 +76,7 @@ return [
             'chart' => 'clan',
             'table_title' => 'Clans Overview',
             'empty' => 'No clans match these filters.',
-            'filters' => ['street', 'clan'],
+            'filters' => ['street', 'clan', 'age', 'sex'],
             'columns' => [
                 ['key' => 'name', 'label' => 'Clan'],
                 ['key' => 'households', 'label' => 'Households'],
@@ -92,7 +92,7 @@ return [
             'chart' => 'street',
             'table_title' => 'Streets Overview',
             'empty' => 'No streets match these filters.',
-            'filters' => ['clan', 'street'],
+            'filters' => ['street', 'clan', 'age', 'sex'],
             'columns' => [
                 ['key' => 'name', 'label' => 'Street'],
                 ['key' => 'households', 'label' => 'Households'],
@@ -108,7 +108,7 @@ return [
             'chart' => 'sex',
             'table_title' => 'Residents Overview',
             'empty' => 'No residents match these filters.',
-            'filters' => ['street', 'clan', 'sex'],
+            'filters' => ['street', 'clan', 'age', 'sex'],
             'columns' => [
                 ['key' => 'record_number', 'label' => 'Record Number'],
                 ['key' => 'name', 'label' => 'Record Name'],
@@ -184,7 +184,7 @@ return [
             'chart' => 'sex',
             'table_title' => 'Residents Overview',
             'empty' => 'No residents match these filters.',
-            'filters' => ['street', 'clan', 'sex'],
+            'filters' => ['street', 'clan', 'age', 'sex'],
             'columns' => [
                 ['key' => 'record_number', 'label' => 'Record Number'],
                 ['key' => 'name', 'label' => 'Record Name'],

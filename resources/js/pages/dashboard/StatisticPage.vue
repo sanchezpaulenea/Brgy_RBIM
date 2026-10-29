@@ -7,9 +7,6 @@
                 </RouterLink>
                 <span aria-hidden="true">/</span>
                 <span class="font-semibold text-slate-900">{{ payload?.statistic?.label || 'Statistic' }}</span>
-                <button type="button" class="ml-auto cursor-pointer text-sm font-medium text-[#344d3f] hover:underline" @click="goBack">
-                    Back
-                </button>
             </nav>
 
             <div
@@ -102,12 +99,12 @@
                             {{ payload?.statistic?.table_title || 'Records' }}
                         </h2>
                         <div class="flex flex-wrap items-end gap-2">
-                            <label class="block text-sm font-medium text-slate-700">
+                            <label class="flex items-center gap-3 text-sm font-medium text-slate-700">
                                 Search
                                 <input
                                     v-model="search"
                                     type="search"
-                                    class="rbim-input mt-1 w-56"
+                                    class="rbim-input w-56"
                                     placeholder="Search records"
                                     @input="onSearch"
                                 >
@@ -162,14 +159,16 @@
                         </table>
                     </div>
 
-                    <div v-if="payload" class="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                        <p class="text-slate-600">
-                            Page {{ payload.pagination.page }} of {{ payload.pagination.last_page }}
-                        </p>
-                        <div class="flex gap-2">
+                    <div v-if="payload" class="grid grid-cols-3 items-center gap-3 px-4 py-3 text-sm">
+                        <div>
                             <button type="button" class="rbim-btn-outline px-3 py-1.5 text-xs" :disabled="payload.pagination.page <= 1" @click="setPage(payload.pagination.page - 1)">
                                 Previous
                             </button>
+                        </div>
+                        <p class="text-center text-slate-600">
+                            Page {{ payload.pagination.page }} of {{ payload.pagination.last_page }}
+                        </p>
+                        <div class="flex justify-end">
                             <button type="button" class="rbim-btn-outline px-3 py-1.5 text-xs" :disabled="payload.pagination.page >= payload.pagination.last_page" @click="setPage(payload.pagination.page + 1)">
                                 Next
                             </button>
@@ -292,16 +291,6 @@ function toggleSort(key) {
 
 function setPage(page) {
     replaceQuery({ page: String(page) });
-}
-
-function goBack() {
-    if (window.history.length > 1) {
-        router.back();
-
-        return;
-    }
-
-    router.push({ name: 'dashboard' });
 }
 
 async function load() {

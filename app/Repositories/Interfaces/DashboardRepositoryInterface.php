@@ -202,4 +202,33 @@ interface DashboardRepositoryInterface
      * @return list<array{key: string, count: int, items: list<array{id: int, name: string}>}>
      */
     public function residentsByDisability(): array;
+
+    /**
+     * Narrow later household and resident chart queries to one street, clan,
+     * age group, or sex. Empty values leave the charts unfiltered.
+     *
+     * @param  array{street?: ?int, clan?: ?int, age?: ?string, sex?: int|string|null}  $filters
+     */
+    public function usePopulationFilters(array $filters): void;
+
+    public function filteredHouseholdCount(): int;
+
+    public function filteredResidentCount(): int;
+
+    /**
+     * @return array{streets: list<array{value: string, label: string}>, clans: list<array{value: string, label: string}>, sexes: list<array{value: string, label: string}>}
+     */
+    public function populationFilterCatalog(): array;
+
+    /**
+     * Household rows for the statistic overview, already limited by the
+     * population filters.
+     */
+    public function householdOverviewQuery(): \Illuminate\Database\Query\Builder;
+
+    /**
+     * Resident rows for the statistic overview, already limited by the
+     * population filters.
+     */
+    public function residentOverviewQuery(): \Illuminate\Database\Query\Builder;
 }

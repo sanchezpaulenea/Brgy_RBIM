@@ -330,14 +330,11 @@ class CensusDashboardService
             $this->whereClan($query, $statistic['source'], $filters['clan']);
         }
 
-        if (in_array('age', $allowed, true) && $filters['age'] !== null && $statistic['source'] === 'residents') {
-            $this->whereAge($query, $filters['age']);
-        }
+        $age = in_array('age', $allowed, true) ? $filters['age'] : null;
+        $sex = in_array('sex', $allowed, true) ? $filters['sex'] : null;
 
-        if (in_array('sex', $allowed, true) && $filters['sex'] !== null && $statistic['source'] === 'residents') {
-            $filters['sex'] === 'none'
-                ? $query->whereNull('resident.sex_id')
-                : $query->where('resident.sex_id', (int) $filters['sex']);
+        if ($age !== null || $sex !== null) {
+            $this->wherePopulationAttributes($query, $statistic['source'], $age, $sex);
         }
 
         if ($filters['q'] !== '') {
@@ -377,10 +374,39 @@ class CensusDashboardService
         };
     }
 
-    private function whereAge(Builder $query, string $age): void
+    private function wherePopulationAttributes(Builder $query, string $source, ?string $age, ?string $sex): void
+    {
+        $apply = function (Builder $sub, string $alias) use ($age, $sex): void {
+            if ($age !== null) {
+                $this->whereAgeOn($sub, $alias, $age);
+            }
+
+            if ($sex !== null) {
+                $this->whereSexOn($sub, $alias, $sex);
+            }
+        };
+
+        match ($source) {
+            'residents' => $apply($query, 'resident'),
+            'households' => $apply($query, 'head'),
+            'clans' => $query->whereExists(function (Builder $sub) use ($apply): void {
+                $sub->from('resident')->whereColumn('resident.clan_id', 'clan.clan_id');
+                $apply($sub, 'resident');
+            }),
+            'streets' => $query->whereExists(function (Builder $sub) use ($apply): void {
+                $sub->from('resident')
+                    ->join('household', 'household.household_id', '=', 'resident.household_id')
+                    ->whereColumn('household.street_id', 'street.street_id');
+                $apply($sub, 'resident');
+            }),
+            default => null,
+        };
+    }
+
+    private function whereAgeOn(Builder $query, string $alias, string $age): void
     {
         if ($age === 'none') {
-            $query->whereNull('resident.date_of_birth');
+            $query->whereNull($alias.'.date_of_birth');
 
             return;
         }
@@ -391,12 +417,20 @@ class CensusDashboardService
             return;
         }
 
-        $expression = 'timestampdiff(YEAR, resident.date_of_birth, curdate())';
+        $column = '`'.str_replace('`', '', $alias).'`.`date_of_birth`';
+        $expression = 'timestampdiff(YEAR, '.$column.', curdate())';
         $query->whereRaw($expression.' >= ?', [(int) $group['min']]);
 
         if ($group['max'] !== null) {
             $query->whereRaw($expression.' <= ?', [(int) $group['max']]);
         }
+    }
+
+    private function whereSexOn(Builder $query, string $alias, string $sex): void
+    {
+        $sex === 'none'
+            ? $query->whereNull($alias.'.sex_id')
+            : $query->where($alias.'.sex_id', (int) $sex);
     }
 
     private function whereSearch(Builder $query, string $source, string $term): void

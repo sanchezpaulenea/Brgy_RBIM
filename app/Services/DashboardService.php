@@ -71,11 +71,15 @@ class DashboardService
     ) {}
 
     /**
+     * @param  array<string, mixed>  $input
      * @return array<string, mixed>
      */
-    public function statistics(): array
+    public function statistics(array $input = []): array
     {
+        $filters = $this->populationFilters($input);
         $repo = $this->dashboardRepository;
+        $totals = $repo->summaryCounts();
+        $repo->usePopulationFilters($filters);
         $womenVia = [
             'table' => 'health',
             'from' => 'health_id',
@@ -84,7 +88,18 @@ class DashboardService
         ];
 
         return [
-            'summary' => $repo->summaryCounts(),
+            'summary' => $totals,
+            'population' => [
+                'households' => [
+                    'filtered' => $repo->filteredHouseholdCount(),
+                    'total' => (int) ($totals['households'] ?? 0),
+                ],
+                'residents' => [
+                    'filtered' => $repo->filteredResidentCount(),
+                    'total' => (int) ($totals['residents'] ?? 0),
+                ],
+            ],
+            'population_filters' => $this->populationFilterDefinitions($filters, $repo->populationFilterCatalog()),
             'charts' => [
                 'clan_households' => $this->chart(self::HOUSEHOLDS, $repo->householdsByLookup('clan_id', 'clan', 'clan_id', 'clan_name')),
                 'clan_residents' => $this->chart(self::RESIDENTS, $repo->residentsByLookup('clan_id', 'clan', 'clan_id', 'clan_name')),
@@ -185,6 +200,229 @@ class DashboardService
             ],
             'generated_at' => now()->toIso8601String(),
         ];
+    }
+
+    /**
+     * Paged household or resident records behind a category chart.
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    public function overview(array $input): array
+    {
+        $population = (string) ($input['population'] ?? '');
+
+        if (! in_array($population, ['households', 'residents'], true)) {
+            throw new \InvalidArgumentException('Choose a household or resident overview.');
+        }
+
+        $filters = $this->populationFilters($input);
+        $this->dashboardRepository->usePopulationFilters($filters);
+        $query = $population === 'residents'
+            ? $this->dashboardRepository->residentOverviewQuery()
+            : $this->dashboardRepository->householdOverviewQuery();
+        $search = trim((string) ($input['q'] ?? ''));
+        $this->applyOverviewSearch($query, $population, $search);
+
+        $total = (int) (clone $query)->count();
+        $perPage = max(1, (int) config('census_statistics.per_page', 10));
+        $page = max(1, (int) ($input['page'] ?? 1));
+        $dir = strtolower((string) ($input['dir'] ?? 'asc')) === 'desc' ? 'desc' : 'asc';
+        $sortKey = (string) ($input['sort'] ?? 'name');
+        $rows = (clone $query)
+            ->orderBy($this->overviewSortColumn($population, $sortKey), $dir)
+            ->forPage($page, $perPage)
+            ->get();
+        $statistic = config('census_statistics.statistics.'.$population);
+
+        return [
+            'table_title' => $statistic['table_title'],
+            'empty' => $statistic['empty'],
+            'columns' => array_map(
+                fn (array $column): array => ['key' => $column['key'], 'label' => $column['label']],
+                $statistic['columns'],
+            ),
+            'rows' => $this->mapOverviewRows($rows, $population),
+            'pagination' => [
+                'page' => $page,
+                'per_page' => $perPage,
+                'last_page' => max(1, (int) ceil($total / $perPage)),
+                'total' => $total,
+            ],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     * @return array{street: ?int, clan: ?int, age: ?string, sex: int|string|null}
+     */
+    private function populationFilters(array $input): array
+    {
+        $age = isset($input['age']) ? (string) $input['age'] : '';
+        $allowedAges = array_column(config('census_statistics.age_groups', []), 'value');
+        $sex = $input['sex'] ?? null;
+
+        return [
+            'street' => $this->positiveInt($input['street'] ?? null),
+            'clan' => $this->positiveInt($input['clan'] ?? null),
+            'age' => in_array($age, $allowedAges, true) || $age === 'none' ? $age : null,
+            'sex' => $sex === 'none' ? 'none' : $this->positiveInt($sex),
+        ];
+    }
+
+    private function positiveInt(mixed $value): ?int
+    {
+        if ($value === null || $value === '' || ! is_numeric($value)) {
+            return null;
+        }
+
+        $number = (int) $value;
+
+        return $number > 0 ? $number : null;
+    }
+
+    /**
+     * @param  array{street: ?int, clan: ?int, age: ?string, sex: int|string|null}  $filters
+     * @param  array{streets?: list<array{value: string, label: string}>, clans?: list<array{value: string, label: string}>, sexes?: list<array{value: string, label: string}>}|null  $catalog
+     * @return list<array{key: string, label: string, value: ?string, options: list<array{value: string, label: string}>}>
+     */
+    private function populationFilterDefinitions(array $filters, ?array $catalog): array
+    {
+        $catalog ??= [];
+        $sexValue = $filters['sex'];
+
+        return [
+            [
+                'key' => 'street',
+                'label' => 'Street',
+                'value' => $filters['street'] === null ? null : (string) $filters['street'],
+                'options' => $catalog['streets'] ?? [],
+            ],
+            [
+                'key' => 'clan',
+                'label' => 'Clan',
+                'value' => $filters['clan'] === null ? null : (string) $filters['clan'],
+                'options' => $catalog['clans'] ?? [],
+            ],
+            [
+                'key' => 'age',
+                'label' => 'Age group',
+                'value' => $filters['age'],
+                'options' => array_map(
+                    fn (array $group): array => ['value' => $group['value'], 'label' => $group['label']],
+                    config('census_statistics.age_groups', []),
+                ),
+            ],
+            [
+                'key' => 'sex',
+                'label' => 'Sex',
+                'value' => $sexValue === null || $sexValue === 'none' ? ($sexValue === 'none' ? 'none' : null) : (string) $sexValue,
+                'options' => $catalog['sexes'] ?? [],
+            ],
+        ];
+    }
+
+    private function applyOverviewSearch(\Illuminate\Database\Query\Builder $query, string $population, string $term): void
+    {
+        if ($term === '') {
+            return;
+        }
+
+        $like = '%'.addcslashes(mb_strtolower($term), '%_\\').'%';
+
+        if ($population === 'households') {
+            $query->whereRaw(
+                "lower(concat(coalesce(head.last_name, ''), ', ', coalesce(head.first_name, ''))) like ? escape '\\\\'",
+                [$like],
+            );
+
+            return;
+        }
+
+        $query->where(function (\Illuminate\Database\Query\Builder $inner) use ($like, $term): void {
+            $inner->whereRaw(
+                "lower(concat(resident.last_name, ', ', resident.first_name, ' ', coalesce(resident.middle_name, ''))) like ? escape '\\\\'",
+                [$like],
+            );
+
+            if (ctype_digit($term)) {
+                $inner->orWhere('resident.resident_id', (int) $term);
+            }
+        });
+    }
+
+    private function overviewSortColumn(string $population, string $sort): string
+    {
+        $columns = $population === 'households'
+            ? [
+                'record_number' => 'household.household_id',
+                'name' => 'head.last_name',
+                'address' => 'street.street_name',
+                'clan' => 'clan.clan_name',
+                'members' => 'member_count',
+            ]
+            : [
+                'record_number' => 'resident.resident_id',
+                'name' => 'resident.last_name',
+                'date_of_birth' => 'resident.date_of_birth',
+                'address' => 'street.street_name',
+                'sex' => 'sex.sex',
+                'clan' => 'clan.clan_name',
+            ];
+
+        return $columns[$sort] ?? $columns['name'];
+    }
+
+    /**
+     * @param  iterable<int, object>  $rows
+     * @return list<array<string, string>>
+     */
+    private function mapOverviewRows(iterable $rows, string $population): array
+    {
+        $mapped = [];
+
+        foreach ($rows as $row) {
+            $mapped[] = $population === 'households'
+                ? [
+                    'record_number' => 'HH-'.str_pad((string) $row->household_id, 4, '0', STR_PAD_LEFT),
+                    'name' => $this->overviewPersonName($row->last_name ?? null, $row->first_name ?? null, $row->middle_name ?? null, $row->suffix ?? null),
+                    'address' => $this->overviewAddress($row->house_number ?? null, $row->street_name ?? null),
+                    'clan' => $row->clan_name ?: '—',
+                    'members' => (string) ($row->member_count ?? 0),
+                ]
+                : [
+                    'record_number' => 'RBIM-'.str_pad((string) $row->resident_id, 4, '0', STR_PAD_LEFT),
+                    'name' => $this->overviewPersonName($row->last_name ?? null, $row->first_name ?? null, $row->middle_name ?? null, $row->suffix ?? null),
+                    'date_of_birth' => $row->date_of_birth ? date('M j, Y', strtotime((string) $row->date_of_birth)) : '—',
+                    'address' => $this->overviewAddress($row->house_number ?? null, $row->street_name ?? null),
+                    'sex' => $row->sex ?: '—',
+                    'clan' => $row->clan_name ?: '—',
+                ];
+        }
+
+        return $mapped;
+    }
+
+    private function overviewPersonName(?string $last, ?string $first, ?string $middle, ?string $suffix): string
+    {
+        $given = trim(implode(' ', array_filter([$first, $middle, $suffix], fn (?string $part): bool => trim((string) $part) !== '')));
+        $family = trim((string) $last);
+
+        if ($family !== '' && $given !== '') {
+            return $family.', '.$given;
+        }
+
+        return $family !== '' ? $family : ($given !== '' ? $given : '—');
+    }
+
+    private function overviewAddress(mixed $houseNumber, mixed $street): string
+    {
+        $parts = array_filter([
+            $houseNumber !== null && $houseNumber !== '' ? (string) $houseNumber : null,
+            $street !== null && trim((string) $street) !== '' ? (string) $street : null,
+        ]);
+
+        return $parts === [] ? '—' : implode(' ', $parts);
     }
 
     /**

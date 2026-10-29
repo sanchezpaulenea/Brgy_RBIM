@@ -162,6 +162,7 @@ Route::prefix('v1')->group(function () {
         Route::get('dashboard/tiles', [CensusDashboardController::class, 'tiles'])->name('dashboard.tiles');
         Route::get('dashboard/stats/{statistic}/export', [CensusDashboardController::class, 'export'])->name('dashboard.stats.export');
         Route::get('dashboard/stats/{statistic}', [CensusDashboardController::class, 'show'])->name('dashboard.stats.show');
+        Route::get('dashboard/statistics/overview', [DashboardController::class, 'overview'])->name('dashboard.statistics.overview');
         Route::get('dashboard/statistics', [DashboardController::class, 'statistics'])->name('dashboard.statistics');
 
         Route::middleware('system.admin')->group(function () {

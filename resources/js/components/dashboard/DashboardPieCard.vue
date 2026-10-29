@@ -1,11 +1,11 @@
 <template>
     <article :class="compact ? '@container rounded-xl border border-slate-200 p-4' : 'rbim-card @container p-5 sm:p-6'">
         <header
-            v-if="title || subtitle || $slots.controls"
+            v-if="showHeading || $slots.controls"
             :class="compact ? 'flex flex-wrap items-start justify-between gap-3 pb-3' : 'flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-5'"
         >
-            <div class="min-w-0">
-                <component :is="compact ? 'h3' : 'h2'" class="text-base font-semibold text-slate-900">
+            <div v-if="showHeading" class="min-w-0">
+                <component :is="compact ? 'h3' : 'h2'" v-if="title" class="text-base font-semibold text-slate-900">
                     {{ title }}
                 </component>
                 <p v-if="subtitle" class="mt-0.5 text-sm text-slate-500">
@@ -34,7 +34,7 @@
         </div>
 
         <template v-else-if="chart">
-            <div class="flex flex-wrap items-center justify-between gap-3 pt-5">
+            <div class="flex flex-wrap items-center justify-between gap-3" :class="showHeading || $slots.controls ? 'pt-5' : ''">
                 <p class="inline-flex items-center gap-1.5 rounded-full bg-brand-muted px-3 py-1.5 text-sm font-medium text-brand">
                     {{ chart.metric }}:
                     <span class="font-semibold tabular-nums">{{ formatNumber(displayTotal) }}</span>
@@ -225,6 +225,18 @@ const activeKey = ref(props.views[0]?.key ?? null);
 const renderKey = ref(0);
 
 const chart = computed(() => props.charts?.[activeKey.value] ?? null);
+
+const showHeading = computed(() => {
+    if (props.subtitle) {
+        return true;
+    }
+
+    if (!props.title) {
+        return false;
+    }
+
+    return props.title !== chart.value?.metric;
+});
 const displaySlices = computed(() => props.slices ?? chart.value?.slices ?? []);
 const displayTotal = computed(() => (
     props.slices

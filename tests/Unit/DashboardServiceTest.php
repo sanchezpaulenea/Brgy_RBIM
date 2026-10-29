@@ -42,6 +42,14 @@ class DashboardServiceTest extends TestCase
         $this->repository->shouldReceive('residentsByVoterStatus')->andReturn([])->byDefault();
         $this->repository->shouldReceive('residentsByChildDistinct')->andReturn([])->byDefault();
         $this->repository->shouldReceive('residentsByDisability')->andReturn([])->byDefault();
+        $this->repository->shouldReceive('usePopulationFilters')->byDefault();
+        $this->repository->shouldReceive('filteredHouseholdCount')->andReturn(0)->byDefault();
+        $this->repository->shouldReceive('filteredResidentCount')->andReturn(0)->byDefault();
+        $this->repository->shouldReceive('populationFilterCatalog')->andReturn([
+            'streets' => [],
+            'clans' => [],
+            'sexes' => [],
+        ])->byDefault();
     }
 
     public function test_many_values_keep_top_five_and_group_the_rest_as_others(): void

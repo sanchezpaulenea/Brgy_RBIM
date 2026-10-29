@@ -36,7 +36,61 @@
             </div>
 
             <template v-else>
-                <header class="flex flex-wrap items-start justify-between gap-4">
+                <p
+                    v-if="error && statistics"
+                    class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                    role="alert"
+                >
+                    Refresh failed: {{ error }} Showing the last loaded statistics.
+                </p>
+
+                <section
+                    v-if="showsPopulationFilters"
+                    class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5"
+                    aria-label="Filters"
+                >
+                    <div v-if="showSkeleton" class="grid animate-pulse grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <div v-for="item in 4" :key="item" class="h-16 rounded-lg bg-slate-100" />
+                    </div>
+                    <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <label v-for="filter in statistics?.population_filters ?? []" :key="filter.key" class="block text-sm font-medium text-slate-700">
+                            {{ filter.label }}
+                            <select
+                                class="rbim-input mt-1"
+                                :value="String(route.query[filter.key] || '')"
+                                @change="setPopulationFilter(filter.key, $event.target.value)"
+                            >
+                                <option value="">All</option>
+                                <option v-for="option in filter.options" :key="option.value" :value="option.value">
+                                    {{ option.label }}
+                                </option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div v-if="activePopulationFilters.length" class="mt-4 flex flex-wrap items-center gap-2">
+                        <button
+                            v-for="chip in activePopulationFilters"
+                            :key="chip.key"
+                            type="button"
+                            class="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#c6cbbb] px-3 py-1 text-sm font-medium text-[#344d3f]"
+                            :aria-label="`Remove ${chip.label} filter`"
+                            @click="setPopulationFilter(chip.key, '')"
+                        >
+                            {{ chip.label }}: {{ chip.value }}
+                            <span aria-hidden="true">×</span>
+                        </button>
+                        <button type="button" class="cursor-pointer text-sm font-semibold text-[#247a3f] hover:underline" @click="clearPopulationFilters">
+                            Clear all
+                        </button>
+                    </div>
+
+                    <p v-if="statistics?.population" class="mt-4 text-sm font-medium text-slate-700" aria-live="polite">
+                        Showing {{ populationCounts.filtered }} of {{ populationCounts.total }}
+                    </p>
+                </section>
+
+                <header v-if="!showsPopulationFilters" class="flex flex-wrap items-start justify-between gap-4">
                     <div class="min-w-0">
                         <h2 class="text-xl font-semibold text-slate-900">{{ reportTitle }}</h2>
                         <p class="mt-1 text-sm text-slate-600">
@@ -61,7 +115,7 @@
                             v-else-if="panel.visualization === 'boolean'"
                             class="rounded-xl border border-slate-200 bg-white p-4"
                         >
-                            <h3 class="text-base font-semibold text-slate-900">{{ panel.title }}</h3>
+                            <h3 v-if="visiblePanels.length > 1" class="text-base font-semibold text-slate-900">{{ panel.title }}</h3>
                             <div class="mt-4">
                                 <DashboardBooleanLists
                                     :chart="panelChart(panel)"
@@ -71,7 +125,7 @@
                         </div>
                         <DashboardPieCard
                             v-else
-                            :title="panel.title"
+                            :title="visiblePanels.length > 1 ? panel.title : ''"
                             :views="panelViews(panel)"
                             :charts="panelCharts(panel)"
                             :loading="showSkeleton"
@@ -80,6 +134,74 @@
                         />
                     </template>
                 </div>
+
+                <section v-if="showsPopulationFilters" class="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+                    <div class="flex flex-wrap items-end justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:px-5">
+                        <h2 class="text-sm font-bold uppercase tracking-wide text-slate-900">
+                            {{ overview?.table_title || (populationSection?.key === 'household' ? 'Households Overview' : 'Residents Overview') }}
+                        </h2>
+                        <label class="flex items-center gap-3 text-sm font-medium text-slate-700">
+                            Search
+                            <input
+                                v-model="search"
+                                type="search"
+                                class="rbim-input w-56"
+                                placeholder="Search records"
+                                @input="onOverviewSearch"
+                            >
+                        </label>
+                    </div>
+
+                    <div v-if="!overviewLoading && !(overview?.rows?.length)" class="px-5 py-14 text-center">
+                        <p class="text-base font-semibold text-slate-900">{{ overview?.empty || 'No records match these filters.' }}</p>
+                    </div>
+
+                    <div v-else class="overflow-x-auto">
+                        <table class="min-w-full text-left text-sm">
+                            <thead class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
+                                <tr>
+                                    <th v-for="column in overview?.columns ?? []" :key="column.key" class="px-4 py-3 font-semibold" scope="col" :aria-sort="overviewSort === column.key ? (overviewDir === 'asc' ? 'ascending' : 'descending') : 'none'">
+                                        <button
+                                            type="button"
+                                            class="inline-flex cursor-pointer items-center gap-1 hover:text-slate-900"
+                                            @click="toggleOverviewSort(column.key)"
+                                        >
+                                            {{ column.label }}
+                                            <span v-if="overviewSort === column.key" aria-hidden="true">{{ overviewDir === 'asc' ? '↑' : '↓' }}</span>
+                                            <span class="sr-only">{{ overviewSort === column.key ? (overviewDir === 'asc' ? 'sorted ascending' : 'sorted descending') : 'sort' }}</span>
+                                        </button>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-if="overviewLoading">
+                                    <td :colspan="overview?.columns?.length || 5" class="px-4 py-8 text-slate-500">Loading records…</td>
+                                </tr>
+                                <tr v-for="(row, index) in overview?.rows ?? []" v-else :key="index" class="border-b border-slate-100">
+                                    <td v-for="column in overview.columns" :key="column.key" class="whitespace-nowrap px-4 py-3 text-slate-800">
+                                        {{ row[column.key] }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div v-if="overview" class="grid grid-cols-3 items-center gap-3 px-4 py-3 text-sm">
+                        <div>
+                            <button type="button" class="rbim-btn-outline px-3 py-1.5 text-xs" :disabled="overview.pagination.page <= 1" @click="setOverviewPage(overview.pagination.page - 1)">
+                                Previous
+                            </button>
+                        </div>
+                        <p class="text-center text-slate-600">
+                            Page {{ overview.pagination.page }} of {{ overview.pagination.last_page }}
+                        </p>
+                        <div class="flex justify-end">
+                            <button type="button" class="rbim-btn-outline px-3 py-1.5 text-xs" :disabled="overview.pagination.page >= overview.pagination.last_page" @click="setOverviewPage(overview.pagination.page + 1)">
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                </section>
 
                 <article
                     v-if="canViewReports && selectedCategory"
@@ -119,9 +241,9 @@ import DashboardDrilldown from '@/components/dashboard/DashboardDrilldown.vue';
 import DashboardModuleFilters from '@/components/dashboard/DashboardModuleFilters.vue';
 import DashboardPieCard from '@/components/dashboard/DashboardPieCard.vue';
 import { useAuth } from '@/composables/useAuth';
-import { findDashboardChart } from '@/constants/dashboardCharts';
+import { DASHBOARD_CATEGORY_SECTIONS, findDashboardChart } from '@/constants/dashboardCharts';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { fetchDashboardStatistics } from '@/services/dashboardService';
+import { fetchDashboardOverview, fetchDashboardStatistics } from '@/services/dashboardService';
 import { extractErrorMessage } from '@/services/http';
 import {
     exportReport,
@@ -159,10 +281,56 @@ const previewError = ref('');
 const exporting = ref('');
 const drillTitle = ref('');
 const drillSubtitle = ref('');
+const overview = ref(null);
+const overviewLoading = ref(false);
+const search = ref(String(route.query.q || ''));
+let loadToken = 0;
+let overviewToken = 0;
+let overviewSearchTimer = null;
 
 const located = computed(() => findDashboardChart(String(route.params.chartKey || '')));
 const missing = computed(() => !located.value);
 const chart = computed(() => located.value?.chart ?? null);
+const populationSection = computed(() => {
+    const match = DASHBOARD_CATEGORY_SECTIONS.find((section) => section.cards.some((card) => card.key === chart.value?.key));
+
+    if (match) {
+        return match;
+    }
+
+    const sectionKey = located.value?.section?.key;
+
+    if (!sectionKey) {
+        return null;
+    }
+
+    const householdSections = ['household-profile', 'housing-utilities', 'barangay-records'];
+
+    return {
+        key: householdSections.includes(sectionKey) ? 'household' : 'resident',
+        title: located.value.section.title,
+    };
+});
+const showsPopulationFilters = computed(() => populationSection.value !== null);
+const activePopulationFilters = computed(() => (
+    (statistics.value?.population_filters ?? [])
+        .filter((filter) => String(route.query[filter.key] || '') !== '')
+        .map((filter) => ({
+            key: filter.key,
+            label: filter.label,
+            value: filter.options.find((option) => option.value === String(route.query[filter.key]))?.label
+                || String(route.query[filter.key]),
+        }))
+));
+const populationCounts = computed(() => {
+    const key = populationSection.value?.key === 'household' ? 'households' : 'residents';
+    const counts = statistics.value?.population?.[key] ?? { filtered: 0, total: 0 };
+
+    return {
+        filtered: Number(counts.filtered || 0).toLocaleString('en-US'),
+        total: Number(counts.total || 0).toLocaleString('en-US'),
+    };
+});
 const showSkeleton = computed(() => loading.value && !statistics.value);
 
 const modulePanels = computed(() => (
@@ -363,6 +531,81 @@ async function download(format) {
     }
 }
 
+function populationParams() {
+    const params = {};
+
+    ['street', 'clan', 'age', 'sex'].forEach((key) => {
+        const value = route.query[key];
+
+        if (value !== undefined && value !== '') {
+            params[key] = value;
+        }
+    });
+
+    return params;
+}
+
+const overviewSort = computed(() => String(route.query.sort || 'name'));
+const overviewDir = computed(() => String(route.query.dir || 'asc'));
+
+function overviewParams() {
+    const params = {
+        population: populationSection.value?.key === 'household' ? 'households' : 'residents',
+        ...populationParams(),
+    };
+
+    ['q', 'sort', 'dir', 'page'].forEach((key) => {
+        const value = route.query[key];
+
+        if (value !== undefined && value !== '') {
+            params[key] = value;
+        }
+    });
+
+    return params;
+}
+
+function replaceOverviewQuery(patch, resetPage = false) {
+    const next = { ...route.query, ...patch };
+
+    if (resetPage) {
+        delete next.page;
+    }
+
+    Object.keys(next).forEach((key) => {
+        if (next[key] === '' || next[key] == null) {
+            delete next[key];
+        }
+    });
+
+    router.push({ name: 'dashboard-category', params: { chartKey: route.params.chartKey }, query: next });
+}
+
+function setPopulationFilter(key, value) {
+    replaceOverviewQuery({ [key]: value }, true);
+}
+
+function clearPopulationFilters() {
+    search.value = '';
+    router.push({ name: 'dashboard-category', params: { chartKey: route.params.chartKey } });
+}
+
+function onOverviewSearch() {
+    clearTimeout(overviewSearchTimer);
+    overviewSearchTimer = setTimeout(() => {
+        replaceOverviewQuery({ q: search.value.trim() }, true);
+    }, 300);
+}
+
+function toggleOverviewSort(key) {
+    const nextDir = overviewSort.value === key && overviewDir.value === 'asc' ? 'desc' : 'asc';
+    replaceOverviewQuery({ sort: key, dir: nextDir }, true);
+}
+
+function setOverviewPage(page) {
+    replaceOverviewQuery({ page: String(page) });
+}
+
 async function load() {
     if (missing.value) {
         loading.value = false;
@@ -370,15 +613,66 @@ async function load() {
         return;
     }
 
+    const token = ++loadToken;
     loading.value = true;
     error.value = '';
 
     try {
-        statistics.value = await fetchDashboardStatistics();
+        const data = await fetchDashboardStatistics(populationParams());
+
+        if (token !== loadToken) {
+            return;
+        }
+
+        statistics.value = data;
     } catch (exception) {
+        if (token !== loadToken) {
+            return;
+        }
+
         error.value = extractErrorMessage(exception, 'Please check your connection and try again.');
     } finally {
-        loading.value = false;
+        if (token === loadToken) {
+            loading.value = false;
+        }
+    }
+}
+
+async function loadOverview() {
+    if (!showsPopulationFilters.value) {
+        overview.value = null;
+
+        return;
+    }
+
+    const token = ++overviewToken;
+    overviewLoading.value = true;
+
+    try {
+        const data = await fetchDashboardOverview(overviewParams());
+
+        if (token !== overviewToken) {
+            return;
+        }
+
+        overview.value = data;
+        search.value = String(route.query.q || '');
+    } catch (exception) {
+        if (token !== overviewToken) {
+            return;
+        }
+
+        overview.value = {
+            table_title: populationSection.value?.key === 'household' ? 'Households Overview' : 'Residents Overview',
+            empty: extractErrorMessage(exception, 'No records match these filters.'),
+            columns: [],
+            rows: [],
+            pagination: { page: 1, last_page: 1 },
+        };
+    } finally {
+        if (token === overviewToken) {
+            overviewLoading.value = false;
+        }
     }
 }
 
@@ -394,12 +688,25 @@ function goBack() {
 
 watch(() => route.params.chartKey, async () => {
     statistics.value = null;
-    await load();
+    overview.value = null;
+    await Promise.all([load(), loadOverview()]);
     resetModule();
 });
 
+watch(() => JSON.stringify(populationParams()), () => {
+    if (!missing.value) {
+        load();
+    }
+});
+
+watch(() => JSON.stringify(overviewParams()), () => {
+    if (showsPopulationFilters.value) {
+        loadOverview();
+    }
+});
+
 onMounted(async () => {
-    await load();
+    await Promise.all([load(), loadOverview()]);
 
     if (!canViewReports.value) {
         return;

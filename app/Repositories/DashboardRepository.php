@@ -11,6 +11,102 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardRepository implements DashboardRepositoryInterface
 {
+    /**
+     * @var array{street: ?int, clan: ?int, age: ?string, sex: int|string|null}
+     */
+    private array $populationFilters = [
+        'street' => null,
+        'clan' => null,
+        'age' => null,
+        'sex' => null,
+    ];
+
+    public function usePopulationFilters(array $filters): void
+    {
+        $this->populationFilters = [
+            'street' => isset($filters['street']) ? (int) $filters['street'] : null,
+            'clan' => isset($filters['clan']) ? (int) $filters['clan'] : null,
+            'age' => isset($filters['age']) && $filters['age'] !== '' ? (string) $filters['age'] : null,
+            'sex' => $filters['sex'] ?? null,
+        ];
+    }
+
+    public function filteredHouseholdCount(): int
+    {
+        $query = DB::table('household');
+        $this->applyHouseholdFilters($query);
+
+        return (int) $query->count();
+    }
+
+    public function filteredResidentCount(): int
+    {
+        $query = DB::table('resident');
+        $this->applyResidentFilters($query);
+
+        return (int) $query->count();
+    }
+
+    public function populationFilterCatalog(): array
+    {
+        return [
+            'streets' => $this->optionRows('street', 'street_id', 'street_name'),
+            'clans' => $this->optionRows('clan', 'clan_id', 'clan_name'),
+            'sexes' => $this->optionRows('sex', 'sex_id', 'sex'),
+        ];
+    }
+
+    public function householdOverviewQuery(): QueryBuilder
+    {
+        $query = DB::table('household')
+            ->leftJoin('street', 'street.street_id', '=', 'household.street_id')
+            ->leftJoin('clan', 'clan.clan_id', '=', 'household.clan_id')
+            ->leftJoin('resident as head', 'head.resident_id', '=', 'household.head_resident_id')
+            ->select([
+                'household.household_id',
+                'household.house_number',
+                'street.street_name',
+                'clan.clan_name',
+                'head.last_name',
+                'head.first_name',
+                'head.middle_name',
+                'head.suffix',
+            ])
+            ->selectSub(
+                DB::table('resident')
+                    ->selectRaw('count(*)')
+                    ->whereColumn('resident.household_id', 'household.household_id'),
+                'member_count',
+            );
+        $this->applyHouseholdFilters($query);
+
+        return $query;
+    }
+
+    public function residentOverviewQuery(): QueryBuilder
+    {
+        $query = DB::table('resident')
+            ->leftJoin('household', 'household.household_id', '=', 'resident.household_id')
+            ->leftJoin('street', 'street.street_id', '=', 'household.street_id')
+            ->leftJoin('clan', 'clan.clan_id', '=', 'resident.clan_id')
+            ->leftJoin('sex', 'sex.sex_id', '=', 'resident.sex_id')
+            ->select([
+                'resident.resident_id',
+                'resident.last_name',
+                'resident.first_name',
+                'resident.middle_name',
+                'resident.suffix',
+                'resident.date_of_birth',
+                'household.house_number',
+                'street.street_name',
+                'clan.clan_name',
+                'sex.sex',
+            ]);
+        $this->applyResidentFilters($query);
+
+        return $query;
+    }
+
     public function summaryCounts(): array
     {
         return [
@@ -25,6 +121,7 @@ class DashboardRepository implements DashboardRepositoryInterface
     {
         $query = DB::table('household')
             ->leftJoin($lookupTable.' as lk', 'lk.'.$lookupId, '=', 'household.'.$column);
+        $this->applyHouseholdFilters($query);
 
         return $this->labelCounts($query, $lookupId, $lookupLabel);
     }
@@ -59,7 +156,10 @@ class DashboardRepository implements DashboardRepositoryInterface
         $wrapped = DB::getQueryGrammar()->wrap('household.'.$column);
         $expression = $nullAs === null ? $wrapped : 'coalesce('.$wrapped.', '.$nullAs.')';
 
-        return DB::table('household')
+        $query = DB::table('household');
+        $this->applyHouseholdFilters($query);
+
+        return $query
             ->selectRaw($expression.' as value, count(*) as total')
             ->groupByRaw($expression)
             ->get()
@@ -83,6 +183,7 @@ class DashboardRepository implements DashboardRepositoryInterface
     {
         $query = DB::table('resident')
             ->leftJoin($lookupTable.' as lk', 'lk.'.$lookupId, '=', 'resident.'.$column);
+        $this->applyResidentFilters($query);
 
         return $this->labelCounts($query, $lookupId, $lookupLabel);
     }
@@ -124,6 +225,7 @@ class DashboardRepository implements DashboardRepositoryInterface
     {
         $query = DB::table('pet_census')
             ->leftJoin($lookupTable.' as lk', 'lk.'.$lookupId, '=', 'pet_census.'.$column);
+        $this->constrainPets($query);
 
         return $this->labelCounts($query, $lookupId, $lookupLabel);
     }
@@ -152,6 +254,7 @@ class DashboardRepository implements DashboardRepositoryInterface
             ->selectRaw($this->personNameSql('resident').' as name')
             ->orderBy('resident.resident_id');
 
+        $this->applyResidentFilters($query);
         $this->applyAudience($query, $audience);
 
         return $this->booleanGroups($query->get());
@@ -167,6 +270,7 @@ class DashboardRepository implements DashboardRepositoryInterface
             ->selectRaw($this->personNameSql('resident').' as name')
             ->orderBy('resident.resident_id');
 
+        $this->applyResidentFilters($query);
         $this->applyAudience($query, $audience);
 
         return $this->booleanGroups($query->get(), unanswered: false);
@@ -177,6 +281,7 @@ class DashboardRepository implements DashboardRepositoryInterface
         $query = DB::table('resident')
             ->leftJoin($childTable, $childTable.'.resident_id', '=', 'resident.resident_id');
 
+        $this->applyResidentFilters($query);
         $this->applyAudience($query, $audience);
 
         return $query
@@ -194,15 +299,15 @@ class DashboardRepository implements DashboardRepositoryInterface
 
     public function petsByBoolean(string $column): array
     {
-        $rows = DB::table('pet_census')
+        $query = DB::table('pet_census')
             ->join('household', 'household.household_id', '=', 'pet_census.household_id')
             ->leftJoin('resident as head', 'head.resident_id', '=', 'household.head_resident_id')
             ->select('household.household_id as id', 'pet_census.'.$column.' as value')
             ->selectRaw($this->personNameSql('head').' as name')
-            ->orderBy('household.household_id')
-            ->get();
+            ->orderBy('household.household_id');
+        $this->constrainPets($query);
 
-        return $this->booleanGroups($rows, unanswered: false);
+        return $this->booleanGroups($query->get(), unanswered: false);
     }
 
     public function petsByRabies(): array
@@ -215,7 +320,10 @@ class DashboardRepository implements DashboardRepositoryInterface
                 else 'Vaccination older than 12 months'
             end";
 
-        return DB::table('pet_census')
+        $query = DB::table('pet_census');
+        $this->constrainPets($query);
+
+        return $query
             ->selectRaw($case.' as label, count(*) as total')
             ->groupByRaw($case)
             ->get()
@@ -246,6 +354,7 @@ class DashboardRepository implements DashboardRepositoryInterface
             ->selectRaw($this->personNameSql('resident').' as name')
             ->orderBy('resident.resident_id');
 
+        $this->applyResidentFilters($query);
         $this->applyAudience($query, $audience);
 
         return $this->booleanGroups($query->get(), unanswered: false);
@@ -256,6 +365,7 @@ class DashboardRepository implements DashboardRepositoryInterface
         $query = DB::table('resident')
             ->leftJoin('community_tax_cert as ctc', 'ctc.resident_id', '=', 'resident.resident_id');
 
+        $this->applyResidentFilters($query);
         $this->applyAudience($query, 'ctc');
 
         $case = "case
@@ -326,8 +436,11 @@ class DashboardRepository implements DashboardRepositoryInterface
                 else 'No'
             end";
 
-        return DB::table('resident')
-            ->leftJoin('sociocivic', 'sociocivic.resident_id', '=', 'resident.resident_id')
+        $query = DB::table('resident')
+            ->leftJoin('sociocivic', 'sociocivic.resident_id', '=', 'resident.resident_id');
+        $this->applyResidentFilters($query);
+
+        return $query
             ->selectRaw($case.' as label, count(*) as total')
             ->groupByRaw($case)
             ->get()
@@ -373,7 +486,9 @@ class DashboardRepository implements DashboardRepositoryInterface
     public function residentsByAgeBuckets(array $buckets): array
     {
         $expression = 'timestampdiff(YEAR, `resident`.`date_of_birth`, curdate())';
-        $rows = DB::table('resident')
+        $query = DB::table('resident');
+        $this->applyResidentFilters($query);
+        $rows = $query
             ->selectRaw($expression.' as value, count(*) as total')
             ->groupByRaw($expression)
             ->get();
@@ -400,22 +515,171 @@ class DashboardRepository implements DashboardRepositoryInterface
         return $this->bucketCounts($rows, $buckets);
     }
 
+    private function populationFiltersActive(): bool
+    {
+        foreach ($this->populationFilters as $value) {
+            if ($value !== null && $value !== '') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function applyHouseholdFilters(QueryBuilder $query, string $alias = 'household'): void
+    {
+        if (! $this->populationFiltersActive()) {
+            return;
+        }
+
+        if ($this->populationFilters['street'] !== null) {
+            $query->where($alias.'.street_id', $this->populationFilters['street']);
+        }
+
+        if ($this->populationFilters['clan'] !== null) {
+            $query->where($alias.'.clan_id', $this->populationFilters['clan']);
+        }
+
+        if ($this->populationFilters['age'] === null && $this->populationFilters['sex'] === null) {
+            return;
+        }
+
+        $query->whereExists(function (QueryBuilder $sub) use ($alias): void {
+            $sub->from('resident as population_head')
+                ->whereColumn('population_head.resident_id', $alias.'.head_resident_id');
+            $this->applyPersonAgeSex($sub, 'population_head');
+        });
+    }
+
+    private function applyResidentFilters(QueryBuilder $query): void
+    {
+        if (! $this->populationFiltersActive()) {
+            return;
+        }
+
+        if ($this->populationFilters['street'] !== null && ! $this->hasJoin($query, 'household')) {
+            $query->leftJoin('household', 'household.household_id', '=', 'resident.household_id');
+        }
+
+        if ($this->populationFilters['street'] !== null) {
+            $query->where('household.street_id', $this->populationFilters['street']);
+        }
+
+        if ($this->populationFilters['clan'] !== null) {
+            $query->where('resident.clan_id', $this->populationFilters['clan']);
+        }
+
+        $this->applyPersonAgeSex($query, 'resident');
+    }
+
+    private function constrainPets(QueryBuilder $query): void
+    {
+        if (! $this->populationFiltersActive()) {
+            return;
+        }
+
+        if (! $this->hasJoin($query, 'household')) {
+            $query->join('household', 'household.household_id', '=', 'pet_census.household_id');
+        }
+
+        $this->applyHouseholdFilters($query);
+    }
+
+    private function applyPersonAgeSex(QueryBuilder $query, string $alias): void
+    {
+        $sex = $this->populationFilters['sex'];
+
+        if ($sex === 'none') {
+            $query->whereNull($alias.'.sex_id');
+        } elseif ($sex !== null && $sex !== '') {
+            $query->where($alias.'.sex_id', (int) $sex);
+        }
+
+        $age = $this->populationFilters['age'];
+
+        if ($age === null || $age === '') {
+            return;
+        }
+
+        if ($age === 'none') {
+            $query->whereNull($alias.'.date_of_birth');
+
+            return;
+        }
+
+        $group = collect(config('census_statistics.age_groups', []))->firstWhere('value', $age);
+
+        if (! is_array($group)) {
+            return;
+        }
+
+        $column = '`'.str_replace('`', '', $alias).'`.`date_of_birth`';
+        $expression = 'timestampdiff(YEAR, '.$column.', curdate())';
+        $query->whereRaw($expression.' >= ?', [(int) $group['min']]);
+
+        if ($group['max'] !== null) {
+            $query->whereRaw($expression.' <= ?', [(int) $group['max']]);
+        }
+    }
+
+    private function hasJoin(QueryBuilder $query, string $table): bool
+    {
+        foreach ($query->joins ?? [] as $join) {
+            $name = $join->table;
+
+            if ($name instanceof \Illuminate\Contracts\Database\Query\Expression) {
+                $name = $name->getValue(DB::connection()->getQueryGrammar());
+            }
+
+            if (preg_match('/(?:^|\s)'.preg_quote($table, '/').'(?:\s|$)/', (string) $name) === 1) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function optionRows(string $table, string $idColumn, string $labelColumn): array
+    {
+        return DB::table($table)
+            ->orderBy($labelColumn)
+            ->get([$idColumn.' as id', $labelColumn.' as label'])
+            ->map(fn (object $row): array => [
+                'value' => (string) $row->id,
+                'label' => (string) $row->label,
+            ])
+            ->all();
+    }
+
     /**
      * Every household with its latest household_questions row as `hq`, the
      * same row Report Generation reads. Unanswered households keep a null row.
      */
     private function householdsWithLatestQuestions(): QueryBuilder
     {
-        return DB::table('household')
+        $query = DB::table('household')
             ->leftJoinSub($this->latestQuestionIds(), 'latest', 'latest.household_id', '=', 'household.household_id')
             ->leftJoin('household_questions as hq', 'hq.household_questions_id', '=', 'latest.latest_id');
+        $this->applyHouseholdFilters($query);
+
+        return $query;
     }
 
     private function latestQuestionIds(): QueryBuilder
     {
-        return DB::table('household_questions')
-            ->selectRaw('household_id, max(household_questions_id) as latest_id')
-            ->groupBy('household_id');
+        $query = DB::table('household_questions')
+            ->selectRaw('household_questions.household_id as household_id, max(household_questions.household_questions_id) as latest_id')
+            ->groupBy('household_questions.household_id');
+
+        if ($this->populationFiltersActive()) {
+            $query->join('household', 'household.household_id', '=', 'household_questions.household_id');
+            $this->applyHouseholdFilters($query);
+        }
+
+        return $query;
     }
 
     /**
@@ -426,12 +690,16 @@ class DashboardRepository implements DashboardRepositoryInterface
         $query = DB::table('resident');
 
         if ($via === null) {
-            return $query->leftJoin($childTable, $childTable.'.resident_id', '=', 'resident.resident_id');
+            $query->leftJoin($childTable, $childTable.'.resident_id', '=', 'resident.resident_id');
+        } else {
+            $query
+                ->leftJoin($via['table'], $via['table'].'.'.$via['owner'], '=', 'resident.resident_id')
+                ->leftJoin($childTable, $childTable.'.'.$via['from'], '=', $via['table'].'.'.$via['to']);
         }
 
-        return $query
-            ->leftJoin($via['table'], $via['table'].'.'.$via['owner'], '=', 'resident.resident_id')
-            ->leftJoin($childTable, $childTable.'.'.$via['from'], '=', $via['table'].'.'.$via['to']);
+        $this->applyResidentFilters($query);
+
+        return $query;
     }
 
     private function applyAudience(QueryBuilder $query, ?string $audience): void

@@ -57,12 +57,12 @@
                 </p>
 
                 <section aria-label="Summary">
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5" :aria-busy="loading">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" :aria-busy="loading">
                         <template v-if="loading && !tiles.length">
                             <div
                                 v-for="item in 8"
                                 :key="item"
-                                class="h-[6.25rem] animate-pulse rounded-2xl bg-white ring-1 ring-slate-200"
+                                class="h-40 animate-pulse rounded-2xl bg-white ring-1 ring-slate-200"
                             />
                         </template>
                         <StatTile v-for="tile in tiles" v-else :key="tile.id" :tile="tile" />
@@ -78,7 +78,7 @@
                     <h3 class="text-base font-semibold text-slate-900">
                         {{ section.title }}
                     </h3>
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <CategoryCard v-for="card in section.cards" :key="card.key" :card="card" />
                     </div>
                 </section>
