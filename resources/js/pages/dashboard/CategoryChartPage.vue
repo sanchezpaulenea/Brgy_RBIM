@@ -49,11 +49,11 @@
                     class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5"
                     aria-label="Filters"
                 >
-                    <div v-if="showSkeleton" class="grid animate-pulse grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                        <div v-for="item in 4" :key="item" class="h-16 rounded-lg bg-slate-100" />
+                    <div v-if="showSkeleton" class="grid animate-pulse grid-cols-1 gap-3 sm:grid-cols-2" :class="filterGridClass">
+                        <div v-for="item in applicableFilterKeys.length" :key="item" class="h-16 rounded-lg bg-slate-100" />
                     </div>
-                    <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                        <label v-for="filter in statistics?.population_filters ?? []" :key="filter.key" class="block text-sm font-medium text-slate-700">
+                    <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2" :class="filterGridClass">
+                        <label v-for="filter in visiblePopulationFilters" :key="filter.key" class="block text-sm font-medium text-slate-700">
                             {{ filter.label }}
                             <select
                                 class="rbim-input mt-1"
@@ -136,9 +136,9 @@
                 </div>
 
                 <section v-if="showsPopulationFilters" class="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
-                    <div class="flex flex-wrap items-end justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:px-5">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 sm:px-5">
                         <h2 class="text-sm font-bold uppercase tracking-wide text-slate-900">
-                            {{ overview?.table_title || (populationSection?.key === 'household' ? 'Households Overview' : 'Residents Overview') }}
+                            {{ overviewTitle }}
                         </h2>
                         <label class="flex items-center gap-3 text-sm font-medium text-slate-700">
                             Search
@@ -241,7 +241,7 @@ import DashboardDrilldown from '@/components/dashboard/DashboardDrilldown.vue';
 import DashboardModuleFilters from '@/components/dashboard/DashboardModuleFilters.vue';
 import DashboardPieCard from '@/components/dashboard/DashboardPieCard.vue';
 import { useAuth } from '@/composables/useAuth';
-import { DASHBOARD_CATEGORY_SECTIONS, findDashboardChart } from '@/constants/dashboardCharts';
+import { DASHBOARD_CATEGORY_SECTIONS, HOUSEHOLD_STATISTIC_FILTERS, findDashboardChart } from '@/constants/dashboardCharts';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { fetchDashboardOverview, fetchDashboardStatistics } from '@/services/dashboardService';
 import { extractErrorMessage } from '@/services/http';
@@ -312,8 +312,35 @@ const populationSection = computed(() => {
     };
 });
 const showsPopulationFilters = computed(() => populationSection.value !== null);
+const overviewTitle = computed(() => `${chart.value?.title || 'Records'} Overview`);
+const applicableFilterKeys = computed(() => (
+    populationSection.value?.key === 'resident'
+        ? ['street', 'clan', 'age', 'sex']
+        : ['street', 'clan', ...(HOUSEHOLD_STATISTIC_FILTERS[chart.value?.key] ?? [])]
+));
+const filterGridClass = computed(() => {
+    const count = applicableFilterKeys.value.length;
+
+    if (count >= 4) {
+        return 'lg:grid-cols-4';
+    }
+
+    if (count === 3) {
+        return 'lg:grid-cols-3';
+    }
+
+    return 'lg:grid-cols-2';
+});
+const visiblePopulationFilters = computed(() => {
+    const shared = (statistics.value?.population_filters ?? [])
+        .filter((filter) => applicableFilterKeys.value.includes(filter.key));
+    const own = (statistics.value?.statistic_filters ?? [])
+        .filter((filter) => applicableFilterKeys.value.includes(filter.key));
+
+    return [...shared, ...own];
+});
 const activePopulationFilters = computed(() => (
-    (statistics.value?.population_filters ?? [])
+    visiblePopulationFilters.value
         .filter((filter) => String(route.query[filter.key] || '') !== '')
         .map((filter) => ({
             key: filter.key,
@@ -534,7 +561,11 @@ async function download(format) {
 function populationParams() {
     const params = {};
 
-    ['street', 'clan', 'age', 'sex'].forEach((key) => {
+    if (populationSection.value?.key === 'household' && chart.value?.key) {
+        params.chart = chart.value.key;
+    }
+
+    applicableFilterKeys.value.forEach((key) => {
         const value = route.query[key];
 
         if (value !== undefined && value !== '') {

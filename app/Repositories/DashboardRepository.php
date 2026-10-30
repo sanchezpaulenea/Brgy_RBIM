@@ -21,6 +21,11 @@ class DashboardRepository implements DashboardRepositoryInterface
         'sex' => null,
     ];
 
+    /**
+     * @var list<array<string, mixed>>
+     */
+    private array $attributeFilters = [];
+
     public function usePopulationFilters(array $filters): void
     {
         $this->populationFilters = [
@@ -29,6 +34,52 @@ class DashboardRepository implements DashboardRepositoryInterface
             'age' => isset($filters['age']) && $filters['age'] !== '' ? (string) $filters['age'] : null,
             'sex' => $filters['sex'] ?? null,
         ];
+    }
+
+    public function useAttributeFilters(array $filters): void
+    {
+        $this->attributeFilters = array_values($filters);
+    }
+
+    public function lookupOptions(string $table, string $idColumn, string $labelColumn): array
+    {
+        $allowed = [
+            'household_status' => ['household_status_id', 'household_status'],
+            'ownership_type' => ['ownership_type_id', 'ownership_type'],
+            'fuel_type' => ['fuel_type_id', 'fuel_type'],
+            'water_source' => ['water_source_id', 'water_source'],
+            'kitchen_garbage_disposal' => ['kitchen_garbage_disposal_id', 'kitchen_garbage_disposal'],
+            'toilet_facility_type' => ['toilet_facility_type_id', 'toilet_facility_type'],
+            'building_house_type' => ['building_house_type_id', 'building_house_type'],
+            'construction_material_outer_wall' => ['construction_material_outer_wall_id', 'construction_material_outer_wall'],
+            'common_disease_cause_death_in_brgy' => ['common_disease_id', 'common_disease'],
+            'primary_need_of_brgy' => ['primary_need_id', 'primary_need'],
+            'specie' => ['specie_id', 'specie'],
+            'sex' => ['sex_id', 'sex'],
+        ];
+
+        if (($allowed[$table] ?? null) !== [$idColumn, $labelColumn]) {
+            return [];
+        }
+
+        return $this->optionRows($table, $idColumn, $labelColumn);
+    }
+
+    public function distinctValues(string $table, string $column): array
+    {
+        $allowed = [
+            'household' => ['number_of_house_story', 'number_of_basement_level'],
+        ];
+
+        if (! in_array($column, $allowed[$table] ?? [], true)) {
+            return [];
+        }
+
+        return DB::table($table)
+            ->distinct()
+            ->orderBy($column)
+            ->pluck($column)
+            ->all();
     }
 
     public function filteredHouseholdCount(): int
@@ -526,9 +577,14 @@ class DashboardRepository implements DashboardRepositoryInterface
         return false;
     }
 
+    private function attributeFiltersActive(): bool
+    {
+        return $this->attributeFilters !== [];
+    }
+
     private function applyHouseholdFilters(QueryBuilder $query, string $alias = 'household'): void
     {
-        if (! $this->populationFiltersActive()) {
+        if (! $this->populationFiltersActive() && ! $this->attributeFiltersActive()) {
             return;
         }
 
@@ -540,15 +596,15 @@ class DashboardRepository implements DashboardRepositoryInterface
             $query->where($alias.'.clan_id', $this->populationFilters['clan']);
         }
 
-        if ($this->populationFilters['age'] === null && $this->populationFilters['sex'] === null) {
-            return;
+        if ($this->populationFilters['age'] !== null || $this->populationFilters['sex'] !== null) {
+            $query->whereExists(function (QueryBuilder $sub) use ($alias): void {
+                $sub->from('resident as population_head')
+                    ->whereColumn('population_head.resident_id', $alias.'.head_resident_id');
+                $this->applyPersonAgeSex($sub, 'population_head');
+            });
         }
 
-        $query->whereExists(function (QueryBuilder $sub) use ($alias): void {
-            $sub->from('resident as population_head')
-                ->whereColumn('population_head.resident_id', $alias.'.head_resident_id');
-            $this->applyPersonAgeSex($sub, 'population_head');
-        });
+        $this->applyAttributeFilters($query, $alias);
     }
 
     private function applyResidentFilters(QueryBuilder $query): void
@@ -574,7 +630,7 @@ class DashboardRepository implements DashboardRepositoryInterface
 
     private function constrainPets(QueryBuilder $query): void
     {
-        if (! $this->populationFiltersActive()) {
+        if (! $this->populationFiltersActive() && ! $this->attributeFiltersActive()) {
             return;
         }
 
@@ -620,6 +676,260 @@ class DashboardRepository implements DashboardRepositoryInterface
         if ($group['max'] !== null) {
             $query->whereRaw($expression.' <= ?', [(int) $group['max']]);
         }
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     */
+    private function applyAttributeFilters(QueryBuilder $query, string $alias): void
+    {
+        $petFilters = [];
+
+        foreach ($this->attributeFilters as $filter) {
+            if (str_starts_with((string) ($filter['kind'] ?? ''), 'pet_')) {
+                $petFilters[] = $filter;
+
+                continue;
+            }
+
+            match ($filter['kind'] ?? '') {
+                'household_lookup' => $this->whereHouseholdLookup($query, $alias, $filter),
+                'household_number' => $this->whereHouseholdNumber($query, $alias, $filter),
+                'question' => $this->whereLatestQuestion($query, $alias, $filter),
+                'question_bool' => $this->whereLatestQuestionBool($query, $alias, $filter),
+                'presence' => $this->whereLatestPresence($query, $alias, $filter),
+                'junction' => $this->whereLatestJunction($query, $alias, $filter),
+                default => null,
+            };
+        }
+
+        $this->applyPetAttributeFilters($query, $alias, $petFilters);
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     */
+    private function whereHouseholdLookup(QueryBuilder $query, string $alias, array $filter): void
+    {
+        $column = $alias.'.'.$filter['column'];
+
+        if ($filter['value'] === 'none') {
+            $query->whereNull($column);
+
+            return;
+        }
+
+        $query->where($column, (int) $filter['value']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     */
+    private function whereHouseholdNumber(QueryBuilder $query, string $alias, array $filter): void
+    {
+        $column = $alias.'.'.$filter['column'];
+
+        if ($filter['value'] === 'none') {
+            $query->whereNull($column);
+
+            return;
+        }
+
+        $number = (int) $filter['value'];
+
+        if (($filter['null_as'] ?? null) === 0 && $number === 0) {
+            $query->where(function (QueryBuilder $inner) use ($column): void {
+                $inner->whereNull($column)->orWhere($column, 0);
+            });
+
+            return;
+        }
+
+        $query->where($column, $number);
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     */
+    private function whereLatestQuestion(QueryBuilder $query, string $alias, array $filter): void
+    {
+        $column = (string) $filter['column'];
+
+        if ($filter['value'] === 'none') {
+            $query->where(function (QueryBuilder $outer) use ($alias, $column): void {
+                $outer->whereNotExists(function (QueryBuilder $sub) use ($alias): void {
+                    $sub->from('household_questions as attr_hq')
+                        ->whereColumn('attr_hq.household_id', $alias.'.household_id');
+                })->orWhereExists(function (QueryBuilder $sub) use ($alias, $column): void {
+                    $this->latestQuestion($sub, $alias)->whereNull('attr_hq.'.$column);
+                });
+            });
+
+            return;
+        }
+
+        $query->whereExists(function (QueryBuilder $sub) use ($alias, $column, $filter): void {
+            $this->latestQuestion($sub, $alias)->where('attr_hq.'.$column, (int) $filter['value']);
+        });
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     */
+    private function whereLatestQuestionBool(QueryBuilder $query, string $alias, array $filter): void
+    {
+        $column = (string) $filter['column'];
+        $value = (string) $filter['value'];
+
+        if ($value === 'none') {
+            $query->where(function (QueryBuilder $outer) use ($alias, $column): void {
+                $outer->whereNotExists(function (QueryBuilder $sub) use ($alias): void {
+                    $sub->from('household_questions as attr_hq')
+                        ->whereColumn('attr_hq.household_id', $alias.'.household_id');
+                })->orWhereExists(function (QueryBuilder $sub) use ($alias, $column): void {
+                    $this->latestQuestion($sub, $alias)->whereNull('attr_hq.'.$column);
+                });
+            });
+
+            return;
+        }
+
+        $query->whereExists(function (QueryBuilder $sub) use ($alias, $column, $value): void {
+            $latest = $this->latestQuestion($sub, $alias);
+
+            if ($value === 'yes') {
+                $latest->where('attr_hq.'.$column, 1);
+
+                return;
+            }
+
+            $latest->where('attr_hq.'.$column, 0);
+        });
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     */
+    private function whereLatestPresence(QueryBuilder $query, string $alias, array $filter): void
+    {
+        $table = (string) $filter['table'];
+        $owner = (string) $filter['owner'];
+
+        if ($filter['value'] === 'yes') {
+            $query->whereExists(function (QueryBuilder $sub) use ($alias, $table, $owner): void {
+                $this->latestQuestion($sub, $alias)
+                    ->join($table.' as attr_presence', 'attr_presence.'.$owner, '=', 'attr_hq.household_questions_id');
+            });
+
+            return;
+        }
+
+        $query->whereExists(function (QueryBuilder $sub) use ($alias, $table, $owner): void {
+            $this->latestQuestion($sub, $alias)
+                ->whereNotExists(function (QueryBuilder $missing) use ($table, $owner): void {
+                    $missing->from($table.' as attr_presence')
+                        ->whereColumn('attr_presence.'.$owner, 'attr_hq.household_questions_id');
+                });
+        });
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     */
+    private function whereLatestJunction(QueryBuilder $query, string $alias, array $filter): void
+    {
+        $table = (string) $filter['table'];
+        $column = (string) $filter['column'];
+        $query->whereExists(function (QueryBuilder $sub) use ($alias, $table, $column, $filter): void {
+            $this->latestQuestion($sub, $alias)
+                ->join($table.' as attr_j', 'attr_j.household_question_id', '=', 'attr_hq.household_questions_id')
+                ->where('attr_j.'.$column, (int) $filter['value']);
+        });
+    }
+
+    private function latestQuestion(QueryBuilder $sub, string $alias): QueryBuilder
+    {
+        return $sub->from('household_questions as attr_hq')
+            ->whereColumn('attr_hq.household_id', $alias.'.household_id')
+            ->whereRaw('attr_hq.household_questions_id = (select max(inner_hq.household_questions_id) from household_questions as inner_hq where inner_hq.household_id = attr_hq.household_id)');
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $filters
+     */
+    private function applyPetAttributeFilters(QueryBuilder $query, string $alias, array $filters): void
+    {
+        if ($filters === []) {
+            return;
+        }
+
+        if ($this->queriesPetCensus($query)) {
+            foreach ($filters as $filter) {
+                $this->constrainPetRow($query, 'pet_census', $filter);
+            }
+
+            return;
+        }
+
+        $query->whereExists(function (QueryBuilder $sub) use ($alias, $filters): void {
+            $sub->from('pet_census as attr_pet')
+                ->whereColumn('attr_pet.household_id', $alias.'.household_id');
+
+            foreach ($filters as $filter) {
+                $this->constrainPetRow($sub, 'attr_pet', $filter);
+            }
+        });
+    }
+
+    /**
+     * @param  array<string, mixed>  $filter
+     */
+    private function constrainPetRow(QueryBuilder $query, string $alias, array $filter): void
+    {
+        $kind = (string) ($filter['kind'] ?? '');
+
+        if ($kind === 'pet_lookup') {
+            $column = $alias.'.'.$filter['column'];
+            $filter['value'] === 'none'
+                ? $query->whereNull($column)
+                : $query->where($column, (int) $filter['value']);
+
+            return;
+        }
+
+        if ($kind === 'pet_bool') {
+            $column = $alias.'.'.$filter['column'];
+
+            if ($filter['value'] === 'yes') {
+                $query->where($column, 1);
+
+                return;
+            }
+
+            $query->where(function (QueryBuilder $inner) use ($column): void {
+                $inner->where($column, 0)->orWhereNull($column);
+            });
+
+            return;
+        }
+
+        if ($kind !== 'pet_rabies') {
+            return;
+        }
+
+        $date = $alias.'.rabies_vaccination_date';
+        $cutoff = now()->subMonths(12)->toDateString();
+
+        match ((string) $filter['value']) {
+            'within_12' => $query->whereNotNull($date)->whereDate($date, '>=', $cutoff),
+            'older_12' => $query->whereNotNull($date)->whereDate($date, '<', $cutoff),
+            default => $query->whereNull($date),
+        };
+    }
+
+    private function queriesPetCensus(QueryBuilder $query): bool
+    {
+        return $query->from === 'pet_census' || $this->hasJoin($query, 'pet_census');
     }
 
     private function hasJoin(QueryBuilder $query, string $table): bool
@@ -674,7 +984,7 @@ class DashboardRepository implements DashboardRepositoryInterface
             ->selectRaw('household_questions.household_id as household_id, max(household_questions.household_questions_id) as latest_id')
             ->groupBy('household_questions.household_id');
 
-        if ($this->populationFiltersActive()) {
+        if ($this->populationFiltersActive() || $this->attributeFiltersActive()) {
             $query->join('household', 'household.household_id', '=', 'household_questions.household_id');
             $this->applyHouseholdFilters($query);
         }

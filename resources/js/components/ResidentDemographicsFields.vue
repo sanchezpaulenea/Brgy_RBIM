@@ -83,7 +83,25 @@
             </select>
             <p v-if="errors.relationship_to_hh_id" class="rbim-error">{{ errors.relationship_to_hh_id }}</p>
         </div>
-        <div>
+        <div v-if="clans.length">
+            <label :for="`${idPrefix}-clan`" class="rbim-label">
+                Clan<span class="rbim-required" aria-hidden="true">*</span>
+            </label>
+            <select
+                :id="`${idPrefix}-clan`"
+                :value="form.clan_id"
+                class="rbim-input"
+                :class="{ 'rbim-input-error': errors.clan_id }"
+                @change="patch('clan_id', $event.target.value)"
+            >
+                <option value="">Select clan</option>
+                <option v-for="option in clans" :key="option.id" :value="option.id">
+                    {{ option.label }}
+                </option>
+            </select>
+            <p v-if="errors.clan_id" class="rbim-error">{{ errors.clan_id }}</p>
+        </div>
+        <div v-else>
             <label :for="`${idPrefix}-sex`" class="rbim-label">
                 Gender<span class="rbim-required" aria-hidden="true">*</span>
             </label>
@@ -101,6 +119,7 @@
             </select>
             <p v-if="errors.sex_id" class="rbim-error">{{ errors.sex_id }}</p>
         </div>
+        <div class="grid gap-4 sm:col-span-2 sm:grid-cols-2">
         <BirthDateField
             :model-value="form.date_of_birth"
             :input-id="`${idPrefix}-date_of_birth`"
@@ -215,23 +234,24 @@
             </select>
             <p v-if="errors.marital_status_id" class="rbim-error">{{ errors.marital_status_id }}</p>
         </div>
+        </div>
         <div v-if="clans.length">
-            <label :for="`${idPrefix}-clan`" class="rbim-label">
-                Clan<span class="rbim-required" aria-hidden="true">*</span>
+            <label :for="`${idPrefix}-sex`" class="rbim-label">
+                Gender<span class="rbim-required" aria-hidden="true">*</span>
             </label>
             <select
-                :id="`${idPrefix}-clan`"
-                :value="form.clan_id"
+                :id="`${idPrefix}-sex`"
+                :value="form.sex_id"
                 class="rbim-input"
-                :class="{ 'rbim-input-error': errors.clan_id }"
-                @change="patch('clan_id', $event.target.value)"
+                :class="{ 'rbim-input-error': errors.sex_id }"
+                @change="patch('sex_id', $event.target.value)"
             >
-                <option value="">Select clan</option>
-                <option v-for="option in clans" :key="option.id" :value="option.id">
+                <option value="">Select gender</option>
+                <option v-for="option in sexes" :key="option.id" :value="option.id">
                     {{ option.label }}
                 </option>
             </select>
-            <p v-if="errors.clan_id" class="rbim-error">{{ errors.clan_id }}</p>
+            <p v-if="errors.sex_id" class="rbim-error">{{ errors.sex_id }}</p>
         </div>
     </div>
 </template>

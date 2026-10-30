@@ -135,20 +135,7 @@ export const CHART_SECTIONS = [
             { key: 'ethnicity', title: 'Ethnicity', subtitle: 'Residents by ethnicity' },
             { key: 'marital_status', title: 'Marital Status', subtitle: 'Residents by marital status' },
             { key: 'resident_status', title: 'Resident Status', subtitle: 'Residents by resident status' },
-            {
-                key: 'age',
-                title: 'Age',
-                subtitle: 'Age plus marital status, disability, resident type, and skill type',
-                visualization: 'range',
-                rangeFilter: 'age',
-                panels: [
-                    { key: 'age', title: 'Age' },
-                    { key: 'age_marital', title: 'Marital Status', dataKey: 'marital_status' },
-                    { key: 'age_disability', title: 'Disability', visualization: 'boolean' },
-                    { key: 'age_resident_type', title: 'Type of Resident', dataKey: 'migration' },
-                    { key: 'age_skill_type', title: 'Skill Type', dataKey: 'skills' },
-                ],
-            },
+            { key: 'age', title: 'Age', subtitle: 'Residents by age group' },
         ],
     },
     {
@@ -296,6 +283,24 @@ export const DASHBOARD_CATEGORY_SECTIONS = [
         ],
     },
 ];
+
+export const HOUSEHOLD_STATISTIC_FILTERS = {
+    house_story_basement: ['house_story', 'basement_level'],
+    household_status: ['household_status'],
+    ownership: ['ownership_unit', 'ownership_lot'],
+    fuel: ['fuel_lighting', 'fuel_cooking'],
+    water_source: ['water_source'],
+    kitchen_garbage: ['kitchen_garbage'],
+    segregate_garbage: ['segregate_garbage'],
+    toilet_facility: ['toilet_facility'],
+    building_type: ['building_type'],
+    construction_material: ['construction_material'],
+    female_died: ['female_died'],
+    child_died: ['child_died'],
+    common_disease: ['common_disease'],
+    primary_need: ['primary_need'],
+    pets: ['pet_specie', 'pet_sex', 'pet_rabies', 'pet_spay'],
+};
 
 export function findDashboardChart(key) {
     for (const section of CHART_SECTIONS) {

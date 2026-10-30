@@ -1,5 +1,5 @@
 <template>
-    <ol class="flex flex-wrap items-center gap-y-3" :aria-label="ariaLabel">
+    <ol class="flex items-center gap-y-3" :class="nowrap ? 'flex-nowrap' : 'flex-wrap'" :aria-label="ariaLabel">
         <li
             v-for="(label, index) in labels"
             :key="label"
@@ -35,6 +35,10 @@ const props = defineProps({
     ariaLabel: {
         type: String,
         default: 'Progress',
+    },
+    nowrap: {
+        type: Boolean,
+        default: false,
     },
 });
 

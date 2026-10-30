@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ResidentManagement\Demographic\Sex;
 use App\Repositories\Interfaces\DashboardRepositoryInterface;
 
 class DashboardService
@@ -77,9 +78,11 @@ class DashboardService
     public function statistics(array $input = []): array
     {
         $filters = $this->populationFilters($input);
+        $attributeFilters = $this->attributeFilters($input);
         $repo = $this->dashboardRepository;
         $totals = $repo->summaryCounts();
         $repo->usePopulationFilters($filters);
+        $repo->useAttributeFilters($attributeFilters);
         $womenVia = [
             'table' => 'health',
             'from' => 'health_id',
@@ -100,6 +103,7 @@ class DashboardService
                 ],
             ],
             'population_filters' => $this->populationFilterDefinitions($filters, $repo->populationFilterCatalog()),
+            'statistic_filters' => $this->statisticFilterDefinitions((string) ($input['chart'] ?? '')),
             'charts' => [
                 'clan_households' => $this->chart(self::HOUSEHOLDS, $repo->householdsByLookup('clan_id', 'clan', 'clan_id', 'clan_name')),
                 'clan_residents' => $this->chart(self::RESIDENTS, $repo->residentsByLookup('clan_id', 'clan', 'clan_id', 'clan_name')),
@@ -218,6 +222,7 @@ class DashboardService
 
         $filters = $this->populationFilters($input);
         $this->dashboardRepository->usePopulationFilters($filters);
+        $this->dashboardRepository->useAttributeFilters($this->attributeFilters($input));
         $query = $population === 'residents'
             ? $this->dashboardRepository->residentOverviewQuery()
             : $this->dashboardRepository->householdOverviewQuery();
@@ -320,6 +325,250 @@ class DashboardService
                 'options' => $catalog['sexes'] ?? [],
             ],
         ];
+    }
+
+    /**
+     * Filters that belong to a household statistic. Street and clan stay
+     * separate because they describe where the household is, not the answer
+     * the chart is about.
+     *
+     * @return array<string, list<array<string, mixed>>>
+     */
+    private function attributeFilterSpecs(): array
+    {
+        $question = fn (string $key, string $label, string $column, string $table, string $id, string $name): array => [
+            'key' => $key,
+            'label' => $label,
+            'kind' => 'question',
+            'column' => $column,
+            'table' => $table,
+            'id' => $id,
+            'name' => $name,
+            'missing' => 'Not answered',
+        ];
+
+        return [
+            'house_story_basement' => [
+                ['key' => 'house_story', 'label' => 'House Story', 'kind' => 'household_number', 'column' => 'number_of_house_story'],
+                ['key' => 'basement_level', 'label' => 'Basement Level', 'kind' => 'household_number', 'column' => 'number_of_basement_level', 'null_as' => 0],
+            ],
+            'household_status' => [
+                ['key' => 'household_status', 'label' => 'Household Status', 'kind' => 'household_lookup', 'column' => 'household_status_id', 'table' => 'household_status', 'id' => 'household_status_id', 'name' => 'household_status', 'missing' => 'Not specified'],
+            ],
+            'ownership' => [
+                $question('ownership_unit', 'Housing Unit Ownership', 'ownership_of_housing_unit_id', 'ownership_type', 'ownership_type_id', 'ownership_type'),
+                $question('ownership_lot', 'Housing Lot Ownership', 'ownership_of_lot_id', 'ownership_type', 'ownership_type_id', 'ownership_type'),
+            ],
+            'fuel' => [
+                $question('fuel_lighting', 'Lighting Fuel', 'fuel_type_for_lighting_id', 'fuel_type', 'fuel_type_id', 'fuel_type'),
+                $question('fuel_cooking', 'Cooking Fuel', 'fuel_type_for_cooking_id', 'fuel_type', 'fuel_type_id', 'fuel_type'),
+            ],
+            'water_source' => [
+                $question('water_source', 'Main Source of Drinking Water', 'main_source_drinking_water_id', 'water_source', 'water_source_id', 'water_source'),
+            ],
+            'kitchen_garbage' => [
+                $question('kitchen_garbage', 'Kitchen Garbage Disposal', 'kitchen_garbage_disposal_id', 'kitchen_garbage_disposal', 'kitchen_garbage_disposal_id', 'kitchen_garbage_disposal'),
+            ],
+            'segregate_garbage' => [
+                ['key' => 'segregate_garbage', 'label' => 'Segregate Garbage', 'kind' => 'question_bool', 'column' => 'perform_garbage_seggragation', 'options' => [
+                    ['value' => 'yes', 'label' => 'Segregates'],
+                    ['value' => 'no', 'label' => 'Does Not Segregate'],
+                    ['value' => 'none', 'label' => 'Not answered'],
+                ]],
+            ],
+            'toilet_facility' => [
+                $question('toilet_facility', 'Toilet Facility', 'toilet_facility_type_id', 'toilet_facility_type', 'toilet_facility_type_id', 'toilet_facility_type'),
+            ],
+            'building_type' => [
+                $question('building_type', 'Type of Building/House', 'type_of_building_house_id', 'building_house_type', 'building_house_type_id', 'building_house_type'),
+            ],
+            'construction_material' => [
+                $question('construction_material', 'Construction Material of the Outer Wall', 'construction_material_outer_wall_id', 'construction_material_outer_wall', 'construction_material_outer_wall_id', 'construction_material_outer_wall'),
+            ],
+            'female_died' => [
+                ['key' => 'female_died', 'label' => 'Female Member Died', 'kind' => 'presence', 'table' => 'female_hhm_died', 'owner' => 'household_question_id', 'options' => [
+                    ['value' => 'yes', 'label' => 'Reported'],
+                    ['value' => 'no', 'label' => 'Not reported'],
+                ]],
+            ],
+            'child_died' => [
+                ['key' => 'child_died', 'label' => 'Child Below 5 Died', 'kind' => 'presence', 'table' => 'child_hhm_died', 'owner' => 'household_question_id', 'options' => [
+                    ['value' => 'yes', 'label' => 'Reported'],
+                    ['value' => 'no', 'label' => 'Not reported'],
+                ]],
+            ],
+            'common_disease' => [
+                ['key' => 'common_disease', 'label' => 'Common Disease', 'kind' => 'junction', 'table' => 'common_disease', 'column' => 'common_disease_id', 'lookup' => 'common_disease_cause_death_in_brgy', 'id' => 'common_disease_id', 'name' => 'common_disease'],
+            ],
+            'primary_need' => [
+                ['key' => 'primary_need', 'label' => 'Primary Need', 'kind' => 'junction', 'table' => 'primary_need', 'column' => 'primary_need_id', 'lookup' => 'primary_need_of_brgy', 'id' => 'primary_need_id', 'name' => 'primary_need'],
+            ],
+            'pets' => [
+                ['key' => 'pet_specie', 'label' => 'Specie', 'kind' => 'pet_lookup', 'column' => 'specie_id', 'table' => 'specie', 'id' => 'specie_id', 'name' => 'specie', 'missing' => 'Not specified'],
+                ['key' => 'pet_sex', 'label' => 'Pet Sex', 'kind' => 'pet_lookup', 'column' => 'sex_id', 'options' => [
+                    ['value' => (string) Sex::MALE, 'label' => 'Male'],
+                    ['value' => (string) Sex::FEMALE, 'label' => 'Female'],
+                ]],
+                ['key' => 'pet_rabies', 'label' => 'Rabies Vaccination', 'kind' => 'pet_rabies', 'options' => [
+                    ['value' => 'within_12', 'label' => 'Vaccinated within last 12 months'],
+                    ['value' => 'older_12', 'label' => 'Vaccination older than 12 months'],
+                    ['value' => 'none', 'label' => 'No vaccination record'],
+                ]],
+                ['key' => 'pet_spay', 'label' => 'Spay / Neuter', 'kind' => 'pet_bool', 'column' => 'is_spay_neuter', 'options' => [
+                    ['value' => 'yes', 'label' => 'Spayed / Neutered'],
+                    ['value' => 'no', 'label' => 'Not Spayed / Neutered'],
+                ]],
+            ],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     * @return list<array<string, mixed>>
+     */
+    private function attributeFilters(array $input): array
+    {
+        $chart = (string) ($input['chart'] ?? '');
+        $active = [];
+
+        foreach ($this->attributeFilterSpecs()[$chart] ?? [] as $spec) {
+            $raw = trim((string) ($input[$spec['key']] ?? ''));
+
+            if ($raw === '' || ! $this->attributeValueAllowed($spec, $raw)) {
+                continue;
+            }
+
+            $active[] = $spec + ['value' => $raw];
+        }
+
+        return $active;
+    }
+
+    /**
+     * @param  array<string, mixed>  $spec
+     */
+    private function attributeValueAllowed(array $spec, string $value): bool
+    {
+        $kind = (string) $spec['kind'];
+
+        if (isset($spec['options'])) {
+            return in_array($value, array_column($spec['options'], 'value'), true);
+        }
+
+        if ($value === 'none') {
+            return in_array($kind, ['household_lookup', 'household_number', 'question', 'pet_lookup'], true)
+                && ($spec['null_as'] ?? null) !== 0;
+        }
+
+        if (! ctype_digit($value)) {
+            return false;
+        }
+
+        $number = (int) $value;
+
+        if ($kind === 'household_number') {
+            return $number >= 0;
+        }
+
+        return $number > 0 && in_array($kind, ['household_lookup', 'question', 'junction', 'pet_lookup'], true);
+    }
+
+    /**
+     * @return list<array{key: string, label: string, options: list<array{value: string, label: string}>}>
+     */
+    private function statisticFilterDefinitions(string $chart): array
+    {
+        $definitions = [];
+
+        foreach ($this->attributeFilterSpecs()[$chart] ?? [] as $spec) {
+            $definitions[] = [
+                'key' => $spec['key'],
+                'label' => $spec['label'],
+                'options' => $this->attributeOptions($spec),
+            ];
+        }
+
+        return $definitions;
+    }
+
+    /**
+     * @param  array<string, mixed>  $spec
+     * @return list<array{value: string, label: string}>
+     */
+    private function attributeOptions(array $spec): array
+    {
+        if (isset($spec['options'])) {
+            return $spec['options'];
+        }
+
+        if ($spec['kind'] === 'household_number') {
+            return $this->numberOptions($spec);
+        }
+
+        $table = (string) ($spec['lookup'] ?? $spec['table']);
+        $options = $this->dashboardRepository->lookupOptions($table, (string) $spec['id'], (string) $spec['name']);
+
+        if (isset($spec['missing'])) {
+            $options[] = ['value' => 'none', 'label' => (string) $spec['missing']];
+        }
+
+        return $options;
+    }
+
+    /**
+     * @param  array<string, mixed>  $spec
+     * @return list<array{value: string, label: string}>
+     */
+    private function numberOptions(array $spec): array
+    {
+        $options = [];
+        $seen = [];
+        $missing = false;
+
+        foreach ($this->dashboardRepository->distinctValues('household', (string) $spec['column']) as $value) {
+            if ($value === null && ($spec['null_as'] ?? null) === 0) {
+                $value = 0;
+            }
+
+            if ($value === null) {
+                $missing = true;
+
+                continue;
+            }
+
+            $number = (int) $value;
+
+            if (isset($seen[$number])) {
+                continue;
+            }
+
+            $seen[$number] = true;
+            $options[] = [
+                'value' => (string) $number,
+                'label' => $this->numberFilterLabel((string) $spec['key'], $number),
+            ];
+        }
+
+        usort($options, fn (array $left, array $right): int => (int) $left['value'] <=> (int) $right['value']);
+
+        if ($missing) {
+            $options[] = ['value' => 'none', 'label' => 'Not specified'];
+        }
+
+        return $options;
+    }
+
+    private function numberFilterLabel(string $key, int $number): string
+    {
+        if ($key === 'basement_level') {
+            return match ($number) {
+                0 => 'No Basement',
+                1 => '1 Basement Level',
+                default => $number.' Basement Levels',
+            };
+        }
+
+        return $number.' '.($number === 1 ? 'Story' : 'Stories');
     }
 
     private function applyOverviewSearch(\Illuminate\Database\Query\Builder $query, string $population, string $term): void

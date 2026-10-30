@@ -211,6 +211,24 @@ interface DashboardRepositoryInterface
      */
     public function usePopulationFilters(array $filters): void;
 
+    /**
+     * Extra filters that belong to one household statistic, such as toilet
+     * facility or water source. Empty leaves those columns unfiltered.
+     *
+     * @param  list<array<string, mixed>>  $filters
+     */
+    public function useAttributeFilters(array $filters): void;
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    public function lookupOptions(string $table, string $idColumn, string $labelColumn): array;
+
+    /**
+     * @return list<int|string|null>
+     */
+    public function distinctValues(string $table, string $column): array;
+
     public function filteredHouseholdCount(): int;
 
     public function filteredResidentCount(): int;

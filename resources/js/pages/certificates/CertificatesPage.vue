@@ -3,21 +3,23 @@
         <div class="space-y-6">
             <PageTabs :tabs="certificateTabs" />
 
-            <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-6">
                 <ProcessSteps
+                    class="min-w-0"
                     :labels="stepLabels"
                     :current="step - 1"
+                    nowrap
                     aria-label="Certificate progress"
                 />
                 <button
                     v-if="step === 5"
                     type="button"
-                    class="rbim-btn py-2"
+                    class="ml-auto inline-flex shrink-0 cursor-pointer items-center rounded-full bg-white px-3 py-2 text-sm font-medium text-red-700 ring-1 ring-red-600 transition hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:cursor-not-allowed disabled:opacity-60"
                     :disabled="busy"
-                    title="Clear this certificate and start again from Certificate Type"
+                    title="Start over from Certificate Type"
                     @click="refresh"
                 >
-                    Refresh
+                    Restart
                 </button>
             </div>
 
@@ -430,9 +432,10 @@
 
         <ConfirmDialog
             :open="confirmRefreshOpen"
-            title="Clear review fields?"
-            message="This clears the fields filled in on Review and Edit. The certificate type, requester, and purpose stay as they are."
-            confirm-label="Clear Fields"
+            title="Start over?"
+            message="Are you sure you want to restart? This clears the certificate and returns to Certificate Type."
+            confirm-label="Restart"
+            variant="danger"
             @confirm="confirmRefresh"
             @cancel="confirmRefreshOpen = false"
         />
@@ -1208,15 +1211,14 @@ function refresh() {
     confirmRefresh();
 }
 
-async function confirmRefresh() {
+function confirmRefresh() {
     confirmRefreshOpen.value = false;
     clearTimeout(previewTimer);
     pageError.value = '';
-    generateError.value = '';
-    issued.value = false;
-    editsReady.value = false;
-    clearIssuanceFields();
-    await loadPreview(false);
+    typeError.value = '';
+    searchError.value = '';
+    signatureWarning.value = '';
+    issueAnother();
 }
 
 function certificatePayload() {

@@ -43,6 +43,7 @@ class DashboardServiceTest extends TestCase
         $this->repository->shouldReceive('residentsByChildDistinct')->andReturn([])->byDefault();
         $this->repository->shouldReceive('residentsByDisability')->andReturn([])->byDefault();
         $this->repository->shouldReceive('usePopulationFilters')->byDefault();
+        $this->repository->shouldReceive('useAttributeFilters')->byDefault();
         $this->repository->shouldReceive('filteredHouseholdCount')->andReturn(0)->byDefault();
         $this->repository->shouldReceive('filteredResidentCount')->andReturn(0)->byDefault();
         $this->repository->shouldReceive('populationFilterCatalog')->andReturn([
