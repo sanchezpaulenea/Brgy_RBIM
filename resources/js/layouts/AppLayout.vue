@@ -1,8 +1,8 @@
 <template>
     <div class="rbim-shell min-h-screen bg-[#f4f6f5] text-slate-900">
-        <header class="fixed inset-x-0 top-0 z-40 h-20 bg-brand text-white shadow-md">
+        <header class="fixed inset-x-0 top-0 z-40 h-28 bg-brand text-white shadow-md">
             <div class="flex h-full items-center justify-between gap-4 px-4 sm:px-6">
-                <div class="flex min-w-0 items-center gap-3">
+                <div class="flex min-w-0 items-center gap-4">
                     <button
                         type="button"
                         class="rounded-lg p-2 text-white/90 hover:bg-white/10 md:hidden"
@@ -13,12 +13,12 @@
                             <path fill-rule="evenodd" d="M3 5h14a1 1 0 010 2H3a1 1 0 010-2zm0 4h14a1 1 0 010 2H3a1 1 0 010-2zm0 4h14a1 1 0 010 2H3a1 1 0 010-2z" clip-rule="evenodd" />
                         </svg>
                     </button>
-                    <BrandLogos size-class="h-11 w-11 sm:h-14 sm:w-14" />
+                    <BrandLogos size-class="h-16 w-16 sm:h-20 sm:w-20" />
                     <div class="min-w-0">
-                        <p class="truncate text-sm font-semibold sm:text-base">
+                        <p class="truncate text-lg font-semibold sm:text-xl">
                             Barangay Happy Hallow Census
                         </p>
-                        <p v-if="title" class="truncate text-xs text-white/80">
+                        <p v-if="title" class="truncate text-sm text-white/80 sm:text-base">
                             {{ title }}
                         </p>
                     </div>
@@ -30,7 +30,7 @@
             </div>
         </header>
 
-        <div class="pt-20 md:pl-[var(--rbim-sidebar)]">
+        <div class="pt-28 md:pl-[var(--rbim-sidebar)]">
             <button
                 v-if="sidebarOpen"
                 type="button"
@@ -39,7 +39,7 @@
                 @click="sidebarOpen = false"
             />
             <aside
-                class="fixed bottom-0 left-0 top-20 z-30 w-[var(--rbim-sidebar)] max-w-[22rem] overflow-x-hidden overflow-y-auto bg-brand text-white shadow-lg transition-transform duration-200 md:translate-x-0"
+                class="fixed bottom-0 left-0 top-28 z-30 w-[var(--rbim-sidebar)] max-w-[22rem] overflow-x-hidden overflow-y-auto bg-brand text-white shadow-lg transition-transform duration-200 md:translate-x-0"
                 :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
             >
                 <nav class="flex flex-col gap-1 p-3">

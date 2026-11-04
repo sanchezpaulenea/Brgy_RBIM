@@ -11,8 +11,29 @@
                 Loading registration form...
             </div>
 
+            <article v-else-if="registrationComplete" class="rbim-card p-6">
+                <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                    Resident registered
+                </h2>
+                <p class="mt-1 text-xs text-slate-500">
+                    {{ completeMessage }}
+                </p>
+                <p class="mt-4 text-sm text-slate-900">
+                    {{ householdLabel }}
+                </p>
+                <div class="mt-6 flex flex-wrap items-center justify-end gap-3">
+                    <button type="button" class="rbim-btn-outline" @click="addMoreResidents">
+                        Add More Residents
+                    </button>
+                    <button type="button" class="rbim-btn" @click="finishRegistration">
+                        Register
+                    </button>
+                </div>
+            </article>
+
             <SequentialResidentRegistration
                 v-else
+                :key="registrationKey"
                 :household="selectedHousehold"
                 :sexes="sexes"
                 :relationships="relationships"
@@ -32,7 +53,7 @@
                 id-prefix="resident"
                 count-input-id="resident_count"
                 @member-added="rememberResident"
-                @finished="goToResidentsList"
+                @finished="showRegistrationComplete"
                 @lookup-created="onLookupCreated"
             >
                 <template #household="{ disabled }">
@@ -67,6 +88,7 @@ import {
     applyLookupCreated,
     ensureResidentDemographicLookups,
 } from '@/utils/demographicLookups';
+import { householdDisplayLabel } from '@/utils/format';
 import {
     emptyProfilingLookups,
     fetchProfilingLookups,
@@ -79,6 +101,10 @@ const { hasPermission } = useAuth();
 const loadingLookups = ref(true);
 const error = ref('');
 const selectedHouseholdId = ref(null);
+const registrationComplete = ref(false);
+const registrationKey = ref(0);
+const savedTotal = ref(0);
+const savedHouseholdId = ref(null);
 
 const households = ref([]);
 const sexes = ref([]);
@@ -94,6 +120,14 @@ const selectedHousehold = computed(() => (
     households.value.find((household) => (
         Number(household.household_id) === Number(selectedHouseholdId.value)
     )) ?? null
+));
+
+const householdLabel = computed(() => householdDisplayLabel(selectedHousehold.value));
+
+const completeMessage = computed(() => (
+    savedTotal.value > 1
+        ? 'These residents are saved. You can add more residents now, or complete registration.'
+        : 'The resident is saved. You can add more residents now, or complete registration.'
 ));
 
 function onLookupCreated(payload) {
@@ -145,6 +179,26 @@ function rememberResident(resident) {
             full_name: resident.full_name,
         },
     ];
+}
+
+function showRegistrationComplete({ total, householdId } = {}) {
+    const count = Number(total);
+
+    savedTotal.value += Number.isInteger(count) && count > 0 ? count : 1;
+    savedHouseholdId.value = householdId ?? selectedHousehold.value?.household_id ?? null;
+    registrationComplete.value = true;
+}
+
+function addMoreResidents() {
+    registrationComplete.value = false;
+    registrationKey.value += 1;
+}
+
+function finishRegistration() {
+    goToResidentsList({
+        total: savedTotal.value,
+        householdId: savedHouseholdId.value,
+    });
 }
 
 function goToResidentsList({ total, householdId } = {}) {

@@ -183,7 +183,7 @@ export function useSequentialResidentRegistration({
                 title: 'Resident with the same name exists',
                 message: `“${duplicate.full_name || `${duplicate.last_name}, ${duplicate.first_name}`}” is already recorded. Save this resident anyway?`,
                 confirmLabel: 'Save anyway',
-                variant: 'danger',
+                variant: 'warning',
             });
 
             if (!proceed) {

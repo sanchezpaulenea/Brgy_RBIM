@@ -40,30 +40,22 @@
                 />
             </div>
 
-            <div class="flex flex-wrap items-center justify-between gap-2">
-                <div class="flex flex-wrap items-center gap-2">
-                    <button
-                        type="button"
-                        class="rbim-btn-outline"
-                        :disabled="saving || isFirstStep"
-                        @click="onBack"
-                    >
-                        Back
-                    </button>
-                    <button type="button" class="rbim-btn-outline" :disabled="saving" @click="onSkip">
-                        Skip
-                    </button>
-                </div>
-                <button type="submit" class="rbim-btn" :disabled="saving">
-                    {{ saving ? 'Saving...' : 'Continue' }}
-                </button>
-            </div>
+            <RegistrationStepActions
+                show-skip
+                :back-disabled="saving || isFirstStep"
+                :skip-disabled="saving"
+                :continue-disabled="saving"
+                :continue-label="saving ? 'Saving...' : 'Continue'"
+                @back="onBack"
+                @skip="onSkip"
+            />
         </form>
     </article>
 </template>
 
 <script setup>
 import { computed, onMounted, watch } from 'vue';
+import RegistrationStepActions from '@/components/RegistrationStepActions.vue';
 import ResidentProfilingSectionFields from '@/components/ResidentProfilingSectionFields.vue';
 import { useResidentSectionWizard } from '@/composables/useResidentSectionWizard';
 import { personDisplayName } from '@/utils/format';
@@ -89,6 +81,10 @@ const props = defineProps({
     idPrefix: {
         type: String,
         default: 'profile-section',
+    },
+    clearOnFinish: {
+        type: Boolean,
+        default: true,
     },
 });
 
@@ -122,7 +118,9 @@ const residentName = computed(() => {
 
 function completeIfFinished(result) {
     if (result === 'finished') {
-        finish();
+        if (props.clearOnFinish) {
+            finish();
+        }
         emit('finished');
     }
 }

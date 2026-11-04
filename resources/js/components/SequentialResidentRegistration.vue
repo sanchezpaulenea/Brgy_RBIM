@@ -43,14 +43,11 @@
                     >
                     <p v-if="countError" class="rbim-error">{{ countError }}</p>
                 </div>
-                <div class="flex flex-wrap items-center justify-end gap-2">
-                    <button v-if="showBack" type="button" class="rbim-btn-outline" @click="emit('back')">
-                        Back
-                    </button>
-                    <button type="submit" class="rbim-btn">
-                        Continue
-                    </button>
-                </div>
+                <RegistrationStepActions
+                    :show-back="showBack"
+                    continue-label="Continue"
+                    @back="emit('back')"
+                />
             </form>
         </article>
 
@@ -104,14 +101,13 @@
                     />
                 </section>
 
-                <div class="flex flex-wrap items-center justify-end gap-2">
-                    <button v-if="showBack" type="button" class="rbim-btn-outline" :disabled="saving" @click="emit('back')">
-                        Back
-                    </button>
-                    <button type="submit" class="rbim-btn" :disabled="saving">
-                        {{ saveButtonLabel }}
-                    </button>
-                </div>
+                <RegistrationStepActions
+                    :show-back="showMemberBack"
+                    :back-disabled="saving"
+                    :continue-disabled="saving"
+                    :continue-label="saveButtonLabel"
+                    @back="onMemberBack"
+                />
             </form>
         </article>
 
@@ -141,6 +137,7 @@
 <script setup>
 import { computed, toRef, watch } from 'vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import RegistrationStepActions from '@/components/RegistrationStepActions.vue';
 import ResidentDemographicsFields from '@/components/ResidentDemographicsFields.vue';
 import ResidentSectionWizard from '@/components/ResidentSectionWizard.vue';
 import {
@@ -281,6 +278,12 @@ function onLookupError({ field, message }) {
 }
 
 const householdLabel = computed(() => householdDisplayLabel(props.household));
+
+const showMemberBack = computed(() => currentMember.value <= 1);
+
+function onMemberBack() {
+    step.value = 'count';
+}
 
 const sectionTitle = computed(() => (
     `Profile for member ${currentMember.value} of ${totalMembers.value}`

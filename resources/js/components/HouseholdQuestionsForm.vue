@@ -29,14 +29,16 @@
                 id-prefix="register-questions-pets"
             />
 
-            <div class="flex flex-wrap items-center justify-between gap-2">
-                <button type="button" class="rbim-btn-outline" :disabled="saving" @click="$emit('skip')">
-                    Skip
-                </button>
-                <button type="submit" class="rbim-btn" :disabled="saving">
-                    {{ saving ? 'Saving...' : 'Continue' }}
-                </button>
-            </div>
+            <RegistrationStepActions
+                :show-back="showBack"
+                show-skip
+                :back-disabled="saving"
+                :skip-disabled="saving"
+                :continue-disabled="saving"
+                :continue-label="saving ? 'Saving...' : 'Continue'"
+                @back="$emit('back')"
+                @skip="$emit('skip')"
+            />
         </form>
     </article>
 </template>
@@ -44,6 +46,7 @@
 <script setup>
 import { reactive, ref } from 'vue';
 import HouseholdPetCensusForm from '@/components/HouseholdPetCensusForm.vue';
+import RegistrationStepActions from '@/components/RegistrationStepActions.vue';
 import HouseholdQuestionsFields from '@/components/HouseholdQuestionsFields.vue';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as householdService from '@/services/householdService';
@@ -67,9 +70,13 @@ const props = defineProps({
         type: Object,
         default: () => ({}),
     },
+    showBack: {
+        type: Boolean,
+        default: true,
+    },
 });
 
-const emit = defineEmits(['finished', 'skip']);
+const emit = defineEmits(['finished', 'skip', 'back']);
 
 const saving = ref(false);
 const error = ref('');

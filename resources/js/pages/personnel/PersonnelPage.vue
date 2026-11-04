@@ -483,7 +483,7 @@ async function savePersonnel(confirmDuplicate = false) {
                 title: 'Possible duplicate',
                 message: validationErrors.duplicate,
                 confirmLabel: 'Save anyway',
-                variant: 'danger',
+                variant: 'warning',
             });
 
             if (proceed) {
@@ -579,7 +579,7 @@ async function handleSave() {
             title: 'Personnel with the same name exists',
             message: `“${duplicate.label}” is already recorded as ${duplicate.position_name || 'a barangay personnel'}. Save this record anyway?`,
             confirmLabel: 'Save anyway',
-            variant: 'danger',
+            variant: 'warning',
         });
 
         if (!proceed) {

@@ -18,44 +18,49 @@
                 Loading household head profile...
             </div>
 
-            <ResidentSectionWizard
-                v-else-if="createdHousehold && !headSectionsComplete && headResident"
-                :key="headResident.resident_id"
-                :resident="headResident"
-                :lookups="profilingLookups"
-                :location="profilingLookups.location"
-                title="Household head profile"
-                id-prefix="head-section"
-                @finished="headSectionsComplete = true"
-            />
+            <template v-else>
+                <ResidentSectionWizard
+                    v-if="createdHousehold && headResident && !questionsComplete"
+                    v-show="!headSectionsComplete"
+                    :key="headResident.resident_id"
+                    :resident="headResident"
+                    :lookups="profilingLookups"
+                    :location="profilingLookups.location"
+                    :clear-on-finish="false"
+                    title="Household head profile"
+                    id-prefix="head-section"
+                    @finished="headSectionsComplete = true"
+                />
 
-            <HouseholdQuestionsForm
-                v-else-if="createdHousehold && !questionsComplete"
-                :household="createdHousehold"
-                :lookups="questionLookups"
-                :location="profilingLookups.location"
-                @finished="questionsComplete = true"
-                @skip="questionsComplete = true"
-            />
+                <HouseholdQuestionsForm
+                    v-if="createdHousehold && !questionsComplete && (headSectionsComplete || !headResident)"
+                    :household="createdHousehold"
+                    :lookups="questionLookups"
+                    :location="profilingLookups.location"
+                    :show-back="Boolean(headResident)"
+                    @back="headSectionsComplete = false"
+                    @finished="onQuestionsDone"
+                    @skip="onQuestionsDone"
+                />
 
-            <HouseholdContinueMembersFlow
-                v-else-if="createdHousehold"
-                :household="createdHousehold"
-                :sexes="sexes"
-                :relationships="relationships"
-                :nationalities="nationalities"
-                :religions="religions"
-                :ethnicities="ethnicities"
-                :marital-statuses="maritalStatuses"
-                :existing-residents="existingResidents"
-                :ensure-lookups="ensureLookups"
-                :profiling-lookups="profilingLookups"
-                @member-added="rememberResident"
-                @members-complete="goToHouseholdDetail"
-                @lookup-created="onLookupCreated"
-            />
+                <HouseholdContinueMembersFlow
+                    v-if="createdHousehold && questionsComplete"
+                    :household="createdHousehold"
+                    :sexes="sexes"
+                    :relationships="relationships"
+                    :nationalities="nationalities"
+                    :religions="religions"
+                    :ethnicities="ethnicities"
+                    :marital-statuses="maritalStatuses"
+                    :existing-residents="existingResidents"
+                    :ensure-lookups="ensureLookups"
+                    :profiling-lookups="profilingLookups"
+                    @member-added="rememberResident"
+                    @members-complete="goToHouseholdDetail"
+                    @lookup-created="onLookupCreated"
+                />
 
-            <article v-else class="rbim-card p-6">
+                <article v-if="!createdHousehold" class="rbim-card p-6">
                 <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">
                     Register household
                 </h2>
@@ -191,13 +196,14 @@
                         />
                     </section>
 
-                    <div class="flex flex-wrap items-center justify-end gap-2">
-                        <button type="submit" class="rbim-btn" :disabled="saving">
-                            {{ saving ? 'Saving...' : 'Continue' }}
-                        </button>
-                    </div>
+                    <RegistrationStepActions
+                        :show-back="false"
+                        :continue-disabled="saving"
+                        :continue-label="saving ? 'Saving...' : 'Continue'"
+                    />
                 </form>
             </article>
+            </template>
         </div>
 
         <ConfirmDialog
@@ -220,6 +226,7 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import HouseholdContinueMembersFlow from '@/components/HouseholdContinueMembersFlow.vue';
 import HouseholdQuestionsForm from '@/components/HouseholdQuestionsForm.vue';
 import PageTabs from '@/components/PageTabs.vue';
+import RegistrationStepActions from '@/components/RegistrationStepActions.vue';
 import ResidentDemographicsFields from '@/components/ResidentDemographicsFields.vue';
 import ResidentSectionWizard from '@/components/ResidentSectionWizard.vue';
 import { useAuth } from '@/composables/useAuth';
@@ -253,6 +260,7 @@ import {
     HOUSEHOLD_REGISTER_DRAFT_KEY,
     clearFormDraft,
     readFormDraft,
+    residentSectionDraftKey,
     writeFormDraft,
 } from '@/utils/formDraft';
 import {
@@ -562,7 +570,7 @@ async function handleSave() {
             title: 'Resident with the same name exists',
             message: `“${duplicate.full_name || `${duplicate.last_name}, ${duplicate.first_name}`}” is already recorded. Save this household anyway?`,
             confirmLabel: 'Save anyway',
-            variant: 'danger',
+            variant: 'warning',
         });
 
         if (!proceed) {
@@ -658,6 +666,16 @@ function rememberResident(resident) {
             full_name: resident.full_name,
         },
     ];
+}
+
+function onQuestionsDone() {
+    const residentId = headResident.value?.resident_id;
+
+    if (residentId) {
+        clearFormDraft(residentSectionDraftKey(residentId));
+    }
+
+    questionsComplete.value = true;
 }
 
 function goToHouseholdDetail() {

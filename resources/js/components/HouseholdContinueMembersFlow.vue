@@ -10,12 +10,12 @@
             <p class="mt-4 text-sm text-slate-900">
                 {{ householdLabel }}
             </p>
-            <div class="mt-6 flex flex-wrap items-center gap-2">
-                <button type="button" class="rbim-btn" @click="step = 'register'">
-                    Continue Registering Members
-                </button>
+            <div class="mt-6 flex flex-wrap items-center justify-between gap-3">
                 <button type="button" class="rbim-btn-outline" @click="emit('members-complete')">
                     Finish
+                </button>
+                <button type="button" class="rbim-btn" @click="step = 'register'">
+                    Continue Registering Members
                 </button>
             </div>
         </article>

@@ -11,14 +11,14 @@
             <UserAvatar
                 :src="user?.avatar_url"
                 :preset="user?.avatar_preset"
-                size-class="h-11 w-11"
+                size-class="h-14 w-14"
                 decorative
             />
             <span class="min-w-0">
-                <span class="block truncate text-sm font-bold uppercase tracking-[0.06em]">
+                <span class="block truncate text-base font-bold uppercase tracking-[0.06em]">
                     {{ pillName }}
                 </span>
-                <span class="block truncate text-xs font-medium text-white/80">
+                <span class="block truncate text-sm font-medium text-white/80">
                     {{ rolesLabel }}
                 </span>
             </span>
@@ -77,8 +77,8 @@
                 </div>
             </div>
 
-            <div class="border-t border-[#e3e8e2] px-4 py-3.5">
-                <div class="flex items-center gap-3">
+            <div class="space-y-2 px-4 pb-4">
+                <div class="flex items-center gap-3 rounded-2xl border border-[#e3e8e2] bg-white px-4 py-3.5">
                     <svg class="h-5 w-5 shrink-0 text-black" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM3 18a7 7 0 1114 0H3z" />
                     </svg>
@@ -86,50 +86,43 @@
                         {{ rolesLabel }}
                     </p>
                 </div>
-            </div>
 
-            <div class="border-t border-[#e3e8e2] px-4 py-3.5">
-                <p id="appearance-label" class="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    Appearance
-                </p>
-                <div
-                    class="grid grid-cols-2 gap-1 rounded-xl bg-slate-200/70 p-1"
-                    role="radiogroup"
-                    aria-labelledby="appearance-label"
-                >
-                    <button
-                        v-for="option in themeOptions"
-                        :key="option.value"
-                        type="button"
-                        role="radio"
-                        class="flex cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
-                        :class="theme === option.value ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-                        :aria-checked="theme === option.value"
-                        @click="setTheme(option.value)"
-                    >
-                        <svg v-if="option.value === 'light'" class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
-                        </svg>
-                        <svg v-else class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-                        </svg>
-                        {{ option.label }}
-                    </button>
-                </div>
-            </div>
-
-            <div class="border-t border-[#e3e8e2]">
                 <button
                     type="button"
-                    class="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-left text-sm font-medium text-slate-800 transition hover:bg-black/[0.03] disabled:cursor-not-allowed disabled:opacity-60"
+                    class="flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-[#e3e8e2] bg-white px-4 py-3.5 text-left text-sm font-medium text-black transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                     :disabled="loading"
                     @click="handleLogout"
                 >
-                    <svg class="h-5 w-5 shrink-0 text-slate-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                    <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6A2.25 2.25 0 005.25 5.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15" />
                         <path stroke-linecap="round" stroke-linejoin="round" d="M18 12H9m9 0l-3-3m3 3l-3 3" />
                     </svg>
                     Log out
+                </button>
+            </div>
+
+            <div
+                class="grid grid-cols-2 gap-2 px-4 pb-4"
+                role="radiogroup"
+                aria-label="Appearance"
+            >
+                <button
+                    v-for="option in themeOptions"
+                    :key="option.value"
+                    type="button"
+                    role="radio"
+                    class="flex cursor-pointer items-center justify-center gap-2 rounded-full px-3 py-2.5 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
+                    :class="theme === option.value ? 'border border-slate-800 bg-white text-slate-900' : 'border border-transparent bg-white/70 text-slate-700 hover:bg-white'"
+                    :aria-checked="theme === option.value"
+                    @click="setTheme(option.value)"
+                >
+                    <svg v-if="option.value === 'light'" class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                    </svg>
+                    <svg v-else class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                    </svg>
+                    {{ option.label }}
                 </button>
             </div>
         </div>

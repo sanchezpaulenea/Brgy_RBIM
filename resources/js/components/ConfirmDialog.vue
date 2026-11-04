@@ -27,7 +27,7 @@
                 </button>
                 <button
                     type="button"
-                    :class="variant === 'danger' ? 'rbim-btn-danger px-4 py-2.5 text-sm' : 'rbim-btn'"
+                    :class="confirmClass"
                     @click="emit('confirm')"
                 >
                     {{ confirmLabel }}
@@ -38,7 +38,9 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue';
+
+const props = defineProps({
     open: {
         type: Boolean,
         default: false,
@@ -66,4 +68,16 @@ defineProps({
 });
 
 const emit = defineEmits(['confirm', 'cancel']);
+
+const confirmClass = computed(() => {
+    if (props.variant === 'danger') {
+        return 'rbim-btn-danger px-4 py-2.5 text-sm';
+    }
+
+    if (props.variant === 'warning') {
+        return 'rbim-btn-gold';
+    }
+
+    return 'rbim-btn';
+});
 </script>
