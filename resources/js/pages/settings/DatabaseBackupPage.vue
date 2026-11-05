@@ -48,7 +48,7 @@
                     </button>
                     <button
                         type="button"
-                        class="rbim-btn-outline"
+                        class="rbim-btn"
                         :disabled="exporting !== ''"
                         @click="download('excel')"
                     >
@@ -56,7 +56,7 @@
                     </button>
                     <button
                         type="button"
-                        class="rbim-btn-outline"
+                        class="rbim-btn"
                         :disabled="exporting !== ''"
                         @click="download('pdf')"
                     >

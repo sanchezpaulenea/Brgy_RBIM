@@ -6,7 +6,6 @@
             </div>
 
             <div v-if="canViewCurrentLog" class="flex flex-wrap items-center gap-2">
-                <span class="text-sm font-medium text-slate-700">Records</span>
                 <button
                     type="button"
                     :class="source === 'active' ? 'rbim-btn py-2' : 'rbim-btn-outline py-2'"
@@ -45,40 +44,18 @@
                         @keydown.enter.prevent="applyAuditFilters"
                     >
                 </div>
-                <div>
-                    <label for="date_from" class="rbim-label">From</label>
-                    <div class="relative">
-                        <input
-                            id="date_from"
-                            v-model="filters.date_from"
-                            type="date"
-                            class="rbim-input peer py-2"
-                            :class="{ 'rbim-date-empty': !filters.date_from }"
-                        >
-                        <span
-                            v-if="!filters.date_from"
-                            class="pointer-events-none absolute inset-0 flex items-center px-3 text-sm text-slate-400 peer-focus:hidden"
-                            aria-hidden="true"
-                        >DD/MM/YYYY</span>
-                    </div>
-                </div>
-                <div>
-                    <label for="date_to" class="rbim-label">To</label>
-                    <div class="relative">
-                        <input
-                            id="date_to"
-                            v-model="filters.date_to"
-                            type="date"
-                            class="rbim-input peer py-2"
-                            :class="{ 'rbim-date-empty': !filters.date_to }"
-                        >
-                        <span
-                            v-if="!filters.date_to"
-                            class="pointer-events-none absolute inset-0 flex items-center px-3 text-sm text-slate-400 peer-focus:hidden"
-                            aria-hidden="true"
-                        >DD/MM/YYYY</span>
-                    </div>
-                </div>
+                <BirthDateField
+                    v-model="filters.date_from"
+                    input-id="date_from"
+                    label="From"
+                    :show-age="false"
+                />
+                <BirthDateField
+                    v-model="filters.date_to"
+                    input-id="date_to"
+                    label="To"
+                    :show-age="false"
+                />
                 <div class="flex items-end gap-2 sm:col-span-2">
                     <button type="button" class="rbim-btn py-2" :disabled="loading" @click="clearFilters">
                         Refresh
@@ -102,40 +79,18 @@
                         @keydown.enter.prevent
                     >
                 </div>
-                <div>
-                    <label for="login_from" class="rbim-label">From</label>
-                    <div class="relative">
-                        <input
-                            id="login_from"
-                            v-model="loginFilters.date_from"
-                            type="date"
-                            class="rbim-input peer py-2"
-                            :class="{ 'rbim-date-empty': !loginFilters.date_from }"
-                        >
-                        <span
-                            v-if="!loginFilters.date_from"
-                            class="pointer-events-none absolute inset-0 flex items-center px-3 text-sm text-slate-400 peer-focus:hidden"
-                            aria-hidden="true"
-                        >DD/MM/YYYY</span>
-                    </div>
-                </div>
-                <div>
-                    <label for="login_to" class="rbim-label">To</label>
-                    <div class="relative">
-                        <input
-                            id="login_to"
-                            v-model="loginFilters.date_to"
-                            type="date"
-                            class="rbim-input peer py-2"
-                            :class="{ 'rbim-date-empty': !loginFilters.date_to }"
-                        >
-                        <span
-                            v-if="!loginFilters.date_to"
-                            class="pointer-events-none absolute inset-0 flex items-center px-3 text-sm text-slate-400 peer-focus:hidden"
-                            aria-hidden="true"
-                        >DD/MM/YYYY</span>
-                    </div>
-                </div>
+                <BirthDateField
+                    v-model="loginFilters.date_from"
+                    input-id="login_from"
+                    label="From"
+                    :show-age="false"
+                />
+                <BirthDateField
+                    v-model="loginFilters.date_to"
+                    input-id="login_to"
+                    label="To"
+                    :show-age="false"
+                />
                 <div class="flex items-end gap-2 sm:col-span-2">
                     <button type="button" class="rbim-btn py-2" :disabled="loading" @click="clearLoginFilters">
                         Refresh
@@ -245,6 +200,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import BirthDateField from '@/components/BirthDateField.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { useAuth } from '@/composables/useAuth';
 import { extractErrorMessage } from '@/services/http';

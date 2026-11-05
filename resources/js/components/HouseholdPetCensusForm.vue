@@ -166,7 +166,7 @@
                     <p v-if="petCountError" class="rbim-error">{{ petCountError }}</p>
                 </div>
             </div>
-            <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center justify-end gap-2">
                 <button type="button" class="rbim-btn-outline" @click="cancelAdd">Cancel</button>
                 <button type="submit" class="rbim-btn">Continue</button>
             </div>
@@ -218,11 +218,11 @@
             <button
                 v-if="canAdd"
                 type="button"
-                class="rbim-btn-outline px-3 py-1.5 text-xs"
+                class="text-sm font-semibold text-slate-800 hover:text-brand disabled:cursor-not-allowed disabled:opacity-60"
                 :disabled="pets.length >= SEQUENTIAL_RESIDENT_MAX"
                 @click="addPet"
             >
-                Add Pet
+                + Add Pet
             </button>
         </div>
         <p v-if="!canUpdate" class="text-sm text-slate-500">

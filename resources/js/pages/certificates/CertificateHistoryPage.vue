@@ -36,15 +36,15 @@
             </div>
             <div v-else class="rbim-card overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <table class="min-w-full table-fixed divide-y divide-slate-200 text-sm">
                         <thead class="bg-slate-50">
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Name</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Resident Status</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Latest Certificate</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Purpose of Request</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Latest Date of Issue</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Certificates Issued</th>
+                                <th class="w-1/6 px-4 py-3 text-center font-semibold text-slate-600">Name</th>
+                                <th class="w-1/6 px-4 py-3 text-center font-semibold text-slate-600">Resident Status</th>
+                                <th class="w-1/6 px-4 py-3 text-center font-semibold text-slate-600">Latest Certificate</th>
+                                <th class="w-1/6 px-4 py-3 text-center font-semibold text-slate-600">Purpose of Request</th>
+                                <th class="w-1/6 px-4 py-3 text-center font-semibold text-slate-600">Latest Date of Issue</th>
+                                <th class="w-1/6 px-4 py-3 text-center font-semibold text-slate-600">Certificates Issued</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -54,12 +54,12 @@
                                 class="cursor-pointer hover:bg-slate-50"
                                 @click="openDetail(resident.resident_id)"
                             >
-                                <td class="px-4 py-3 font-medium text-slate-900">{{ resident.name || '—' }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ resident.resident_status || '—' }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ resident.latest_type_of_certificate || '—' }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ resident.latest_purpose_of_request || '—' }}</td>
-                                <td class="px-4 py-3 text-slate-600">{{ resident.latest_date_of_issue ? formatDateTime(resident.latest_date_of_issue) : '—' }}</td>
-                                <td class="px-4 py-3">
+                                <td class="px-4 py-3 text-center font-medium text-slate-900">{{ resident.name || '—' }}</td>
+                                <td class="px-4 py-3 text-center text-slate-600">{{ resident.resident_status || '—' }}</td>
+                                <td class="px-4 py-3 text-center text-slate-600">{{ resident.latest_type_of_certificate || '—' }}</td>
+                                <td class="px-4 py-3 text-center text-slate-600">{{ resident.latest_purpose_of_request || '—' }}</td>
+                                <td class="px-4 py-3 text-center text-slate-600">{{ resident.latest_date_of_issue ? formatDateTime(resident.latest_date_of_issue) : '—' }}</td>
+                                <td class="px-4 py-3 text-center">
                                     <span class="rounded-full bg-brand-muted px-2 py-0.5 text-xs font-semibold text-brand">
                                         {{ resident.certificate_count }}
                                     </span>

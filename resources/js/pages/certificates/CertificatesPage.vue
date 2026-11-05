@@ -270,11 +270,14 @@
 
                         <div v-if="selectedType?.kind === 'death'" class="grid gap-4 md:grid-cols-2">
                             <div>
-                                <label for="date-of-death" class="rbim-label">
-                                    Date of Death<span class="rbim-required" aria-hidden="true">*</span>
-                                </label>
-                                <input id="date-of-death" v-model="dateOfDeath" type="date" class="rbim-input py-2">
-                                <p v-if="dateOfDeathError" class="rbim-error">{{ dateOfDeathError }}</p>
+                                <BirthDateField
+                                    v-model="dateOfDeath"
+                                    input-id="date-of-death"
+                                    label="Date of Death"
+                                    required
+                                    :show-age="false"
+                                    :error="dateOfDeathError"
+                                />
                                 <p class="rbim-hint">Kept on the certificate record. The barangay form prints the ethnic practice.</p>
                             </div>
                             <div>
@@ -334,7 +337,7 @@
                             <div>
                                 <p class="rbim-label">Children under custody<span class="rbim-required" aria-hidden="true">*</span></p>
                                 <p class="rbim-hint">Type a name, or choose a child from this household.</p>
-                                <div v-for="(child, index) in children" :key="index" class="mt-2 grid gap-3 md:grid-cols-[1fr_180px_auto]">
+                                <div v-for="(child, index) in children" :key="index" class="mt-2 grid gap-3 md:grid-cols-[1fr_13rem_auto]">
                                     <HouseholdChildCombobox
                                         :model-value="child.child_name"
                                         :options="householdChildren"
@@ -342,7 +345,13 @@
                                         @update:model-value="(name) => onChildNameInput(index, name)"
                                         @select="(option) => onChildSelected(index, option)"
                                     />
-                                    <input v-model="child.date_of_birth" type="date" class="rbim-input py-2">
+                                    <BirthDateField
+                                        v-model="child.date_of_birth"
+                                        :input-id="`child-dob-${index}`"
+                                        label=""
+                                        aria-label="Child date of birth"
+                                        :show-age="false"
+                                    />
                                     <button type="button" class="rbim-btn-outline" @click="removeChild(index)">Remove</button>
                                 </div>
                                 <button type="button" class="rbim-btn-outline mt-3" :disabled="children.length >= 10" @click="addChild">
@@ -447,6 +456,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue';
 import CertificatePreview from '@/components/CertificatePreview.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import BirthDateField from '@/components/BirthDateField.vue';
 import HouseholdChildCombobox from '@/components/HouseholdChildCombobox.vue';
 import PageTabs from '@/components/PageTabs.vue';
 import ProcessSteps from '@/components/ProcessSteps.vue';

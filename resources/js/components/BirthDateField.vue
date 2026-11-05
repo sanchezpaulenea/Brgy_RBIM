@@ -1,6 +1,6 @@
 <template>
     <div ref="rootEl">
-        <label :for="inputId" class="rbim-label">
+        <label v-if="label" :for="inputId" class="rbim-label">
             {{ label }}<span v-if="required" class="rbim-required" aria-hidden="true">*</span>
         </label>
         <div class="relative">
@@ -14,6 +14,7 @@
                 spellcheck="false"
                 :placeholder="inputPlaceholder"
                 :disabled="disabled"
+                :aria-label="label ? undefined : (ariaLabel || 'Date')"
                 class="rbim-input pr-10"
                 :class="{ 'rbim-input-error': error }"
                 :aria-expanded="calendarOpen"
@@ -161,6 +162,10 @@ const props = defineProps({
     label: {
         type: String,
         default: 'Date of birth',
+    },
+    ariaLabel: {
+        type: String,
+        default: '',
     },
     inputId: {
         type: String,

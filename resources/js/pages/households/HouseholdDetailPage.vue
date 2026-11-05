@@ -136,31 +136,31 @@
                         <h3 class="text-sm font-semibold text-slate-900">Household members</h3>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-slate-200 text-sm">
+                        <table class="min-w-full table-fixed divide-y divide-slate-200 text-sm">
                             <thead class="bg-slate-50">
                                 <tr>
-                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Name</th>
-                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Relationship to Household Head</th>
-                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Gender</th>
-                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Age</th>
-                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
+                                    <th class="w-1/5 px-4 py-3 text-center font-semibold text-slate-600">Name</th>
+                                    <th class="w-1/5 px-4 py-3 text-center font-semibold text-slate-600">Relationship to Household Head</th>
+                                    <th class="w-1/5 px-4 py-3 text-center font-semibold text-slate-600">Gender</th>
+                                    <th class="w-1/5 px-4 py-3 text-center font-semibold text-slate-600">Age</th>
+                                    <th class="w-1/5 px-4 py-3 text-center font-semibold text-slate-600">Status</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
                                 <tr v-for="member in household.residents || []" :key="member.resident_id">
-                                    <td class="px-4 py-3 font-medium text-slate-900">
+                                    <td class="px-4 py-3 text-center font-medium text-slate-900">
                                         <RouterLink
                                             :to="{ name: 'resident-detail', params: { id: member.resident_id } }"
-                                            class="text-brand hover:underline"
+                                            class="hover:underline"
                                             @click.stop
                                         >
                                             {{ member.full_name }}
                                         </RouterLink>
                                     </td>
-                                    <td class="px-4 py-3 text-slate-600">{{ member.relationship_to_hh || '—' }}</td>
-                                    <td class="px-4 py-3 text-slate-600">{{ member.sex || '—' }}</td>
-                                    <td class="px-4 py-3 text-slate-600">{{ ageLabel(member.date_of_birth) }}</td>
-                                    <td class="px-4 py-3 text-slate-600">{{ member.resident_status || '—' }}</td>
+                                    <td class="px-4 py-3 text-center text-slate-600">{{ member.relationship_to_hh || '—' }}</td>
+                                    <td class="px-4 py-3 text-center text-slate-600">{{ member.sex || '—' }}</td>
+                                    <td class="px-4 py-3 text-center text-slate-600">{{ ageLabel(member.date_of_birth) }}</td>
+                                    <td class="px-4 py-3 text-center text-slate-600">{{ member.resident_status || '—' }}</td>
                                 </tr>
                                 <tr v-if="!(household.residents || []).length">
                                     <td colspan="5" class="px-4 py-8 text-center text-slate-500">
@@ -331,12 +331,12 @@
                             id-prefix="detail-questions-pets"
                         />
                     </section>
-                    <div class="flex items-center justify-between gap-2">
-                        <button type="button" class="rbim-btn-outline" @click="cancelEdit">
+                    <div class="flex items-center justify-end gap-2">
+                        <button type="button" class="rbim-btn-outline px-4 py-2 text-sm" @click="cancelEdit">
                             Cancel
                         </button>
-                        <button type="submit" class="rbim-btn" :disabled="saving">
-                            {{ saving ? 'Saving...' : 'Update household' }}
+                        <button type="submit" class="rbim-btn px-4 py-2 text-sm" :disabled="saving">
+                            {{ saving ? 'Saving...' : 'Update' }}
                         </button>
                     </div>
                 </form>

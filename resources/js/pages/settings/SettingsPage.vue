@@ -29,7 +29,7 @@
                         <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Setting</div>
                         <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Value</div>
                         <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Description</div>
-                        <div v-if="canUpdateSettings" class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Action</div>
+                        <div v-if="canUpdateSettings" class="py-3 text-center" role="columnheader">Action</div>
                     </div>
                     <div
                         v-for="setting in group.settings"
@@ -81,8 +81,8 @@
                         <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left break-words text-slate-600" role="cell">
                             {{ setting.description }}
                         </div>
-                        <div v-if="canUpdateSettings" class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="cell">
-                            <div v-if="setting.setting_key === 'punong_barangay_signature'" class="flex flex-col items-start gap-2">
+                        <div v-if="canUpdateSettings" class="flex justify-center py-3" role="cell">
+                            <div v-if="setting.setting_key === 'punong_barangay_signature'" class="flex flex-col items-center gap-2">
                                 <input
                                     id="punong-barangay-signature"
                                     type="file"
@@ -93,19 +93,15 @@
                                 >
                                 <label
                                     for="punong-barangay-signature"
-                                    class="rbim-btn-action"
+                                    class="inline-flex h-9 w-[5.75rem] cursor-pointer items-center justify-center rounded-lg border border-brand bg-brand text-sm font-semibold text-white transition hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                                     :class="signatureUploading ? 'pointer-events-none opacity-60' : ''"
                                 >
-                                    <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                        <path d="M9.25 13.25a.75.75 0 001.5 0V4.81l1.72 1.72a.75.75 0 101.06-1.06l-3-3a.75.75 0 00-1.06 0l-3 3a.75.75 0 101.06 1.06l1.72-1.72v8.44z" />
-                                        <path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" />
-                                    </svg>
-                                    {{ signatureUploading ? 'Uploading...' : 'Choose File' }}
+                                    {{ signatureUploading ? 'Uploading...' : 'Upload' }}
                                 </label>
                                 <button
                                     v-if="setting.setting_value"
                                     type="button"
-                                    class="rbim-btn-danger px-3 py-1.5 text-xs"
+                                    class="inline-flex h-9 w-[5.75rem] cursor-pointer items-center justify-center rounded-lg border border-red-500 bg-white text-sm font-medium text-red-600 transition hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:cursor-not-allowed disabled:opacity-60"
                                     :disabled="signatureUploading"
                                     @click="confirmRemoveSignature = true"
                                 >
@@ -131,12 +127,9 @@
                             <button
                                 v-else
                                 type="button"
-                                class="rbim-btn-action"
+                                class="inline-flex h-9 w-[4.75rem] cursor-pointer items-center justify-center rounded-lg border border-brand bg-white text-sm font-medium text-brand transition hover:bg-brand-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                                 @click="startEdit(setting)"
                             >
-                                <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path d="M13.586 2.586a2 2 0 112.828 2.828l-8.5 8.5a1 1 0 01-.44.253l-3 .857a.5.5 0 01-.618-.618l.857-3a1 1 0 01.253-.44l8.62-8.38z" />
-                                </svg>
                                 Edit
                             </button>
                         </div>

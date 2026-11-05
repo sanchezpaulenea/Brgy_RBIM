@@ -56,7 +56,9 @@
                         role="row"
                     >
                         <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">ID</div>
-                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Position</div>
+                        <div class="flex justify-center py-3" role="columnheader">
+                            <span class="w-[17rem] translate-x-16 whitespace-nowrap text-left">Position</span>
+                        </div>
                         <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Status</div>
                         <div v-if="canDeletePosition" class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Action</div>
                     </div>
@@ -68,7 +70,9 @@
                         role="row"
                     >
                         <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left font-mono text-xs text-slate-700" role="cell">{{ item.id }}</div>
-                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left font-medium break-words text-slate-900" role="cell">{{ item.label }}</div>
+                        <div class="flex justify-center py-3" role="cell">
+                            <span class="w-[17rem] translate-x-16 whitespace-nowrap text-left font-medium text-slate-900">{{ item.label }}</span>
+                        </div>
                         <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="cell">
                             <span
                                 class="rounded-full px-2 py-0.5 text-xs"
@@ -144,7 +148,9 @@ const confirm = reactive({
 const canCreatePosition = computed(() => hasPermission('pposition.create'));
 const canDeletePosition = computed(() => hasPermission('pposition.delete'));
 const positionColumnTemplate = computed(() => (
-    canDeletePosition.value ? 'repeat(4, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))'
+    canDeletePosition.value
+        ? 'minmax(0, 0.6fr) minmax(18rem, 2fr) minmax(0, 1fr) minmax(0, 1fr)'
+        : 'minmax(0, 0.6fr) minmax(18rem, 2fr) minmax(0, 1fr)'
 ));
 const assignedPositionMessage = 'This personnel position is assigned to one or more personnel records and cannot be deleted.';
 

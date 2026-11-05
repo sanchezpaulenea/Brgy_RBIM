@@ -54,7 +54,7 @@
                     </select>
                 </div>
                 <div class="flex items-end">
-                    <button type="button" class="rbim-btn py-2" :disabled="loading" @click="clearFilters">
+                    <button type="button" class="rbim-btn-outline py-2" :disabled="loading" @click="clearFilters">
                         Refresh
                     </button>
                 </div>
@@ -87,12 +87,12 @@
                                 <td class="px-3 py-3 text-center text-slate-700">{{ household.household_id }}</td>
                                 <td class="px-3 py-3 text-center text-slate-900">{{ household.street_name || '—' }}</td>
                                 <td class="px-3 py-3 text-center text-slate-600">{{ household.house_number ?? '—' }}</td>
-                                <td class="px-4 py-3 text-center font-medium text-slate-900">{{ household.head_name || '—' }}</td>
+                                <td class="py-3 pl-20 pr-4 text-left font-medium text-slate-900">{{ household.head_name || '—' }}</td>
                                 <td class="px-3 py-3 text-center text-slate-600">{{ household.household_status || '—' }}</td>
                                 <td class="px-3 py-3 text-center whitespace-nowrap text-slate-600">{{ formatDate(household.registration_date) }}</td>
                                 <td class="px-3 py-3" @click.stop>
                                     <div class="flex justify-center gap-2">
-                                        <button type="button" class="rbim-btn-action" @click="openDetail(household.household_id)">
+                                        <button type="button" class="rbim-btn-outline px-3 py-1.5 text-xs" @click="openDetail(household.household_id)">
                                             View
                                         </button>
                                         <button

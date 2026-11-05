@@ -44,11 +44,11 @@ const props = defineProps({
 
 function stepClass(index) {
     if (index < props.current) {
-        return 'bg-brand text-white';
+        return 'bg-[#c5ead4] text-[#143326]';
     }
 
     if (index === props.current) {
-        return 'bg-[#c5ead4] text-[#143326]';
+        return 'bg-slate-200 text-slate-800';
     }
 
     return 'bg-white text-slate-500 ring-1 ring-slate-300';

@@ -69,7 +69,7 @@
                             placeholder="Maximum"
                         >
                     </div>
-                    <button type="button" class="rbim-btn py-2" :disabled="loading" @click="clearFilters">
+                    <button type="button" class="rbim-btn-outline py-2" :disabled="loading" @click="clearFilters">
                         Refresh
                     </button>
                 </div>
@@ -100,7 +100,7 @@
                                 @click="openDetail(resident.resident_id)"
                             >
                                 <td class="px-4 py-3 text-left font-medium text-slate-900">{{ resident.full_name || personDisplayName(resident) }}</td>
-                                <td class="px-3 py-3 text-center text-slate-600">{{ householdLabelFor(resident) }}</td>
+                                <td class="px-3 py-3 text-left text-slate-600">{{ householdLabelFor(resident) }}</td>
                                 <td class="px-3 py-3 text-center text-slate-600">{{ resident.relationship_to_hh || '—' }}</td>
                                 <td class="px-3 py-3 text-center text-slate-600">{{ resident.sex || '—' }}</td>
                                 <td class="px-3 py-3 text-center text-slate-600">{{ resident.age ?? ageLabel(resident.date_of_birth) }}</td>

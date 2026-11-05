@@ -129,7 +129,7 @@
                 Loading personnel...
             </div>
             <div v-else class="rbim-card overflow-hidden">
-                <div class="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-end sm:justify-between">
+                <div class="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-end">
                     <div class="sm:w-72">
                         <label for="personnel-filter-name" class="rbim-label">Search personnel name</label>
                         <input
@@ -151,56 +151,51 @@
                         </select>
                     </div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full table-fixed divide-y divide-slate-200 text-sm">
-                        <colgroup>
-                            <col :style="{ width: columnWidth }" />
-                            <col :style="{ width: columnWidth }" />
-                            <col :style="{ width: columnWidth }" />
-                            <col :style="{ width: columnWidth }" />
-                            <col v-if="canUpdate" :style="{ width: columnWidth }" />
-                        </colgroup>
-                        <thead class="bg-slate-50">
-                            <tr>
-                                <th class="px-3 py-3 text-center font-semibold text-slate-600">Name</th>
-                                <th class="px-3 py-3 text-center font-semibold text-slate-600">Position</th>
-                                <th class="px-3 py-3 text-center font-semibold text-slate-600">Personnel Status</th>
-                                <th class="px-3 py-3 text-center font-semibold text-slate-600">Account</th>
-                                <th v-if="canUpdate" class="px-3 py-3 text-center font-semibold text-slate-600">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            <tr v-for="person in filteredItems" :key="person.personnel_id">
-                                <td class="break-words px-3 py-3 text-center font-medium text-slate-900">{{ person.label }}</td>
-                                <td class="break-words px-3 py-3 text-center text-slate-600">{{ person.position_name }}</td>
-                                <td class="px-3 py-3 text-center">
-                                    <select
-                                        v-if="canUpdate"
-                                        :value="pendingStatus[person.personnel_id] ?? person.personnel_status_id"
-                                        class="max-w-full rounded-lg border border-slate-300 px-2 py-1 text-xs outline-none focus:border-brand"
-                                        :disabled="updatingStatusId === person.personnel_id"
-                                        @change="handleStatusChange(person, $event)"
-                                    >
-                                        <option v-for="status in PERSONNEL_STATUSES" :key="status.id" :value="status.id">
-                                            {{ status.label }}
-                                        </option>
-                                    </select>
-                                    <span v-else class="text-slate-600">{{ statusLabel(person.personnel_status_id) }}</span>
-                                </td>
-                                <td class="break-words px-3 py-3 text-center text-slate-600">{{ person.username || 'No account' }}</td>
-                                <td v-if="canUpdate" class="px-3 py-3 text-center">
-                                    <button type="button" class="rbim-btn-action" @click="startEdit(person)">
-                                        Update
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr v-if="!filteredItems.length">
-                                <td :colspan="canUpdate ? 5 : 4" class="px-4 py-8 text-center text-slate-500">
-                                    {{ items.length ? 'No personnel match the current filters.' : 'No personnel records found.' }}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="w-full overflow-x-auto" role="table">
+                    <div
+                        class="grid w-full min-w-[48rem] items-center gap-x-[7.5rem] bg-slate-50 px-4 text-sm font-semibold text-slate-600"
+                        :style="{ gridTemplateColumns: personnelColumnTemplate }"
+                        role="row"
+                    >
+                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Name</div>
+                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Position</div>
+                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Personnel Status</div>
+                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Account</div>
+                        <div v-if="canUpdate" class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Action</div>
+                    </div>
+                    <div
+                        v-for="person in filteredItems"
+                        :key="person.personnel_id"
+                        class="grid w-full min-w-[48rem] items-center gap-x-[7.5rem] border-t border-slate-100 px-4 text-sm"
+                        :style="{ gridTemplateColumns: personnelColumnTemplate }"
+                        role="row"
+                    >
+                        <div class="mx-auto w-[58%] translate-x-[2rem] break-words py-3 text-left font-medium text-slate-900" role="cell">{{ person.label }}</div>
+                        <div class="mx-auto w-[58%] translate-x-[2rem] break-words py-3 text-left text-slate-600" role="cell">{{ person.position_name }}</div>
+                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="cell">
+                            <select
+                                v-if="canUpdate"
+                                :value="pendingStatus[person.personnel_id] ?? person.personnel_status_id"
+                                class="max-w-full rounded-lg border border-slate-300 px-2 py-1 text-xs outline-none focus:border-brand"
+                                :disabled="updatingStatusId === person.personnel_id"
+                                @change="handleStatusChange(person, $event)"
+                            >
+                                <option v-for="status in PERSONNEL_STATUSES" :key="status.id" :value="status.id">
+                                    {{ status.label }}
+                                </option>
+                            </select>
+                            <span v-else class="text-slate-600">{{ statusLabel(person.personnel_status_id) }}</span>
+                        </div>
+                        <div class="mx-auto w-[58%] translate-x-[2rem] break-words py-3 text-left text-slate-600" role="cell">{{ person.username || 'No account' }}</div>
+                        <div v-if="canUpdate" class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="cell">
+                            <button type="button" class="rbim-btn-action" @click="startEdit(person)">
+                                Update
+                            </button>
+                        </div>
+                    </div>
+                    <div v-if="!filteredItems.length" class="border-t border-slate-100 px-4 py-8 text-center text-sm text-slate-500">
+                        {{ items.length ? 'No personnel match the current filters.' : 'No personnel records found.' }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -296,7 +291,9 @@ const confirm = reactive({
 
 const canCreate = computed(() => hasPermission('personnel.create'));
 const canUpdate = computed(() => hasPermission('personnel.update'));
-const columnWidth = computed(() => (canUpdate.value ? '20%' : '25%'));
+const personnelColumnTemplate = computed(() => (
+    canUpdate.value ? 'repeat(5, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))'
+));
 const canCreatePosition = computed(() => hasPermission('pposition.create'));
 
 const positionHint = computed(() => (
