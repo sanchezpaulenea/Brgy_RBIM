@@ -16,7 +16,7 @@
                 No settings found.
             </div>
             <section v-for="group in settingGroups" :key="group.title" class="rbim-card overflow-hidden">
-                <header class="border-b border-slate-200 bg-slate-50 px-4 py-3">
+                <header class="border-b border-slate-200 bg-slate-50 py-3 pl-16 pr-4">
                     <h2 class="text-sm font-semibold text-slate-900">{{ group.title }}</h2>
                     <p class="mt-0.5 text-xs text-slate-500">{{ group.description }}</p>
                 </header>
@@ -24,7 +24,7 @@
                     <table class="min-w-full text-sm">
                         <thead class="bg-slate-50 text-left font-semibold text-slate-600">
                             <tr>
-                                <th class="whitespace-nowrap px-4 py-3">Setting</th>
+                                <th class="whitespace-nowrap py-3 pl-16 pr-4">Setting</th>
                                 <th class="whitespace-nowrap px-4 py-3">Value</th>
                                 <th class="whitespace-nowrap px-4 py-3">Description</th>
                                 <th v-if="canUpdateSettings" class="whitespace-nowrap px-4 py-3 text-center">Action</th>
@@ -32,7 +32,7 @@
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             <tr v-for="setting in group.settings" :key="setting.setting_id">
-                                <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-900">
+                                <td class="whitespace-nowrap py-3 pl-16 pr-4 font-medium text-slate-900">
                                     {{ formatSettingLabel(setting.setting_key) }}
                                 </td>
                                 <td class="px-4 py-3">

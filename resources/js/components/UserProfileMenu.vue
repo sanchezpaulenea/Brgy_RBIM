@@ -26,7 +26,7 @@
 
         <div
             v-if="open"
-            class="absolute right-0 top-full z-50 mt-2 w-[21.5rem] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-3xl border border-slate-200 bg-[#f3f4f6] shadow-xl"
+            class="absolute right-0 top-full z-50 mt-2 w-[21.5rem] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-3xl border border-[#e0ebe3] bg-[#f1f6f2] shadow-xl"
             role="dialog"
             aria-label="Account"
         >
@@ -103,7 +103,7 @@
 
             <div class="px-4 pb-4">
                 <div
-                    class="flex rounded-full bg-slate-200 p-1"
+                    class="flex rounded-full bg-[#e7f1e9] p-1"
                     role="radiogroup"
                     aria-label="Appearance"
                 >
