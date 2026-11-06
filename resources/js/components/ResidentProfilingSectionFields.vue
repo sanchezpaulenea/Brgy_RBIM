@@ -480,32 +480,28 @@
 
         <template v-else-if="section === 'migration'">
             <div>
-                <div class="flex items-start gap-3">
-                    <div class="min-w-0 flex-1">
-                        <BirthDateField
-                            v-model="form.date_of_transfer_in_brgy"
-                            label="Date of Transfer into Barangay"
-                            :input-id="`${idPrefix}-date_of_transfer_in_brgy`"
-                            placeholder="MM/YYYY"
-                            precision="month"
-                            required
-                            :disabled="form.since_birth === true"
-                            :max="todayIso"
-                            :show-age="false"
-                            :error="errors.date_of_transfer_in_brgy"
-                        />
-                    </div>
-                    <label class="mt-7 flex shrink-0 items-center gap-2 text-sm font-medium text-slate-700">
-                        <input
-                            :id="`${idPrefix}-since_birth`"
-                            type="checkbox"
-                            class="h-4 w-4 rounded border-slate-400 text-brand focus:ring-brand"
-                            :checked="form.since_birth === true"
-                            @change="setSinceBirth($event.target.checked)"
-                        >
-                        Since Birth
-                    </label>
-                </div>
+                <BirthDateField
+                    v-model="form.date_of_transfer_in_brgy"
+                    label="Date of Transfer into Barangay"
+                    :input-id="`${idPrefix}-date_of_transfer_in_brgy`"
+                    placeholder="MM/YYYY"
+                    precision="month"
+                    required
+                    :disabled="form.since_birth === true"
+                    :max="todayIso"
+                    :show-age="false"
+                    :error="errors.date_of_transfer_in_brgy"
+                />
+                <label class="mt-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+                    <input
+                        :id="`${idPrefix}-since_birth`"
+                        type="checkbox"
+                        class="h-4 w-4 rounded border-slate-400 text-brand focus:ring-brand"
+                        :checked="form.since_birth === true"
+                        @change="setSinceBirth($event.target.checked)"
+                    >
+                    Since Birth
+                </label>
             </div>
             <div>
                 <label class="rbim-label">Length of Stay in the Barangay</label>

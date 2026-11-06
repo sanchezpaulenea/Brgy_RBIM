@@ -83,8 +83,8 @@
                     <table class="min-w-full table-fixed divide-y divide-slate-200 text-sm">
                         <thead class="bg-slate-50">
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-600">Name</th>
-                                <th class="w-[14%] px-3 py-3 text-center font-semibold text-slate-600">Household</th>
+                                <th class="w-[20%] px-4 py-3 text-left font-semibold text-slate-600">Name</th>
+                                <th class="w-[20%] px-3 py-3 text-left font-semibold text-slate-600">Household</th>
                                 <th class="w-[16%] px-3 py-3 text-center font-semibold text-slate-600">Relationship to Household Head</th>
                                 <th class="w-[8%] px-3 py-3 text-center font-semibold text-slate-600">Gender</th>
                                 <th class="w-[6%] px-3 py-3 text-center font-semibold text-slate-600">Age</th>

@@ -13,7 +13,7 @@
             <button
                 v-if="showSkip"
                 type="button"
-                class="cursor-pointer px-1 py-2.5 text-sm font-semibold text-slate-700 transition hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60"
+                class="cursor-pointer px-1 py-2.5 text-sm font-semibold text-brand transition hover:text-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60"
                 :disabled="skipDisabled"
                 @click="$emit('skip')"
             >

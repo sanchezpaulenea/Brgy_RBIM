@@ -218,7 +218,7 @@
             <button
                 v-if="canAdd"
                 type="button"
-                class="text-sm font-semibold text-slate-800 hover:text-brand disabled:cursor-not-allowed disabled:opacity-60"
+                class="cursor-pointer text-sm font-semibold text-brand transition hover:text-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60"
                 :disabled="pets.length >= SEQUENTIAL_RESIDENT_MAX"
                 @click="addPet"
             >

@@ -5,18 +5,20 @@
                 Household registered
             </h2>
             <p class="mt-1 text-xs text-slate-500">
-                The household and head resident are saved. You can add more members now, or finish registration.
+                The household and head resident are saved. You can add more members now, or complete registration.
             </p>
-            <p class="mt-4 text-sm text-slate-900">
-                {{ householdLabel }}
-            </p>
-            <div class="mt-6 flex flex-wrap items-center justify-between gap-3">
-                <button type="button" class="rbim-btn-outline" @click="emit('members-complete')">
-                    Finish
-                </button>
-                <button type="button" class="rbim-btn" @click="step = 'register'">
-                    Continue Registering Members
-                </button>
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+                <p class="text-sm text-slate-900">
+                    {{ householdLabel }}
+                </p>
+                <div class="flex flex-wrap items-center gap-3">
+                    <button type="button" class="rbim-btn-outline" @click="step = 'register'">
+                        Add More Members
+                    </button>
+                    <button type="button" class="rbim-btn" @click="emit('members-complete')">
+                        Register
+                    </button>
+                </div>
             </div>
         </article>
 

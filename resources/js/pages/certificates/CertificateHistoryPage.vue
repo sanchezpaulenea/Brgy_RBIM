@@ -25,7 +25,7 @@
                             @keydown.enter.prevent="applyFilters"
                         >
                     </div>
-                    <button type="button" class="rbim-btn py-2" :disabled="loading" @click="clearFilters">
+                    <button type="button" class="rbim-btn-outline py-2" :disabled="loading" @click="clearFilters">
                         Refresh
                     </button>
                 </div>

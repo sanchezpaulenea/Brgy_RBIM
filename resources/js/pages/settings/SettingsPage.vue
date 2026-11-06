@@ -20,123 +20,113 @@
                     <h2 class="text-sm font-semibold text-slate-900">{{ group.title }}</h2>
                     <p class="mt-0.5 text-xs text-slate-500">{{ group.description }}</p>
                 </header>
-                <div class="w-full overflow-x-auto" role="table">
-                    <div
-                        class="grid w-full min-w-[44rem] items-center gap-x-[7.5rem] bg-slate-50 px-4 text-sm font-semibold text-slate-600"
-                        :style="{ gridTemplateColumns: settingsColumnTemplate }"
-                        role="row"
-                    >
-                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Setting</div>
-                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Value</div>
-                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Description</div>
-                        <div v-if="canUpdateSettings" class="py-3 text-center" role="columnheader">Action</div>
-                    </div>
-                    <div
-                        v-for="setting in group.settings"
-                        :key="setting.setting_id"
-                        class="grid w-full min-w-[44rem] items-start gap-x-[7.5rem] border-t border-slate-100 px-4 text-sm"
-                        :style="{ gridTemplateColumns: settingsColumnTemplate }"
-                        role="row"
-                    >
-                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left font-medium break-words text-slate-900" role="cell">
-                            {{ formatSettingLabel(setting.setting_key) }}
-                        </div>
-                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left break-words" role="cell">
-                            <template v-if="setting.setting_key === 'punong_barangay_signature'">
-                                <p class="font-medium text-slate-900">{{ setting.setting_value ? 'Uploaded' : 'Not set' }}</p>
-                                <img
-                                    v-if="signaturePreviewUrl"
-                                    :src="signaturePreviewUrl"
-                                    alt="Punong Barangay signature preview"
-                                    class="mt-2 h-16 max-w-full bg-slate-100 object-contain"
-                                >
-                                <p class="rbim-hint">Use a transparent-background PNG. Width must be between 100 and 1500 pixels, and the file must be 1024 KB or smaller.</p>
-                                <p v-if="signatureError" class="rbim-error">{{ signatureError }}</p>
-                            </template>
-                            <template v-else-if="canUpdateSettings && editingId === setting.setting_id">
-                                <input
-                                    v-model="editValues[setting.setting_id]"
-                                    :type="setting.data_type === 'int' ? 'number' : 'text'"
-                                    :inputmode="inputModeFor(setting)"
-                                    :placeholder="placeholderFor(setting)"
-                                    :min="rangeFor(setting)?.min"
-                                    :max="rangeFor(setting)?.max"
-                                    maxlength="45"
-                                    class="rbim-input py-1.5"
-                                    :class="{ 'rbim-input-error': editError }"
-                                    @input="editError = ''"
-                                >
-                                <p v-if="editError" class="rbim-error">{{ editError }}</p>
-                                <p v-else-if="hintFor(setting)" class="rbim-hint">{{ hintFor(setting) }}</p>
-                            </template>
-                            <template v-else>
-                                <span class="font-medium text-slate-900">
-                                    {{ setting.typed_value ?? setting.setting_value }}
-                                </span>
-                                <p v-if="isRetentionSetting(setting)" class="rbim-hint">
-                                    Changed on Log Retention and Archiving.
-                                </p>
-                            </template>
-                        </div>
-                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left break-words text-slate-600" role="cell">
-                            {{ setting.description }}
-                        </div>
-                        <div v-if="canUpdateSettings" class="flex justify-center py-3" role="cell">
-                            <div v-if="setting.setting_key === 'punong_barangay_signature'" class="flex flex-col items-center gap-2">
-                                <input
-                                    id="punong-barangay-signature"
-                                    type="file"
-                                    accept="image/png"
-                                    class="sr-only"
-                                    :disabled="signatureUploading"
-                                    @change="uploadSignature"
-                                >
-                                <label
-                                    for="punong-barangay-signature"
-                                    class="inline-flex h-9 w-[5.75rem] cursor-pointer items-center justify-center rounded-lg border border-brand bg-brand text-sm font-semibold text-white transition hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-                                    :class="signatureUploading ? 'pointer-events-none opacity-60' : ''"
-                                >
-                                    {{ signatureUploading ? 'Uploading...' : 'Upload' }}
-                                </label>
-                                <button
-                                    v-if="setting.setting_value"
-                                    type="button"
-                                    class="inline-flex h-9 w-[5.75rem] cursor-pointer items-center justify-center rounded-lg border border-red-500 bg-white text-sm font-medium text-red-600 transition hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:cursor-not-allowed disabled:opacity-60"
-                                    :disabled="signatureUploading"
-                                    @click="confirmRemoveSignature = true"
-                                >
-                                    Remove
-                                </button>
-                            </div>
-                            <p v-else-if="isRetentionSetting(setting)" class="text-xs text-slate-500">
-                                Read only here.
-                            </p>
-                            <div v-else-if="editingId === setting.setting_id" class="flex flex-wrap gap-2">
-                                <button
-                                    type="button"
-                                    class="rbim-btn px-3 py-1.5 text-xs"
-                                    :disabled="savingId === setting.setting_id"
-                                    @click="saveSetting(setting)"
-                                >
-                                    Save
-                                </button>
-                                <button type="button" class="rbim-btn-outline px-3 py-1.5 text-xs" @click="cancelEdit">
-                                    Cancel
-                                </button>
-                            </div>
-                            <button
-                                v-else
-                                type="button"
-                                class="inline-flex h-9 w-[4.75rem] cursor-pointer items-center justify-center rounded-lg border border-brand bg-white text-sm font-medium text-brand transition hover:bg-brand-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-                                @click="startEdit(setting)"
-                            >
-                                Edit
-                            </button>
-                        </div>
-                    </div>
-                    <div v-if="!group.settings.length" class="border-t border-slate-100 px-4 py-8 text-center text-sm text-slate-500">
-                        No settings in this category.
-                    </div>
+                <div class="w-full overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-slate-50 text-left font-semibold text-slate-600">
+                            <tr>
+                                <th class="whitespace-nowrap px-4 py-3">Setting</th>
+                                <th class="whitespace-nowrap px-4 py-3">Value</th>
+                                <th class="whitespace-nowrap px-4 py-3">Description</th>
+                                <th v-if="canUpdateSettings" class="whitespace-nowrap px-4 py-3 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr v-for="setting in group.settings" :key="setting.setting_id">
+                                <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-900">
+                                    {{ formatSettingLabel(setting.setting_key) }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    <template v-if="setting.setting_key === 'punong_barangay_signature'" />
+                                    <template v-else-if="canUpdateSettings && editingId === setting.setting_id">
+                                        <input
+                                            v-model="editValues[setting.setting_id]"
+                                            :type="setting.data_type === 'int' ? 'number' : 'text'"
+                                            :inputmode="inputModeFor(setting)"
+                                            :placeholder="placeholderFor(setting)"
+                                            :min="rangeFor(setting)?.min"
+                                            :max="rangeFor(setting)?.max"
+                                            maxlength="45"
+                                            class="rbim-input py-1.5"
+                                            :class="{ 'rbim-input-error': editError }"
+                                            @input="editError = ''"
+                                        >
+                                        <p v-if="editError" class="rbim-error">{{ editError }}</p>
+                                        <p v-else-if="hintFor(setting)" class="rbim-hint">{{ hintFor(setting) }}</p>
+                                    </template>
+                                    <template v-else>
+                                        <span class="whitespace-nowrap font-medium text-slate-900">
+                                            {{ setting.typed_value ?? setting.setting_value }}
+                                        </span>
+                                        <p v-if="isRetentionSetting(setting)" class="rbim-hint whitespace-nowrap">
+                                            Changed on Log Retention and Archiving.
+                                        </p>
+                                    </template>
+                                </td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">
+                                    {{ setting.description }}
+                                </td>
+                                <td v-if="canUpdateSettings" class="whitespace-nowrap px-4 py-3">
+                                    <div class="flex justify-center">
+                                        <div v-if="setting.setting_key === 'punong_barangay_signature'" class="flex flex-col items-center gap-2">
+                                            <input
+                                                id="punong-barangay-signature"
+                                                type="file"
+                                                accept="image/png"
+                                                class="sr-only"
+                                                :disabled="signatureUploading"
+                                                @change="uploadSignature"
+                                            >
+                                            <label
+                                                for="punong-barangay-signature"
+                                                class="inline-flex h-9 w-[5.75rem] cursor-pointer items-center justify-center rounded-lg border border-brand bg-brand text-sm font-semibold text-white transition hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                                                :class="signatureUploading ? 'pointer-events-none opacity-60' : ''"
+                                            >
+                                                {{ signatureUploading ? 'Uploading...' : 'Upload' }}
+                                            </label>
+                                            <button
+                                                v-if="setting.setting_value"
+                                                type="button"
+                                                class="inline-flex h-9 w-[5.75rem] cursor-pointer items-center justify-center rounded-lg border border-red-500 bg-white text-sm font-medium text-red-600 transition hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+                                                :disabled="signatureUploading"
+                                                @click="confirmRemoveSignature = true"
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+                                        <p v-else-if="isRetentionSetting(setting)" class="whitespace-nowrap text-xs text-slate-500">
+                                            Read only here.
+                                        </p>
+                                        <div v-else-if="editingId === setting.setting_id" class="flex flex-wrap gap-2">
+                                            <button
+                                                type="button"
+                                                class="rbim-btn px-3 py-1.5 text-xs"
+                                                :disabled="savingId === setting.setting_id"
+                                                @click="saveSetting(setting)"
+                                            >
+                                                Save
+                                            </button>
+                                            <button type="button" class="rbim-btn-outline px-3 py-1.5 text-xs" @click="cancelEdit">
+                                                Cancel
+                                            </button>
+                                        </div>
+                                        <button
+                                            v-else
+                                            type="button"
+                                            class="inline-flex h-9 w-[4.75rem] cursor-pointer items-center justify-center rounded-lg border border-brand bg-white text-sm font-medium text-brand transition hover:bg-brand-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                                            @click="startEdit(setting)"
+                                        >
+                                            Edit
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr v-if="!group.settings.length">
+                                <td :colspan="canUpdateSettings ? 4 : 3" class="px-4 py-8 text-center text-slate-500">
+                                    No settings in this category.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </section>
             <ConfirmDialog
@@ -163,13 +153,12 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import PasswordConfirmDialog from '@/components/PasswordConfirmDialog.vue';
 import { useAdministratorPasswordConfirm } from '@/composables/useAdministratorPasswordConfirm';
 import { useAuth } from '@/composables/useAuth';
-import { fetchSignatureBlob } from '@/services/certificateService';
 import { extractErrorMessage, extractValidationErrors } from '@/services/http';
 import * as settingService from '@/services/settingService';
 import { formatSettingLabel } from '@/utils/format';
@@ -265,18 +254,12 @@ const editValues = reactive({});
 const editError = ref('');
 const error = ref('');
 const successMessage = ref('');
-const signaturePreviewUrl = ref('');
-const signatureError = ref('');
 const signatureUploading = ref(false);
 const confirmRemoveSignature = ref(false);
 
 const canUpdateSettings = computed(() => (
     isSuperAdmin.value && hasPermission('setting.update')
 ));
-const settingsColumnTemplate = computed(() => (
-    canUpdateSettings.value ? 'repeat(4, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))'
-));
-
 const settingGroups = computed(() => {
     if (loading.value || !settings.value.length) {
         return [];
@@ -348,7 +331,6 @@ async function loadSettings() {
 
     try {
         settings.value = await settingService.fetchSettings();
-        await loadSignaturePreview();
     } catch (err) {
         error.value = extractErrorMessage(err, 'Unable to load settings.');
     } finally {
@@ -412,35 +394,6 @@ async function saveSetting(setting) {
     }
 }
 
-function signatureSetting() {
-    return settings.value.find((setting) => setting.setting_key === 'punong_barangay_signature') ?? null;
-}
-
-function clearSignaturePreview() {
-    if (signaturePreviewUrl.value) {
-        URL.revokeObjectURL(signaturePreviewUrl.value);
-        signaturePreviewUrl.value = '';
-    }
-}
-
-async function loadSignaturePreview() {
-    clearSignaturePreview();
-    signatureError.value = '';
-
-    if (!signatureSetting()?.setting_value) {
-        return;
-    }
-
-    try {
-        const blob = await fetchSignatureBlob();
-        signaturePreviewUrl.value = URL.createObjectURL(blob);
-    } catch (err) {
-        signatureError.value = err.response?.status === 404
-            ? 'No Punong Barangay signature uploaded.'
-            : extractErrorMessage(err, 'Unable to preview the Punong Barangay signature.');
-    }
-}
-
 async function uploadSignature(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -450,7 +403,6 @@ async function uploadSignature(event) {
     }
 
     signatureUploading.value = true;
-    signatureError.value = '';
     error.value = '';
     successMessage.value = '';
 
@@ -459,10 +411,9 @@ async function uploadSignature(event) {
         settings.value = settings.value.map((row) => (
             row.setting_id === updated.setting_id ? updated : row
         ));
-        await loadSignaturePreview();
         successMessage.value = 'Punong Barangay signature uploaded.';
     } catch (err) {
-        signatureError.value = extractValidationErrors(err).signature
+        error.value = extractValidationErrors(err).signature
             ?? extractErrorMessage(err, 'Unable to upload the Punong Barangay signature.');
     } finally {
         signatureUploading.value = false;
@@ -472,7 +423,6 @@ async function uploadSignature(event) {
 async function removeSignature() {
     confirmRemoveSignature.value = false;
     signatureUploading.value = true;
-    signatureError.value = '';
     error.value = '';
     successMessage.value = '';
 
@@ -481,16 +431,13 @@ async function removeSignature() {
         settings.value = settings.value.map((row) => (
             row.setting_id === updated.setting_id ? updated : row
         ));
-        clearSignaturePreview();
         successMessage.value = 'Punong Barangay signature removed.';
     } catch (err) {
-        signatureError.value = extractErrorMessage(err, 'Unable to remove the Punong Barangay signature.');
+        error.value = extractErrorMessage(err, 'Unable to remove the Punong Barangay signature.');
     } finally {
         signatureUploading.value = false;
     }
 }
-
-onBeforeUnmount(clearSignaturePreview);
 
 onMounted(loadSettings);
 </script>

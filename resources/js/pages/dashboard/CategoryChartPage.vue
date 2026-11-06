@@ -97,8 +97,8 @@
                             {{ reportSubtitle || chart?.subtitle }}
                         </p>
                     </div>
-                    <button type="button" class="rbim-btn-outline" :disabled="loading" @click="load">
-                        {{ loading ? 'Refreshing…' : 'Refresh' }}
+                    <button type="button" class="rbim-btn-outline py-2" :disabled="loading" @click="load">
+                        Refresh
                     </button>
                 </header>
 

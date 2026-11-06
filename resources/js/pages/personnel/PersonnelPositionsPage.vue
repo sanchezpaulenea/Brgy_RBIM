@@ -71,7 +71,7 @@
                     >
                         <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left font-mono text-xs text-slate-700" role="cell">{{ item.id }}</div>
                         <div class="flex justify-center py-3" role="cell">
-                            <span class="w-[17rem] translate-x-16 whitespace-nowrap text-left font-medium text-slate-900">{{ item.label }}</span>
+                            <span class="w-[17rem] whitespace-nowrap text-left font-medium text-slate-900">{{ item.label }}</span>
                         </div>
                         <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="cell">
                             <span

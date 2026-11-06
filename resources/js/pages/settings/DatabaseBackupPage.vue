@@ -114,9 +114,11 @@
                         <p v-if="confirmationError" class="rbim-error">{{ confirmationError }}</p>
                     </div>
 
-                    <button type="submit" class="rbim-btn-danger px-4 py-2.5 text-sm" :disabled="restoring">
-                        {{ restoring ? 'Restoring...' : 'Restore Database' }}
-                    </button>
+                    <div class="flex justify-end">
+                        <button type="submit" class="rbim-btn-danger px-4 py-2.5 text-sm" :disabled="restoring">
+                            {{ restoring ? 'Restoring...' : 'Restore Database' }}
+                        </button>
+                    </div>
                 </form>
             </section>
 
