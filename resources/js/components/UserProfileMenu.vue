@@ -26,7 +26,7 @@
 
         <div
             v-if="open"
-            class="absolute right-0 top-full z-50 mt-2 w-[21.5rem] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-3xl border border-[#e3e8e2] bg-[#f4f6f1] shadow-xl"
+            class="absolute right-0 top-full z-50 mt-2 w-[21.5rem] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-3xl border border-slate-200 bg-[#f3f4f6] shadow-xl"
             role="dialog"
             aria-label="Account"
         >
@@ -46,64 +46,64 @@
                 </button>
             </div>
 
-            <div class="border-t border-[#e3e8e2] px-4 py-4">
-                <div class="flex items-center gap-3">
-                    <div class="relative shrink-0">
-                        <UserAvatar
-                            :src="user?.avatar_url"
-                            :preset="user?.avatar_preset"
-                            size-class="h-14 w-14"
-                            :alt="displayName"
-                        />
-                        <button
-                            type="button"
-                            class="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border-2 border-[#f4f6f1] bg-white text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2d4c39]"
-                            aria-label="Change profile picture"
-                            @click="openEditor"
-                        >
-                            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                            </svg>
-                        </button>
+            <div class="px-4 pb-3">
+                <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white">
+                    <div class="flex items-center gap-3 px-4 py-4">
+                        <div class="relative shrink-0">
+                            <UserAvatar
+                                :src="user?.avatar_url"
+                                :preset="user?.avatar_preset"
+                                size-class="h-14 w-14"
+                                :alt="displayName"
+                            />
+                            <button
+                                type="button"
+                                class="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-white text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400"
+                                aria-label="Change profile picture"
+                                @click="openEditor"
+                            >
+                                <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="truncate text-[15px] font-bold uppercase tracking-wide text-slate-900">
+                                {{ displayName }}
+                            </p>
+                            <p class="truncate text-sm text-slate-500">
+                                {{ positionLabel }}
+                            </p>
+                        </div>
                     </div>
-                    <div class="min-w-0">
-                        <p class="truncate text-[15px] font-bold uppercase tracking-wide text-slate-900">
-                            {{ displayName }}
-                        </p>
-                        <p class="truncate text-sm text-slate-500">
-                            {{ positionLabel }}
+
+                    <div class="flex items-center gap-3 border-t border-slate-200 px-4 py-3.5">
+                        <svg class="h-5 w-5 shrink-0 text-slate-800" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM3 18a7 7 0 1114 0H3z" />
+                        </svg>
+                        <p class="min-w-0 truncate text-sm font-medium text-slate-900">
+                            {{ rolesLabel }}
                         </p>
                     </div>
-                </div>
-            </div>
 
-            <div class="space-y-2 px-4 pb-4">
-                <div class="flex items-center gap-3 rounded-2xl border border-[#e3e8e2] bg-white px-4 py-3.5">
-                    <svg class="h-5 w-5 shrink-0 text-slate-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.25l7 2.4v6.1c0 4.35-2.9 7.55-7 9-4.1-1.45-7-4.65-7-9V5.65l7-2.4z" />
-                    </svg>
-                    <p class="min-w-0 truncate text-sm font-medium text-slate-900">
-                        {{ rolesLabel }}
-                    </p>
+                    <button
+                        type="button"
+                        class="flex w-full cursor-pointer items-center gap-3 border-t border-slate-200 px-4 py-3.5 text-left text-sm font-medium text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        :disabled="loading"
+                        @click="handleLogout"
+                    >
+                        <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6A2.25 2.25 0 005.25 5.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 12H9m9 0l-3-3m3 3l-3 3" />
+                        </svg>
+                        Log out
+                    </button>
                 </div>
-
-                <button
-                    type="button"
-                    class="flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-[#e3e8e2] bg-white px-4 py-3.5 text-left text-sm font-medium text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-                    :disabled="loading"
-                    @click="handleLogout"
-                >
-                    <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6A2.25 2.25 0 005.25 5.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 12H9m9 0l-3-3m3 3l-3 3" />
-                    </svg>
-                    Log out
-                </button>
             </div>
 
             <div class="px-4 pb-4">
                 <div
-                    class="flex rounded-full bg-[#e6ebe4] p-1"
+                    class="flex rounded-full bg-slate-200 p-1"
                     role="radiogroup"
                     aria-label="Appearance"
                 >
@@ -136,7 +136,7 @@
                 @click.self="closeEditor"
             >
                 <div
-                    class="w-full max-w-md overflow-hidden rounded-[1.75rem] bg-[#e8eee9] text-slate-900 shadow-2xl"
+                    class="w-full max-w-md overflow-hidden rounded-[1.75rem] bg-[#f3f4f6] text-slate-900 shadow-2xl"
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="edit-profile-title"
@@ -168,7 +168,7 @@
                             />
                             <button
                                 type="button"
-                                class="absolute bottom-1 right-1 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-[3px] border-[#e8eee9] bg-brand text-white shadow-md transition hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60"
+                                class="absolute bottom-1 right-1 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-[3px] border-[#f3f4f6] bg-[#3c4043] text-white shadow-md transition hover:bg-[#4e5256] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
                                 aria-label="Upload photo"
                                 :disabled="uploading"
                                 @click="choosePhoto"
@@ -192,11 +192,11 @@
                         >
                         <button
                             type="button"
-                            class="flex w-full cursor-pointer items-center gap-4 rounded-2xl bg-white px-4 py-3.5 text-left transition hover:bg-[#f7faf7] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60"
+                            class="flex w-full cursor-pointer items-center gap-4 rounded-2xl bg-white px-4 py-3.5 text-left transition hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
                             :disabled="uploading"
                             @click="choosePhoto"
                         >
-                            <span class="flex h-10 w-10 shrink-0 items-center justify-center text-brand">
+                            <span class="flex h-10 w-10 shrink-0 items-center justify-center text-slate-700">
                                 <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                     <path d="M6 4.75A2.75 2.75 0 0 0 3.25 7.5v9A2.75 2.75 0 0 0 6 19.25h12A2.75 2.75 0 0 0 20.75 16.5v-9A2.75 2.75 0 0 0 18 4.75H6Zm1.2 2.1a1.35 1.35 0 1 1 0 2.7 1.35 1.35 0 0 1 0-2.7ZM5.5 16.2l3.15-3.55a.9.9 0 0 1 1.32-.04l1.55 1.58 2.35-2.85a.9.9 0 0 1 1.4 0L18.5 15.4v1.1a1.25 1.25 0 0 1-1.25 1.25H6.75A1.25 1.25 0 0 1 5.5 16.5v-.3Z" />
                                 </svg>
