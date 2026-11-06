@@ -136,7 +136,7 @@
                 @click.self="closeEditor"
             >
                 <div
-                    class="w-full max-w-md overflow-hidden rounded-[1.75rem] bg-[#f3f4f6] text-slate-900 shadow-2xl"
+                    class="w-full max-w-md overflow-hidden rounded-[1.75rem] bg-[#f1f6f2] text-slate-900 shadow-2xl"
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="edit-profile-title"
@@ -144,7 +144,7 @@
                     <div class="relative flex h-14 items-center px-2">
                         <button
                             type="button"
-                            class="cursor-pointer rounded-full p-2.5 text-slate-700 transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
+                            class="ml-auto cursor-pointer rounded-full p-2.5 text-slate-700 transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
                             aria-label="Close"
                             :disabled="uploading"
                             @click="closeEditor"
@@ -168,7 +168,7 @@
                             />
                             <button
                                 type="button"
-                                class="absolute bottom-1 right-1 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-[3px] border-[#f3f4f6] bg-[#3c4043] text-white shadow-md transition hover:bg-[#4e5256] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
+                                class="absolute bottom-1 right-1 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-[3px] border-[#f1f6f2] bg-brand text-white shadow-md transition hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60"
                                 aria-label="Upload photo"
                                 :disabled="uploading"
                                 @click="choosePhoto"
@@ -196,7 +196,7 @@
                             :disabled="uploading"
                             @click="choosePhoto"
                         >
-                            <span class="flex h-10 w-10 shrink-0 items-center justify-center text-slate-700">
+                            <span class="flex h-10 w-10 shrink-0 items-center justify-center text-brand">
                                 <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                     <path d="M6 4.75A2.75 2.75 0 0 0 3.25 7.5v9A2.75 2.75 0 0 0 6 19.25h12A2.75 2.75 0 0 0 20.75 16.5v-9A2.75 2.75 0 0 0 18 4.75H6Zm1.2 2.1a1.35 1.35 0 1 1 0 2.7 1.35 1.35 0 0 1 0-2.7ZM5.5 16.2l3.15-3.55a.9.9 0 0 1 1.32-.04l1.55 1.58 2.35-2.85a.9.9 0 0 1 1.4 0L18.5 15.4v1.1a1.25 1.25 0 0 1-1.25 1.25H6.75A1.25 1.25 0 0 1 5.5 16.5v-.3Z" />
                                 </svg>
