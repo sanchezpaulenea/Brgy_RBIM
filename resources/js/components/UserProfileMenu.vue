@@ -11,7 +11,7 @@
             <UserAvatar
                 :src="user?.avatar_url"
                 :preset="user?.avatar_preset"
-                size-class="h-14 w-14"
+                size-class="h-16 w-16 sm:h-20 sm:w-20"
                 decorative
             />
             <span class="min-w-0">
@@ -31,7 +31,7 @@
             aria-label="Account"
         >
             <div class="relative px-4 py-3 text-center">
-                <p class="truncate px-6 text-[13px] text-black">
+                <p class="truncate px-6 text-[13px] text-slate-500">
                     {{ managedByLabel }}
                 </p>
                 <button
@@ -67,10 +67,10 @@
                         </button>
                     </div>
                     <div class="min-w-0">
-                        <p class="truncate text-[15px] font-semibold uppercase tracking-wide text-slate-900">
+                        <p class="truncate text-[15px] font-bold uppercase tracking-wide text-slate-900">
                             {{ displayName }}
                         </p>
-                        <p class="truncate text-sm text-black">
+                        <p class="truncate text-sm text-slate-500">
                             {{ positionLabel }}
                         </p>
                     </div>
@@ -79,17 +79,17 @@
 
             <div class="space-y-2 px-4 pb-4">
                 <div class="flex items-center gap-3 rounded-2xl border border-[#e3e8e2] bg-white px-4 py-3.5">
-                    <svg class="h-5 w-5 shrink-0 text-black" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM3 18a7 7 0 1114 0H3z" />
+                    <svg class="h-5 w-5 shrink-0 text-slate-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.25l7 2.4v6.1c0 4.35-2.9 7.55-7 9-4.1-1.45-7-4.65-7-9V5.65l7-2.4z" />
                     </svg>
-                    <p class="min-w-0 truncate text-sm font-medium text-black">
+                    <p class="min-w-0 truncate text-sm font-medium text-slate-900">
                         {{ rolesLabel }}
                     </p>
                 </div>
 
                 <button
                     type="button"
-                    class="flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-[#e3e8e2] bg-white px-4 py-3.5 text-left text-sm font-medium text-black transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    class="flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-[#e3e8e2] bg-white px-4 py-3.5 text-left text-sm font-medium text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                     :disabled="loading"
                     @click="handleLogout"
                 >
@@ -101,18 +101,19 @@
                 </button>
             </div>
 
-            <div
-                class="grid grid-cols-2 gap-2 px-4 pb-4"
-                role="radiogroup"
-                aria-label="Appearance"
-            >
+            <div class="px-4 pb-4">
+                <div
+                    class="flex rounded-full bg-[#e6ebe4] p-1"
+                    role="radiogroup"
+                    aria-label="Appearance"
+                >
                 <button
                     v-for="option in themeOptions"
                     :key="option.value"
                     type="button"
                     role="radio"
-                    class="flex cursor-pointer items-center justify-center gap-2 rounded-full px-3 py-2.5 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
-                    :class="theme === option.value ? 'border border-slate-800 bg-white text-slate-900' : 'border border-transparent bg-white/70 text-slate-700 hover:bg-white'"
+                    class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full px-3 py-2.5 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
+                    :class="theme === option.value ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
                     :aria-checked="theme === option.value"
                     @click="setTheme(option.value)"
                 >
@@ -124,6 +125,7 @@
                     </svg>
                     {{ option.label }}
                 </button>
+                </div>
             </div>
         </div>
 
@@ -134,7 +136,7 @@
                 @click.self="closeEditor"
             >
                 <div
-                    class="w-full max-w-md overflow-hidden rounded-[1.75rem] bg-[#1f1f1f] text-white shadow-2xl"
+                    class="w-full max-w-md overflow-hidden rounded-[1.75rem] bg-[#e8eee9] text-slate-900 shadow-2xl"
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="edit-profile-title"
@@ -142,7 +144,7 @@
                     <div class="relative flex h-14 items-center px-2">
                         <button
                             type="button"
-                            class="cursor-pointer rounded-full p-2.5 text-white/90 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                            class="cursor-pointer rounded-full p-2.5 text-slate-700 transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
                             aria-label="Close"
                             :disabled="uploading"
                             @click="closeEditor"
@@ -161,12 +163,12 @@
                             <UserAvatar
                                 :src="user?.avatar_url"
                                 :preset="user?.avatar_preset"
-                                size-class="h-44 w-44 ring-1 ring-white/10"
+                                size-class="h-44 w-44 ring-1 ring-black/10"
                                 :alt="displayName"
                             />
                             <button
                                 type="button"
-                                class="absolute bottom-1 right-1 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-[3px] border-[#1f1f1f] bg-[#3c4043] text-white shadow-md transition hover:bg-[#4e5256] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60"
+                                class="absolute bottom-1 right-1 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-[3px] border-[#e8eee9] bg-brand text-white shadow-md transition hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60"
                                 aria-label="Upload photo"
                                 :disabled="uploading"
                                 @click="choosePhoto"
@@ -190,11 +192,11 @@
                         >
                         <button
                             type="button"
-                            class="flex w-full cursor-pointer items-center gap-4 rounded-2xl bg-[#2d2d2d] px-4 py-3.5 text-left transition hover:bg-[#383838] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60"
+                            class="flex w-full cursor-pointer items-center gap-4 rounded-2xl bg-white px-4 py-3.5 text-left transition hover:bg-[#f7faf7] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60"
                             :disabled="uploading"
                             @click="choosePhoto"
                         >
-                            <span class="flex h-10 w-10 shrink-0 items-center justify-center text-white/90">
+                            <span class="flex h-10 w-10 shrink-0 items-center justify-center text-brand">
                                 <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                     <path d="M6 4.75A2.75 2.75 0 0 0 3.25 7.5v9A2.75 2.75 0 0 0 6 19.25h12A2.75 2.75 0 0 0 20.75 16.5v-9A2.75 2.75 0 0 0 18 4.75H6Zm1.2 2.1a1.35 1.35 0 1 1 0 2.7 1.35 1.35 0 0 1 0-2.7ZM5.5 16.2l3.15-3.55a.9.9 0 0 1 1.32-.04l1.55 1.58 2.35-2.85a.9.9 0 0 1 1.4 0L18.5 15.4v1.1a1.25 1.25 0 0 1-1.25 1.25H6.75A1.25 1.25 0 0 1 5.5 16.5v-.3Z" />
                                 </svg>
@@ -203,10 +205,10 @@
                                 {{ uploading ? 'Uploading…' : 'Upload photo' }}
                             </span>
                         </button>
-                        <p v-if="photoError" class="mt-3 px-1 text-sm text-red-300" role="alert">
+                        <p v-if="photoError" class="mt-3 px-1 text-sm text-red-700" role="alert">
                             {{ photoError }}
                         </p>
-                        <p v-else class="mt-3 px-1 text-xs text-white/50">
+                        <p v-else class="mt-3 px-1 text-xs text-slate-600">
                             JPEG, PNG, WebP, or GIF. Maximum 2 MB.
                         </p>
                     </div>
