@@ -83,6 +83,7 @@
                                     v-model="household.clan_id"
                                     class="rbim-input"
                                     :class="{ 'rbim-input-error': householdErrors.clan_id }"
+                                    @change="householdErrors.clan_id = ''"
                                 >
                                     <option value="">Select clan</option>
                                     <option v-for="option in clans" :key="option.id" :value="option.id">
@@ -100,6 +101,7 @@
                                     v-model="household.street_id"
                                     class="rbim-input"
                                     :class="{ 'rbim-input-error': householdErrors.street_id }"
+                                    @change="householdErrors.street_id = ''"
                                 >
                                     <option value="">Select street</option>
                                     <option v-for="option in streets" :key="option.id" :value="option.id">
@@ -136,6 +138,7 @@
                                     step="1"
                                     class="rbim-input"
                                     :class="{ 'rbim-input-error': householdErrors.number_of_house_story }"
+                                    @change="householdErrors.number_of_house_story = ''"
                                 >
                                 <p v-if="householdErrors.number_of_house_story" class="rbim-error">{{ householdErrors.number_of_house_story }}</p>
                             </div>
@@ -148,6 +151,7 @@
                                     v-model="household.has_basement"
                                     class="rbim-input"
                                     :class="{ 'rbim-input-error': householdErrors.has_basement }"
+                                    @change="householdErrors.has_basement = ''"
                                 >
                                     <option value="">Select</option>
                                     <option value="true">Yes</option>
