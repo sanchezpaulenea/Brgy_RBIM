@@ -40,11 +40,15 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    completedClass: {
+        type: String,
+        default: 'border border-brand bg-brand-muted text-slate-900',
+    },
 });
 
 function stepClass(index) {
     if (index < props.current) {
-        return 'bg-[#c5ead4] text-[#143326]';
+        return props.completedClass;
     }
 
     if (index === props.current) {
