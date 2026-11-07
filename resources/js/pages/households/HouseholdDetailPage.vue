@@ -200,6 +200,7 @@
                                 v-model="editForm.clan_id"
                                 class="rbim-input"
                                 :class="{ 'rbim-input-error': editErrors.clan_id }"
+                                @change="editErrors.clan_id = ''"
                             >
                                 <option value="">Select clan</option>
                                 <option v-for="clan in clans" :key="clan.id" :value="clan.id">
@@ -217,6 +218,7 @@
                                 v-model="editForm.street_id"
                                 class="rbim-input"
                                 :class="{ 'rbim-input-error': editErrors.street_id }"
+                                @change="editErrors.street_id = ''"
                             >
                                 <option value="">Select street</option>
                                 <option v-for="street in streets" :key="street.id" :value="street.id">
@@ -253,6 +255,7 @@
                                 step="1"
                                 class="rbim-input"
                                 :class="{ 'rbim-input-error': editErrors.number_of_house_story }"
+                                @change="editErrors.number_of_house_story = ''"
                             >
                             <p v-if="editErrors.number_of_house_story" class="rbim-error">{{ editErrors.number_of_house_story }}</p>
                         </div>
@@ -265,6 +268,7 @@
                                 v-model="editForm.has_basement"
                                 class="rbim-input"
                                 :class="{ 'rbim-input-error': editErrors.has_basement }"
+                                @change="editErrors.has_basement = ''"
                             >
                                 <option value="">Select</option>
                                 <option value="true">Yes</option>
@@ -297,6 +301,7 @@
                                 v-model="editForm.household_status_id"
                                 class="rbim-input"
                                 :class="{ 'rbim-input-error': editErrors.household_status_id }"
+                                @change="editErrors.detail_household_status_id = ''"
                             >
                                 <option value="">Select household status</option>
                                 <option v-for="status in householdStatuses" :key="status.id" :value="status.id">
