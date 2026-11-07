@@ -30,6 +30,8 @@
             :error="errors.breed || errors.breed_id"
             :hint="PET_LOOKUP_HINT"
             @create="(name) => acceptTypedLookup('breeds', 'breed_id', 'breed_name', name)"
+            @update:model-value="clearError('breed', 'breed_id')"
+            @update:query="clearError('breed', 'breed_id', 'breed_name')"
         />
         <div>
             <label :for="`${idPrefix}-sex`" class="rbim-label">
@@ -40,6 +42,7 @@
                 v-model="pet.sex_id"
                 class="rbim-input"
                 :class="{ 'rbim-input-error': errors.sex_id }"
+                @change="errors.sex_id = ''"
             >
                 <option value="">Select</option>
                 <option v-for="sex in lookups.sexes" :key="sex.id" :value="sex.id">
@@ -64,6 +67,7 @@
                 v-model="pet.is_spay_neuter"
                 class="rbim-input"
                 :class="{ 'rbim-input-error': errors.is_spay_neuter }"
+                @change="errors.is_spay_neuter = ''"
             >
                 <option value="">Select</option>
                 <option value="true">Yes</option>
@@ -90,6 +94,7 @@
                 v-model="pet.pet_status_id"
                 class="rbim-input"
                 :class="{ 'rbim-input-error': errors.pet_status_id }"
+                @change="errors.pet_status_id = ''"
             >
                 <option value="">Select</option>
                 <option v-for="status in lookups.petStatuses" :key="status.id" :value="status.id">
@@ -157,4 +162,11 @@ function acceptTypedLookup(listKey, idField, nameField, name) {
     delete props.errors[idField];
     delete props.errors[nameField];
 }
+
+function clearError(...fields) {
+    fields.forEach((field) => {
+        delete props.errors[field];
+    });
+}
+
 </script>

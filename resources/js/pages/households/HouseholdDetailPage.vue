@@ -750,5 +750,15 @@ async function handleUpdate() {
 }
 
 watch(() => route.params.id, loadHousehold);
+watch(
+    () => ({ ...questionForm }),
+    (newValues, oldValues) => {
+        Object.keys(newValues).forEach((key) => {
+            if (newValues[key] !== oldValues[key]) {
+                questionErrors[key] = '';
+            }
+        });
+    }
+);
 onMounted(loadHousehold);
 </script>
