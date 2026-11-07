@@ -26,7 +26,7 @@
                             id="personnel_last_name"
                             v-model="form.personnel_last_name"
                             type="text"
-                            maxlength="45"
+                            maxlength="100"
                             class="rbim-input"
                             :class="{ 'rbim-input-error': formErrors.personnel_last_name }"
                             @input="validateName('personnel_last_name', 'Last name', true)"
@@ -42,7 +42,7 @@
                             id="personnel_first_name"
                             v-model="form.personnel_first_name"
                             type="text"
-                            maxlength="45"
+                            maxlength="100"
                             class="rbim-input"
                             :class="{ 'rbim-input-error': formErrors.personnel_first_name }"
                             @input="validateName('personnel_first_name', 'First name', true)"
@@ -56,7 +56,7 @@
                             id="personnel_middle_name"
                             v-model="form.personnel_middle_name"
                             type="text"
-                            maxlength="45"
+                            maxlength="100"
                             class="rbim-input"
                             :class="{ 'rbim-input-error': formErrors.personnel_middle_name }"
                             @input="validateName('personnel_middle_name', 'Middle name')"
@@ -112,6 +112,8 @@
                             required
                             :hint="positionHint"
                             :error="formErrors.position_id || formErrors.position_name"
+                            @update:model-value="clearPositionErrors"
+                            @update:query="clearPositionErrors"
                         />
                     </div>
                     <div class="flex justify-end gap-2 sm:col-span-2">
@@ -346,6 +348,11 @@ function clearFormErrors() {
 
 function clearDateOfBirthError() {
     delete formErrors.personnel_date_of_birth;
+}
+
+function clearPositionErrors() {
+    formErrors.position_id = '';
+    formErrors.position_name = '';
 }
 
 function validateName(field, label, required = false) {
