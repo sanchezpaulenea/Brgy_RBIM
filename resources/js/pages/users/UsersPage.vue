@@ -23,12 +23,14 @@
                             id="username"
                             v-model="createForm.username"
                             type="text"
+                            minlength="2"
                             maxlength="45"
                             required
                             class="rbim-input"
                             :class="{ 'rbim-input-error': createErrors.username }"
+                            @input="createErrors.username = ''"
                         >
-                        <p v-if="createErrors.username" class="rbim-error">{{ createErrors.username }}</p>
+                        <p v-if="createErrors.username" class="rbim-error"> {{ createErrors.username }} </p>
                     </div>
                     <PersonnelSearch
                         v-model="createForm.personnel_id"
@@ -46,6 +48,7 @@
                             required
                             class="rbim-input"
                             :class="{ 'rbim-input-error': createErrors.role_id }"
+                            @change="createErrors.role_id = ''"
                         >
                             <option value="">Select role</option>
                             <option
@@ -320,16 +323,43 @@ async function loadOptions() {
 }
 
 async function handleCreateUser() {
-    creatingUser.value = true;
+    // Reset previous validation errors
     createErrors.username = '';
     createErrors.personnel_id = '';
     createErrors.role_id = '';
     error.value = '';
     successMessage.value = '';
 
+    // Normalize username
+    const username = createForm.username.trim();
+
+    // Frontend validation
+    if (!username) {
+        createErrors.username = 'Username is required.';
+    } else if (username.length < 2) {
+        createErrors.username = 'Username must be at least 2 characters.';
+    } else if (username.length > 45) {
+        createErrors.username = 'Username must not exceed 45 characters.';
+    }
+
+    if (!createForm.role_id) {
+        createErrors.role_id = 'Please select a role.';
+    }
+
+    // Stop if validation fails
+    if (
+        createErrors.username ||
+        createErrors.personnel_id ||
+        createErrors.role_id
+    ) {
+        return;
+    }
+
+    creatingUser.value = true;
+
     const hasPersonnel = Boolean(createForm.personnel_id);
     const payload = {
-        username: createForm.username.trim(),
+        username,
         role_id: Number(createForm.role_id),
     };
 
@@ -340,7 +370,9 @@ async function handleCreateUser() {
     try {
         const created = await userService.createUser(payload);
 
-        users.value = [...users.value, created].sort((a, b) => a.username.localeCompare(b.username));
+        users.value = [...users.value, created].sort(
+            (a, b) => a.username.localeCompare(b.username)
+        );
         createForm.username = '';
         createForm.personnel_id = null;
         createForm.role_id = '';
@@ -349,9 +381,15 @@ async function handleCreateUser() {
     } catch (err) {
         const validationErrors = extractValidationErrors(err);
         createErrors.username = validationErrors.username ?? '';
-        createErrors.personnel_id = validationErrors.personnel_id ?? validationErrors.position_id ?? '';
+        createErrors.personnel_id =
+            validationErrors.personnel_id ??
+            validationErrors.position_id ?? '';
         createErrors.role_id = validationErrors.role_id ?? '';
-        error.value = (createErrors.username || createErrors.personnel_id || createErrors.role_id)
+        error.value = (
+            createErrors.username ||
+            createErrors.personnel_id ||
+            createErrors.role_id
+        )
             ? ''
             : extractErrorMessage(err, 'Unable to create user account.');
     } finally {
