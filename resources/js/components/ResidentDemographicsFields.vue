@@ -13,6 +13,7 @@
                 :class="{ 'rbim-input-error': errors.last_name }"
                 @input="onNameInput('last_name', $event.target.value, 'Last Name', true)"
                 @blur="emit('validate-name', 'last_name', 'Last Name', true)"
+                @change="errors.last_name = ''"
             >
             <p v-if="errors.last_name" class="rbim-error">{{ errors.last_name }}</p>
         </div>
@@ -29,6 +30,7 @@
                 :class="{ 'rbim-input-error': errors.first_name }"
                 @input="onNameInput('first_name', $event.target.value, 'First Name', true)"
                 @blur="emit('validate-name', 'first_name', 'First Name', true)"
+                @change="errors.first_name = ''"
             >
             <p v-if="errors.first_name" class="rbim-error">{{ errors.first_name }}</p>
         </div>
@@ -43,6 +45,7 @@
                 :class="{ 'rbim-input-error': errors.middle_name }"
                 @input="onNameInput('middle_name', $event.target.value, 'Middle Name', false)"
                 @blur="emit('validate-name', 'middle_name', 'Middle Name', false)"
+                @change="errors.middle_name = ''"
             >
             <p v-if="errors.middle_name" class="rbim-error">{{ errors.middle_name }}</p>
         </div>
@@ -92,7 +95,7 @@
                 :value="form.clan_id"
                 class="rbim-input"
                 :class="{ 'rbim-input-error': errors.clan_id }"
-                @change="patch('clan_id', $event.target.value)"
+                @change="patch('clan_id', $event.target.value); delete errors.clan_id"
             >
                 <option value="">Select clan</option>
                 <option v-for="option in clans" :key="option.id" :value="option.id">

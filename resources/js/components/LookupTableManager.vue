@@ -20,7 +20,7 @@
                         :id="inputId"
                         v-model="newName"
                         type="text"
-                        maxlength="45"
+                        maxlength="100"
                         class="rbim-input"
                         :class="{ 'rbim-input-error': createError }"
                         @input="createError = ''"

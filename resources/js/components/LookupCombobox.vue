@@ -113,7 +113,7 @@ const props = defineProps({
     },
     maxLength: {
         type: Number,
-        default: 45,
+        default: 100,
     },
 });
 
