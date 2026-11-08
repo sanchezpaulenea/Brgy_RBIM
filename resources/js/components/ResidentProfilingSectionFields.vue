@@ -10,6 +10,7 @@
                     v-model="form.highest_lvl_of_educ_id"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.highest_lvl_of_educ_id }"
+                    @change="errors.highest_lvl_of_educ_id = ''"
                 >
                     <option value="">Select education level</option>
                     <option v-for="option in lookups.highestLvlOfEduc" :key="option.id" :value="option.id">{{ option.label }}</option>
@@ -25,6 +26,7 @@
                     v-model="form.current_enrollement_status_id"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.current_enrollement_status_id }"
+                    @change="errors.current_enrollement_status_id = ''"
                 >
                     <option value="">Select enrollment status</option>
                     <option v-for="option in lookups.currentEnrollmentStatus" :key="option.id" :value="option.id">{{ option.label }}</option>
@@ -60,6 +62,7 @@
                         maxlength="45"
                         class="rbim-input"
                         :class="{ 'rbim-input-error': errors.place_of_school_brgy }"
+                        @change="errors.place_of_school_brgy = ''"
                     >
                     <p v-if="errors.place_of_school_brgy" class="rbim-error">{{ errors.place_of_school_brgy }}</p>
                 </div>
@@ -101,6 +104,7 @@
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.monthly_income }"
                     @blur="form.monthly_income = formatDecimalAmount(form.monthly_income)"
+                    @input="errors.monthly_income = ''"
                 >
                 <p v-if="errors.monthly_income" class="rbim-error">{{ errors.monthly_income }}</p>
                 <p v-else class="rbim-hint">Amount in pesos, up to two decimal places (e.g. 12500.00).</p>
@@ -114,6 +118,7 @@
                     v-model="form.source_of_income_id"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.source_of_income_id }"
+                    @change="errors.source_of_income_id = ''"
                 >
                     <option value="">Select source of income</option>
                     <option v-for="option in lookups.sourceOfIncome" :key="option.id" :value="option.id">{{ option.label }}</option>
@@ -132,6 +137,7 @@
                     v-model="form.status_of_work_business_id"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.status_of_work_business_id }"
+                    @change="errors.status_of_work_business_id = ''"
                 >
                     <option value="">Select work/business status</option>
                     <option v-for="option in lookups.statusOfWorkBusiness" :key="option.id" :value="option.id">{{ option.label }}</option>
@@ -146,9 +152,10 @@
                     :id="`${idPrefix}-place_of_work_business`"
                     v-model="form.place_of_work_business"
                     type="text"
-                    maxlength="45"
+                    maxlength="60"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.place_of_work_business }"
+                    @input="errors.place_of_work_business = ''"
                 >
                 <p v-if="errors.place_of_work_business" class="rbim-error">{{ errors.place_of_work_business }}</p>
             </div>
@@ -271,7 +278,7 @@
                     :placeholder="'0'.repeat(PWD_ID_DIGITS)"
                     class="rbim-input font-mono tracking-wider"
                     :class="{ 'rbim-input-error': errors.pwd_id_number }"
-                    @input="form.pwd_id_number = digitsOnly($event.target.value).slice(0, PWD_ID_DIGITS)"
+                    @input="form.pwd_id_number = digitsOnly($event.target.value).slice(0, PWD_ID_DIGITS); delete errors.pwd_id_number"
                 >
                 <p v-if="errors.pwd_id_number" class="rbim-error">{{ errors.pwd_id_number }}</p>
                 <p v-else class="rbim-hint">{{ PWD_ID_DIGITS }} digits, numbers only. Leave blank if the resident has no PWD ID.</p>
@@ -290,6 +297,7 @@
                     min="0"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.number_pregnancies }"
+                    @change="errors.number_pregnancies = ''"
                 >
                 <p v-if="errors.number_pregnancies" class="rbim-error">{{ errors.number_pregnancies }}</p>
             </div>
@@ -318,6 +326,7 @@
                     v-model="form.family_planning_method_id"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.family_planning_method_id }"
+                    @change="errors.family_planning_method_id = ''"
                 >
                     <option value="">Select family planning method</option>
                     <option v-for="option in lookups.familyPlanningMethod" :key="option.id" :value="option.id">{{ option.label }}</option>
@@ -334,6 +343,7 @@
                         v-model="form.source_of_fp_method_id"
                         class="rbim-input"
                         :class="{ 'rbim-input-error': errors.source_of_fp_method_id }"
+                        @change="errors.source_of_fp_method_id = ''"
                     >
                         <option value="">Select source of method</option>
                         <option v-for="option in lookups.sourceOfFpMethod" :key="option.id" :value="option.id">{{ option.label }}</option>
@@ -350,7 +360,7 @@
                     :value="booleanSelectValue(form.have_intention_to_use_fp)"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.have_intention_to_use_fp }"
-                    @change="form.have_intention_to_use_fp = parseBoolean($event.target.value)"
+                    @change="form.have_intention_to_use_fp = parseBoolean($event.target.value); delete errors.have_intention_to_use_fp"
                 >
                     <option value="">Select intention</option>
                     <option value="true">Yes</option>
@@ -370,6 +380,7 @@
                     v-model="form.solo_parent_status_id"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.solo_parent_status_id }"
+                    @change="errors.solo_parent_status_id = ''"
                 >
                     <option value="">Select solo parent status</option>
                     <option v-for="option in lookups.soloParentStatus" :key="option.id" :value="option.id">{{ option.label }}</option>
@@ -390,6 +401,7 @@
                     class="rbim-input font-mono"
                     :class="{ 'rbim-input-error': errors.solo_parent_id_number }"
                     @blur="form.solo_parent_id_number = formatSoloParentId(form.solo_parent_id_number)"
+                    @input="errors.solo_parent_id_number = ''"
                 >
                 <p v-if="errors.solo_parent_id_number" class="rbim-error">{{ errors.solo_parent_id_number }}</p>
                 <p v-else class="rbim-hint">10-digit PSGC code, year and month of issuance, then a 6-digit registry count.</p>
@@ -403,7 +415,7 @@
                     :value="booleanSelectValue(form.registered_sen_citizen)"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.registered_sen_citizen }"
-                    @change="form.registered_sen_citizen = parseBoolean($event.target.value)"
+                    @change="form.registered_sen_citizen = parseBoolean($event.target.value); delete errors.registered_sen_citizen"
                 >
                     <option value="">Select senior citizen status</option>
                     <option value="true">Yes</option>
@@ -426,7 +438,7 @@
                         :placeholder="`${NCSC_RRN_MIN_DIGITS}-${NCSC_RRN_MAX_DIGITS} digit RRN`"
                         class="rbim-input font-mono"
                         :class="{ 'rbim-input-error': errors.ncsc_rrn_id_number }"
-                        @input="form.ncsc_rrn_id_number = digitsOnly($event.target.value).slice(0, NCSC_RRN_MAX_DIGITS)"
+                        @input="form.ncsc_rrn_id_number = digitsOnly($event.target.value).slice(0, NCSC_RRN_MAX_DIGITS); delete errors.ncsc_rrn_id_number"
                     >
                     <p v-if="errors.ncsc_rrn_id_number" class="rbim-error">{{ errors.ncsc_rrn_id_number }}</p>
                     <p v-else class="rbim-hint">{{ NCSC_RRN_MIN_DIGITS }} to {{ NCSC_RRN_MAX_DIGITS }} digits, numbers only.</p>
@@ -442,6 +454,7 @@
                         maxlength="45"
                         class="rbim-input"
                         :class="{ 'rbim-input-error': errors.osca_id_number }"
+                        @input="errors.osca_id_number = ''"
                     >
                     <p v-if="errors.osca_id_number" class="rbim-error">{{ errors.osca_id_number }}</p>
                 </div>
@@ -455,6 +468,7 @@
                     v-model="form.is_registered_barangay_voter"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.is_registered_barangay_voter }"
+                    @change="errors.is_registered_barangay_voter = ''"
                 >
                     <option value="">Select voter status</option>
                     <option value="Yes">Yes</option>
@@ -473,6 +487,7 @@
                     maxlength="45"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.registered_barangay_voter }"
+                    @input="errors.registered_barangay_voter = ''"
                 >
                 <p v-if="errors.registered_barangay_voter" class="rbim-error">{{ errors.registered_barangay_voter }}</p>
             </div>
@@ -532,6 +547,7 @@
                         v-model="form.reason_for_leaving_id"
                         class="rbim-input"
                         :class="{ 'rbim-input-error': errors.reason_for_leaving_id }"
+                        @change="errors.reason_for_leaving_id = ''"
                     >
                         <option value="">Select reason for leaving</option>
                         <option v-for="option in migrantReasonsForLeaving" :key="option.id" :value="option.id">{{ option.label }}</option>
@@ -547,6 +563,7 @@
                         v-model="form.reason_for_transfer_id"
                         class="rbim-input"
                         :class="{ 'rbim-input-error': errors.reason_for_transfer_id }"
+                        @change="errors.reason_for_transfer_id = ''"
                     >
                         <option value="">Select reason for transferring</option>
                         <option v-for="option in migrantReasonsForTransfer" :key="option.id" :value="option.id">{{ option.label }}</option>
@@ -562,7 +579,7 @@
                         :value="booleanSelectValue(form.will_return_to_previous_residence)"
                         class="rbim-input"
                         :class="{ 'rbim-input-error': errors.will_return_to_previous_residence }"
-                        @change="form.will_return_to_previous_residence = parseBoolean($event.target.value)"
+                        @change="form.will_return_to_previous_residence = parseBoolean($event.target.value); delete errors.will_return_to_previous_residence"
                     >
                         <option value="">Select plan to return</option>
                         <option value="true">Yes</option>
@@ -633,9 +650,10 @@
                     :id="`${idPrefix}-skills_development_training`"
                     v-model="form.skills_development_training"
                     type="text"
-                    maxlength="45"
+                    maxlength="60"
                     class="rbim-input"
                     :class="{ 'rbim-input-error': errors.skills_development_training }"
+                    @input="errors.skills_development_training = ''"
                 >
                 <p v-if="errors.skills_development_training" class="rbim-error">{{ errors.skills_development_training }}</p>
             </div>
@@ -746,6 +764,143 @@ function applyEducationSchoolLevel() {
         props.form.school_lvl_id = '';
     }
 }
+
+function watchFieldErrors(fields) {
+    fields.forEach(({ value, errorKeys, section }) => {
+        watch(
+            value,
+            (newValue, oldValue) => {
+                if (section && props.section !== section) return;
+                if (newValue === oldValue) return;
+
+                const hasValue =
+                    typeof newValue === 'boolean' ||
+                    (newValue !== null &&
+                     newValue !== undefined &&
+                     String(newValue).trim() !== '');
+
+                if (hasValue) {
+                    errorKeys.forEach((key) => {
+                        delete props.errors[key];
+                    });
+                }
+            }
+        );
+    });
+}
+
+watchFieldErrors([
+    // INFANT HEALTH
+
+    // Place of Delivery
+    {
+        section: 'infant_health',
+        value: () => props.form.place_of_delivery_id,
+        errorKeys: ['place_of_delivery_id', 'place_of_delivery'],
+    },
+    {
+        section: 'infant_health',
+        value: () => props.form.place_of_delivery_name,
+        errorKeys: ['place_of_delivery_id', 'place_of_delivery'],
+    },
+
+    // Birth Attendant
+    {
+        section: 'infant_health',
+        value: () => props.form.birth_attendant_id,
+        errorKeys: ['birth_attendant_id', 'birth_attendant'],
+    },
+    {
+        section: 'infant_health',
+        value: () => props.form.birth_attendant_name,
+        errorKeys: ['birth_attendant_id', 'birth_attendant'],
+    },
+
+    // Immunization
+    {
+        section: 'infant_health',
+        value: () => props.form.immunization_id,
+        errorKeys: ['immunization_id', 'immunization'],
+    },
+    {
+        section: 'infant_health',
+        value: () => props.form.immunization_name,
+        errorKeys: ['immunization_id', 'immunization'],
+    },
+
+    // HEALTH AND SKILLS
+
+    // Health Insurance
+    {
+        value: () => props.form.health_insurance_id,
+        errorKeys: ['health_insurance_id', 'health_insurance'],
+    },
+    {
+        value: () => props.form.health_insurance,
+        errorKeys: ['health_insurance_id', 'health_insurance'],
+    },
+
+    // Facility Visited Past 12 Months
+    {
+        value: () => props.form.facility_visited_past_12mos_id,
+        errorKeys: ['facility_visited_past_12mos_id', 'facility_visited_past_12mos'],
+    },
+    {
+        value: () => props.form.facility_visited_past_12mos,
+        errorKeys: ['facility_visited_past_12mos_id', 'facility_visited_past_12mos'],
+    },
+
+    // Facility Visit Reason
+    {
+        value: () => props.form.facility_visit_reason_id,
+        errorKeys: ['facility_visit_reason_id', 'facility_visit_reason'],
+    },
+    {
+        value: () => props.form.facility_visit_reason,
+        errorKeys: ['facility_visit_reason_id', 'facility_visit_reason'],
+    },
+
+    // Disability
+    {
+        value: () => props.form.disability_id,
+        errorKeys: ['disability_id', 'disability'],
+    },
+    {
+        value: () => props.form.disability,
+        errorKeys: ['disability_id', 'disability'],
+    },
+
+    // Date of Transfer in Barangay
+    {
+        value: () => props.form.date_of_transfer_in_brgy,
+        errorKeys: ['date_of_transfer_in_brgy'],
+    },
+
+    // Duration of Stay
+    {
+        value: () => props.form.duration_of_stay,
+        errorKeys: ['duration_of_stay'],
+    }, 
+
+    // CTC
+    {
+        section: 'ctc',
+        value: () => props.form.has_valid_ctc,
+        errorKeys: ['has_valid_ctc'],
+    },
+    {
+        section: 'ctc',
+        value: () => props.form.ctc_issued_here,
+        errorKeys: ['ctc_issued_here'],
+    },
+
+    // Skills
+    {
+        section: 'skills',
+        value: () => props.form.skills_development_training,
+        errorKeys: ['skills_development_training'],
+    },
+]);
 
 watch(
     () => [

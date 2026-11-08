@@ -197,6 +197,7 @@
                             max="120"
                             class="rbim-input"
                             :class="{ 'rbim-input-error': errors[`female_deaths.${index}.age`] }"
+                            @input="errors[`female_deaths.${index}.age`] = ''"
                         >
                         <p v-if="errors[`female_deaths.${index}.age`]" class="rbim-error">{{ errors[`female_deaths.${index}.age`] }}</p>
                     </div>
@@ -209,6 +210,7 @@
                             maxlength="45"
                             class="rbim-input"
                             :class="{ 'rbim-input-error': errors[`female_deaths.${index}.cause_of_death`] }"
+                            @input="errors[`female_deaths.${index}.cause_of_death`] = ''"
                         >
                         <p v-if="errors[`female_deaths.${index}.cause_of_death`]" class="rbim-error">{{ errors[`female_deaths.${index}.cause_of_death`] }}</p>
                     </div>
@@ -233,7 +235,7 @@
                 :value="booleanSelectValue(form.child_hhm_died_past_12mos)"
                 class="rbim-input"
                 :class="{ 'rbim-input-error': errors.child_hhm_died_past_12mos }"
-                @change="onChildDiedChange($event.target.value)"
+                @change="onChildDiedChange($event.target.value); delete errors.child_hhm_died_past_12mos"
             >
                 <option value="">Select</option>
                 <option value="true">Yes</option>
@@ -257,6 +259,7 @@
                             max="4"
                             class="rbim-input"
                             :class="{ 'rbim-input-error': errors[`child_deaths.${index}.age`] }"
+                            @input="errors[`child_deaths.${index}.age`] = ''"
                         >
                         <p v-if="errors[`child_deaths.${index}.age`]" class="rbim-error">{{ errors[`child_deaths.${index}.age`] }}</p>
                     </div>
@@ -267,6 +270,7 @@
                             v-model="death.sex_id"
                             class="rbim-input"
                             :class="{ 'rbim-input-error': errors[`child_deaths.${index}.sex_id`] }"
+                            @change="errors[`child_deaths.${index}.sex_id`] = ''"
                         >
                             <option value="">Select gender</option>
                             <option v-for="option in (lookups.sex ?? [])" :key="option.id" :value="option.id">{{ option.label }}</option>
@@ -282,6 +286,7 @@
                             maxlength="45"
                             class="rbim-input"
                             :class="{ 'rbim-input-error': errors[`child_deaths.${index}.cause_of_death`] }"
+                            @input="errors[`child_deaths.${index}.cause_of_death`] = ''"
                         >
                         <p v-if="errors[`child_deaths.${index}.cause_of_death`]" class="rbim-error">{{ errors[`child_deaths.${index}.cause_of_death`] }}</p>
                     </div>
@@ -345,6 +350,7 @@
                         maxlength="45"
                         class="rbim-input"
                         :class="{ 'rbim-input-error': errors.intend_to_stay_brgy }"
+                        @input="errors.intend_to_stay_brgy = ''"
                     >
                     <p v-if="errors.intend_to_stay_brgy" class="rbim-error">{{ errors.intend_to_stay_brgy }}</p>
                 </div>
@@ -357,6 +363,7 @@
                         maxlength="45"
                         class="rbim-input"
                         :class="{ 'rbim-input-error': errors.intend_to_stay_municipality }"
+                        @input="errors.intend_to_stay_municipality = ''"
                     >
                     <p v-if="errors.intend_to_stay_municipality" class="rbim-error">{{ errors.intend_to_stay_municipality }}</p>
                 </div>
@@ -369,6 +376,7 @@
                         maxlength="45"
                         class="rbim-input"
                         :class="{ 'rbim-input-error': errors.intend_to_stay_province }"
+                        @input="errors.intend_to_stay_province = ''"
                     >
                     <p v-if="errors.intend_to_stay_province" class="rbim-error">{{ errors.intend_to_stay_province }}</p>
                 </div>

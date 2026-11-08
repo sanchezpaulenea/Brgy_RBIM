@@ -289,6 +289,7 @@
                                 step="1"
                                 class="rbim-input"
                                 :class="{ 'rbim-input-error': editErrors.number_of_basement_level }"
+                                @input="editErrors.number_of_basement_level = ''"
                             >
                             <p v-if="editErrors.number_of_basement_level" class="rbim-error">{{ editErrors.number_of_basement_level }}</p>
                         </div>
@@ -301,7 +302,7 @@
                                 v-model="editForm.household_status_id"
                                 class="rbim-input"
                                 :class="{ 'rbim-input-error': editErrors.household_status_id }"
-                                @change="editErrors.detail_household_status_id = ''"
+                                @change="editErrors.household_status_id = ''"
                             >
                                 <option value="">Select household status</option>
                                 <option v-for="status in householdStatuses" :key="status.id" :value="status.id">
