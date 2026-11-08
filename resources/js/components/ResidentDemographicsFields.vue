@@ -8,7 +8,7 @@
                 :id="`${idPrefix}-last_name`"
                 :value="form.last_name"
                 type="text"
-                maxlength="45"
+                maxlength="100"
                 class="rbim-input"
                 :class="{ 'rbim-input-error': errors.last_name }"
                 @input="onNameInput('last_name', $event.target.value, 'Last Name', true)"
@@ -24,7 +24,7 @@
                 :id="`${idPrefix}-first_name`"
                 :value="form.first_name"
                 type="text"
-                maxlength="45"
+                maxlength="100"
                 class="rbim-input"
                 :class="{ 'rbim-input-error': errors.first_name }"
                 @input="onNameInput('first_name', $event.target.value, 'First Name', true)"
@@ -38,7 +38,7 @@
                 :id="`${idPrefix}-middle_name`"
                 :value="form.middle_name"
                 type="text"
-                maxlength="45"
+                maxlength="100"
                 class="rbim-input"
                 :class="{ 'rbim-input-error': errors.middle_name }"
                 @input="onNameInput('middle_name', $event.target.value, 'Middle Name', false)"
@@ -70,7 +70,7 @@
                 class="rbim-input"
                 :class="{ 'rbim-input-error': errors.relationship_to_hh_id }"
                 :disabled="relationshipLocked"
-                @change="patch('relationship_to_hh_id', $event.target.value)"
+                @change="patch('relationship_to_hh_id', $event.target.value); delete errors.relationship_to_hh_id"
             >
                 <option value="">Select relationship</option>
                 <option
@@ -110,7 +110,7 @@
                 :value="form.sex_id"
                 class="rbim-input"
                 :class="{ 'rbim-input-error': errors.sex_id }"
-                @change="patch('sex_id', $event.target.value)"
+                @change="patch('sex_id', $event.target.value); delete errors.sex_id"
             >
                 <option value="">Select gender</option>
                 <option v-for="option in sexes" :key="option.id" :value="option.id">
@@ -127,7 +127,7 @@
             :max="maxBirthDate"
             required
             :error="errors.date_of_birth"
-            @update:model-value="patch('date_of_birth', $event)"
+            @update:model-value="patch('date_of_birth', $event); delete errors.date_of_birth"
         />
         <div>
             <label :for="`${idPrefix}-birth_country`" class="rbim-label">
@@ -187,6 +187,7 @@
             :error="errors.nationality_id"
             :hint="lookupHint(canCreateNationality)"
             @create="createNationality"
+            @change="errors.nationality_id = ''"
         />
         <LookupCombobox
             v-model="form.religion_id"
@@ -201,6 +202,7 @@
             :error="errors.religion_id"
             :hint="lookupHint(canCreateReligion)"
             @create="createReligion"
+            @change="errors.religion_id = ''"
         />
         <LookupCombobox
             v-model="form.ethnicity_id"
@@ -215,6 +217,7 @@
             :error="errors.ethnicity_id"
             :hint="lookupHint(canCreateEthnicity)"
             @create="createEthnicity"
+            @change="errors.ethnicity_id = ''"
         />
         <div>
             <label :for="`${idPrefix}-marital_status`" class="rbim-label">
@@ -225,7 +228,7 @@
                 :value="form.marital_status_id"
                 class="rbim-input"
                 :class="{ 'rbim-input-error': errors.marital_status_id }"
-                @change="patch('marital_status_id', $event.target.value)"
+                @change="patch('marital_status_id', $event.target.value); delete errors.marital_status_id"
             >
                 <option value="">Select marital status</option>
                 <option v-for="option in maritalStatuses" :key="option.id" :value="option.id">
@@ -244,7 +247,7 @@
                 :value="form.sex_id"
                 class="rbim-input"
                 :class="{ 'rbim-input-error': errors.sex_id }"
-                @change="patch('sex_id', $event.target.value)"
+                @change="patch('sex_id', $event.target.value); delete errors.sex_id"
             >
                 <option value="">Select gender</option>
                 <option v-for="option in sexes" :key="option.id" :value="option.id">
