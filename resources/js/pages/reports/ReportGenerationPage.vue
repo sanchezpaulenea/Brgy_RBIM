@@ -227,7 +227,12 @@
                         >
                         <span>
                             <span class="font-medium text-slate-900">{{ column.label }}</span>
-                            <span v-if="column.is_group" class="mt-1 block text-xs text-slate-500">
+                            <span v-if="column.key === 'household_questions'" class="mt-1 block text-xs leading-5 text-slate-500">
+                                <span v-for="child in column.columns" :key="child.key" class="mr-2 inline-block">
+                                    • {{ child.label }}
+                                </span>
+                            </span>
+                            <span v-else-if="column.is_group" class="mt-1 block text-xs text-slate-500">
                                 {{ column.columns.map((child) => child.label).join(', ') }}
                             </span>
                         </span>
