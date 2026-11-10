@@ -30,7 +30,7 @@
                         <label v-for="filter in payload?.filters ?? []" :key="filter.key" class="block text-sm font-medium text-slate-700">
                             {{ filter.label }}
                             <select
-                                class="rbim-input mt-1"
+                                class="rbim-input rbim-filter mt-1"
                                 :value="filter.value || ''"
                                 @change="setFilter(filter.key, $event.target.value)"
                             >

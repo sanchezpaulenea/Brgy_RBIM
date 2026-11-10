@@ -145,7 +145,7 @@
                     </div>
                     <div class="sm:w-48">
                         <label for="personnel-filter-status" class="rbim-label">Personnel Status</label>
-                        <select id="personnel-filter-status" v-model="filters.statusId" class="rbim-input py-2">
+                        <select id="personnel-filter-status" v-model="filters.statusId" class="rbim-input rbim-filter py-2">
                             <option value="all">All statuses</option>
                             <option v-for="status in PERSONNEL_STATUSES" :key="status.id" :value="status.id">
                                 {{ status.label }}

@@ -7,9 +7,6 @@
                 </RouterLink>
                 <span aria-hidden="true">/</span>
                 <span class="font-semibold text-slate-900">{{ chart?.title || 'Statistic' }}</span>
-                <button type="button" class="ml-auto cursor-pointer text-sm font-medium text-[#344d3f] hover:underline" @click="goBack">
-                    Back
-                </button>
             </nav>
 
             <div
@@ -56,7 +53,7 @@
                         <label v-for="filter in visiblePopulationFilters" :key="filter.key" class="block text-sm font-medium text-slate-700">
                             {{ filter.label }}
                             <select
-                                class="rbim-input mt-1"
+                                class="rbim-input rbim-filter mt-1"
                                 :value="String(route.query[filter.key] || '')"
                                 @change="setPopulationFilter(filter.key, $event.target.value)"
                             >
@@ -705,16 +702,6 @@ async function loadOverview() {
             overviewLoading.value = false;
         }
     }
-}
-
-function goBack() {
-    if (window.history.length > 1) {
-        router.back();
-
-        return;
-    }
-
-    router.push({ name: 'dashboard' });
 }
 
 watch(() => route.params.chartKey, async () => {

@@ -28,7 +28,7 @@
                 </div>
                 <div>
                     <label for="resident-filter-type" class="rbim-label">Resident Type</label>
-                    <select id="resident-filter-type" v-model="filters.resident_type_id" class="rbim-input py-2">
+                    <select id="resident-filter-type" v-model="filters.resident_type_id" class="rbim-input rbim-filter py-2">
                         <option value="">All types</option>
                         <option v-for="type in residentTypes" :key="type.id" :value="type.id">
                             {{ type.label }}
@@ -37,7 +37,7 @@
                 </div>
                 <div>
                     <label for="resident-filter-status" class="rbim-label">Resident Status</label>
-                    <select id="resident-filter-status" v-model="filters.resident_status_id" class="rbim-input py-2">
+                    <select id="resident-filter-status" v-model="filters.resident_status_id" class="rbim-input rbim-filter py-2">
                         <option value="">All statuses</option>
                         <option v-for="status in residentStatuses" :key="status.id" :value="status.id">
                             {{ status.label }}

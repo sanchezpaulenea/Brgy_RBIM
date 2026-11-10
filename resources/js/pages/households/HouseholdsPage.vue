@@ -28,7 +28,7 @@
                 </div>
                 <div>
                     <label for="household-filter-clan" class="rbim-label">Clan</label>
-                    <select id="household-filter-clan" v-model="filters.clan_id" class="rbim-input py-2">
+                    <select id="household-filter-clan" v-model="filters.clan_id" class="rbim-input rbim-filter py-2">
                         <option value="">All clans</option>
                         <option v-for="clan in clans" :key="clan.id" :value="clan.id">
                             {{ clan.label }}
@@ -37,7 +37,7 @@
                 </div>
                 <div>
                     <label for="household-filter-street" class="rbim-label">Street</label>
-                    <select id="household-filter-street" v-model="filters.street_id" class="rbim-input py-2">
+                    <select id="household-filter-street" v-model="filters.street_id" class="rbim-input rbim-filter py-2">
                         <option value="">All streets</option>
                         <option v-for="street in streets" :key="street.id" :value="street.id">
                             {{ street.label }}
@@ -46,7 +46,7 @@
                 </div>
                 <div>
                     <label for="household-filter-status" class="rbim-label">Household Status</label>
-                    <select id="household-filter-status" v-model="filters.household_status_id" class="rbim-input py-2">
+                    <select id="household-filter-status" v-model="filters.household_status_id" class="rbim-input rbim-filter py-2">
                         <option value="">All statuses</option>
                         <option v-for="status in householdStatuses" :key="status.id" :value="status.id">
                             {{ status.label }}

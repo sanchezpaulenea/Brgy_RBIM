@@ -31,7 +31,7 @@
                 </div>
                 <div>
                     <label for="pet-status" class="rbim-label">Pet Status</label>
-                    <select id="pet-status" v-model="filters.pet_status_id" class="rbim-input py-2">
+                    <select id="pet-status" v-model="filters.pet_status_id" class="rbim-input rbim-filter py-2">
                         <option value="">All pet statuses</option>
                         <option v-for="status in options.petStatuses" :key="status.id" :value="String(status.id)">
                             {{ status.label }}
@@ -40,7 +40,7 @@
                 </div>
                 <div>
                     <label for="pet-species" class="rbim-label">Species</label>
-                    <select id="pet-species" v-model="filters.specie_id" class="rbim-input py-2">
+                    <select id="pet-species" v-model="filters.specie_id" class="rbim-input rbim-filter py-2">
                         <option value="">All species</option>
                         <option v-for="specie in options.species" :key="specie.id" :value="String(specie.id)">
                             {{ specie.label }}
@@ -49,7 +49,7 @@
                 </div>
                 <div>
                     <label for="pet-breed" class="rbim-label">Breed</label>
-                    <select id="pet-breed" v-model="filters.breed_id" class="rbim-input py-2">
+                    <select id="pet-breed" v-model="filters.breed_id" class="rbim-input rbim-filter py-2">
                         <option value="">All breeds</option>
                         <option v-for="breed in filterBreeds" :key="breed.id" :value="String(breed.id)">
                             {{ breed.label }}
