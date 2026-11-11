@@ -42,7 +42,7 @@ const props = defineProps({
     },
     completedClass: {
         type: String,
-        default: 'border border-brand bg-brand-muted text-slate-900',
+        default: 'bg-[#c5ead4] text-[#143326]',
     },
 });
 

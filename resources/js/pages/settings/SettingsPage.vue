@@ -21,12 +21,23 @@
                     <p class="mt-0.5 text-xs text-slate-500">{{ group.description }}</p>
                 </header>
                 <div class="w-full overflow-x-auto">
-                    <table class="min-w-full text-sm">
-                        <thead class="bg-slate-50 text-left font-semibold text-slate-600">
+                    <table class="w-full table-fixed text-sm" :class="canUpdateSettings ? 'min-w-[66rem]' : 'min-w-[58rem]'">
+                        <colgroup v-if="canUpdateSettings">
+                            <col class="w-[24%]" />
+                            <col class="w-[34%]" />
+                            <col class="w-[28%]" />
+                            <col class="w-[14%]" />
+                        </colgroup>
+                        <colgroup v-else>
+                            <col class="w-[28%]" />
+                            <col class="w-[40%]" />
+                            <col class="w-[32%]" />
+                        </colgroup>
+                        <thead class="bg-slate-50 font-semibold text-slate-600">
                             <tr>
-                                <th class="whitespace-nowrap py-3 pl-16 pr-4">Setting</th>
-                                <th class="whitespace-nowrap px-4 py-3">Value</th>
-                                <th class="whitespace-nowrap px-4 py-3">Description</th>
+                                <th class="whitespace-nowrap py-3 pl-16 pr-4 text-left">Setting</th>
+                                <th class="whitespace-nowrap px-4 py-3 text-left">Value</th>
+                                <th class="whitespace-nowrap px-4 py-3 text-left">Description</th>
                                 <th v-if="canUpdateSettings" class="whitespace-nowrap px-4 py-3 text-center">Action</th>
                             </tr>
                         </thead>
