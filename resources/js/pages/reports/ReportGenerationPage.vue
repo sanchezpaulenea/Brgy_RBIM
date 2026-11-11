@@ -225,13 +225,17 @@
                             :disabled="column.locked"
                             @change="toggleColumn(column.key)"
                         >
-                        <span>
+                        <span class="min-w-0 flex-1">
                             <span class="font-medium text-slate-900">{{ column.label }}</span>
-                            <span v-if="column.key === 'household_questions'" class="mt-1 block text-xs leading-5 text-slate-500">
-                                <span v-for="child in column.columns" :key="child.key" class="mr-2 inline-block">
-                                    • {{ child.label }}
-                                </span>
-                            </span>
+                            <ul
+                                v-if="column.key === 'household_questions'"
+                                class="mt-1 max-h-28 list-disc space-y-0.5 overflow-y-auto pl-4 pr-1 text-xs text-slate-500"
+                                @click.stop
+                            >
+                                <li v-for="child in column.columns" :key="child.key">
+                                    {{ child.label }}
+                                </li>
+                            </ul>
                             <span v-else-if="column.is_group" class="mt-1 block text-xs text-slate-500">
                                 {{ column.columns.map((child) => child.label).join(', ') }}
                             </span>

@@ -3,7 +3,7 @@
         <div class="space-y-6">
             <PageTabs :tabs="certificateTabs" />
 
-            <div class="flex items-center gap-6">
+            <div class="flex flex-wrap items-center gap-3">
                 <ProcessSteps
                     class="min-w-0"
                     :labels="stepLabels"
@@ -12,14 +12,13 @@
                     aria-label="Certificate progress"
                 />
                 <button
-                    v-if="step === 5"
+                    v-if="issued"
                     type="button"
-                    class="ml-auto inline-flex shrink-0 cursor-pointer items-center rounded-full bg-white px-3 py-2 text-sm font-medium text-red-700 ring-1 ring-red-600 transition hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+                    class="rbim-btn ml-auto shrink-0"
                     :disabled="busy"
-                    title="Start over from Certificate Type"
-                    @click="refresh"
+                    @click="confirmRefreshOpen = true"
                 >
-                    Restart
+                    Issue Another Certificate
                 </button>
             </div>
 
@@ -152,21 +151,23 @@
                         No certificates have been issued to this resident yet.
                     </div>
                     <div v-else class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-slate-200 text-sm">
-                            <thead class="bg-slate-50">
+                        <table class="w-full table-fixed text-sm">
+                            <thead class="bg-slate-50 font-semibold text-slate-600">
                                 <tr>
-                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Certificate Type</th>
-                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Purpose of Request</th>
-                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Date of Issue</th>
-                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Issuer</th>
+                                    <th class="px-4 py-3 text-center">Certificate Type</th>
+                                    <th class="px-4 py-3 text-center">Purpose of Request</th>
+                                    <th class="px-4 py-3 text-center">Requested By</th>
+                                    <th class="px-4 py-3 text-center">Date of Issue</th>
+                                    <th class="px-4 py-3 text-center">Issuer</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
                                 <tr v-for="row in historyRows" :key="row.certificate_id">
-                                    <td class="px-4 py-3">{{ row.type_of_certificate }}</td>
-                                    <td class="px-4 py-3">{{ row.purpose_of_request }}</td>
-                                    <td class="px-4 py-3">{{ formatDateTime(row.date_of_issue) }}</td>
-                                    <td class="px-4 py-3">{{ row.issuer_name }}</td>
+                                    <td class="px-4 py-3 text-center font-medium text-slate-900">{{ row.type_of_certificate || '—' }}</td>
+                                    <td class="px-4 py-3 text-center text-slate-600">{{ row.purpose_of_request || '—' }}</td>
+                                    <td class="px-4 py-3 text-center text-slate-600">{{ requestedBy(row) }}</td>
+                                    <td class="px-4 py-3 text-center text-slate-600">{{ formatDateTime(row.date_of_issue) }}</td>
+                                    <td class="px-4 py-3 text-center text-slate-600">{{ row.issuer_name || '—' }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -190,9 +191,6 @@
             <section v-else class="space-y-4">
                 <div v-if="issued" class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
                     {{ editingCertificateId ? 'Certificate updated.' : 'Certificate issued.' }} The PDF opened in a new tab for printing or download.
-                    <button type="button" class="rbim-btn ml-3 py-2" @click="issueAnother">
-                        Issue Another Certificate
-                    </button>
                 </div>
 
                 <div v-if="previewWarnings.length" class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -455,10 +453,9 @@
 
         <ConfirmDialog
             :open="confirmRefreshOpen"
-            title="Start over?"
-            message="Are you sure you want to restart? This clears the certificate and returns to Certificate Type."
-            confirm-label="Restart"
-            variant="danger"
+            title="Issue Another Certificate?"
+            message="Are you sure you want to issue another certificate? This will clear the current certificate and return you to the Certificate Type selection."
+            confirm-label="Issue Another Certificate"
             @confirm="confirmRefresh"
             @cancel="confirmRefreshOpen = false"
         />
@@ -900,6 +897,16 @@ function overrideError(value, label) {
     return '';
 }
 
+function requestedBy(row) {
+    if (!row.representative_name) {
+        return 'Resident';
+    }
+
+    return row.representative_relationship
+        ? `${row.representative_name} (${row.representative_relationship})`
+        : row.representative_name;
+}
+
 function ordinal(number) {
     const mod100 = number % 100;
 
@@ -1226,16 +1233,6 @@ function issueAnother() {
     selectedType.value = null;
     resetAfterType();
     step.value = 1;
-}
-
-function refresh() {
-    if (step.value > 1 || selectedType.value) {
-        confirmRefreshOpen.value = true;
-
-        return;
-    }
-
-    confirmRefresh();
 }
 
 function confirmRefresh() {

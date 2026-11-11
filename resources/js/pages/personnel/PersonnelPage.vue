@@ -157,51 +157,49 @@
                         </select>
                     </div>
                 </div>
-                <div class="w-full overflow-x-auto" role="table">
-                    <div
-                        class="grid w-full min-w-[48rem] items-center gap-x-[7.5rem] bg-slate-50 px-4 text-sm font-semibold text-slate-600"
-                        :style="{ gridTemplateColumns: personnelColumnTemplate }"
-                        role="row"
-                    >
-                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Name</div>
-                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Position</div>
-                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Personnel Status</div>
-                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Account</div>
-                        <div v-if="canUpdate" class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="columnheader">Action</div>
-                    </div>
-                    <div
-                        v-for="person in filteredItems"
-                        :key="person.personnel_id"
-                        class="grid w-full min-w-[48rem] items-center gap-x-[7.5rem] border-t border-slate-100 px-4 text-sm"
-                        :style="{ gridTemplateColumns: personnelColumnTemplate }"
-                        role="row"
-                    >
-                        <div class="mx-auto w-[58%] translate-x-[2rem] break-words py-3 text-left font-medium text-slate-900" role="cell">{{ person.label }}</div>
-                        <div class="mx-auto w-[58%] translate-x-[2rem] break-words py-3 text-left text-slate-600" role="cell">{{ person.position_name }}</div>
-                        <div class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="cell">
-                            <select
-                                v-if="canUpdate"
-                                :value="pendingStatus[person.personnel_id] ?? person.personnel_status_id"
-                                class="max-w-full rounded-lg border border-slate-300 px-2 py-1 text-xs outline-none focus:border-brand"
-                                :disabled="updatingStatusId === person.personnel_id"
-                                @change="handleStatusChange(person, $event)"
-                            >
-                                <option v-for="status in PERSONNEL_STATUSES" :key="status.id" :value="status.id">
-                                    {{ status.label }}
-                                </option>
-                            </select>
-                            <span v-else class="text-slate-600">{{ statusLabel(person.personnel_status_id) }}</span>
-                        </div>
-                        <div class="mx-auto w-[58%] translate-x-[2rem] break-words py-3 text-left text-slate-600" role="cell">{{ person.username || 'No account' }}</div>
-                        <div v-if="canUpdate" class="mx-auto w-[58%] translate-x-[2rem] py-3 text-left" role="cell">
-                            <button type="button" class="rbim-btn-action" @click="startEdit(person)">
-                                Update
-                            </button>
-                        </div>
-                    </div>
-                    <div v-if="!filteredItems.length" class="border-t border-slate-100 px-4 py-8 text-center text-sm text-slate-500">
-                        {{ items.length ? 'No personnel match the current filters.' : 'No personnel records found.' }}
-                    </div>
+                <div class="w-full overflow-x-auto">
+                    <table class="w-full table-fixed text-sm">
+                        <thead class="bg-slate-50 font-semibold text-slate-600">
+                            <tr>
+                                <th class="px-4 py-3 text-center">Name</th>
+                                <th class="px-4 py-3 text-center">Position</th>
+                                <th class="px-4 py-3 text-center">Personnel Status</th>
+                                <th class="px-4 py-3 text-center">Account</th>
+                                <th v-if="canUpdate" class="px-4 py-3 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr v-for="person in filteredItems" :key="person.personnel_id">
+                                <td class="px-4 py-3 text-center font-medium text-slate-900">{{ listName(person) }}</td>
+                                <td class="px-4 py-3 text-center text-slate-600">{{ person.position_name }}</td>
+                                <td class="px-4 py-3 text-center">
+                                    <select
+                                        v-if="canUpdate"
+                                        :value="pendingStatus[person.personnel_id] ?? person.personnel_status_id"
+                                        class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs outline-none focus:border-brand"
+                                        :disabled="updatingStatusId === person.personnel_id"
+                                        @change="handleStatusChange(person, $event)"
+                                    >
+                                        <option v-for="status in PERSONNEL_STATUSES" :key="status.id" :value="status.id">
+                                            {{ status.label }}
+                                        </option>
+                                    </select>
+                                    <span v-else class="text-slate-600">{{ statusLabel(person.personnel_status_id) }}</span>
+                                </td>
+                                <td class="px-4 py-3 text-center text-slate-600">{{ person.username || 'No account' }}</td>
+                                <td v-if="canUpdate" class="px-4 py-3 text-center">
+                                    <button type="button" class="rbim-btn-action" @click="startEdit(person)">
+                                        Update
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr v-if="!filteredItems.length">
+                                <td :colspan="canUpdate ? 5 : 4" class="px-4 py-8 text-center text-sm text-slate-500">
+                                    {{ items.length ? 'No personnel match the current filters.' : 'No personnel records found.' }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -298,9 +296,6 @@ const confirm = reactive({
 
 const canCreate = computed(() => hasPermission('personnel.create'));
 const canUpdate = computed(() => hasPermission('personnel.update'));
-const personnelColumnTemplate = computed(() => (
-    canUpdate.value ? 'repeat(5, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))'
-));
 const canCreatePosition = computed(() => hasPermission('pposition.create'));
 
 const positionHint = computed(() => (
@@ -311,7 +306,9 @@ const positionHint = computed(() => (
 
 const filteredItems = computed(() => (
     items.value.filter((person) => {
-        const matchesName = matchesSearch(person.label, filters.name)
+        const matchesName = matchesSearch(listName(person), filters.name)
+            || matchesSearch(person.personnel_first_name, filters.name)
+            || matchesSearch(person.personnel_last_name, filters.name)
             || matchesSearch(person.position_name, filters.name)
             || matchesSearch(person.username, filters.name);
         const matchesStatus = filters.statusId === 'all'
@@ -323,6 +320,20 @@ const filteredItems = computed(() => (
 
 function statusLabel(statusId) {
     return PERSONNEL_STATUSES.find((status) => status.id === Number(statusId))?.label ?? '—';
+}
+
+function listName(person) {
+    const last = String(person.personnel_last_name ?? '').trim();
+    const first = [person.personnel_first_name, person.personnel_suffix]
+        .map((part) => String(part ?? '').trim())
+        .filter(Boolean)
+        .join(' ');
+
+    if (last && first) {
+        return `${last}, ${first}`;
+    }
+
+    return last || first || '—';
 }
 
 function handleConfirmCancel() {
@@ -591,7 +602,7 @@ async function handleSave() {
     if (duplicate) {
         const proceed = await askConfirm({
             title: 'Personnel with the same name exists',
-            message: `“${duplicate.label}” is already recorded as ${duplicate.position_name || 'a barangay personnel'}. Save this record anyway?`,
+            message: `“${listName(duplicate)}” is already recorded as ${duplicate.position_name || 'a barangay personnel'}. Save this record anyway?`,
             confirmLabel: 'Save anyway',
             variant: 'warning',
         });
@@ -625,7 +636,7 @@ async function handleStatusChange(person, event) {
     try {
         const updated = await askAdministratorPassword({
             title: 'Update personnel status',
-            message: `Set "${person.label}" to ${statusLabel(nextStatusId)}. Enter your Admin or Super Admin password to save this change.`,
+            message: `Set "${listName(person)}" to ${statusLabel(nextStatusId)}. Enter your Admin or Super Admin password to save this change.`,
             confirmLabel: 'Update status',
             run: (password) => personnelService.updatePersonnel(person.personnel_id, {
                 personnel_last_name: person.personnel_last_name,
@@ -656,7 +667,7 @@ async function handleStatusChange(person, event) {
         }
 
         delete pendingStatus[person.personnel_id];
-        successMessage.value = `Updated status for "${person.label}" to ${statusLabel(nextStatusId)}.`;
+        successMessage.value = `Updated status for "${listName(person)}" to ${statusLabel(nextStatusId)}.`;
     } catch (err) {
         delete pendingStatus[person.personnel_id];
         error.value = extractErrorMessage(err, 'Unable to update personnel status.');

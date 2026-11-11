@@ -41,23 +41,23 @@
 
                 <div class="rbim-card overflow-hidden">
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-slate-200 text-sm">
-                            <thead class="bg-slate-50">
+                        <table class="w-full table-fixed text-sm">
+                            <thead class="bg-slate-50 font-semibold text-slate-600">
                                 <tr>
-                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Certificate Type</th>
-                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Purpose of Request</th>
-                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Requested By</th>
-                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Date of Issue</th>
-                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Issuer</th>
+                                    <th class="px-4 py-3 text-center">Certificate Type</th>
+                                    <th class="px-4 py-3 text-center">Purpose of Request</th>
+                                    <th class="px-4 py-3 text-center">Requested By</th>
+                                    <th class="px-4 py-3 text-center">Date of Issue</th>
+                                    <th class="px-4 py-3 text-center">Issuer</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
                                 <tr v-for="row in rows" :key="row.certificate_id">
-                                    <td class="px-4 py-3 font-medium text-slate-900">{{ row.type_of_certificate || '—' }}</td>
-                                    <td class="px-4 py-3 text-slate-600">{{ row.purpose_of_request || '—' }}</td>
-                                    <td class="px-4 py-3 text-slate-600">{{ requestedBy(row) }}</td>
-                                    <td class="px-4 py-3 text-slate-600">{{ formatDateTime(row.date_of_issue) }}</td>
-                                    <td class="px-4 py-3 text-slate-600">{{ row.issuer_name || '—' }}</td>
+                                    <td class="px-4 py-3 text-center font-medium text-slate-900">{{ row.type_of_certificate || '—' }}</td>
+                                    <td class="px-4 py-3 text-center text-slate-600">{{ row.purpose_of_request || '—' }}</td>
+                                    <td class="px-4 py-3 text-center text-slate-600">{{ requestedBy(row) }}</td>
+                                    <td class="px-4 py-3 text-center text-slate-600">{{ formatDateTime(row.date_of_issue) }}</td>
+                                    <td class="px-4 py-3 text-center text-slate-600">{{ row.issuer_name || '—' }}</td>
                                 </tr>
                                 <tr v-if="!rows.length">
                                     <td colspan="5" class="px-4 py-8 text-center text-slate-500">

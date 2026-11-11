@@ -16,37 +16,37 @@
                 No settings found.
             </div>
             <section v-for="group in settingGroups" :key="group.title" class="rbim-card overflow-hidden">
-                <header class="border-b border-slate-200 bg-slate-50 py-3 pl-16 pr-4">
+                <header class="border-b border-slate-200 bg-slate-50 px-6 py-3">
                     <h2 class="text-sm font-semibold text-slate-900">{{ group.title }}</h2>
                     <p class="mt-0.5 text-xs text-slate-500">{{ group.description }}</p>
                 </header>
                 <div class="w-full overflow-x-auto">
-                    <table class="w-full table-fixed text-sm" :class="canUpdateSettings ? 'min-w-[66rem]' : 'min-w-[58rem]'">
+                    <table class="w-full table-fixed text-sm">
                         <colgroup v-if="canUpdateSettings">
-                            <col class="w-[24%]" />
-                            <col class="w-[34%]" />
-                            <col class="w-[28%]" />
-                            <col class="w-[14%]" />
+                            <col class="w-[25%]" />
+                            <col class="w-[30%]" />
+                            <col class="w-[30%]" />
+                            <col class="w-[15%]" />
                         </colgroup>
                         <colgroup v-else>
-                            <col class="w-[28%]" />
-                            <col class="w-[40%]" />
-                            <col class="w-[32%]" />
+                            <col class="w-[30%]" />
+                            <col class="w-[35%]" />
+                            <col class="w-[35%]" />
                         </colgroup>
                         <thead class="bg-slate-50 font-semibold text-slate-600">
                             <tr>
-                                <th class="whitespace-nowrap py-3 pl-16 pr-4 text-left">Setting</th>
-                                <th class="whitespace-nowrap px-4 py-3 text-left">Value</th>
-                                <th class="whitespace-nowrap px-4 py-3 text-left">Description</th>
-                                <th v-if="canUpdateSettings" class="whitespace-nowrap px-4 py-3 text-center">Action</th>
+                                <th class="px-4 py-3 text-center">Setting</th>
+                                <th class="px-4 py-3 text-center">Value</th>
+                                <th class="px-4 py-3 text-center">Description</th>
+                                <th v-if="canUpdateSettings" class="px-4 py-3 text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             <tr v-for="setting in group.settings" :key="setting.setting_id">
-                                <td class="whitespace-nowrap py-3 pl-16 pr-4 font-medium text-slate-900">
+                                <td class="whitespace-nowrap py-3 pl-24 pr-4 text-left font-medium text-slate-900">
                                     {{ formatSettingLabel(setting.setting_key) }}
                                 </td>
-                                <td class="px-4 py-3">
+                                <td class="py-3 pl-24 pr-4">
                                     <template v-if="setting.setting_key === 'punong_barangay_signature'" />
                                     <template v-else-if="canUpdateSettings && editingId === setting.setting_id">
                                         <input
@@ -73,7 +73,7 @@
                                         </p>
                                     </template>
                                 </td>
-                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">
+                                <td class="whitespace-nowrap py-3 pl-24 pr-4 text-slate-600">
                                     {{ setting.description }}
                                 </td>
                                 <td v-if="canUpdateSettings" class="whitespace-nowrap px-4 py-3">
