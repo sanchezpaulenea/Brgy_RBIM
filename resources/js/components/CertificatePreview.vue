@@ -1,8 +1,46 @@
 <template>
     <article class="rbim-paper mx-auto max-w-3xl bg-white px-10 py-8 text-[13px] leading-snug text-slate-900 shadow-sm" style="font-family: 'Times New Roman', Times, serif;">
         <template v-for="(sheet, sheetIndex) in sheets" :key="sheetIndex">
-        <div :class="sheetIndex > 0 ? 'mt-10 border-t border-slate-300 pt-8' : ''">
-        <div class="flex items-start gap-3">
+        <div :class="[sheetIndex > 0 ? 'mt-10 border-t border-slate-300 pt-8' : '', 'relative overflow-hidden']" :style="sheet.exact ? { fontFamily: 'Arial, sans-serif' } : undefined">
+        <p
+            v-if="sheet.watermark"
+            class="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 -rotate-45 text-5xl tracking-wide whitespace-nowrap text-slate-200"
+        >
+            {{ sheet.watermark }}
+        </p>
+        <div v-if="sheet.letterhead?.lines?.length" class="flex items-center gap-3">
+            <div class="flex shrink-0 items-center gap-1">
+                <img
+                    v-if="sheet.letterhead.variant !== 'punong' && sheet.logos?.bagong_pilipinas"
+                    :src="sheet.logos.bagong_pilipinas"
+                    alt=""
+                    class="h-16 w-16 object-contain"
+                >
+                <img
+                    v-if="sheet.logos?.city_of_baguio"
+                    :src="sheet.logos.city_of_baguio"
+                    alt=""
+                    class="h-16 w-16 object-contain"
+                >
+            </div>
+            <div class="min-w-0 flex-1 text-center text-[12px] leading-tight" style="font-family: Georgia, 'Times New Roman', serif;">
+                <p
+                    v-for="(line, lineIndex) in sheet.letterhead.lines"
+                    :key="lineIndex"
+                    class="m-0"
+                    :class="{ 'font-bold': line.bold, underline: line.underline }"
+                >
+                    {{ line.text }}
+                </p>
+            </div>
+            <img
+                v-if="sheet.logos?.happy_hallow"
+                :src="sheet.logos.happy_hallow"
+                alt=""
+                class="h-16 w-16 shrink-0 object-contain"
+            >
+        </div>
+        <div v-else class="flex items-start gap-3">
             <div class="flex shrink-0 gap-1">
                 <img v-if="sheet.logos?.bagong_pilipinas" :src="sheet.logos.bagong_pilipinas" alt="" class="h-14 w-14 object-contain">
                 <div v-else class="h-14 w-14 border border-slate-300" />
@@ -80,30 +118,63 @@
         </div>
 
         <div v-else-if="sheet.signature_style === 'approved'" class="mt-4">
-            <p class="font-bold">Approved by:</p>
-            <div class="w-60 text-center">
-                <img v-if="attachSignature && signatureUrl" :src="signatureUrl" alt="Punong Barangay signature" class="mx-auto h-12 object-contain">
-                <div v-else class="h-12" />
-                <p class="font-bold underline">{{ sheet.fields?.punong_barangay_name || ' ' }}</p>
-                <p>Punong Barangay</p>
+            <div class="text-center">
+                <p class="font-bold">Approved by:</p>
+                <div class="mx-auto w-60">
+                    <img v-if="attachSignature && signatureUrl" :src="signatureUrl" alt="Punong Barangay signature" class="mx-auto h-12 object-contain">
+                    <div v-else class="h-12" />
+                    <p class="font-bold underline">{{ sheet.fields?.punong_barangay_name || ' ' }}</p>
+                    <p>Punong Barangay</p>
+                </div>
             </div>
             <p class="mt-3 font-bold">Witnessed by:</p>
             <p class="font-bold">{{ sheet.fields?.issuer_name }}</p>
             <p>{{ sheet.fields?.issuer_position || 'Barangay Kagawad' }}</p>
-            <p>Date: <span class="font-bold">{{ sheet.fields?.witness_date }}</span></p>
+            <p>Date: <span class="font-bold">{{ sheet.fields?.witness_date_tight || sheet.fields?.witness_date }}</span></p>
         </div>
 
-        <div v-else-if="sheet.signature_style === 'oath'" class="mt-4">
+        <div v-else-if="sheet.signature_style === 'oath'" class="mt-4 font-bold">
+            <div class="text-right">
+                <img v-if="attachSignature && signatureUrl" :src="signatureUrl" alt="Punong Barangay signature" class="ml-auto h-12 object-contain">
+                <div v-else class="h-8" />
+                <p>{{ sheet.fields?.punong_barangay_name }}, Punong Barangay</p>
+            </div>
+            <p class="mt-2">{{ (sheet.fields?.resident_name || '').toUpperCase() }}, <span class="text-[12px]">FIRST TIME JOB SEEKER</span></p>
+            <p class="mt-2">Witnessed by:{{ (sheet.fields?.issuer_name || '').toUpperCase() }}, {{ sheet.fields?.issuer_position || 'Barangay Kagawad' }}/Officer of the day</p>
+            <p class="mt-2">DATE: {{ sheet.fields?.witness_date }}</p>
+        </div>
+        <div v-else-if="sheet.signature_style === 'income' && sheet.layout === 'low_income'" class="mt-6">
             <div class="flex justify-end">
                 <div class="w-60 text-center">
                     <img v-if="attachSignature && signatureUrl" :src="signatureUrl" alt="Punong Barangay signature" class="mx-auto h-12 object-contain">
-                    <div v-else class="h-8" />
-                    <p>{{ sheet.fields?.punong_barangay_name }}, Punong Barangay</p>
+                    <div v-else class="h-12" />
+                    <p class="font-bold underline">{{ sheet.fields?.punong_barangay_name || ' ' }}</p>
+                    <p>Punong Barangay</p>
                 </div>
             </div>
-            <p class="font-bold">{{ sheet.fields?.resident_name }}, FIRST TIME JOB SEEKER</p>
-            <p class="mt-2">Witnessed by:<span class="font-bold">{{ sheet.fields?.issuer_name }}</span>, {{ sheet.fields?.issuer_position || 'Barangay Kagawad' }}/Officer of the day</p>
-            <p>DATE: {{ sheet.fields?.witness_date }}</p>
+            <div class="mt-2 flex items-start justify-between gap-4">
+                <div>
+                    <p>{{ sheet.authority_line }}</p>
+                    <p class="font-bold">{{ (sheet.fields?.issuer_name || '').toUpperCase() }}</p>
+                    <p>{{ sheet.officer_label || 'Officer Of The Day' }}</p>
+                    <p>{{ sheet.fields?.issuer_position || 'Barangay Kagawad' }}</p>
+                </div>
+                <div v-if="sheet.show_stamp" class="w-56 shrink-0 rounded-lg border-2 border-[#9c3b32] p-0.5 text-left text-[#9c3b32]">
+                    <div class="rounded-md border border-[#9c3b32] px-2 py-1.5 text-[10px] leading-tight">
+                        <p class="text-center font-bold">DOCUMENTARY STAMP TAX PAID</p>
+                        <div class="mt-1.5 grid grid-cols-[1.3fr_1fr]">
+                            <div class="pr-2">
+                                <p>GOR SERIAL NUMBER:</p>
+                                <div class="mt-2 border-b border-[#9c3b32]" />
+                            </div>
+                            <div class="border-l border-[#9c3b32] pl-2">
+                                <p>DATE:</p>
+                                <div class="mt-2 border-b border-[#9c3b32]" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div v-else-if="sheet.signature_style === 'income'" class="mt-4">
             <p>{{ sheet.authority_line }}</p>
@@ -221,12 +292,12 @@
 
         <div v-if="sheet.footer_split" class="mt-4 flex items-end justify-between gap-4">
             <div>
-                <p v-for="(note, noteIndex) in sheet.footer_notes || []" :key="noteIndex" class="text-[11px] font-bold">{{ note }}</p>
+            <p v-for="(note, noteIndex) in sheet.footer_notes || []" :key="noteIndex" class="text-[11px]" :class="sheet.layout === 'oath' || sheet.layout === 'jobseeker' ? 'font-bold italic' : 'font-bold'">{{ note }}</p>
             </div>
-            <p class="text-right text-[11px] italic">{{ sheet.revised_note }}</p>
+            <p class="text-right text-[11px] font-bold italic">{{ sheet.revised_note }}</p>
         </div>
         <div v-else>
-            <p v-for="(note, noteIndex) in sheet.footer_notes || []" :key="noteIndex" class="mt-1 text-[11px] font-bold">
+            <p v-for="(note, noteIndex) in sheet.footer_notes || []" :key="noteIndex" class="mt-1 text-[11px]" :class="sheet.layout === 'oath' ? 'font-bold italic' : 'font-bold'">
                 {{ note }}
             </p>
         </div>

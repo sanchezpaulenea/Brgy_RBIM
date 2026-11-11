@@ -4,7 +4,17 @@
     <meta charset="utf-8">
     <title>{{ $document['title'] }}</title>
     <style>
-        @php $arialFonts = $arialFonts ?? []; @endphp
+        @php
+            $arialFonts = $arialFonts ?? [];
+            $sheets = $document['pages'] ?? [$document];
+            $exactDocument = false;
+            foreach ($sheets as $sheet) {
+                if (! empty($sheet['exact'])) {
+                    $exactDocument = true;
+                    break;
+                }
+            }
+        @endphp
         @if (! empty($arialFonts['regular']))
         @@font-face { font-family: "Arial"; font-weight: normal; font-style: normal; src: url("{{ $arialFonts['regular'] }}") format("truetype"); }
         @endif
@@ -17,7 +27,19 @@
         @if (! empty($arialFonts['bold_italic']))
         @@font-face { font-family: "Arial"; font-weight: bold; font-style: italic; src: url("{{ $arialFonts['bold_italic'] }}") format("truetype"); }
         @endif
-        @page { margin: 40px 48px 36px; }
+        @if (! empty($arialFonts['georgia']))
+        @@font-face { font-family: "Georgia"; font-weight: normal; font-style: normal; src: url("{{ $arialFonts['georgia'] }}") format("truetype"); }
+        @endif
+        @if (! empty($arialFonts['georgia_bold']))
+        @@font-face { font-family: "Georgia"; font-weight: bold; font-style: normal; src: url("{{ $arialFonts['georgia_bold'] }}") format("truetype"); }
+        @endif
+        @if (! empty($arialFonts['times_italic']))
+        @@font-face { font-family: "Times New Roman"; font-weight: normal; font-style: italic; src: url("{{ $arialFonts['times_italic'] }}") format("truetype"); }
+        @endif
+        @if (! empty($arialFonts['times_bold_italic']))
+        @@font-face { font-family: "Times New Roman"; font-weight: bold; font-style: italic; src: url("{{ $arialFonts['times_bold_italic'] }}") format("truetype"); }
+        @endif
+        @page { margin: {{ $exactDocument ? '0' : '40px 48px 36px' }}; }
         body { font-family: Arial, sans-serif; font-size: 15px; color: #111; line-height: 1.5; }
         .sheet-table { width: 100%; border-collapse: collapse; }
         .sheet-main { vertical-align: top; }
@@ -78,11 +100,78 @@
         .stamp-title { font-weight: bold; text-align: center; letter-spacing: 0.2px; margin: 0 0 6px; }
         .stamp-label { font-size: 7.5px; }
         .stamp-blank { border-bottom: 1px solid #9c3b32; height: 12px; margin-top: 2px; }
+        .exact { position: relative; }
+        .watermark { position: fixed; top: 390pt; left: 8pt; font-family: Arial, sans-serif; font-size: 45pt; font-weight: normal; color: #e4e4e4; transform: rotate(-45deg); white-space: nowrap; line-height: 1; z-index: -1; }
+        .exact-mast { padding: 20pt 26pt 0 28pt; }
+        .layout-good-moral .exact-mast { padding-top: 72pt; }
+        .layout-low-income .exact-mast { padding-top: 48pt; }
+        .exact-copy { padding: 0 69pt 22pt 72pt; font-family: Arial, sans-serif; font-size: 12pt; color: #111; }
+        .layout-low-income .exact-copy { padding: 0 56pt 16pt 72pt; }
+        .mast-table { width: 100%; border-collapse: collapse; }
+        .mast-left { width: 158pt; vertical-align: middle; }
+        .mast-right { width: 90pt; text-align: right; vertical-align: middle; }
+        .mast-center { text-align: center; vertical-align: middle; }
+        .logo-bp { width: 68pt; height: 64pt; }
+        .logo-city { width: 72pt; height: 72pt; margin-left: 2pt; }
+        .logo-brgy { width: 80pt; height: 80pt; }
+        .layout-good-moral .mast-left { width: 120pt; text-align: center; }
+        .layout-good-moral .logo-city { width: 82pt; height: 82pt; margin-left: 0; }
+        .layout-good-moral .logo-brgy { width: 86pt; height: 86pt; }
+        .mast-line { font-family: Georgia, "Times New Roman", serif; font-size: 13pt; line-height: 14.7pt; margin: 0; text-align: center; font-weight: normal; }
+        .mast-line.strong { font-weight: bold; }
+        .mast-line.ruled { text-decoration: underline; }
+        .exact .office { font-family: Arial, sans-serif; font-weight: bold; font-size: 12pt; text-align: center; margin: 16pt 0 0; line-height: 1.2; }
+        .exact .doc-title { font-family: Arial, sans-serif; font-weight: bold; font-size: 16pt; text-align: center; margin: 14pt 0 12pt; line-height: 1.2; }
+        .exact .doc-subtitle { font-family: Georgia, "Times New Roman", serif; font-weight: bold; font-size: 12pt; text-align: center; margin: 1pt 0 6pt; line-height: 14pt; }
+        .layout-jobseeker .doc-title { font-family: Georgia, "Times New Roman", serif; font-size: 12pt; margin: 1pt 0 0; }
+        .layout-oath .doc-title { font-family: Arial, sans-serif; font-size: 12pt; margin: 12pt 0 10pt; }
+        .layout-good-moral .office, .layout-low-income .office { margin-top: 18pt; }
+        .layout-good-moral .doc-title { margin: 16pt 0 14pt; }
+        .layout-low-income .doc-title { margin: 20pt 0 16pt; font-size: 18pt; }
+        .revised-top { font-family: "Times New Roman", Times, serif; font-style: italic; font-weight: normal; font-size: 12pt; text-align: right; margin: 8pt 0 0; line-height: 14pt; }
+        .cert-no { font-family: "Times New Roman", Times, serif; font-style: italic; font-size: 12pt; text-align: right; text-decoration: underline; margin: 0; line-height: 14pt; }
+        .exact .salutation { font-family: Arial, sans-serif; font-weight: bold; font-size: 12pt; text-align: left; margin: 10pt 0 8pt; line-height: 14pt; }
+        .exact .body { font-family: Arial, sans-serif; font-size: 12pt; font-weight: normal; text-align: justify; text-indent: 36pt; line-height: 18pt; margin: 0 0 8pt; }
+        .layout-jobseeker .body { line-height: 20.7pt; margin: 0 0 10pt; }
+        .layout-good-moral .body { line-height: 18pt; margin: 0 0 10pt; }
+        .layout-low-income .body { line-height: 16pt; margin: 0 0 11pt; }
+        .good-sign { margin-top: 48pt; }
+        .layout-oath .body { text-indent: 0; font-weight: bold; line-height: 16pt; margin: 0; }
+        .layout-oath .body.item { margin-left: 36pt; text-indent: -18pt; }
+        .layout-oath .body.lead { margin-bottom: 10pt; }
+        .exact .bold { font-weight: bold; }
+        .exact .italic { font-style: italic; }
+        .exact .underline { text-decoration: underline; }
+        .approved { font-family: Arial, sans-serif; font-weight: bold; font-size: 12pt; text-align: center; margin: 8pt 0 0; }
+        .sig-center { text-align: center; }
+        .sig-img-exact { height: 34pt; }
+        .sig-gap { height: 34pt; }
+        .pb-line { font-family: Arial, sans-serif; font-weight: bold; font-size: 12pt; text-align: center; text-decoration: underline; margin: 0; line-height: 14pt; }
+        .pb-role { font-family: Arial, sans-serif; font-size: 12pt; text-align: center; margin: 0; line-height: 14pt; font-weight: normal; }
+        .witness-label { font-family: Arial, sans-serif; font-weight: bold; font-size: 12pt; text-align: left; margin: 14pt 0 10pt; }
+        .witness-name { font-family: Arial, sans-serif; font-weight: bold; font-size: 12pt; margin: 0; line-height: 15pt; text-align: left; }
+        .witness-role, .witness-date { font-family: Arial, sans-serif; font-size: 12pt; font-weight: normal; margin: 0; line-height: 15pt; text-align: left; }
+        .form-footer { width: 100%; border-collapse: collapse; margin-top: 42pt; }
+        .form-revised { font-family: "Times New Roman", Times, serif; font-style: italic; font-weight: bold; font-size: 12pt; text-align: right; }
+        .form-note { font-family: Arial, sans-serif; font-weight: bold; font-style: italic; font-size: 10pt; text-align: left; margin: 0; line-height: 12pt; }
+        .oath-sign { font-family: Arial, sans-serif; font-weight: bold; font-size: 12pt; text-align: right; margin: 2pt 0 8pt; }
+        .oath-seeker { font-family: Arial, sans-serif; font-weight: bold; font-size: 12pt; text-align: left; margin: 0; }
+        .oath-seeker-role { font-size: 11pt; font-weight: bold; }
+        .oath-witness, .oath-date { font-family: Arial, sans-serif; font-weight: bold; font-size: 12pt; text-align: left; margin: 8pt 0 0; }
+        .oath-notes { margin-top: 12pt; }
+        .layout-oath .form-note { font-size: 10pt; }
+        .income-authority { font-family: Arial, sans-serif; font-size: 12pt; margin: 0; line-height: 16pt; }
+        .income-name { font-family: Arial, sans-serif; font-weight: bold; font-size: 12pt; margin: 0; line-height: 16pt; }
+        .income-role { font-family: Arial, sans-serif; font-size: 12pt; margin: 0; line-height: 16pt; }
+        .layout-low-income .stamp-outer { width: 168pt; }
+        .sign-right { text-align: center; }
     </style>
 </head>
 <body>
-@php $sheets = $document['pages'] ?? [$document]; @endphp
 @foreach ($sheets as $sheetIndex => $document)
+    @if (! empty($document['exact']))
+        @include('certificates.exact')
+    @else
     <div class="sheet {{ $sheetIndex > 0 ? 'sheet-break' : '' }} {{ ! empty($document['dense']) ? 'dense' : '' }}" style="font-weight: normal;">
     <table class="sheet-table" width="100%" cellspacing="0" cellpadding="0">
     <tr>
@@ -320,6 +409,7 @@
     </tr>
     </table>
     </div>
+    @endif
 @endforeach
 </body>
 </html>

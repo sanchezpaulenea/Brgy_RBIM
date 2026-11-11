@@ -7,6 +7,7 @@ use App\Models\BarangayPersonnel\PersonnelPosition;
 use App\Models\Certificate\Certificate;
 use App\Models\Certificate\TypeOfCertificate;
 use App\Models\Logs\Action;
+use App\Models\ResidentManagement\Demographic\Ethnicity;
 use App\Models\ResidentManagement\Demographic\Resident;
 use App\Models\ResidentManagement\Migration\Migration;
 use App\Models\UserManagement\User;
@@ -536,11 +537,10 @@ class CertificateService
             $options->setDefaultFont('Arial');
         }
 
+        $paper = (string) ($document['paper'] ?? config('certificates.paper', 'legal'));
+
         return $pdf
-            ->setPaper(
-                (string) config('certificates.paper', 'a4'),
-                (string) config('certificates.orientation', 'portrait'),
-            )
+            ->setPaper($paper, (string) config('certificates.orientation', 'portrait'))
             ->output();
     }
 
@@ -1163,6 +1163,7 @@ class CertificateService
                 'issuer_name' => $issuerUser instanceof User ? $this->issuerPrintName($issuerUser) : '',
                 'issuer_position' => trim((string) ($issuerUser?->personnel?->position?->position_name ?? '')),
                 'punong_barangay_name' => $this->resolvedPunongBarangayName($issuerUser),
+                'witness_date_tight' => $localIssued->format('F j,Y'),
                 'barangay_short' => $tokens['barangay_short'],
                 'city' => $cityName,
             ],
@@ -1191,6 +1192,15 @@ class CertificateService
                 $issuedAt,
                 $relationship,
             ));
+        }
+
+        foreach ($sheets as $index => $sheet) {
+            if (empty($sheet['exact'])) {
+                continue;
+            }
+
+            $sheets[$index]['letterhead'] = $this->letterheadFor($sheet);
+            $sheets[$index]['watermark'] = $this->watermarkLabel((string) ($sheet['header']['barangay_name'] ?? ''));
         }
 
         $document = $sheets[0];
@@ -1252,6 +1262,8 @@ class CertificateService
                 $template = substr($template, 1);
             }
 
+            $item = preg_match('/^\d+\./', ltrim($template)) === 1;
+
             if (! $isDeathRequest && $representativeSentence !== null && str_contains(mb_strtolower($template), 'issued upon the request')) {
                 $replaced = preg_replace(
                     '/[^.]*issued upon the request[^.]*\./iu',
@@ -1271,8 +1283,17 @@ class CertificateService
 
             $paragraphs[] = [
                 'flush' => $flush,
+                'item' => $item,
                 'parts' => $this->paragraphParts($template, $tokens),
             ];
+        }
+
+        if (! empty($config['body_bold'])) {
+            foreach ($paragraphs as $index => $paragraph) {
+                foreach ($paragraph['parts'] as $partIndex => $part) {
+                    $paragraphs[$index]['parts'][$partIndex]['bold'] = true;
+                }
+            }
         }
 
         if ($representativeSentence !== null && ! $replacedRequest) {
@@ -1294,8 +1315,16 @@ class CertificateService
         }
 
         $signatureStyle = (string) ($config['signature'] ?? 'authority');
+        $layout = (string) ($config['layout'] ?? '');
 
         return [
+            'layout' => $layout,
+            'exact' => in_array($layout, ['good_moral', 'low_income', 'jobseeker', 'oath'], true),
+            'paper' => (string) ($config['paper'] ?? config('certificates.paper', 'legal')),
+            'letterhead_variant' => (string) ($config['letterhead_variant'] ?? 'standard'),
+            'issuer_upper' => (bool) ($config['issuer_upper'] ?? false),
+            'officer_label' => (string) ($config['officer_label'] ?? 'Officer for the day'),
+            'body_bold' => (bool) ($config['body_bold'] ?? false),
             'title' => mb_strtoupper($title, 'UTF-8'),
             'subtitle' => isset($config['subtitle']) ? (string) $config['subtitle'] : null,
             'office' => $config['office'] ?? null,
@@ -1331,7 +1360,7 @@ class CertificateService
      */
     private function paragraphParts(string $template, array $tokens): array
     {
-        $pieces = preg_split('/(\*\*.*?\*\*|__.*?__|~~.*?~~)/us', $template, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [$template];
+        $pieces = preg_split('/(\*\*__.*?__\*\*|\*\*.*?\*\*|__.*?__|~~.*?~~)/us', $template, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [$template];
         $parts = [];
 
         foreach ($pieces as $piece) {
@@ -1339,12 +1368,22 @@ class CertificateService
                 continue;
             }
 
-            $bold = str_starts_with($piece, '**') && str_ends_with($piece, '**');
-            $underline = str_starts_with($piece, '__') && str_ends_with($piece, '__');
-            $italic = str_starts_with($piece, '~~') && str_ends_with($piece, '~~');
+            $bold = false;
+            $underline = false;
+            $italic = false;
 
-            if ($bold || $underline || $italic) {
-                $piece = substr($piece, 2, -2);
+            if (str_starts_with($piece, '**__') && str_ends_with($piece, '__**') && strlen($piece) >= 8) {
+                $bold = true;
+                $underline = true;
+                $piece = substr($piece, 4, -4);
+            } else {
+                $bold = str_starts_with($piece, '**') && str_ends_with($piece, '**');
+                $underline = str_starts_with($piece, '__') && str_ends_with($piece, '__');
+                $italic = str_starts_with($piece, '~~') && str_ends_with($piece, '~~');
+
+                if ($bold || $underline || $italic) {
+                    $piece = substr($piece, 2, -2);
+                }
             }
 
             foreach ($this->fillTokens($piece, $tokens, $bold) as $part) {
@@ -1836,7 +1875,7 @@ class CertificateService
             ]);
         }
 
-        $match = \App\Models\ResidentManagement\Demographic\Ethnicity::query()
+        $match = Ethnicity::query()
             ->whereRaw('LOWER(ethnicity) = ?', [mb_strtolower(trim($label))])
             ->first();
 
@@ -1878,6 +1917,49 @@ class CertificateService
         return trim(is_string($short) ? $short : $barangayName);
     }
 
+    /**
+     * @param  array<string, mixed>  $sheet
+     * @return array{variant: string, lines: list<array{text: string, bold: bool, underline: bool}>}
+     */
+    private function letterheadFor(array $sheet): array
+    {
+        $header = is_array($sheet['header'] ?? null) ? $sheet['header'] : [];
+        $city = trim((string) ($header['city_name'] ?? ''));
+        $barangay = trim((string) ($header['barangay_name'] ?? ''));
+        $email = trim((string) ($header['barangay_email'] ?? ''));
+        $phone = trim((string) ($header['barangay_contact_no'] ?? ''));
+        $variant = (string) ($sheet['letterhead_variant'] ?? 'standard');
+
+        if ($variant === 'punong') {
+            return [
+                'variant' => 'punong',
+                'lines' => [
+                    ['text' => 'Republic of the Philippines', 'bold' => false, 'underline' => false],
+                    ['text' => $this->cityOf($city), 'bold' => false, 'underline' => false],
+                    ['text' => $this->watermarkLabel($barangay), 'bold' => true, 'underline' => false],
+                    ['text' => 'Email address: '.$email, 'bold' => false, 'underline' => true],
+                    ['text' => 'Landline number: '.$phone, 'bold' => false, 'underline' => true],
+                ],
+            ];
+        }
+
+        return [
+            'variant' => 'standard',
+            'lines' => [
+                ['text' => 'Republic of the Philippines', 'bold' => true, 'underline' => false],
+                ['text' => $city, 'bold' => true, 'underline' => false],
+                ['text' => mb_strtoupper($barangay, 'UTF-8'), 'bold' => true, 'underline' => false],
+                ['text' => 'Official email address: '.$email, 'bold' => false, 'underline' => true],
+                ['text' => 'Tel. No. '.$phone, 'bold' => false, 'underline' => true],
+            ],
+        ];
+    }
+
+    private function watermarkLabel(string $barangayName): string
+    {
+        return mb_strtoupper(trim($this->barangayShort($barangayName).' Barangay'), 'UTF-8');
+    }
+
     private function resolvedPunongBarangayName(?User $issuer): string
     {
         if ($issuer instanceof User) {
@@ -1888,7 +1970,7 @@ class CertificateService
     }
 
     /**
-     * @return array{regular: string, bold: string, italic: string, bold_italic: string}
+     * @return array{regular: string, bold: string, italic: string, bold_italic: string, georgia: string, georgia_bold: string, times_italic: string, times_bold_italic: string}
      */
     private function arialFontSources(): array
     {
@@ -1897,6 +1979,10 @@ class CertificateService
             'bold' => ['arialbd.ttf', 'Arial_Bold.ttf'],
             'italic' => ['ariali.ttf', 'Arial_Italic.ttf'],
             'bold_italic' => ['arialbi.ttf', 'Arial_Bold_Italic.ttf'],
+            'georgia' => ['georgia.ttf'],
+            'georgia_bold' => ['georgiab.ttf'],
+            'times_italic' => ['timesi.ttf'],
+            'times_bold_italic' => ['timesbi.ttf'],
         ];
         $directories = [
             'C:/Windows/Fonts',
@@ -1907,6 +1993,10 @@ class CertificateService
             'bold' => '',
             'italic' => '',
             'bold_italic' => '',
+            'georgia' => '',
+            'georgia_bold' => '',
+            'times_italic' => '',
+            'times_bold_italic' => '',
         ];
 
         foreach ($faces as $style => $names) {

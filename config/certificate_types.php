@@ -47,6 +47,9 @@ return [
 
     3 => [
         'kind' => 'first_time_job_seeker',
+        'layout' => 'jobseeker',
+        'letterhead_variant' => 'standard',
+        'paper' => 'legal',
         'title' => 'Barangay Certification',
         'subtitle' => '(FIRST TIME JOBSEEKERS ASSISTANCE ACT-RA 11261)',
         'office' => null,
@@ -66,7 +69,7 @@ return [
         'allows_signature' => true,
         'print_purpose' => false,
         'paragraphs' => [
-            'This is to certify that {name}, {years_old}, with residence and postal address at **{address}**, is a qualified availee of RA 11261 or the **First Time Jobseekers Act of 2019**.',
+            'This is to certify that {name}, {years_old}, with residence and postal address at **{address}**, is a qualified availee of RA 11261 or the **__First Time Jobseekers Act of 2019__**.',
             'I further certify that the holder was informed of {possessive} rights, including the duties and responsibilities accorded by RA 11261 through the Oath of Undertaking {subject_pronoun} signed and executed in the presence of our Barangay Official.',
             'Signed on the **{issued_ordinal} day of {issued_month} {issued_year}**, in the Barangay Hall of {barangay_short},City of {city_name}.',
             'This certification is valid only for one (1) year from the issuance.',
@@ -114,30 +117,39 @@ return [
 
     7 => [
         'kind' => 'low_income',
+        'layout' => 'low_income',
+        'letterhead_variant' => 'standard',
+        'paper' => 'a4',
+        'issuer_upper' => true,
+        'officer_label' => 'Officer Of The Day',
         'title' => 'Low Income Certification',
         'office' => 'OFFICE OF THE SANGGUNIANG BARANGAY',
         'salutation' => 'To Whom It May Concern:',
         'signature' => 'income',
         'stamp' => true,
         'bold_issuer' => true,
-        'authority_line' => 'By the Authority of the Punong Barangay:',
+        'authority_line' => 'By The Authority Of The Punong Barangay;',
         'allows_signature' => true,
         'print_purpose' => true,
         'paragraphs' => [
-            'This is to CERTIFY that {courtesy}{name}, legal age, {civil_status}, residing at {address}, is a bona fide resident of this barangay since {resident_since} to present;',
+            'This is to **CERTIFY** that **{courtesy}{name}**, legal age, {civil_status}, residing at **{address}**, are a bona fide resident of this barangay since {resident_since} to present;',
             'It is certified further that the above mentioned name belongs to the low income group/ below minimum wage.',
-            'This BARANGAY CERTIFICATION is being issued upon the request of {requester}{purpose_clause}.',
-            'Issued this {issued_on} at {barangay_short} Barangay, {city}.',
+            'This **BARANGAY CERTIFICATION** is being issued upon the request of **{courtesy}{requester}** for **{purpose}**.',
+            'Issued this **{issued_on}** at {barangay_short} Barangay, {city}.',
         ],
     ],
 
     'oath' => [
         'kind' => 'oath',
+        'layout' => 'oath',
+        'letterhead_variant' => 'standard',
+        'paper' => 'legal',
+        'body_bold' => true,
         'title' => 'Oath of Undertaking',
         'salutation' => null,
         'signature' => 'oath',
         'stamp' => false,
-        'title_bold' => false,
+        'title_bold' => true,
         'dense' => true,
         'footer_notes' => [
             'THIS FORM NEED NOT BE NOTARIZED',
@@ -183,6 +195,9 @@ return [
 
     9 => [
         'kind' => 'good_moral',
+        'layout' => 'good_moral',
+        'letterhead_variant' => 'punong',
+        'paper' => 'letter',
         'title' => 'Good Moral Certificate',
         'office' => 'OFFICE OF THE PUNONG BARANGAY',
         'salutation' => 'TO WHOM IT MAY CONCERN:',
