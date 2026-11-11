@@ -35,22 +35,21 @@
                     <PersonnelSearch
                         v-model="createForm.personnel_id"
                         :options="personnelOptions"
-                        hint="Leave this blank to create a Guest account. Staff roles require a personnel record."
+                        hint="Optional. A staff role still requires a linked personnel record. Guest cannot be linked to personnel."
                         :error="createErrors.personnel_id"
                     />
                     <div>
                         <label for="role_id" class="rbim-label">
-                            Role<span class="rbim-required" aria-hidden="true">*</span>
+                            Role
                         </label>
                         <select
                             id="role_id"
                             v-model="createForm.role_id"
-                            required
                             class="rbim-input"
                             :class="{ 'rbim-input-error': createErrors.role_id }"
                             @change="createErrors.role_id = ''"
                         >
-                            <option value="">Select role</option>
+                            <option value="">No role yet</option>
                             <option
                                 v-for="role in createRoleOptions"
                                 :key="role.role_id"
@@ -60,6 +59,9 @@
                             </option>
                         </select>
                         <p v-if="createErrors.role_id" class="rbim-error">{{ createErrors.role_id }}</p>
+                        <p class="mt-1 text-xs text-slate-500">
+                            Optional. Assigning a role asks for your Admin or Super Admin password.
+                        </p>
                     </div>
                     <div class="sm:col-span-2">
                         <div class="flex justify-end">
@@ -69,7 +71,7 @@
                         </div>
                         <p class="mt-2 text-xs text-slate-500">
                             New accounts receive the default password and must change it on first login.
-                            Additional roles are assigned in the User Role tab.
+                            A role can be left blank and assigned later in the User Role tab.
                         </p>
                     </div>
                 </form>
@@ -162,6 +164,17 @@
             @confirm="confirm.onConfirm?.()"
             @cancel="handleConfirmCancel"
         />
+        <PasswordConfirmDialog
+            :open="passwordPrompt.open"
+            :title="passwordPrompt.title"
+            :message="passwordPrompt.message"
+            :confirm-label="passwordPrompt.confirmLabel"
+            :variant="passwordPrompt.variant"
+            :error="passwordPrompt.error"
+            :submitting="passwordPrompt.submitting"
+            @confirm="confirmAdministratorPassword"
+            @cancel="cancelAdministratorPassword"
+        />
     </AppLayout>
 </template>
 
@@ -169,8 +182,10 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import PasswordConfirmDialog from '@/components/PasswordConfirmDialog.vue';
 import PageTabs from '@/components/PageTabs.vue';
 import PersonnelSearch from '@/components/PersonnelSearch.vue';
+import { useAdministratorPasswordConfirm } from '@/composables/useAdministratorPasswordConfirm';
 import { ROLES } from '@/constants/roles';
 import { useAuth } from '@/composables/useAuth';
 import { useSectionTabs } from '@/composables/useSectionTabs';
@@ -182,6 +197,12 @@ import { matchesSearch } from '@/utils/format';
 
 const { hasPermission } = useAuth();
 const { userTabs } = useSectionTabs();
+const {
+    passwordPrompt,
+    askAdministratorPassword,
+    confirmAdministratorPassword,
+    cancelAdministratorPassword,
+} = useAdministratorPasswordConfirm();
 
 const users = ref([]);
 const userStatuses = ref([]);
@@ -280,8 +301,13 @@ function askConfirm({ title, message, confirmLabel = 'Continue', variant = 'prim
 }
 
 watch(() => createForm.personnel_id, () => {
-    const first = createRoleOptions.value[0];
-    createForm.role_id = first?.role_id ?? '';
+    const stillValid = createRoleOptions.value.some(
+        (role) => Number(role.role_id) === Number(createForm.role_id),
+    );
+
+    if (!stillValid) {
+        createForm.role_id = '';
+    }
 });
 
 async function loadUsers() {
@@ -306,9 +332,6 @@ async function loadOptions() {
         ]);
 
         createOptions.roles = options.roles ?? [];
-        if (!createForm.personnel_id && createRoleOptions.value[0]) {
-            createForm.role_id = createRoleOptions.value[0].role_id;
-        }
         userStatuses.value = statuses.map((item) => ({ id: item.id, label: item.label }));
         personnelOptions.value = personnel.length
             ? personnel
@@ -342,32 +365,59 @@ async function handleCreateUser() {
         createErrors.username = 'Username must not exceed 45 characters.';
     }
 
-    if (!createForm.role_id) {
-        createErrors.role_id = 'Please select a role.';
-    }
-
     // Stop if validation fails
     if (
         createErrors.username ||
-        createErrors.personnel_id ||
-        createErrors.role_id
+        createErrors.personnel_id
     ) {
         return;
     }
 
-    creatingUser.value = true;
-
     const hasPersonnel = Boolean(createForm.personnel_id);
+    const roleId = createForm.role_id ? Number(createForm.role_id) : null;
     const payload = {
         username,
-        role_id: Number(createForm.role_id),
     };
+
+    if (roleId) {
+        payload.role_id = roleId;
+    }
 
     if (hasPersonnel) {
         payload.personnel_id = Number(createForm.personnel_id);
     }
 
+    creatingUser.value = true;
+
     try {
+        if (roleId) {
+            const roleName = createRoleOptions.value.find((role) => Number(role.role_id) === roleId)?.role_name ?? 'the selected role';
+            const created = await askAdministratorPassword({
+                title: 'Assign role',
+                message: `Create "${username}" and assign the ${roleName} role. Enter your Admin or Super Admin password to continue.`,
+                confirmLabel: 'Create account',
+                run: (password) => userService.createUser({
+                    ...payload,
+                    admin_password: password,
+                }),
+            });
+
+            if (!created) {
+                return;
+            }
+
+            users.value = [...users.value, created].sort(
+                (a, b) => a.username.localeCompare(b.username)
+            );
+            createForm.username = '';
+            createForm.personnel_id = null;
+            createForm.role_id = '';
+            await loadOptions();
+            successMessage.value = `Account "${created.username}" created.`;
+
+            return;
+        }
+
         const created = await userService.createUser(payload);
 
         users.value = [...users.value, created].sort(

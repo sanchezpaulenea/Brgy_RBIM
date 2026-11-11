@@ -2,6 +2,7 @@
 
 namespace App\Models\ResidentManagement\Education;
 
+use App\Models\Geographic\Barangay;
 use App\Models\ResidentManagement\Demographic\Resident;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,8 +22,7 @@ class Education extends Model
         'highest_lvl_of_educ_id',
         'current_enrollement_status_id',
         'school_lvl_id',
-        'place_of_school_brgy',
-        'place_of_school_city_municipality',
+        'place_of_school_brgy_id',
     ];
 
     public function getRouteKeyName(): string
@@ -64,5 +64,13 @@ class Education extends Model
     public function schoolLvl(): BelongsTo
     {
         return $this->belongsTo(SchoolLvl::class, 'school_lvl_id', 'school_lvl_id');
+    }
+
+    /**
+     * @return BelongsTo<Barangay, $this>
+     */
+    public function schoolBarangay(): BelongsTo
+    {
+        return $this->belongsTo(Barangay::class, 'place_of_school_brgy_id', 'barangay_id');
     }
 }

@@ -54,7 +54,7 @@ class BarangayPersonnelService
                     'personnel_last_name' => $data['personnel_last_name'],
                     'personnel_first_name' => $data['personnel_first_name'],
                     'personnel_middle_name' => $data['personnel_middle_name'] ?? null,
-                    'personnel_suffix' => $data['personnel_suffix'] ?? null,
+                    'personnel_suffix_id' => $data['personnel_suffix_id'],
                     'personnel_date_of_birth' => $data['personnel_date_of_birth'],
                     'sex_id' => $data['sex_id'],
                     'personnel_status_id' => $data['personnel_status_id'] ?? self::ACTIVE_STATUS_ID,
@@ -117,7 +117,7 @@ class BarangayPersonnelService
      */
     public function formatRecord(BarangayPersonnel $personnel): array
     {
-        $personnel->loadMissing(['position', 'status', 'user', 'sex']);
+        $personnel->loadMissing(['position', 'status', 'user', 'sex', 'nameSuffix']);
 
         $fullName = $this->fullName($personnel);
 
@@ -128,7 +128,8 @@ class BarangayPersonnelService
             'personnel_last_name' => $personnel->personnel_last_name,
             'personnel_first_name' => $personnel->personnel_first_name,
             'personnel_middle_name' => $personnel->personnel_middle_name,
-            'personnel_suffix' => $personnel->personnel_suffix,
+            'personnel_suffix_id' => $personnel->personnel_suffix_id,
+            'personnel_suffix' => $personnel->printedSuffix(),
             'personnel_status_id' => $personnel->personnel_status_id,
             'personnel_status' => $personnel->status?->personnel_status,
             'personnel_date_of_birth' => $personnel->personnel_date_of_birth?->format('Y-m-d'),
@@ -154,7 +155,7 @@ class BarangayPersonnelService
             $data['personnel_last_name'],
             $data['personnel_first_name'],
             $data['personnel_middle_name'] ?? null,
-            $data['personnel_suffix'] ?? null,
+            (int) $data['personnel_suffix_id'],
             (string) $data['personnel_date_of_birth'],
             $excludePersonnelId,
         );
@@ -259,7 +260,7 @@ class BarangayPersonnelService
         $givenNames = collect([
             $personnel->personnel_first_name,
             $personnel->personnel_middle_name,
-            $personnel->personnel_suffix,
+            $personnel->printedSuffix(),
         ])->filter()->implode(' ');
 
         if ($givenNames === '') {

@@ -5,6 +5,7 @@ namespace App\Services\ResidentManagement\Skill;
 use App\Models\Logs\Action;
 use App\Models\ResidentManagement\Demographic\Resident;
 use App\Models\ResidentManagement\Skill\SkillsDevelopment;
+use App\Models\ResidentManagement\Skill\SkillsDevelopmentTraining;
 use App\Models\ResidentManagement\Skill\SkillType;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
@@ -32,6 +33,7 @@ class SkillService
     {
         $this->assertEligible($resident);
 
+        $data = $this->resolveTraining($data, true);
         $data = $this->resolveSkillType($data);
         $data['resident_id'] = $resident->resident_id;
 
@@ -50,7 +52,7 @@ class SkillService
                 recordId: $skillsDevelopment->skills_development_id,
                 description: 'Create skills development',
                 oldValue: null,
-                newValue: (string) $skillsDevelopment->skills_development_training,
+                newValue: (string) ($skillsDevelopment->training?->skills_development_training ?? ''),
                 target: 'record',
                 entity: 'skills_development',
             );
@@ -68,6 +70,7 @@ class SkillService
         $skillsDevelopment->loadMissing('resident');
         $this->assertEligible($skillsDevelopment->resident);
 
+        $data = $this->resolveTraining($data, false);
         $data = $this->resolveSkillType($data);
         $previous = $this->auditSnapshot($skillsDevelopment);
 
@@ -85,6 +88,37 @@ class SkillService
 
             return $this->formatRecord($updated);
         });
+    }
+
+    private function resolveTraining(array $data, bool $required): array
+    {
+        if ((int) ($data['skills_development_training_id'] ?? 0) > 0) {
+            unset($data['skills_development_training']);
+
+            return $data;
+        }
+
+        $label = is_string($data['skills_development_training'] ?? null)
+            ? trim($data['skills_development_training'])
+            : '';
+
+        if ($label === '') {
+            unset($data['skills_development_training']);
+
+            if ($required) {
+                throw ValidationException::withMessages([
+                    'skills_development_training' => ['Skills development training is required.'],
+                ]);
+            }
+
+            return $data;
+        }
+
+        $data['skills_development_training_id'] = SkillsDevelopmentTraining::findOrCreateByLabel($label)
+            ->skills_development_training_id;
+        unset($data['skills_development_training']);
+
+        return $data;
     }
 
     /**
@@ -115,12 +149,13 @@ class SkillService
 
     public function formatRecord(SkillsDevelopment $skillsDevelopment): array
     {
-        $skillsDevelopment->loadMissing('skillType');
+        $skillsDevelopment->loadMissing(['skillType', 'training']);
 
         return [
             'skills_development_id' => $skillsDevelopment->skills_development_id,
             'resident_id' => $skillsDevelopment->resident_id,
-            'skills_development_training' => $skillsDevelopment->skills_development_training,
+            'skills_development_training_id' => $skillsDevelopment->skills_development_training_id,
+            'skills_development_training' => $skillsDevelopment->training?->skills_development_training,
             'skill_type_id' => $skillsDevelopment->skill_type_id,
             'skill_type' => $skillsDevelopment->skillType?->skill_type,
         ];
@@ -140,10 +175,10 @@ class SkillService
      */
     private function auditSnapshot(SkillsDevelopment $skillsDevelopment): array
     {
-        $skillsDevelopment->loadMissing('skillType');
+        $skillsDevelopment->loadMissing(['skillType', 'training']);
 
         return [
-            'training' => (string) $skillsDevelopment->skills_development_training,
+            'training' => (string) ($skillsDevelopment->training?->skills_development_training ?? ''),
             'skill type' => (string) ($skillsDevelopment->skillType?->skill_type ?? $skillsDevelopment->skill_type_id),
         ];
     }

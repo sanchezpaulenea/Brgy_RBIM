@@ -4,7 +4,6 @@ namespace App\Http\Requests\HouseholdManagement;
 
 use App\Http\Requests\HouseholdManagement\Concerns\NormalizesHouseholdAddress;
 use App\Rules\ValidPersonnelName;
-use App\Rules\ValidPlaceName;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -28,6 +27,12 @@ class StoreHouseholdRequest extends FormRequest
                 'house_number' => $this->normalizeHouseNumber($this->input('house_number')),
             ]);
         }
+
+        if ($this->exists('clan_id')) {
+            $this->merge([
+                'clan_id' => $this->blankLookupId($this->input('clan_id')),
+            ]);
+        }
         $this->mergeBasementLevelFromAnswer();
 
         $head = $this->input('head');
@@ -43,9 +48,6 @@ class StoreHouseholdRequest extends FormRequest
                 'first_name' => $this->titleCaseName($head['first_name'] ?? null),
                 'middle_name' => $this->titleCaseName($head['middle_name'] ?? null),
                 'suffix' => $this->titleCaseName($head['suffix'] ?? null),
-                'birth_city_municipality' => $this->titleCasePlace($head['birth_city_municipality'] ?? null),
-                'birth_province' => $this->titleCasePlace($head['birth_province'] ?? null),
-                'birth_country' => $this->titleCasePlace($head['birth_country'] ?? null),
                 'nationality_id' => $this->blankLookupId($head['nationality_id'] ?? null),
                 'religion_id' => $this->blankLookupId($head['religion_id'] ?? null),
                 'ethnicity_id' => $this->blankLookupId($head['ethnicity_id'] ?? null),
@@ -59,7 +61,7 @@ class StoreHouseholdRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'clan_id' => ['required', 'integer', Rule::exists('clan', 'clan_id')],
+            'clan_id' => ['nullable', 'integer', Rule::exists('clan', 'clan_id')],
             'street_id' => ['required', 'integer', Rule::exists('street', 'street_id')],
             'house_number' => ['nullable', 'integer', 'min:0', 'max:2147483647'],
             'number_of_house_story' => ['required', 'integer', 'min:1', 'max:50'],
@@ -84,14 +86,15 @@ class StoreHouseholdRequest extends FormRequest
             'head.suffix' => ['nullable', 'string', 'max:45', new ValidPersonnelName],
             'head.sex_id' => ['required', 'integer', Rule::exists('sex', 'sex_id')],
             'head.date_of_birth' => ['required', 'date', 'before_or_equal:today'],
-            'head.birth_city_municipality' => ['nullable', 'string', 'max:45', new ValidPlaceName('City / municipality of birth')],
-            'head.birth_province' => ['nullable', 'string', 'max:45', new ValidPlaceName('Province of birth')],
-            'head.birth_country' => ['nullable', 'string', 'max:45', new ValidPlaceName('Country of birth')],
+            'head.birth_barangay_id' => ['nullable', 'integer', Rule::exists('barangay', 'barangay_id')],
+            'head.birth_city_municipality_id' => ['nullable', 'integer', Rule::exists('municipality_city', 'municipality_city_id')],
+            'head.birth_province_id' => ['nullable', 'integer', Rule::exists('province', 'province_id')],
+            'head.birth_country_id' => ['nullable', 'integer', Rule::exists('country', 'country_id')],
             'head.nationality_id' => ['nullable', 'integer', Rule::exists('nationality', 'nationality_id')],
             'head.religion_id' => ['nullable', 'integer', Rule::exists('religion', 'religion_id')],
             'head.ethnicity_id' => ['nullable', 'integer', Rule::exists('ethnicity', 'ethnicity_id')],
             'head.marital_status_id' => ['required', 'integer', Rule::exists('marital_status', 'marital_status_id')],
-            'head.clan_id' => ['sometimes', 'integer', Rule::exists('clan', 'clan_id')],
+            'head.clan_id' => ['nullable', 'integer', Rule::exists('clan', 'clan_id')],
             'head.resident_status_id' => [
                 'sometimes',
                 'integer',
@@ -111,7 +114,6 @@ class StoreHouseholdRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'clan_id.required' => 'Clan is required.',
             'clan_id.exists' => 'The selected clan does not exist.',
             'street_id.required' => 'Street is required.',
             'street_id.exists' => 'The selected street does not exist.',

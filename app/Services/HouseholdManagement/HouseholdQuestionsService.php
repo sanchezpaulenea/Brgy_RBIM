@@ -2,6 +2,7 @@
 
 namespace App\Services\HouseholdManagement;
 
+use App\Models\Geographic\Barangay;
 use App\Models\HouseholdManagement\CommonDiseaseCauseDeathInBrgy;
 use App\Models\HouseholdManagement\Household;
 use App\Models\HouseholdManagement\HouseholdQuestions;
@@ -132,7 +133,7 @@ class HouseholdQuestionsService
             'constructionMaterialOuterWall',
             'commonDiseases',
             'primaryNeeds',
-            'intendToStay',
+            'intendToStay.barangay.municipalityCity.province',
             'femaleDeaths',
             'childDeaths.sex',
         ]);
@@ -189,9 +190,10 @@ class HouseholdQuestionsService
                 ->filter()
                 ->values()
                 ->all(),
-            'intend_to_stay_brgy' => $questions->intendToStay?->intend_to_stay_brgy,
-            'intend_to_stay_municipality' => $questions->intendToStay?->intend_to_stay_municipality,
-            'intend_to_stay_province' => $questions->intendToStay?->intend_to_stay_province,
+            'intend_to_stay_brgy_id' => $questions->intendToStay?->intend_to_stay_brgy_id,
+            'intend_to_stay_brgy' => $questions->intendToStay?->barangay?->barangay_name,
+            'intend_to_stay_municipality' => $questions->intendToStay?->barangay?->municipalityCity?->municipality_city_name,
+            'intend_to_stay_province' => $questions->intendToStay?->barangay?->municipalityCity?->province?->province_name,
         ];
     }
 
@@ -257,9 +259,7 @@ class HouseholdQuestionsService
             $questions->intendToStay()->updateOrCreate(
                 ['household_question_id' => $questions->household_questions_id],
                 [
-                    'intend_to_stay_brgy' => $data['intend_to_stay_brgy'] ?? $questions->intendToStay?->intend_to_stay_brgy,
-                    'intend_to_stay_municipality' => $data['intend_to_stay_municipality'] ?? $questions->intendToStay?->intend_to_stay_municipality,
-                    'intend_to_stay_province' => $data['intend_to_stay_province'] ?? $questions->intendToStay?->intend_to_stay_province,
+                    'intend_to_stay_brgy_id' => $this->intendToStayBarangayId($questions, $data),
                 ],
             );
         }
@@ -350,7 +350,35 @@ class HouseholdQuestionsService
     {
         return array_key_exists('intend_to_stay_brgy', $data)
             || array_key_exists('intend_to_stay_municipality', $data)
-            || array_key_exists('intend_to_stay_province', $data);
+            || array_key_exists('intend_to_stay_province', $data)
+            || array_key_exists('intend_to_stay_brgy_id', $data);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function intendToStayBarangayId(HouseholdQuestions $questions, array $data): int
+    {
+        $submittedId = $data['intend_to_stay_brgy_id'] ?? null;
+
+        if (is_numeric($submittedId) && (int) $submittedId > 0) {
+            return (int) $submittedId;
+        }
+
+        $questions->loadMissing('intendToStay.barangay.municipalityCity.province');
+        $existing = $questions->intendToStay?->barangay;
+        $barangay = trim((string) ($data['intend_to_stay_brgy'] ?? $existing?->barangay_name ?? ''));
+        $municipality = trim((string) ($data['intend_to_stay_municipality'] ?? $existing?->municipalityCity?->municipality_city_name ?? ''));
+        $province = trim((string) ($data['intend_to_stay_province'] ?? $existing?->municipalityCity?->province?->province_name ?? ''));
+        $barangayId = Barangay::idForLocation($barangay, $municipality, $province);
+
+        if ($barangayId === null) {
+            throw ValidationException::withMessages([
+                'intend_to_stay_brgy' => ['Select a barangay that is already in the registry, with its city or municipality and province.'],
+            ]);
+        }
+
+        return $barangayId;
     }
 
     /**

@@ -51,34 +51,20 @@
                     <p v-if="errors.school_lvl_id" class="rbim-error">{{ errors.school_lvl_id }}</p>
                     <p v-else class="rbim-hint">Automatically selected from Highest Level of Education.</p>
                 </div>
-                <div>
-                    <label class="rbim-label" :for="`${idPrefix}-place_of_school_brgy`">
-                        School Barangay<span class="rbim-required" aria-hidden="true">*</span>
-                    </label>
-                    <input
-                        :id="`${idPrefix}-place_of_school_brgy`"
-                        v-model="form.place_of_school_brgy"
-                        type="text"
-                        maxlength="45"
-                        class="rbim-input"
-                        :class="{ 'rbim-input-error': errors.place_of_school_brgy }"
-                        @change="errors.place_of_school_brgy = ''"
-                    >
-                    <p v-if="errors.place_of_school_brgy" class="rbim-error">{{ errors.place_of_school_brgy }}</p>
-                </div>
-                <div>
-                    <label class="rbim-label" :for="`${idPrefix}-place_of_school_city_municipality`">
-                        School City/Municipality<span class="rbim-required" aria-hidden="true">*</span>
-                    </label>
-                    <input
-                        :id="`${idPrefix}-place_of_school_city_municipality`"
-                        v-model="form.place_of_school_city_municipality"
-                        type="text"
-                        maxlength="45"
-                        class="rbim-input"
-                        :class="{ 'rbim-input-error': errors.place_of_school_city_municipality }"
-                    >
-                    <p v-if="errors.place_of_school_city_municipality" class="rbim-error">{{ errors.place_of_school_city_municipality }}</p>
+                <div class="sm:col-span-2">
+                    <LookupCombobox
+                        :model-value="form.place_of_school_brgy_id"
+                        :options="schoolBarangayOptions"
+                        :search="searchSchoolBarangays"
+                        label="School Barangay"
+                        placeholder="Search barangay"
+                        :input-id="`${idPrefix}-place_of_school_brgy_id`"
+                        :error="errors.place_of_school_brgy_id"
+                        hint="Search the barangay where the school is located. The list includes the city or municipality so similarly named barangays stay distinct."
+                        required
+                        @update:model-value="selectSchoolBarangay"
+                        @update:query="rememberSchoolBarangayLabel"
+                    />
                 </div>
             </template>
             <p
@@ -748,6 +734,37 @@ const educationEnrolled = computed(() => (
 const enrolledSchoolLevels = computed(() => (
     (props.lookups.schoolLvl ?? []).filter((option) => !isNotApplicableSchoolLvl(option))
 ));
+
+const schoolBarangayOptions = computed(() => {
+    const id = Number(props.form.place_of_school_brgy_id);
+    const label = String(props.form.place_of_school_label ?? '').trim();
+
+    if (!Number.isInteger(id) || id <= 0 || label === '') {
+        return [];
+    }
+
+    return [{ id, label }];
+});
+
+function selectSchoolBarangay(id) {
+    props.form.place_of_school_brgy_id = id || '';
+
+    if (!id) {
+        props.form.place_of_school_label = '';
+    }
+
+    delete props.errors.place_of_school_brgy_id;
+}
+
+function rememberSchoolBarangayLabel(label) {
+    if (props.form.place_of_school_brgy_id) {
+        props.form.place_of_school_label = label;
+    }
+}
+
+function searchSchoolBarangays(term) {
+    return lookupService.searchBarangays(term);
+}
 
 function applyEducationSchoolLevel() {
     if (props.section !== 'education') {

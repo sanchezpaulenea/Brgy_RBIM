@@ -61,8 +61,8 @@ export function emptySectionForm(key) {
             highest_lvl_of_educ_id: '',
             current_enrollement_status_id: '',
             school_lvl_id: '',
-            place_of_school_brgy: '',
-            place_of_school_city_municipality: '',
+            place_of_school_brgy_id: '',
+            place_of_school_label: '',
         },
         economic: {
             monthly_income: '',
@@ -279,8 +279,7 @@ export function validateSectionForm(key, form, errors, { lookups = {}, resident 
 
             if (enrolled) {
                 requiredSelect(form, errors, 'school_lvl_id', 'School level is required.');
-                requiredPlace(form, errors, 'place_of_school_brgy', 'School barangay');
-                requiredPlace(form, errors, 'place_of_school_city_municipality', 'School city / municipality');
+                requiredSelect(form, errors, 'place_of_school_brgy_id', 'School barangay is required.');
 
                 if (isNotApplicableSchoolLvl(lookupById(lookups.schoolLvl, form.school_lvl_id))) {
                     errors.school_lvl_id = 'School level is required.';
@@ -542,14 +541,16 @@ export function prepareSectionPayload(key, form, { lookups = {}, resident = {} }
         if (!relevance.enrollment || !isEnrollmentStatusEnrolled(
             lookupById(lookups.currentEnrollmentStatus, form.current_enrollement_status_id),
         )) {
-            payload.place_of_school_brgy = null;
-            payload.place_of_school_city_municipality = null;
+            payload.place_of_school_brgy_id = null;
+            delete payload.place_of_school_label;
             payload.school_lvl_id = notApplicableSchoolLvlId(lookups.schoolLvl);
         }
 
         if (!relevance.enrollment) {
             payload.current_enrollement_status_id = ENROLLMENT_NOT_ENROLLED_ID;
         }
+
+        delete payload.place_of_school_label;
     }
 
     if (key === 'economic') {

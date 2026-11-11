@@ -265,6 +265,20 @@
                                         {{ personTextError(representativeRelationship, 'Relationship', 45) }}
                                     </p>
                                 </div>
+                                <div class="md:col-span-2">
+                                    <label for="representative-pronouns" class="rbim-label">
+                                        Representative Pronouns<span class="rbim-required" aria-hidden="true">*</span>
+                                    </label>
+                                    <select id="representative-pronouns" v-model="representativePronouns" class="rbim-input py-2">
+                                        <option value="">Select pronouns</option>
+                                        <option value="he/him/his">He / Him / His</option>
+                                        <option value="she/her/hers">She / Her / Hers</option>
+                                        <option value="they/them/their">They / Them / Their</option>
+                                    </select>
+                                    <p v-if="representativeRequested && !representativePronouns" class="rbim-error">
+                                        Representative pronouns are required.
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
@@ -517,6 +531,7 @@ const editingCertificateId = ref(null);
 const representativeRequested = ref(false);
 const representativeName = ref('');
 const representativeRelationship = ref('');
+const representativePronouns = ref('');
 const dateOfDeath = ref('');
 const placeOfDeath = ref('');
 const causeOfDeath = ref('');
@@ -863,7 +878,8 @@ function representativeError() {
     }
 
     return personTextError(representativeName.value, 'Representative name', 100)
-        || personTextError(representativeRelationship.value, 'Relationship', 45);
+        || personTextError(representativeRelationship.value, 'Relationship', 45)
+        || (representativePronouns.value ? '' : 'Representative pronouns are required.');
 }
 
 function overrideError(value, label) {
@@ -910,6 +926,7 @@ function clearIssuanceFields() {
     representativeRequested.value = selectedType.value?.kind === 'death';
     representativeName.value = '';
     representativeRelationship.value = '';
+    representativePronouns.value = '';
     dateOfDeath.value = '';
     placeOfDeath.value = '';
     causeOfDeath.value = '';
@@ -1239,6 +1256,7 @@ function certificatePayload() {
         representative_requested: representativeRequested.value,
         representative_name: representativeRequested.value ? representativeName.value.trim() : null,
         representative_relationship: representativeRequested.value ? representativeRelationship.value.trim() : null,
+        representative_pronouns: representativeRequested.value ? representativePronouns.value : null,
         date_of_death: selectedType.value?.kind === 'death' ? dateOfDeath.value : null,
         place_of_death: selectedType.value?.kind === 'death' ? placeOfDeath.value.trim() : null,
         cause_of_death: selectedType.value?.kind === 'death' ? causeOfDeath.value.trim() : null,
@@ -1289,6 +1307,7 @@ watch(
         representativeRequested.value,
         representativeName.value,
         representativeRelationship.value,
+        representativePronouns.value,
         dateOfDeath.value,
         placeOfDeath.value,
         causeOfDeath.value,

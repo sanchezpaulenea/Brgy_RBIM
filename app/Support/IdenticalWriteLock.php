@@ -67,7 +67,7 @@ class IdenticalWriteLock
             $data['personnel_last_name'] ?? '',
             $data['personnel_first_name'] ?? '',
             $data['personnel_middle_name'] ?? '',
-            $data['personnel_suffix'] ?? '',
+            $data['personnel_suffix_id'] ?? '',
             substr((string) ($data['personnel_date_of_birth'] ?? ''), 0, 10),
         ]);
     }

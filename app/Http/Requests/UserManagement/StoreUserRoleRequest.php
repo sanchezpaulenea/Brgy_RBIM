@@ -3,6 +3,7 @@
 namespace App\Http\Requests\UserManagement;
 
 use App\Models\UserManagement\User;
+use App\Rules\CurrentAdministratorPassword;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -30,6 +31,7 @@ class StoreUserRoleRequest extends FormRequest
                     fn ($query) => $query->where('user_id', $user->user_id)
                 ),
             ],
+            'admin_password' => ['bail', 'required', 'string', 'max:255', new CurrentAdministratorPassword],
         ];
     }
 
@@ -42,6 +44,7 @@ class StoreUserRoleRequest extends FormRequest
             'role_id.required' => 'Role is required.',
             'role_id.exists' => 'The selected role does not exist.',
             'role_id.unique' => 'This role is already assigned to the user.',
+            'admin_password.required' => 'Enter your Admin or Super Admin password to assign a role.',
         ];
     }
 }

@@ -87,6 +87,73 @@ export function fetchLookup(slug) {
     return getOnce(`/lookups/${slug}`, (data) => selectable(data.items));
 }
 
+export async function searchBarangays(term) {
+    const query = String(term ?? '').trim();
+
+    if (query.length < 2) {
+        return [];
+    }
+
+    const { data } = await http.get('/lookups/barangays', { params: { q: query } });
+
+    return selectable(data.items);
+}
+
+export async function fetchProvinces() {
+    const { data } = await http.get('/lookups/provinces');
+
+    return selectable(data.items);
+}
+
+export async function createProvince(provinceName) {
+    const { data } = await http.post('/lookups/provinces', {
+        province_name: provinceName,
+    });
+
+    return data.item;
+}
+
+export async function fetchMunicipalities(provinceId) {
+    const { data } = await http.get('/lookups/municipalities', {
+        params: { province_id: provinceId },
+    });
+
+    return selectable(data.items);
+}
+
+export async function createMunicipality(provinceId, municipalityName) {
+    const { data } = await http.post('/lookups/municipalities', {
+        province_id: provinceId,
+        municipality_city_name: municipalityName,
+    });
+
+    return data.item;
+}
+
+export async function fetchBarangays(municipalityId) {
+    const { data } = await http.get('/lookups/barangays', {
+        params: { municipality_city_id: municipalityId },
+    });
+
+    return selectable(data.items).map(barangayOption);
+}
+
+export async function createBarangay(municipalityId, barangayName) {
+    const { data } = await http.post('/lookups/barangays', {
+        municipality_city_id: municipalityId,
+        barangay_name: barangayName,
+    });
+
+    return barangayOption(data.item);
+}
+
+function barangayOption(item) {
+    return {
+        ...item,
+        label: item?.barangay_name || item?.label,
+    };
+}
+
 export function fetchStreets() {
     return getOnce('/streets', (data) => data.items);
 }

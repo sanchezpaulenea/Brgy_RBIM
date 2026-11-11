@@ -125,6 +125,12 @@ Route::prefix('v1')->group(function () {
         Route::post('religions', [ReligionController::class, 'store'])->name('religions.store');
 
         Route::get('location-profile', [SystemSettingController::class, 'locationProfile'])->name('location-profile.show');
+        Route::get('lookups/provinces', [LookupController::class, 'provinces'])->name('lookups.provinces');
+        Route::post('lookups/provinces', [LookupController::class, 'storeProvince'])->name('lookups.provinces.store');
+        Route::get('lookups/municipalities', [LookupController::class, 'municipalities'])->name('lookups.municipalities');
+        Route::post('lookups/municipalities', [LookupController::class, 'storeMunicipality'])->name('lookups.municipalities.store');
+        Route::get('lookups/barangays', [LookupController::class, 'searchBarangays'])->name('lookups.barangays');
+        Route::post('lookups/barangays', [LookupController::class, 'storeBarangay'])->name('lookups.barangays.store');
         Route::get('lookups/{lookup}', [LookupController::class, 'index'])->name('lookups.index');
         Route::get('clans', [LookupController::class, 'index'])->defaults('lookup', 'clan')->name('clans.index');
         Route::get('household-statuses', [LookupController::class, 'index'])->defaults('lookup', 'household-status')->name('household-statuses.index');

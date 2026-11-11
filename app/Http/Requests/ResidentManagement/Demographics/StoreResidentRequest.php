@@ -4,7 +4,6 @@ namespace App\Http\Requests\ResidentManagement\Demographics;
 
 use App\Models\ResidentManagement\Demographic\RelationshipToHouseholdHead;
 use App\Rules\ValidPersonnelName;
-use App\Rules\ValidPlaceName;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -23,9 +22,6 @@ class StoreResidentRequest extends FormRequest
             'first_name' => $this->titleCaseName($this->input('first_name')),
             'middle_name' => $this->titleCaseName($this->input('middle_name')),
             'suffix' => $this->titleCaseName($this->input('suffix')),
-            'birth_city_municipality' => $this->titleCasePlace($this->input('birth_city_municipality')),
-            'birth_province' => $this->titleCasePlace($this->input('birth_province')),
-            'birth_country' => $this->titleCasePlace($this->input('birth_country')),
             'nationality_id' => $this->blankLookupId($this->input('nationality_id')),
             'religion_id' => $this->blankLookupId($this->input('religion_id')),
             'ethnicity_id' => $this->blankLookupId($this->input('ethnicity_id')),
@@ -50,14 +46,15 @@ class StoreResidentRequest extends FormRequest
             ],
             'sex_id' => ['required', 'integer', Rule::exists('sex', 'sex_id')],
             'date_of_birth' => ['required', 'date', 'before_or_equal:today'],
-            'birth_city_municipality' => ['nullable', 'string', 'max:45', new ValidPlaceName('City / municipality of birth')],
-            'birth_province' => ['nullable', 'string', 'max:45', new ValidPlaceName('Province of birth')],
-            'birth_country' => ['nullable', 'string', 'max:45', new ValidPlaceName('Country of birth')],
+            'birth_barangay_id' => ['nullable', 'integer', Rule::exists('barangay', 'barangay_id')],
+            'birth_city_municipality_id' => ['nullable', 'integer', Rule::exists('municipality_city', 'municipality_city_id')],
+            'birth_province_id' => ['nullable', 'integer', Rule::exists('province', 'province_id')],
+            'birth_country_id' => ['nullable', 'integer', Rule::exists('country', 'country_id')],
             'nationality_id' => ['nullable', 'integer', Rule::exists('nationality', 'nationality_id')],
             'religion_id' => ['nullable', 'integer', Rule::exists('religion', 'religion_id')],
             'ethnicity_id' => ['nullable', 'integer', Rule::exists('ethnicity', 'ethnicity_id')],
             'marital_status_id' => ['required', 'integer', Rule::exists('marital_status', 'marital_status_id')],
-            'clan_id' => ['sometimes', 'integer', Rule::exists('clan', 'clan_id')],
+            'clan_id' => ['sometimes', 'nullable', 'integer', Rule::exists('clan', 'clan_id')],
             'resident_status_id' => [
                 'sometimes',
                 'integer',

@@ -88,7 +88,7 @@
             </div>
             <div>
                 <label class="rbim-label" for="clan_id">
-                    Clan<span class="rbim-required" aria-hidden="true">*</span>
+                    Clan
                 </label>
                 <select
                     id="clan_id"

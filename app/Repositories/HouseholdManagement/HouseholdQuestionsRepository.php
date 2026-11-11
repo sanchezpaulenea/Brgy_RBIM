@@ -24,7 +24,7 @@ class HouseholdQuestionsRepository implements HouseholdQuestionsRepositoryInterf
             'constructionMaterialOuterWall',
             'commonDiseases',
             'primaryNeeds',
-            'intendToStay',
+            'intendToStay.barangay.municipalityCity.province',
             'femaleDeaths',
             'childDeaths.sex',
         ];

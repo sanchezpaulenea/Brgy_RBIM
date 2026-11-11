@@ -12,7 +12,7 @@ class SkillRepository implements SkillRepositoryInterface
      */
     private function defaultRelations(): array
     {
-        return ['skillType'];
+        return ['skillType', 'training'];
     }
 
     public function findById(int $skillsDevelopmentId): ?SkillsDevelopment

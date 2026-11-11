@@ -95,7 +95,6 @@ import {
     houseNumberValidationError,
     optionalHouseNumber,
     personnelNameValidationError,
-    placeNameValidationError,
 } from '@/utils/validation';
 
 const HEAD_RELATIONSHIP_ID = 1;
@@ -200,8 +199,13 @@ function createMember(isHead) {
         religion_name: '',
         ethnicity_id: '',
         ethnicity_name: '',
+        birth_barangay_id: null,
+        birth_barangay: '',
+        birth_city_municipality_id: null,
         birth_city_municipality: '',
+        birth_province_id: null,
         birth_province: '',
+        birth_country_id: null,
         birth_country: DEFAULT_BIRTH_COUNTRY,
         highest_education_attained: '',
         enrollment_status: '',
@@ -313,10 +317,6 @@ function validateIdentification() {
         errors.street_id = 'Street is required.';
     }
 
-    if (!identification.clan_id) {
-        errors.clan_id = 'Clan is required.';
-    }
-
     const houseNumberError = houseNumberValidationError(identification.house_number);
 
     if (houseNumberError) {
@@ -403,18 +403,6 @@ function validateMembers() {
         if (!member.marital_status_id) {
             errors.marital_status_id = 'Marital status is required.';
         }
-
-        [
-            ['birth_city_municipality', 'City / municipality of birth'],
-            ['birth_province', 'Province of birth'],
-            ['birth_country', 'Country of birth'],
-        ].forEach(([field, label]) => {
-            const message = placeNameValidationError(member[field], label, false);
-
-            if (message) {
-                errors[field] = message;
-            }
-        });
 
         if (Object.keys(errors).length) {
             valid = false;
@@ -503,9 +491,10 @@ function residentPayload(member) {
         relationship_to_hh_id: toId(member.relationship_to_hh_id),
         sex_id: toId(member.sex_id),
         date_of_birth: member.date_of_birth,
-        birth_city_municipality: optionalText(member.birth_city_municipality),
-        birth_province: optionalText(member.birth_province),
-        birth_country: optionalText(member.birth_country),
+        birth_barangay_id: toId(member.birth_barangay_id),
+        birth_city_municipality_id: toId(member.birth_city_municipality_id),
+        birth_province_id: toId(member.birth_province_id),
+        birth_country_id: toId(member.birth_country_id),
         nationality_id: toOptionalLookupId(member.nationality_id),
         religion_id: toOptionalLookupId(member.religion_id),
         ethnicity_id: toOptionalLookupId(member.ethnicity_id),

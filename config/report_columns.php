@@ -139,17 +139,17 @@ return [
                 [
                     'key' => 'intend_to_stay_brgy',
                     'label' => 'Intend to Stay in the Barangay',
-                    'source' => 'intendToStay.intend_to_stay_brgy',
+                    'source' => 'intendToStay.barangay.barangay_name',
                 ],
                 [
                     'key' => 'intend_to_stay_municipality',
                     'label' => 'Intend to Stay in the Municipality',
-                    'source' => 'intendToStay.intend_to_stay_municipality',
+                    'source' => 'intendToStay.barangay.municipalityCity.municipality_city_name',
                 ],
                 [
                     'key' => 'intend_to_stay_province',
                     'label' => 'Intend to Stay in the Province',
-                    'source' => 'intendToStay.intend_to_stay_province',
+                    'source' => 'intendToStay.barangay.municipalityCity.province.province_name',
                 ],
                 [
                     'key' => 'female_deaths',
@@ -292,17 +292,17 @@ return [
                 [
                     'key' => 'birth_city_municipality',
                     'label' => 'Birth City/Municipality',
-                    'source' => 'birth_city_municipality',
+                    'source' => 'birthMunicipality.municipality_city_name',
                 ],
                 [
                     'key' => 'birth_province',
                     'label' => 'Birth Province',
-                    'source' => 'birth_province',
+                    'source' => 'birthProvince.province_name',
                 ],
                 [
                     'key' => 'birth_country',
                     'label' => 'Birth Country',
-                    'source' => 'birth_country',
+                    'source' => 'birthCountry.country_name',
                 ],
             ],
         ],
@@ -429,17 +429,17 @@ return [
                 [
                     'key' => 'birth_city_municipality',
                     'label' => 'Birth City/Municipality',
-                    'source' => 'birth_city_municipality',
+                    'source' => 'birthMunicipality.municipality_city_name',
                 ],
                 [
                     'key' => 'birth_province',
                     'label' => 'Birth Province',
-                    'source' => 'birth_province',
+                    'source' => 'birthProvince.province_name',
                 ],
                 [
                     'key' => 'birth_country',
                     'label' => 'Birth Country',
-                    'source' => 'birth_country',
+                    'source' => 'birthCountry.country_name',
                 ],
             ],
         ],
@@ -640,12 +640,7 @@ return [
                 [
                     'key' => 'place_of_school_brgy',
                     'label' => 'Place of School (Barangay)',
-                    'source' => 'place_of_school_brgy',
-                ],
-                [
-                    'key' => 'place_of_school_city_municipality',
-                    'label' => 'Place of School (City/Municipality)',
-                    'source' => 'place_of_school_city_municipality',
+                    'source' => 'schoolBarangay.barangay_name',
                 ],
             ],
         ],
@@ -878,7 +873,7 @@ return [
                 [
                     'key' => 'skills_development_training',
                     'label' => 'Skills Development Training',
-                    'source' => 'skills_development_training',
+                    'source' => 'training.skills_development_training',
                 ],
                 [
                     'key' => 'skill_type',

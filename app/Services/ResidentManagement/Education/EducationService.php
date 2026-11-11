@@ -82,8 +82,7 @@ class EducationService
             'highest_lvl_of_educ_id',
             'current_enrollement_status_id',
             'school_lvl_id',
-            'place_of_school_brgy',
-            'place_of_school_city_municipality',
+            'place_of_school_brgy_id',
         ]), $data));
         $data = $this->applyEnrollmentRules($data);
 
@@ -123,8 +122,9 @@ class EducationService
             'current_enrollment_status' => $education->currentEnrollmentStatus?->current_enrollement_status,
             'school_lvl_id' => $education->school_lvl_id,
             'school_lvl' => $education->schoolLvl?->school_lvl,
-            'place_of_school_brgy' => $education->place_of_school_brgy,
-            'place_of_school_city_municipality' => $education->place_of_school_city_municipality,
+            'place_of_school_brgy_id' => $education->place_of_school_brgy_id,
+            'place_of_school_brgy' => $education->schoolBarangay?->barangay_name,
+            'place_of_school_label' => $education->schoolBarangay?->locationLabel(),
             'field_relevance' => $relevance,
         ];
     }
@@ -154,8 +154,7 @@ class EducationService
 
         if (! $relevance['enrollment']) {
             $data['current_enrollement_status_id'] = CurrentEnrollmentStatus::NOT_ENROLLED;
-            $data['place_of_school_brgy'] = null;
-            $data['place_of_school_city_municipality'] = null;
+            $data['place_of_school_brgy_id'] = null;
             $data['school_lvl_id'] = $this->notApplicableSchoolLvlId();
         }
 
@@ -195,8 +194,7 @@ class EducationService
             return $data;
         }
 
-        $data['place_of_school_brgy'] = null;
-        $data['place_of_school_city_municipality'] = null;
+        $data['place_of_school_brgy_id'] = null;
 
         $notApplicableId = SchoolLvl::notApplicableId();
 
@@ -222,8 +220,7 @@ class EducationService
             'highest level of education' => (string) ($education->highestLvlOfEduc?->lvl_of_educ ?? $education->highest_lvl_of_educ_id),
             'enrollment status' => (string) ($education->currentEnrollmentStatus?->current_enrollement_status ?? $education->current_enrollement_status_id),
             'school level' => (string) ($education->schoolLvl?->school_lvl ?? $education->school_lvl_id),
-            'school barangay' => (string) ($education->place_of_school_brgy ?? ''),
-            'school city' => (string) ($education->place_of_school_city_municipality ?? ''),
+            'school barangay' => (string) ($education->schoolBarangay?->locationLabel() ?? ''),
         ];
     }
 
@@ -236,6 +233,7 @@ class EducationService
             'highestLvlOfEduc',
             'currentEnrollmentStatus',
             'schoolLvl',
+            'schoolBarangay.municipalityCity.province',
         ];
     }
 }

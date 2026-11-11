@@ -5,6 +5,8 @@ namespace App\Repositories;
 use App\Models\Certificate\Certificate;
 use App\Models\Certificate\CertificateSoloParent;
 use App\Models\Certificate\CertificateSoloParentChild;
+use App\Models\Certificate\DeathCertificate;
+use App\Models\Certificate\LowIncomeCertificate;
 use App\Models\Certificate\TypeOfCertificate;
 use App\Models\ResidentManagement\Demographic\Resident;
 use App\Repositories\Interfaces\CertificateRepositoryInterface;
@@ -30,10 +32,14 @@ class CertificateRepository implements CertificateRepositoryInterface
     public function create(array $attributes): Certificate
     {
         $soloParent = $attributes['solo_parent'] ?? null;
-        unset($attributes['solo_parent']);
+        $death = $attributes['death'] ?? null;
+        $lowIncome = $attributes['low_income'] ?? null;
+        unset($attributes['solo_parent'], $attributes['death'], $attributes['low_income']);
 
         $certificate = Certificate::query()->create($attributes);
         $this->syncSoloParent($certificate, is_array($soloParent) ? $soloParent : null);
+        $this->syncDeath($certificate, is_array($death) ? $death : null);
+        $this->syncLowIncome($certificate, is_array($lowIncome) ? $lowIncome : null);
 
         return $certificate->refresh();
     }
@@ -41,11 +47,15 @@ class CertificateRepository implements CertificateRepositoryInterface
     public function update(Certificate $certificate, array $attributes): Certificate
     {
         $soloParent = $attributes['solo_parent'] ?? null;
-        unset($attributes['solo_parent']);
+        $death = $attributes['death'] ?? null;
+        $lowIncome = $attributes['low_income'] ?? null;
+        unset($attributes['solo_parent'], $attributes['death'], $attributes['low_income']);
 
         $certificate->fill($attributes);
         $certificate->save();
         $this->syncSoloParent($certificate, is_array($soloParent) ? $soloParent : null);
+        $this->syncDeath($certificate, is_array($death) ? $death : null);
+        $this->syncLowIncome($certificate, is_array($lowIncome) ? $lowIncome : null);
 
         return $certificate->refresh();
     }
@@ -53,7 +63,7 @@ class CertificateRepository implements CertificateRepositoryInterface
     public function paginateForResident(int $residentId, int $perPage = 10, int $page = 1): LengthAwarePaginator
     {
         return Certificate::query()
-            ->with(['type', 'issuer.personnel', 'soloParent', 'soloParentChildren'])
+            ->with(['type', 'issuer.personnel', 'soloParent.president', 'soloParent.kagawad', 'soloParent.children', 'deathRecord.ethnicity', 'lowIncome', 'captain', 'maritalStatusResident.maritalStatus', 'genderResident.sex'])
             ->where('resident_id', $residentId)
             ->orderByDesc('date_of_issue')
             ->orderByDesc('certificate_id')
@@ -147,33 +157,81 @@ class CertificateRepository implements CertificateRepositoryInterface
     {
         $certificateId = (int) $certificate->certificate_id;
 
-        CertificateSoloParentChild::query()->where('certificate_id', $certificateId)->delete();
-
         if ($soloParent === null) {
-            CertificateSoloParent::query()->where('certificate_id', $certificateId)->delete();
+            $existing = CertificateSoloParent::query()->where('certificate_id', $certificateId)->first();
+
+            if ($existing !== null) {
+                CertificateSoloParentChild::query()
+                    ->where('certificate_solo_parent_id', $existing->certificate_solo_parent_id)
+                    ->delete();
+                $existing->delete();
+            }
 
             return;
         }
 
-        CertificateSoloParent::query()->updateOrCreate(
+        $record = CertificateSoloParent::query()->updateOrCreate(
             ['certificate_id' => $certificateId],
             [
-                'circumstance' => $soloParent['circumstance'],
-                'president_name' => $soloParent['president_name'],
+                'certificate_solo_parent_id' => $certificateId,
+                'social_service_kagawad_id' => $soloParent['social_service_kagawad_id'],
+                'president_name_id' => $soloParent['president_name_id'],
                 'president_address' => $soloParent['president_address'],
                 'neighbor_name' => $soloParent['neighbor_name'],
                 'neighbor_address' => $soloParent['neighbor_address'],
-                'kagawad_name' => $soloParent['kagawad_name'],
+                'circumstance' => $soloParent['circumstance'],
             ],
         );
 
+        CertificateSoloParentChild::query()
+            ->where('certificate_solo_parent_id', $record->certificate_solo_parent_id)
+            ->delete();
+
         foreach ($soloParent['children'] as $child) {
             CertificateSoloParentChild::query()->create([
-                'certificate_id' => $certificateId,
+                'certificate_solo_parent_id' => $record->certificate_solo_parent_id,
                 'child_name' => $child['child_name'],
                 'date_of_birth' => $child['date_of_birth'],
             ]);
         }
+    }
+
+    /**
+     * @param  array{ethnicity_id: int, date_of_death: string, place_of_death: string, cause_of_death: string}|null  $death
+     */
+    private function syncDeath(Certificate $certificate, ?array $death): void
+    {
+        $certificateId = (int) $certificate->certificate_id;
+
+        if ($death === null) {
+            DeathCertificate::query()->where('certificate_id', $certificateId)->delete();
+
+            return;
+        }
+
+        DeathCertificate::query()->updateOrCreate(
+            ['certificate_id' => $certificateId],
+            $death,
+        );
+    }
+
+    /**
+     * @param  array{include_income_amount: int, stated_income_amount: ?string, resident_since: ?string}|null  $lowIncome
+     */
+    private function syncLowIncome(Certificate $certificate, ?array $lowIncome): void
+    {
+        $certificateId = (int) $certificate->certificate_id;
+
+        if ($lowIncome === null) {
+            LowIncomeCertificate::query()->where('certificate_id', $certificateId)->delete();
+
+            return;
+        }
+
+        LowIncomeCertificate::query()->updateOrCreate(
+            ['certificate_id' => $certificateId],
+            $lowIncome,
+        );
     }
 
     private function escapeLike(string $value): string

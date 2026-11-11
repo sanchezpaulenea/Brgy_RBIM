@@ -3,10 +3,8 @@
 namespace App\Http\Requests\ResidentManagement\Education;
 
 use App\Http\Requests\Concerns\RequiresAtLeastOneField;
-use App\Http\Requests\Concerns\TitleCasesAttributes;
 use App\Models\ResidentManagement\Education\CurrentEnrollmentStatus;
 use App\Models\ResidentManagement\Education\SchoolLvl;
-use App\Rules\ValidPlaceName;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -14,19 +12,10 @@ use Illuminate\Validation\Validator;
 class UpdateEducationRequest extends FormRequest
 {
     use RequiresAtLeastOneField;
-    use TitleCasesAttributes;
 
     public function authorize(): bool
     {
         return true;
-    }
-
-    protected function prepareForValidation(): void
-    {
-        $this->mergeTitleCased([
-            'place_of_school_brgy',
-            'place_of_school_city_municipality',
-        ]);
     }
 
     /**
@@ -50,14 +39,7 @@ class UpdateEducationRequest extends FormRequest
                 Rule::exists('current_enrollment_status', 'current_enrollment_status_id'),
             ],
             'school_lvl_id' => ['sometimes', 'required', 'integer', Rule::exists('school_lvl', 'school_lvl_id')],
-            'place_of_school_brgy' => ['sometimes', 'nullable', 'string', 'max:45', new ValidPlaceName('School barangay')],
-            'place_of_school_city_municipality' => [
-                'sometimes',
-                'nullable',
-                'string',
-                'max:45',
-                new ValidPlaceName('School city / municipality'),
-            ],
+            'place_of_school_brgy_id' => ['sometimes', 'nullable', 'integer', Rule::exists('barangay', 'barangay_id')],
         ];
     }
 
@@ -69,8 +51,7 @@ class UpdateEducationRequest extends FormRequest
                     'highest_lvl_of_educ_id',
                     'current_enrollement_status_id',
                     'school_lvl_id',
-                    'place_of_school_brgy',
-                    'place_of_school_city_municipality',
+                    'place_of_school_brgy_id',
                 ], 'education', 'Provide at least one education field to update.');
             },
             function (Validator $validator): void {
@@ -103,22 +84,12 @@ class UpdateEducationRequest extends FormRequest
                     $validator->errors()->add('school_lvl_id', 'School level is required when the resident is enrolled.');
                 }
 
-                $brgy = $this->exists('place_of_school_brgy')
-                    ? $this->input('place_of_school_brgy')
-                    : $this->route('education')?->place_of_school_brgy;
-                $city = $this->exists('place_of_school_city_municipality')
-                    ? $this->input('place_of_school_city_municipality')
-                    : $this->route('education')?->place_of_school_city_municipality;
+                $barangayId = $this->exists('place_of_school_brgy_id')
+                    ? $this->input('place_of_school_brgy_id')
+                    : $this->route('education')?->place_of_school_brgy_id;
 
-                if (! is_string($brgy) || trim($brgy) === '') {
-                    $validator->errors()->add('place_of_school_brgy', 'School barangay is required when the resident is enrolled.');
-                }
-
-                if (! is_string($city) || trim($city) === '') {
-                    $validator->errors()->add(
-                        'place_of_school_city_municipality',
-                        'School city / municipality is required when the resident is enrolled.',
-                    );
+                if ($barangayId === null || $barangayId === '') {
+                    $validator->errors()->add('place_of_school_brgy_id', 'School barangay is required when the resident is enrolled.');
                 }
             },
         ];

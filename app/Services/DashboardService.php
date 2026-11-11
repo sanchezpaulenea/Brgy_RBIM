@@ -143,7 +143,7 @@ class DashboardService
                 ),
                 'common_disease' => $this->chart('Total Diseases Recorded', $repo->questionJunctionCounts('common_disease', 'common_disease_id', 'common_disease_cause_death_in_brgy', 'common_disease_id', 'common_disease')),
                 'primary_need' => $this->chart('Total Primary Needs Recorded', $repo->questionJunctionCounts('primary_need', 'primary_need_id', 'primary_need_of_brgy', 'primary_need_id', 'primary_need')),
-                'pets' => $this->chart('Total Pets Recorded', $repo->petsByLookup('specie_id', 'specie', 'specie_id', 'specie')),
+                'pets' => $this->chart('Total Pets Recorded', $repo->petsBySpecies()),
                 'pets_sex' => $this->chart('Total Pets Recorded', $repo->petsByLookup('sex_id', 'sex', 'sex_id', 'sex')),
                 'pets_rabies' => $this->chart('Total Pets Recorded', $repo->petsByRabies()),
                 'pets_spay' => $this->booleanChart(
@@ -192,7 +192,7 @@ class DashboardService
                 'registered_voter' => $this->chart(self::RESIDENTS, $repo->residentsByVoterStatus(), self::NOT_ANSWERED),
                 'migration' => $this->chart(self::RESIDENTS, $repo->residentsByChildLookup('migration', 'resident_type_id', 'resident_type', 'resident_type_id', 'resident_type'), self::NOT_ANSWERED),
                 'ctc' => $this->chart(self::RESIDENTS, $repo->residentsByCtcStatus(), self::NOT_ANSWERED),
-                'skills_training' => $this->chart(self::RESIDENTS, $repo->residentsByChildDistinct('skills_development', 'skills_development_training', 'skills_development_id', 'skills'), self::NOT_ANSWERED),
+                'skills_training' => $this->chart(self::RESIDENTS, $repo->residentsByChildLookup('skills_development', 'skills_development_training_id', 'skills_development_training', 'skills_development_training_id', 'skills_development_training', 'skills'), self::NOT_ANSWERED),
                 'skills' => $this->chart(self::RESIDENTS, $repo->residentsByChildLookup('skills_development', 'skill_type_id', 'skill_type', 'skill_type_id', 'skill_type', 'skills'), self::NOT_ANSWERED),
                 'age' => $this->chart(self::RESIDENTS, $repo->residentsByAgeBuckets(self::AGE_BUCKETS)),
                 'age_disability' => $this->booleanChart(

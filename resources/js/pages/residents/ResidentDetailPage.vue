@@ -541,6 +541,7 @@ const demographicFields = computed(() => {
         { label: 'Age', value: item.age ?? '—' },
         { label: 'Relationship to Household Head', value: item.relationship_to_hh || '—' },
         { label: 'Household', value: item.household_id || '—' },
+        { label: 'Birth Barangay', value: item.birth_barangay || '—' },
         { label: 'Birth City / Municipality', value: item.birth_city_municipality || '—' },
         { label: 'Birth Province', value: item.birth_province || '—' },
         { label: 'Birth Country', value: item.birth_country || '—' },
@@ -690,8 +691,7 @@ function displayEducation(record) {
         if (!isNotApplicableSchoolLvl(record.school_lvl)) {
             fields.push(
                 { label: 'School Level', value: record.school_lvl || '—' },
-                { label: 'School Barangay', value: record.place_of_school_brgy || '—' },
-                { label: 'School City / Municipality', value: record.place_of_school_city_municipality || '—' },
+                { label: 'School Barangay', value: record.place_of_school_label || record.place_of_school_brgy || '—' },
             );
         }
     }
@@ -907,9 +907,14 @@ function startDemographicsEdit() {
         relationship_to_hh_id: item.relationship_to_hh_id,
         sex_id: item.sex_id,
         date_of_birth: item.date_of_birth,
-        birth_city_municipality: item.birth_city_municipality,
-        birth_province: item.birth_province,
-        birth_country: item.birth_country,
+        birth_barangay_id: item.birth_barangay_id,
+        birth_barangay: item.birth_barangay || '',
+        birth_city_municipality_id: item.birth_city_municipality_id,
+        birth_city_municipality: item.birth_city_municipality || '',
+        birth_province_id: item.birth_province_id,
+        birth_province: item.birth_province || '',
+        birth_country_id: item.birth_country_id,
+        birth_country: item.birth_country || 'Philippines',
         nationality_id: item.nationality_id,
         nationality_name: item.nationality || '',
         religion_id: item.religion_id,
@@ -952,8 +957,8 @@ function startSectionEdit(key) {
             highest_lvl_of_educ_id: record.highest_lvl_of_educ_id || '',
             current_enrollement_status_id: record.current_enrollement_status_id || '',
             school_lvl_id: record.school_lvl_id || '',
-            place_of_school_brgy: record.place_of_school_brgy || '',
-            place_of_school_city_municipality: record.place_of_school_city_municipality || '',
+            place_of_school_brgy_id: record.place_of_school_brgy_id || '',
+            place_of_school_label: record.place_of_school_label || record.place_of_school_brgy || '',
         },
         economic: {
             monthly_income: record.monthly_income === undefined || record.monthly_income === null
@@ -1183,11 +1188,6 @@ async function handleSave() {
         if (!valid) {
             return;
         }
-    }
-
-    if (editing.value === 'demographics' && !toId(editForm.clan_id)) {
-        editErrors.clan_id = 'Clan is required.';
-        return;
     }
 
     if (editing.value === 'demographics' && resident.value.is_household_head) {

@@ -15,7 +15,7 @@ class SkillsDevelopment extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'skills_development_training',
+        'skills_development_training_id',
         'skill_type_id',
         'resident_id',
     ];
@@ -39,5 +39,17 @@ class SkillsDevelopment extends Model
     public function skillType(): BelongsTo
     {
         return $this->belongsTo(SkillType::class, 'skill_type_id', 'skill_type_id');
+    }
+
+    /**
+     * @return BelongsTo<SkillsDevelopmentTraining, $this>
+     */
+    public function training(): BelongsTo
+    {
+        return $this->belongsTo(
+            SkillsDevelopmentTraining::class,
+            'skills_development_training_id',
+            'skills_development_training_id',
+        );
     }
 }

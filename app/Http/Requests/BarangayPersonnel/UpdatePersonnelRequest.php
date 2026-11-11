@@ -22,7 +22,6 @@ class UpdatePersonnelRequest extends FormRequest
             'personnel_last_name' => $this->titleCaseName($this->input('personnel_last_name')),
             'personnel_first_name' => $this->titleCaseName($this->input('personnel_first_name')),
             'personnel_middle_name' => $this->titleCaseName($this->input('personnel_middle_name')),
-            'personnel_suffix' => $this->titleCaseName($this->input('personnel_suffix')),
         ]);
     }
 
@@ -35,7 +34,7 @@ class UpdatePersonnelRequest extends FormRequest
             'personnel_last_name' => ['required', 'string', 'max:45', new ValidPersonnelName],
             'personnel_first_name' => ['required', 'string', 'max:45', new ValidPersonnelName],
             'personnel_middle_name' => ['nullable', 'string', 'max:45', new ValidPersonnelName],
-            'personnel_suffix' => ['nullable', 'string', 'max:10', new ValidPersonnelName],
+            'personnel_suffix_id' => ['required', 'integer', Rule::exists('suffix', 'suffix_id')],
             'personnel_date_of_birth' => ['required', 'date', 'before_or_equal:today'],
             'sex_id' => ['sometimes', 'required', 'integer', Rule::exists('sex', 'sex_id')],
             'personnel_status_id' => ['required', 'integer', Rule::exists('personnel_status', 'personnel_status_id')],
@@ -59,6 +58,8 @@ class UpdatePersonnelRequest extends FormRequest
     {
         return [
             'personnel_last_name.required' => 'Last name is required.',
+            'personnel_suffix_id.required' => 'Suffix is required.',
+            'personnel_suffix_id.exists' => 'The selected suffix does not exist.',
             'personnel_first_name.required' => 'First name is required.',
             'personnel_date_of_birth.required' => 'Date of birth is required.',
             'personnel_date_of_birth.before_or_equal' => 'Date of birth cannot be in the future.',

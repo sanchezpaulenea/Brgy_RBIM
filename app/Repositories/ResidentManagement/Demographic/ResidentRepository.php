@@ -3,6 +3,7 @@
 namespace App\Repositories\ResidentManagement\Demographic;
 
 use App\Models\ResidentManagement\Demographic\Resident;
+use App\Models\ResidentManagement\Demographic\Suffix;
 use App\Repositories\Interfaces\ResidentManagement\Demographic\ResidentRepositoryInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -26,6 +27,10 @@ class ResidentRepository implements ResidentRepositoryInterface
             'migration.residentType',
             'status',
             'relationshipToHouseholdHead',
+            'nameSuffix',
+            'birthProvince',
+            'birthMunicipality',
+            'birthCountry',
         ];
     }
 
@@ -63,7 +68,8 @@ class ResidentRepository implements ResidentRepositoryInterface
     public function listNames(array $filters = []): Collection
     {
         return $this->matchingResidents($filters)
-            ->select(['resident_id', 'last_name', 'first_name', 'middle_name', 'suffix'])
+            ->select(['resident_id', 'last_name', 'first_name', 'middle_name', 'suffix_id'])
+            ->with('nameSuffix')
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->orderBy('resident_id')
@@ -85,7 +91,8 @@ class ResidentRepository implements ResidentRepositoryInterface
             ->orderBy('resident_id');
 
         if ($namesOnly) {
-            $query->select(['resident_id', 'last_name', 'first_name', 'middle_name', 'suffix']);
+            $query->select(['resident_id', 'last_name', 'first_name', 'middle_name', 'suffix_id'])
+                ->with('nameSuffix');
         } else {
             $query->with($this->defaultRelations())
                 ->withExists($this->sectionExistsRelations());
@@ -147,7 +154,11 @@ class ResidentRepository implements ResidentRepositoryInterface
                         ->whereRaw('LOWER(last_name) LIKE ? ESCAPE \'\\\\\'', [$term])
                         ->orWhereRaw('LOWER(first_name) LIKE ? ESCAPE \'\\\\\'', [$term])
                         ->orWhereRaw('LOWER(COALESCE(middle_name, \'\')) LIKE ? ESCAPE \'\\\\\'', [$term])
-                        ->orWhereRaw('LOWER(COALESCE(suffix, \'\')) LIKE ? ESCAPE \'\\\\\'', [$term])
+                        ->orWhereHas('nameSuffix', function ($suffixQuery) use ($term) {
+                            $suffixQuery
+                                ->whereRaw('LOWER(suffix) LIKE ? ESCAPE \'\\\\\'', [$term])
+                                ->whereRaw('LOWER(suffix) NOT LIKE ?', ['not applic%']);
+                        })
                         ->orWhereRaw(
                             'LOWER(CONCAT(last_name, \', \', first_name, \' \', COALESCE(middle_name, \'\'))) LIKE ? ESCAPE \'\\\\\'',
                             [$term],
@@ -196,7 +207,14 @@ class ResidentRepository implements ResidentRepositoryInterface
             ->whereDate('date_of_birth', substr($dateOfBirth, 0, 10));
 
         $this->whereBlankOrEquals($query, 'middle_name', $middleName);
-        $this->whereBlankOrEquals($query, 'suffix', $suffix);
+
+        $suffixId = Suffix::idForIdentityMatch($suffix);
+
+        if ($suffixId === null) {
+            $query->whereRaw('0 = 1');
+        } else {
+            $query->where('suffix_id', $suffixId);
+        }
 
         if ($householdId !== null) {
             $query->where('household_id', $householdId);
@@ -273,7 +291,7 @@ class ResidentRepository implements ResidentRepositoryInterface
      */
     public function create(array $attributes): Resident
     {
-        $resident = Resident::create($attributes);
+        $resident = Resident::create($this->persistableAttributes($attributes, true));
 
         return $resident->load($this->defaultRelations());
     }
@@ -283,10 +301,69 @@ class ResidentRepository implements ResidentRepositoryInterface
      */
     public function update(Resident $resident, array $attributes): Resident
     {
-        $resident->fill($attributes);
+        $resident->fill($this->persistableAttributes($attributes, false));
         $resident->save();
 
         return $resident->fresh($this->defaultRelations()) ?? $resident;
+    }
+
+    /**
+     * The resident table stores suffix_id. A blank suffix is the Not Applicable row.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
+     */
+    private function persistableAttributes(array $attributes, bool $requireSuffix): array
+    {
+        $hasBirthPlace = array_key_exists('birth_barangay_id', $attributes)
+            || array_key_exists('birth_city_municipality_id', $attributes)
+            || array_key_exists('birth_province_id', $attributes)
+            || array_key_exists('birth_country_id', $attributes)
+            || array_key_exists('birth_city_municipality', $attributes)
+            || array_key_exists('birth_province', $attributes)
+            || array_key_exists('birth_country', $attributes);
+
+        unset(
+            $attributes['birth_city_municipality'],
+            $attributes['birth_province'],
+            $attributes['birth_country'],
+        );
+
+        if ($hasBirthPlace) {
+            $birthPlace = Resident::birthPlaceIds($attributes);
+
+            $attributes['birth_city_municipality_id'] = $birthPlace['birth_city_municipality_id'];
+            $attributes['birth_province_id'] = $birthPlace['birth_province_id'];
+            $attributes['birth_country_id'] = $birthPlace['birth_country_id'];
+
+            if (Resident::birthBarangayColumnExists()) {
+                $attributes['birth_barangay_id'] = $birthPlace['birth_barangay_id'];
+            } else {
+                unset($attributes['birth_barangay_id']);
+            }
+        }
+
+        $hasSuffixId = array_key_exists('suffix_id', $attributes)
+            && $attributes['suffix_id'] !== null
+            && $attributes['suffix_id'] !== '';
+
+        if ($hasSuffixId) {
+            $attributes['suffix_id'] = (int) $attributes['suffix_id'];
+            unset($attributes['suffix']);
+
+            return $attributes;
+        }
+
+        if ($requireSuffix || array_key_exists('suffix', $attributes)) {
+            $label = isset($attributes['suffix']) && is_string($attributes['suffix'])
+                ? $attributes['suffix']
+                : null;
+            $attributes['suffix_id'] = Suffix::idMatchingLabel($label);
+        }
+
+        unset($attributes['suffix']);
+
+        return $attributes;
     }
 
     /**
@@ -334,6 +411,7 @@ class ResidentRepository implements ResidentRepositoryInterface
             'education.highestLvlOfEduc',
             'education.currentEnrollmentStatus',
             'education.schoolLvl',
+            'education.schoolBarangay.municipalityCity.province',
             'economic.sourceOfIncome',
             'economic.statusOfWorkBusiness',
             'infantHealth.placeOfDelivery',
@@ -350,6 +428,7 @@ class ResidentRepository implements ResidentRepositoryInterface
             'migration.reasonForTransfer',
             'communityTaxCert',
             'skillsDevelopment.skillType',
+            'skillsDevelopment.training',
         ];
     }
 

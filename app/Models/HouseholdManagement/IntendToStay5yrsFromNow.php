@@ -2,6 +2,7 @@
 
 namespace App\Models\HouseholdManagement;
 
+use App\Models\Geographic\Barangay;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -14,9 +15,7 @@ class IntendToStay5yrsFromNow extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'intend_to_stay_brgy',
-        'intend_to_stay_municipality',
-        'intend_to_stay_province',
+        'intend_to_stay_brgy_id',
         'household_question_id',
     ];
 
@@ -31,5 +30,13 @@ class IntendToStay5yrsFromNow extends Model
     public function householdQuestions(): BelongsTo
     {
         return $this->belongsTo(HouseholdQuestions::class, 'household_question_id', 'household_questions_id');
+    }
+
+    /**
+     * @return BelongsTo<Barangay, $this>
+     */
+    public function barangay(): BelongsTo
+    {
+        return $this->belongsTo(Barangay::class, 'intend_to_stay_brgy_id', 'barangay_id');
     }
 }

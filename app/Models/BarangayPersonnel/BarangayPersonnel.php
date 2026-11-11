@@ -3,6 +3,7 @@
 namespace App\Models\BarangayPersonnel;
 
 use App\Models\ResidentManagement\Demographic\Sex;
+use App\Models\ResidentManagement\Demographic\Suffix;
 use App\Models\UserManagement\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,7 +22,7 @@ class BarangayPersonnel extends Model
         'personnel_last_name',
         'personnel_first_name',
         'personnel_middle_name',
-        'personnel_suffix',
+        'personnel_suffix_id',
         'personnel_status_id',
         'personnel_date_of_birth',
         'sex_id',
@@ -61,6 +62,21 @@ class BarangayPersonnel extends Model
     public function sex(): BelongsTo
     {
         return $this->belongsTo(Sex::class, 'sex_id', 'sex_id');
+    }
+
+    /**
+     * @return BelongsTo<Suffix, $this>
+     */
+    public function nameSuffix(): BelongsTo
+    {
+        return $this->belongsTo(Suffix::class, 'personnel_suffix_id', 'suffix_id');
+    }
+
+    public function printedSuffix(): string
+    {
+        $this->loadMissing('nameSuffix');
+
+        return $this->nameSuffix?->printed() ?? '';
     }
 
     /**

@@ -167,14 +167,14 @@ class PetCensusService
      */
     public function formatRecord(PetCensus $pet): array
     {
-        $pet->loadMissing(['petStatus', 'specie', 'breed', 'sex']);
+        $pet->loadMissing(['petStatus', 'breed.specie', 'sex']);
 
         return [
             'pet_census_id' => $pet->pet_census_id,
             'household_id' => $pet->household_id,
             'household_label' => $this->householdLabel($pet->household, $pet->household_id),
-            'specie_id' => $pet->specie_id,
-            'specie' => $pet->specie?->specie,
+            'specie_id' => $pet->breed?->specie_id,
+            'specie' => $pet->breed?->specie?->specie,
             'breed_id' => $pet->breed_id,
             'breed' => $pet->breed?->breed,
             'sex_id' => $pet->sex_id,
@@ -257,7 +257,6 @@ class PetCensusService
         }
 
         $attributes = [
-            'specie_id' => $specieId,
             'breed_id' => $breed->breed_id,
             'sex_id' => $data['sex_id'],
             'pet_date_of_birth' => $this->nullableDate($data['pet_date_of_birth'] ?? null),
@@ -308,10 +307,10 @@ class PetCensusService
      */
     private function auditSnapshot(PetCensus $pet): array
     {
-        $pet->loadMissing(['petStatus', 'specie', 'breed', 'sex']);
+        $pet->loadMissing(['petStatus', 'breed.specie', 'sex']);
 
         return [
-            'specie' => (string) ($pet->specie?->specie ?? ''),
+            'specie' => (string) ($pet->breed?->specie?->specie ?? ''),
             'breed' => (string) ($pet->breed?->breed ?? ''),
             'sex' => (string) ($pet->sex?->sex ?? ''),
             'pet_date_of_birth' => (string) ($pet->pet_date_of_birth?->format('Y-m-d') ?? ''),

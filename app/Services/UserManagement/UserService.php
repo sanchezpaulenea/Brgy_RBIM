@@ -54,7 +54,7 @@ class UserService
     /**
      * Create a user account and assign the initial role in one transaction.
      *
-     * @param  array{username: string, role_id: int, personnel_id?: int, position_id?: int}  $data
+     * @param  array{username: string, role_id?: int|null, personnel_id?: int, position_id?: int, admin_password?: string|null}  $data
      * @return array<string, mixed>
      */
     public function createUser(User $performedBy, array $data): array
@@ -72,7 +72,9 @@ class UserService
                 'must_change_password' => true,
             ]);
 
-            $this->userRoleService->assignRole($performedBy, $user, $data['role_id']);
+            if (! empty($data['role_id'])) {
+                $this->userRoleService->assignRole($performedBy, $user, (int) $data['role_id']);
+            }
 
             $this->auditLogRepository->log(
                 performedByUserId: $performedBy->user_id,
@@ -289,7 +291,7 @@ class UserService
         $givenNames = collect([
             $personnel->personnel_first_name,
             $personnel->personnel_middle_name,
-            $personnel->personnel_suffix,
+            $personnel->printedSuffix(),
         ])->filter()->implode(' ');
 
         if ($givenNames === '') {

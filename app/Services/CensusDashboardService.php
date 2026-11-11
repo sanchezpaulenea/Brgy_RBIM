@@ -191,7 +191,6 @@ class CensusDashboardService
                 'resident.last_name',
                 'resident.first_name',
                 'resident.middle_name',
-                'resident.suffix',
                 'resident.date_of_birth',
                 'resident.sex_id',
                 'resident.clan_id',
@@ -200,7 +199,8 @@ class CensusDashboardService
                 'street.street_name',
                 'clan.clan_name',
                 'sex.sex',
-            ]);
+            ])
+            ->selectRaw("coalesce((select case when lower(s.suffix) like 'not applic%' then '' else s.suffix end from suffix as s where s.suffix_id = resident.suffix_id), '') as suffix");
 
         $age = 'timestampdiff(YEAR, resident.date_of_birth, curdate())';
 
@@ -246,8 +246,8 @@ class CensusDashboardService
                 'head.last_name',
                 'head.first_name',
                 'head.middle_name',
-                'head.suffix',
             ])
+            ->selectRaw("coalesce((select case when lower(s.suffix) like 'not applic%' then '' else s.suffix end from suffix as s where s.suffix_id = head.suffix_id), '') as suffix")
             ->selectSub(
                 DB::table('resident')
                     ->selectRaw('count(*)')

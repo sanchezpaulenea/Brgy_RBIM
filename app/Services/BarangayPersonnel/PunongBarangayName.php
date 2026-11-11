@@ -177,7 +177,7 @@ class PunongBarangayName
             ->filter()
             ->values();
 
-        $suffix = $this->displaySuffix($personnel->personnel_suffix);
+        $suffix = $personnel->printedSuffix();
 
         if ($suffix !== '') {
             $parts->push($suffix);
@@ -283,7 +283,7 @@ class PunongBarangayName
             'personnel_first_name' => $personnel->personnel_first_name,
             'personnel_middle_name' => $personnel->personnel_middle_name,
             'personnel_last_name' => $personnel->personnel_last_name,
-            'personnel_suffix' => $personnel->personnel_suffix,
+            'personnel_suffix' => $personnel->printedSuffix(),
         ];
 
         foreach ($parts as $key => $value) {
@@ -303,7 +303,7 @@ class PunongBarangayName
         $given = collect([
             $personnel->personnel_first_name,
             $personnel->personnel_middle_name,
-            $personnel->personnel_suffix,
+            $personnel->printedSuffix(),
         ])->map(fn (mixed $part): string => trim((string) $part))
             ->filter()
             ->implode(' ');

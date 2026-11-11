@@ -4,7 +4,6 @@ namespace App\Http\Requests\ResidentManagement\Demographics;
 
 use App\Models\ResidentManagement\Demographic\RelationshipToHouseholdHead;
 use App\Rules\ValidPersonnelName;
-use App\Rules\ValidPlaceName;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -24,12 +23,6 @@ class UpdateResidentRequest extends FormRequest
         foreach (['last_name', 'first_name', 'middle_name', 'suffix'] as $field) {
             if ($this->exists($field)) {
                 $merge[$field] = $this->titleCaseName($this->input($field));
-            }
-        }
-
-        foreach (['birth_city_municipality', 'birth_province', 'birth_country'] as $field) {
-            if ($this->exists($field)) {
-                $merge[$field] = $this->titleCasePlace($this->input($field));
             }
         }
 
@@ -63,20 +56,15 @@ class UpdateResidentRequest extends FormRequest
             ],
             'sex_id' => ['sometimes', 'required', 'integer', Rule::exists('sex', 'sex_id')],
             'date_of_birth' => ['sometimes', 'required', 'date', 'before_or_equal:today'],
-            'birth_city_municipality' => [
-                'sometimes',
-                'nullable',
-                'string',
-                'max:45',
-                new ValidPlaceName('City / municipality of birth'),
-            ],
-            'birth_province' => ['sometimes', 'nullable', 'string', 'max:45', new ValidPlaceName('Province of birth')],
-            'birth_country' => ['sometimes', 'nullable', 'string', 'max:45', new ValidPlaceName('Country of birth')],
+            'birth_barangay_id' => ['sometimes', 'nullable', 'integer', Rule::exists('barangay', 'barangay_id')],
+            'birth_city_municipality_id' => ['sometimes', 'nullable', 'integer', Rule::exists('municipality_city', 'municipality_city_id')],
+            'birth_province_id' => ['sometimes', 'nullable', 'integer', Rule::exists('province', 'province_id')],
+            'birth_country_id' => ['sometimes', 'nullable', 'integer', Rule::exists('country', 'country_id')],
             'nationality_id' => ['sometimes', 'nullable', 'integer', Rule::exists('nationality', 'nationality_id')],
             'religion_id' => ['sometimes', 'nullable', 'integer', Rule::exists('religion', 'religion_id')],
             'ethnicity_id' => ['sometimes', 'nullable', 'integer', Rule::exists('ethnicity', 'ethnicity_id')],
             'marital_status_id' => ['sometimes', 'required', 'integer', Rule::exists('marital_status', 'marital_status_id')],
-            'clan_id' => ['sometimes', 'required', 'integer', Rule::exists('clan', 'clan_id')],
+            'clan_id' => ['sometimes', 'nullable', 'integer', Rule::exists('clan', 'clan_id')],
             'resident_status_id' => [
                 'sometimes',
                 'required',
@@ -141,9 +129,10 @@ class UpdateResidentRequest extends FormRequest
                     'relationship_to_hh_id',
                     'sex_id',
                     'date_of_birth',
-                    'birth_city_municipality',
-                    'birth_province',
-                    'birth_country',
+                    'birth_barangay_id',
+                    'birth_city_municipality_id',
+                    'birth_province_id',
+                    'birth_country_id',
                     'nationality_id',
                     'religion_id',
                     'ethnicity_id',

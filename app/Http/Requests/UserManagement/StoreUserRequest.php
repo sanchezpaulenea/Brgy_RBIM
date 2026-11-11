@@ -4,6 +4,7 @@ namespace App\Http\Requests\UserManagement;
 
 use App\Models\UserManagement\Role;
 use App\Models\UserManagement\User;
+use App\Rules\CurrentAdministratorPassword;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -44,7 +45,14 @@ class StoreUserRequest extends FormRequest
                 'integer',
                 Rule::exists('personnel_position', 'position_id'),
             ],
-            'role_id' => ['required', 'integer', Rule::exists('role', 'role_id')],
+            'role_id' => ['nullable', 'integer', Rule::exists('role', 'role_id')],
+            'admin_password' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::requiredIf(fn () => $this->filled('role_id')),
+                Rule::when($this->filled('role_id'), [new CurrentAdministratorPassword]),
+            ],
         ];
     }
 
@@ -59,8 +67,8 @@ class StoreUserRequest extends FormRequest
             'personnel_id.exists' => 'The selected personnel record does not exist.',
             'personnel_id.unique' => 'This personnel record is already linked to another user account.',
             'position_id.exists' => 'The selected personnel position does not exist.',
-            'role_id.required' => 'Role is required.',
             'role_id.exists' => 'The selected role does not exist.',
+            'admin_password.required' => 'Enter your Admin or Super Admin password to assign a role.',
         ];
     }
 
@@ -69,6 +77,10 @@ class StoreUserRequest extends FormRequest
         return [
             function (Validator $validator): void {
                 if ($validator->errors()->isNotEmpty()) {
+                    return;
+                }
+
+                if (! $this->filled('role_id')) {
                     return;
                 }
 

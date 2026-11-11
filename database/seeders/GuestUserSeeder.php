@@ -28,7 +28,8 @@ class GuestUserSeeder extends Seeder
             'personnel_last_name' => 'Guest',
             'personnel_first_name' => 'Demo',
             'personnel_middle_name' => null,
-            'personnel_suffix' => null,
+            'personnel_suffix_id' => 12,
+            'sex_id' => 1,
             'personnel_status_id' => 1,
             'personnel_date_of_birth' => '1990-01-01',
         ]);

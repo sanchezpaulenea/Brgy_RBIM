@@ -76,7 +76,7 @@
                         <div class="grid gap-4 sm:grid-cols-2">
                             <div>
                                 <label for="clan_id" class="rbim-label">
-                                    Clan<span class="rbim-required" aria-hidden="true">*</span>
+                                    Clan
                                 </label>
                                 <select
                                     id="clan_id"
@@ -448,10 +448,6 @@ function validateHeadName(field, label, required = false) {
 
 function validateHousehold() {
     clearHouseholdErrors();
-
-    if (!toId(household.clan_id)) {
-        householdErrors.clan_id = 'Clan is required.';
-    }
 
     if (!toId(household.street_id)) {
         householdErrors.street_id = 'Street is required.';

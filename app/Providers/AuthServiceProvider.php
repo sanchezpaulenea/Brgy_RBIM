@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use App\Models\BarangayPersonnel\BarangayPersonnel;
+use App\Models\Geographic\Barangay;
+use App\Models\Geographic\MunicipalityCity;
+use App\Models\Geographic\Province;
+use App\Policies\Geographic\GeographicPlacePolicy;
 use App\Models\BarangayPersonnel\PersonnelPosition;
 use App\Models\Certificate\Certificate;
 use App\Models\DatabaseBackup;
@@ -36,6 +40,7 @@ use App\Models\ResidentManagement\Demographic\Resident;
 use App\Models\ResidentManagement\Demographic\ResidentStatus;
 use App\Models\ResidentManagement\Demographic\ResidentType;
 use App\Models\ResidentManagement\Demographic\Sex;
+use App\Models\ResidentManagement\Demographic\Suffix;
 use App\Models\ResidentManagement\Economic\Economic;
 use App\Models\ResidentManagement\Economic\SourceOfIncome;
 use App\Models\ResidentManagement\Economic\StatusOfWorkBusiness;
@@ -137,6 +142,10 @@ class AuthServiceProvider extends ServiceProvider
         ResidentStatus::class => ReferenceLookupPolicy::class,
         ResidentType::class => ReferenceLookupPolicy::class,
         Sex::class => PetLookupWritePolicy::class,
+        Suffix::class => ReferenceLookupPolicy::class,
+        Barangay::class => GeographicPlacePolicy::class,
+        MunicipalityCity::class => GeographicPlacePolicy::class,
+        Province::class => GeographicPlacePolicy::class,
         Education::class => EducationPolicy::class,
         Economic::class => EconomicPolicy::class,
         InfantHealth::class => InfantHealthPolicy::class,

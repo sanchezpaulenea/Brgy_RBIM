@@ -23,6 +23,7 @@ use App\Models\ResidentManagement\Demographic\RelationshipToHouseholdHead;
 use App\Models\ResidentManagement\Demographic\ResidentStatus;
 use App\Models\ResidentManagement\Demographic\ResidentType;
 use App\Models\ResidentManagement\Demographic\Sex;
+use App\Models\ResidentManagement\Demographic\Suffix;
 use App\Models\ResidentManagement\Economic\SourceOfIncome;
 use App\Models\ResidentManagement\Economic\StatusOfWorkBusiness;
 use App\Models\ResidentManagement\Education\CurrentEnrollmentStatus;
@@ -89,6 +90,7 @@ enum LookupType: string
     case Specie = 'specie';
     case Breed = 'breed';
     case PetStatus = 'pet-status';
+    case Suffix = 'suffix';
 
     /**
      * @return class-string<Model>
@@ -137,6 +139,7 @@ enum LookupType: string
             self::Specie => Specie::class,
             self::Breed => Breed::class,
             self::PetStatus => PetStatus::class,
+            self::Suffix => Suffix::class,
         };
     }
 
@@ -161,6 +164,7 @@ enum LookupType: string
             self::Specie,
             self::Breed,
             self::PetStatus,
+            self::Suffix,
             ...self::incrementTwoLookups(),
         ], true);
     }
@@ -253,6 +257,7 @@ enum LookupType: string
             self::Specie => 'specie_id',
             self::Breed => 'breed_id',
             self::PetStatus => 'pet_status_id',
+            self::Suffix => 'suffix_id',
             default => null,
         };
     }
@@ -289,6 +294,7 @@ enum LookupType: string
             self::Breed => 'breed',
             self::Sex => 'sex',
             self::PetStatus => 'pet_status',
+            self::Suffix => 'suffix',
             default => null,
         };
     }
@@ -311,6 +317,10 @@ enum LookupType: string
 
             if ($this === self::Breed) {
                 $formatted['specie_id'] = $model->getAttribute('specie_id');
+            }
+
+            if ($this === self::Suffix) {
+                $formatted['label'] = Suffix::choiceLabel((string) $model->getAttribute('suffix'));
             }
 
             return $formatted;

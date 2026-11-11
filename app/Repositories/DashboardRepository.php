@@ -121,8 +121,8 @@ class DashboardRepository implements DashboardRepositoryInterface
                 'head.last_name',
                 'head.first_name',
                 'head.middle_name',
-                'head.suffix',
             ])
+            ->selectRaw($this->printedSuffixSql('head').' as suffix')
             ->selectSub(
                 DB::table('resident')
                     ->selectRaw('count(*)')
@@ -146,13 +146,13 @@ class DashboardRepository implements DashboardRepositoryInterface
                 'resident.last_name',
                 'resident.first_name',
                 'resident.middle_name',
-                'resident.suffix',
                 'resident.date_of_birth',
                 'household.house_number',
                 'street.street_name',
                 'clan.clan_name',
                 'sex.sex',
-            ]);
+            ])
+            ->selectRaw($this->printedSuffixSql('resident').' as suffix');
         $this->applyResidentFilters($query);
 
         return $query;
@@ -260,7 +260,7 @@ class DashboardRepository implements DashboardRepositoryInterface
             ->select('household.household_id as id')
             ->selectRaw('max(presence.'.$owner.') as value')
             ->selectRaw($this->personNameSql('head').' as name')
-            ->groupBy('household.household_id', 'head.last_name', 'head.first_name', 'head.middle_name', 'head.suffix')
+            ->groupBy('household.household_id', 'head.last_name', 'head.first_name', 'head.middle_name', 'head.suffix_id')
             ->orderBy('household.household_id')
             ->get()
             ->map(fn (object $row): object => (object) [
@@ -279,6 +279,16 @@ class DashboardRepository implements DashboardRepositoryInterface
         $this->constrainPets($query);
 
         return $this->labelCounts($query, $lookupId, $lookupLabel);
+    }
+
+    public function petsBySpecies(): array
+    {
+        $query = DB::table('pet_census')
+            ->leftJoin('breed', 'breed.breed_id', '=', 'pet_census.breed_id')
+            ->leftJoin('specie as lk', 'lk.specie_id', '=', 'breed.specie_id');
+        $this->constrainPets($query);
+
+        return $this->labelCounts($query, 'specie_id', 'specie');
     }
 
     public function residentsByChildLookup(
@@ -1169,8 +1179,13 @@ class DashboardRepository implements DashboardRepositoryInterface
         $last = $alias.'.last_name';
         $first = $alias.'.first_name';
         $middle = $alias.'.middle_name';
-        $suffix = $alias.'.suffix';
+        $suffix = $this->printedSuffixSql($alias);
 
         return "trim(concat(coalesce({$last}, ''), case when coalesce({$last}, '') = '' then '' else ', ' end, trim(concat_ws(' ', {$first}, {$middle}, {$suffix}))))";
+    }
+
+    private function printedSuffixSql(string $alias): string
+    {
+        return "coalesce((select case when lower(s.suffix) like 'not applic%' then '' else s.suffix end from suffix as s where s.suffix_id = {$alias}.suffix_id), '')";
     }
 }

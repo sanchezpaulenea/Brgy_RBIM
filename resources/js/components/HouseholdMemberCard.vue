@@ -178,52 +178,8 @@
 
         <fieldset class="mt-4">
             <legend class="mb-3 text-sm font-semibold text-slate-700">Place of birth</legend>
-            <div class="grid gap-4 sm:grid-cols-3">
-                <div>
-                    <label class="rbim-label" :for="`${idPrefix}-birth_city`">
-                        City / municipality
-                    </label>
-                    <input
-                        :id="`${idPrefix}-birth_city`"
-                        :value="form.birth_city_municipality"
-                        type="text"
-                        maxlength="45"
-                        class="rbim-input"
-                        :class="{ 'rbim-input-error': errors.birth_city_municipality }"
-                        @input="patch('birth_city_municipality', $event.target.value)"
-                    >
-                    <p v-if="errors.birth_city_municipality" class="rbim-error">{{ errors.birth_city_municipality }}</p>
-                </div>
-                <div>
-                    <label class="rbim-label" :for="`${idPrefix}-birth_province`">
-                        Province
-                    </label>
-                    <input
-                        :id="`${idPrefix}-birth_province`"
-                        :value="form.birth_province"
-                        type="text"
-                        maxlength="45"
-                        class="rbim-input"
-                        :class="{ 'rbim-input-error': errors.birth_province }"
-                        @input="patch('birth_province', $event.target.value)"
-                    >
-                    <p v-if="errors.birth_province" class="rbim-error">{{ errors.birth_province }}</p>
-                </div>
-                <div>
-                    <label class="rbim-label" :for="`${idPrefix}-birth_country`">
-                        Country
-                    </label>
-                    <input
-                        :id="`${idPrefix}-birth_country`"
-                        :value="form.birth_country"
-                        type="text"
-                        maxlength="45"
-                        class="rbim-input"
-                        :class="{ 'rbim-input-error': errors.birth_country }"
-                        @input="patch('birth_country', $event.target.value)"
-                    >
-                    <p v-if="errors.birth_country" class="rbim-error">{{ errors.birth_country }}</p>
-                </div>
+            <div class="grid gap-4 sm:grid-cols-2">
+                <BirthPlaceFields v-model="form" :errors="errors" :id-prefix="idPrefix" />
             </div>
         </fieldset>
 
@@ -248,6 +204,7 @@ import { computed } from 'vue';
 import BirthDateField from '@/components/BirthDateField.vue';
 import FormSectionCard from '@/components/FormSectionCard.vue';
 import HouseholdEducationForm from '@/components/HouseholdEducationForm.vue';
+import BirthPlaceFields from '@/components/BirthPlaceFields.vue';
 import LookupCombobox from '@/components/LookupCombobox.vue';
 import { useAuth } from '@/composables/useAuth';
 import { extractErrorMessage } from '@/services/http';

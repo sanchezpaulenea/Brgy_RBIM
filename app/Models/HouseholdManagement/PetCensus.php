@@ -16,7 +16,6 @@ class PetCensus extends Model
 
     protected $fillable = [
         'household_id',
-        'specie_id',
         'breed_id',
         'sex_id',
         'pet_date_of_birth',
@@ -48,14 +47,8 @@ class PetCensus extends Model
     }
 
     /**
-     * @return BelongsTo<Specie, $this>
-     */
-    public function specie(): BelongsTo
-    {
-        return $this->belongsTo(Specie::class, 'specie_id', 'specie_id');
-    }
-
-    /**
+     * Species stays on the form and is stored on the breed, not on this census row.
+     *
      * @return BelongsTo<Breed, $this>
      */
     public function breed(): BelongsTo

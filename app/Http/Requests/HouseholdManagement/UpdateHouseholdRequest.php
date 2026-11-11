@@ -24,6 +24,10 @@ class UpdateHouseholdRequest extends FormRequest
                 'house_number' => $this->normalizeHouseNumber($this->input('house_number')),
             ]);
         }
+
+        if ($this->exists('clan_id') && ($this->input('clan_id') === '' || $this->input('clan_id') === null)) {
+            $this->merge(['clan_id' => null]);
+        }
         $this->mergeBasementLevelFromAnswer();
     }
 
@@ -33,7 +37,7 @@ class UpdateHouseholdRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'clan_id' => ['sometimes', 'integer', Rule::exists('clan', 'clan_id')],
+            'clan_id' => ['sometimes', 'nullable', 'integer', Rule::exists('clan', 'clan_id')],
             'street_id' => ['sometimes', 'integer', Rule::exists('street', 'street_id')],
             'house_number' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:2147483647'],
             'number_of_house_story' => ['sometimes', 'required', 'integer', 'min:1', 'max:50'],

@@ -15,7 +15,7 @@ class PersonnelNameNormalizationTest extends TestCase
             'personnel_last_name' => 'salibad',
             'personnel_first_name' => 'ellen',
             'personnel_middle_name' => 'marie',
-            'personnel_suffix' => 'jr',
+            'personnel_suffix_id' => 1,
         ]);
 
         $this->invokePrepareForValidation($request);
@@ -23,7 +23,7 @@ class PersonnelNameNormalizationTest extends TestCase
         $this->assertSame('Salibad', $request->input('personnel_last_name'));
         $this->assertSame('Ellen', $request->input('personnel_first_name'));
         $this->assertSame('Marie', $request->input('personnel_middle_name'));
-        $this->assertSame('Jr', $request->input('personnel_suffix'));
+        $this->assertSame(1, $request->input('personnel_suffix_id'));
     }
 
     public function test_update_request_title_cases_personnel_names(): void

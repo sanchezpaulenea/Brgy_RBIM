@@ -79,6 +79,13 @@ interface DashboardRepositoryInterface
     public function petsByLookup(string $column, string $lookupTable, string $lookupId, string $lookupLabel): array;
 
     /**
+     * Pets grouped by the species stored on their breed.
+     *
+     * @return list<array{id: ?int, label: ?string, count: int}>
+     */
+    public function petsBySpecies(): array;
+
+    /**
      * Residents grouped by a lookup on a one-to-one child table.
      *
      * @return list<array{id: ?int, label: ?string, count: int}>

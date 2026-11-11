@@ -48,7 +48,7 @@
             </li>
         </ul>
         <p
-            v-else-if="open && query.trim() && !itemCount"
+            v-else-if="open && query.trim() && !itemCount && !searching && !selected"
             class="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 shadow-lg"
         >
             No result.
@@ -115,6 +115,10 @@ const props = defineProps({
         type: Number,
         default: 100,
     },
+    search: {
+        type: Function,
+        default: null,
+    },
 });
 
 const emit = defineEmits(['update:modelValue', 'update:query', 'create']);
@@ -123,12 +127,20 @@ const query = ref('');
 const open = ref(false);
 const highlightedIndex = ref(0);
 const root = ref(null);
+const remoteResults = ref([]);
+const searching = ref(false);
+let searchTimer = null;
+let searchSeq = 0;
 
 const selected = computed(() => (
     props.options.find((option) => Number(option.id) === Number(props.modelValue)) ?? null
 ));
 
 const filtered = computed(() => {
+    if (typeof props.search === 'function') {
+        return remoteResults.value.slice(0, props.limit);
+    }
+
     const term = query.value.trim();
     const preferred = props.preferredIds
         .map((id) => Number(id))
@@ -173,6 +185,40 @@ function onInput() {
     emit('update:query', query.value);
     emit('update:modelValue', null);
     highlightedIndex.value = 0;
+
+    if (typeof props.search !== 'function') {
+        return;
+    }
+
+    clearTimeout(searchTimer);
+    const term = query.value.trim();
+
+    if (term.length < 2) {
+        remoteResults.value = [];
+        searching.value = false;
+        searchSeq += 1;
+
+        return;
+    }
+
+    searching.value = true;
+    searchTimer = setTimeout(() => {
+        const seq = ++searchSeq;
+
+        Promise.resolve(props.search(term)).then((items) => {
+            if (seq !== searchSeq) {
+                return;
+            }
+
+            remoteResults.value = Array.isArray(items) ? items : [];
+            searching.value = false;
+        }).catch(() => {
+            if (seq === searchSeq) {
+                remoteResults.value = [];
+                searching.value = false;
+            }
+        });
+    }, 250);
 }
 
 function onBlur() {
@@ -186,7 +232,10 @@ function closeOnOutsidePointer(event) {
 }
 
 onMounted(() => document.addEventListener('pointerdown', closeOnOutsidePointer, true));
-onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutsidePointer, true));
+onBeforeUnmount(() => {
+    document.removeEventListener('pointerdown', closeOnOutsidePointer, true);
+    clearTimeout(searchTimer);
+});
 
 function onArrowDown() {
     if (!open.value) {

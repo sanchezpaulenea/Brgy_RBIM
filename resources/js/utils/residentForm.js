@@ -1,5 +1,5 @@
 import { ageFromDateOfBirth, todayDate } from '@/utils/format';
-import { personnelNameValidationError, placeNameValidationError } from '@/utils/validation';
+import { personnelNameValidationError } from '@/utils/validation';
 
 export const HEAD_RELATIONSHIP_ID = 1;
 
@@ -25,8 +25,13 @@ export function emptyResidentForm(overrides = {}) {
         relationship_to_hh_id: '',
         sex_id: '',
         date_of_birth: '',
+        birth_barangay_id: null,
+        birth_barangay: '',
+        birth_city_municipality_id: null,
         birth_city_municipality: '',
+        birth_province_id: null,
         birth_province: '',
+        birth_country_id: null,
         birth_country: DEFAULT_BIRTH_COUNTRY,
         nationality_id: '',
         nationality_name: '',
@@ -208,28 +213,6 @@ export function validateResidentForm(form, errors, { requireRelationship = true,
         delete errors.date_of_birth;
     }
 
-    const cityError = placeNameValidationError(form.birth_city_municipality, 'Birth City/Municipality', false);
-    const provinceError = placeNameValidationError(form.birth_province, 'Birth Province', false);
-    const countryError = placeNameValidationError(form.birth_country, 'Birth Country', false);
-
-    if (cityError) {
-        errors.birth_city_municipality = cityError;
-    } else {
-        delete errors.birth_city_municipality;
-    }
-
-    if (provinceError) {
-        errors.birth_province = provinceError;
-    } else {
-        delete errors.birth_province;
-    }
-
-    if (countryError) {
-        errors.birth_country = countryError;
-    } else {
-        delete errors.birth_country;
-    }
-
     delete errors.nationality_id;
     delete errors.religion_id;
     delete errors.ethnicity_id;
@@ -252,9 +235,10 @@ export function residentPayload(form) {
         relationship_to_hh_id: toId(form.relationship_to_hh_id),
         sex_id: toId(form.sex_id),
         date_of_birth: form.date_of_birth,
-        birth_city_municipality: optionalText(form.birth_city_municipality),
-        birth_province: optionalText(form.birth_province),
-        birth_country: optionalText(form.birth_country),
+        birth_barangay_id: toId(form.birth_barangay_id),
+        birth_city_municipality_id: toId(form.birth_city_municipality_id),
+        birth_province_id: toId(form.birth_province_id),
+        birth_country_id: toId(form.birth_country_id),
         nationality_id: toOptionalLookupId(form.nationality_id),
         religion_id: toOptionalLookupId(form.religion_id),
         ethnicity_id: toOptionalLookupId(form.ethnicity_id),

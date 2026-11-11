@@ -148,6 +148,12 @@ trait ValidatesCertificateInput
                 'max:45',
                 $this->personTextRule('Relationship'),
             ],
+            'representative_pronouns' => [
+                Rule::requiredIf(fn (): bool => $strictTypeFields && $this->boolean('representative_requested')),
+                'nullable',
+                'string',
+                Rule::in(['he/him/his', 'she/her/hers', 'they/them/their']),
+            ],
             'date_of_death' => [
                 Rule::requiredIf(fn (): bool => $strictTypeFields && $this->certificateKind() === 'death'),
                 Rule::prohibitedIf(fn (): bool => $this->filled('date_of_death') && $this->certificateKind() !== 'death'),
@@ -268,6 +274,8 @@ trait ValidatesCertificateInput
             'representative_name.required' => 'Representative name is required when the request is made by a representative.',
             'representative_name.max' => 'Representative name must not exceed 100 characters.',
             'representative_relationship.required' => 'Relationship to the certificate owner is required when the request is made by a representative.',
+            'representative_pronouns.required' => 'Representative pronouns are required.',
+            'representative_pronouns.in' => 'Select He/Him/His, She/Her/Hers, or They/Them/Their.',
             'representative_relationship.max' => 'Relationship must not exceed 45 characters.',
             'date_of_death.required' => 'Date of death is required for a Death Certificate.',
             'date_of_death.date' => 'Date of death must be a valid date.',

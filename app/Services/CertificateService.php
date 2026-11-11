@@ -45,7 +45,7 @@ class CertificateService
     private const SOLO_PARENT_KAGAWAD_POSITION = 'Kagawad on Social Services';
 
     /**
-     * @var array{president_name: ?string, kagawad_name: ?string}|null
+     * @var array{president_name: ?string, president_name_id: ?int, kagawad_name: ?string, social_service_kagawad_id: ?int}|null
      */
     private ?array $soloParentOfficialNamesCache = null;
 
@@ -159,21 +159,26 @@ class CertificateService
                 'type_of_certificate_id' => $certificate->type_of_certificate_id,
                 'representative_name' => $certificate->representative_name,
                 'representative_relationship' => $certificate->representative_relationship,
-                'date_of_death' => $certificate->date_of_death?->toDateString(),
-                'include_income_amount' => (bool) $certificate->include_income_amount,
-                'stated_income_amount' => $certificate->stated_income_amount,
-                'place_of_death' => $certificate->place_of_death,
-                'cause_of_death' => $certificate->cause_of_death,
-                'ethnic_group' => $certificate->ethnic_group,
-                'resident_since_year' => $certificate->resident_since_year,
-                'stated_civil_status' => $certificate->stated_civil_status,
+                'representative_pronouns' => $certificate->representative_pronouns,
+                'date_of_death' => $certificate->deathRecord?->date_of_death?->toDateString(),
+                'include_income_amount' => (bool) $certificate->lowIncome?->include_income_amount,
+                'stated_income_amount' => $certificate->lowIncome?->stated_income_amount,
+                'place_of_death' => $certificate->deathRecord?->place_of_death,
+                'cause_of_death' => $certificate->deathRecord?->cause_of_death,
+                'ethnic_group' => $certificate->deathRecord?->ethnicity?->ethnicity,
+                'resident_since_year' => $certificate->lowIncome?->resident_since?->year,
+                'stated_civil_status' => $certificate->maritalStatusResident?->maritalStatus?->marital_status,
                 'solo_parent_circumstance' => $certificate->soloParent?->circumstance,
-                'solo_parent_president_name' => $certificate->soloParent?->president_name,
+                'solo_parent_president_name' => $certificate->soloParent?->president
+                    ? $this->personnelPrintName($certificate->soloParent->president)
+                    : null,
                 'solo_parent_president_address' => $certificate->soloParent?->president_address,
                 'solo_parent_neighbor_name' => $certificate->soloParent?->neighbor_name,
                 'solo_parent_neighbor_address' => $certificate->soloParent?->neighbor_address,
-                'solo_parent_kagawad_name' => $certificate->soloParent?->kagawad_name,
-                'children' => $certificate->soloParentChildren->map(fn ($child): array => [
+                'solo_parent_kagawad_name' => $certificate->soloParent?->kagawad
+                    ? $this->personnelPrintName($certificate->soloParent->kagawad)
+                    : null,
+                'children' => ($certificate->soloParent?->children ?? collect())->map(fn ($child): array => [
                     'child_name' => $child->child_name,
                     'date_of_birth' => $child->date_of_birth?->toDateString(),
                 ])->all(),
@@ -363,14 +368,18 @@ class CertificateService
         $details = $this->certificateDetails($input, $type, requireOfficials: true);
         $overrides = $this->overrides($input);
         $issuedAt = now();
+        $captain = $this->activePunongBarangay();
 
-        return DB::transaction(function () use ($type, $resident, $details, $issuedAt, $overrides, $signature, $issuer): array {
+        return DB::transaction(function () use ($type, $resident, $details, $issuedAt, $overrides, $signature, $issuer, $captain): array {
             $certificate = $this->certificateRepository->create([
                 'resident_id' => $resident->resident_id,
                 'date_of_issue' => $issuedAt->toDateTimeString(),
                 'type_of_certificate_id' => $type->type_of_certificate_id,
                 'issuer_id' => $issuer->user_id,
-                ...$this->storedAttributes($details),
+                'resident_marital_status_id' => $resident->resident_id,
+                'resident_gender_id' => $resident->resident_id,
+                'brgy_captain_id' => $captain->personnel_id,
+                ...$this->storedAttributes($details, $resident),
             ]);
 
             $document = $this->buildDocument(
@@ -454,7 +463,7 @@ class CertificateService
         return DB::transaction(function () use ($certificate, $type, $resident, $details, $issuedAt, $overrides, $signature, $editor): array {
             $this->auditFieldChanges($certificate, $details, $editor);
 
-            $certificate = $this->certificateRepository->update($certificate, $this->storedAttributes($details));
+            $certificate = $this->certificateRepository->update($certificate, $this->storedAttributes($details, $resident));
 
             $document = $this->buildDocument(
                 $type,
@@ -648,12 +657,15 @@ class CertificateService
         $requested = (bool) ($input['representative_requested'] ?? false);
         $representativeName = null;
         $relationship = null;
+        $pronouns = null;
 
         if ($requested) {
             $representativeName = $this->titleCase((string) ($input['representative_name'] ?? ''));
             $relationship = $this->relationshipCase((string) ($input['representative_relationship'] ?? ''));
             $representativeName = $representativeName !== '' ? $representativeName : null;
             $relationship = $relationship !== '' ? $relationship : null;
+            $pronouns = $this->blankToNull(isset($input['representative_pronouns']) ? (string) $input['representative_pronouns'] : null);
+            $pronouns = $pronouns === null ? null : mb_strtolower($pronouns, 'UTF-8');
         }
 
         $dateOfDeath = null;
@@ -698,6 +710,7 @@ class CertificateService
             'purpose_of_request' => $this->titleCase((string) $input['purpose_of_request']),
             'representative_name' => $representativeName,
             'representative_relationship' => $relationship,
+            'representative_pronouns' => $pronouns,
             'date_of_death' => $dateOfDeath,
             'include_income_amount' => $includeIncome ? 1 : 0,
             'stated_income_amount' => $includeIncome ? $amount : null,
@@ -714,20 +727,39 @@ class CertificateService
      * @param  array<string, mixed>  $details
      * @return array<string, mixed>
      */
-    private function storedAttributes(array $details): array
+    private function storedAttributes(array $details, ?Resident $resident = null): array
     {
+        $death = null;
+
+        if ($details['date_of_death'] !== null || $details['place_of_death'] !== null || $details['cause_of_death'] !== null) {
+            $death = [
+                'ethnicity_id' => $this->resolveEthnicityId($resident, $details['ethnic_group'] ?? null),
+                'date_of_death' => $details['date_of_death'],
+                'place_of_death' => (string) ($details['place_of_death'] ?? ''),
+                'cause_of_death' => (string) ($details['cause_of_death'] ?? ''),
+            ];
+        }
+
+        $lowIncome = null;
+
+        if (($details['include_income_amount'] ?? 0) === 1 || $details['resident_since_year'] !== null) {
+            $since = $details['resident_since_year'] !== null
+                ? sprintf('%04d-01-01', (int) $details['resident_since_year'])
+                : null;
+            $lowIncome = [
+                'include_income_amount' => (int) ($details['include_income_amount'] ?? 0),
+                'stated_income_amount' => $details['stated_income_amount'],
+                'resident_since' => $since,
+            ];
+        }
+
         return [
             'purpose_of_request' => $details['purpose_of_request'],
             'representative_name' => $details['representative_name'],
             'representative_relationship' => $details['representative_relationship'],
-            'date_of_death' => $details['date_of_death'],
-            'include_income_amount' => $details['include_income_amount'],
-            'stated_income_amount' => $details['stated_income_amount'],
-            'place_of_death' => $details['place_of_death'],
-            'cause_of_death' => $details['cause_of_death'],
-            'ethnic_group' => $details['ethnic_group'],
-            'resident_since_year' => $details['resident_since_year'],
-            'stated_civil_status' => $details['stated_civil_status'],
+            'representative_pronouns' => $details['representative_pronouns'] ?? null,
+            'death' => $death,
+            'low_income' => $lowIncome,
             'solo_parent' => $details['solo_parent'],
         ];
     }
@@ -776,10 +808,12 @@ class CertificateService
 
         return [
             'circumstance' => $this->lowerText($input['solo_parent_circumstance'] ?? null) ?? '',
+            'president_name_id' => $officials['president_name_id'],
             'president_name' => $officials['president_name'] ?? '',
             'president_address' => Str::squish((string) ($input['solo_parent_president_address'] ?? '')),
             'neighbor_name' => $this->titleCase((string) ($input['solo_parent_neighbor_name'] ?? '')),
             'neighbor_address' => Str::squish((string) ($input['solo_parent_neighbor_address'] ?? '')),
+            'social_service_kagawad_id' => $officials['social_service_kagawad_id'],
             'kagawad_name' => $officials['kagawad_name'] ?? '',
             'children' => $children,
         ];
@@ -1030,7 +1064,7 @@ class CertificateService
         array $details = [],
         ?int $certificateId = null,
     ): array {
-        $resident->loadMissing(['ethnicity', 'maritalStatus', 'nationality', 'sociocivic.soloParentStatus']);
+        $resident->loadMissing(['ethnicity', 'maritalStatus', 'nationality', 'sociocivic.soloParentStatus', 'sex']);
         $config = $this->typeConfig((int) $type->type_of_certificate_id) ?? [];
         $barangayName = $this->settingValue('barangay_name');
         $cityName = $this->settingValue('city_name');
@@ -1047,7 +1081,7 @@ class CertificateService
         $representativeSentence = null;
 
         if ($representativeName !== null && $relationship !== null) {
-            $representativeSentence = 'This Certification was issued upon the request of {representative_name} to process the {certificate_type} of {possessive} {relationship}, {owner_name}.';
+            $representativeSentence = 'This Certification was issued upon the request of {representative_name} to process the {certificate_type} of {representative_possessive} {relationship}, {owner_name}.';
         }
 
         $incomeAmount = $this->blankToNull(isset($details['stated_income_amount']) ? (string) $details['stated_income_amount'] : null);
@@ -1082,6 +1116,7 @@ class CertificateService
             'city_name' => $this->cityNameOnly($cityName),
             'city_of' => $this->cityOf($cityName),
             'representative_name' => mb_strtoupper($representativeName ?? '', 'UTF-8'),
+            'representative_possessive' => $this->representativePronounSet($details['representative_pronouns'] ?? null)['possessive'],
             'certificate_type' => (string) $type->type_of_certificate,
             'relationship' => $relationship ?? '',
             'courtesy' => $courtesy,
@@ -1206,7 +1241,7 @@ class CertificateService
                     : '**{requester}**';
                 $relation = mb_strtolower($relationship ?? '');
                 $template = $relation !== ''
-                    ? "This Certification was issued upon the request of {$asker} to process the **DEATH** Certificate of {possessive} {$relation} {owner_name}."
+                    ? "This Certification was issued upon the request of {$asker} to process the **DEATH** Certificate of {representative_possessive} {$relation} {owner_name}."
                     : "This Certification was issued upon the request of {$asker} to process the **DEATH** Certificate of {owner_name}.";
                 $replacedRequest = true;
             }
@@ -1427,7 +1462,9 @@ class CertificateService
         $kagawadKey = mb_strtolower(PersonnelPosition::standardizeName(self::SOLO_PARENT_KAGAWAD_POSITION));
         $names = [
             'president_name' => null,
+            'president_name_id' => null,
             'kagawad_name' => null,
+            'social_service_kagawad_id' => null,
         ];
 
         $personnel = $this->barangayPersonnelRepository->findActiveByPositionNames([
@@ -1445,10 +1482,12 @@ class CertificateService
 
             if ($position === $presidentKey && $names['president_name'] === null) {
                 $names['president_name'] = $printed;
+                $names['president_name_id'] = (int) $person->personnel_id;
             }
 
             if ($position === $kagawadKey && $names['kagawad_name'] === null) {
                 $names['kagawad_name'] = $printed;
+                $names['social_service_kagawad_id'] = (int) $person->personnel_id;
             }
         }
 
@@ -1461,7 +1500,7 @@ class CertificateService
             $personnel->personnel_first_name,
             $personnel->personnel_middle_name,
             $personnel->personnel_last_name,
-            $personnel->personnel_suffix,
+            $personnel->printedSuffix(),
         ])->map(fn (mixed $part) => trim((string) $part))->filter()->implode(' ');
 
         return $name === '' ? '' : $this->titleCase($name);
@@ -1755,6 +1794,65 @@ class CertificateService
         };
     }
 
+    /**
+     * @return array{subject: string, object: string, possessive: string}
+     */
+    private function representativePronounSet(?string $stored): array
+    {
+        return match ($stored) {
+            'she/her/hers' => ['subject' => 'she', 'object' => 'her', 'possessive' => 'her'],
+            'they/them/their' => ['subject' => 'they', 'object' => 'them', 'possessive' => 'their'],
+            default => ['subject' => 'he', 'object' => 'him', 'possessive' => 'his'],
+        };
+    }
+
+    private function activePunongBarangay(): BarangayPersonnel
+    {
+        $captain = $this->barangayPersonnelRepository
+            ->findActiveByPositionNames([PunongBarangayName::POSITION])
+            ->first();
+
+        if (! $captain instanceof BarangayPersonnel) {
+            throw ValidationException::withMessages([
+                'brgy_captain_id' => 'Register an active Punong Barangay in Barangay Personnel before issuing a certificate.',
+            ]);
+        }
+
+        return $captain;
+    }
+
+    private function resolveEthnicityId(?Resident $resident, ?string $label): int
+    {
+        $resident?->loadMissing('ethnicity');
+        $knownId = $resident?->ethnicity_id;
+
+        if ($label === null || trim($label) === '') {
+            if ($knownId !== null) {
+                return (int) $knownId;
+            }
+
+            throw ValidationException::withMessages([
+                'ethnic_group' => 'Ethnicity is required for a death certificate.',
+            ]);
+        }
+
+        $match = \App\Models\ResidentManagement\Demographic\Ethnicity::query()
+            ->whereRaw('LOWER(ethnicity) = ?', [mb_strtolower(trim($label))])
+            ->first();
+
+        if ($match !== null) {
+            return (int) $match->ethnicity_id;
+        }
+
+        if ($knownId !== null && strcasecmp((string) $resident?->ethnicity?->ethnicity, trim($label)) === 0) {
+            return (int) $knownId;
+        }
+
+        throw ValidationException::withMessages([
+            'ethnic_group' => 'Select an ethnicity that is already in the registry.',
+        ]);
+    }
+
     private function possessivePronoun(Resident $resident): string
     {
         $sex = mb_strtolower(trim((string) ($resident->sex?->sex ?? '')));
@@ -1954,7 +2052,7 @@ class CertificateService
             $personnel->personnel_first_name,
             $personnel->personnel_middle_name,
             $personnel->personnel_last_name,
-            $personnel->personnel_suffix,
+            $personnel->printedSuffix(),
         ])->map(fn (mixed $part) => trim((string) $part))->filter()->implode(' ');
 
         return $name !== '' ? $name : '';

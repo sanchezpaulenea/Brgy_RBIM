@@ -193,7 +193,7 @@
                         <div class="grid gap-4 sm:grid-cols-2">
                         <div>
                             <label for="detail_clan_id" class="rbim-label">
-                                Clan<span class="rbim-required" aria-hidden="true">*</span>
+                                Clan
                             </label>
                             <select
                                 id="detail_clan_id"
@@ -662,10 +662,6 @@ async function loadHousehold() {
 
 async function handleUpdate() {
     clearEditErrors();
-
-    if (!toId(editForm.clan_id)) {
-        editErrors.clan_id = 'Clan is required.';
-    }
 
     if (!toId(editForm.street_id)) {
         editErrors.street_id = 'Street is required.';

@@ -188,7 +188,9 @@
                     class="grid gap-3 sm:grid-cols-2"
                 >
                     <div>
-                        <label :for="`${idPrefix}-female_deaths_${index}_age`" class="rbim-label">Age</label>
+                        <label :for="`${idPrefix}-female_deaths_${index}_age`" class="rbim-label">
+                            Age<span class="rbim-required" aria-hidden="true">*</span>
+                        </label>
                         <input
                             :id="`${idPrefix}-female_deaths_${index}_age`"
                             v-model="death.age"
@@ -202,7 +204,9 @@
                         <p v-if="errors[`female_deaths.${index}.age`]" class="rbim-error">{{ errors[`female_deaths.${index}.age`] }}</p>
                     </div>
                     <div>
-                        <label :for="`${idPrefix}-female_deaths_${index}_cause`" class="rbim-label">Cause of death</label>
+                        <label :for="`${idPrefix}-female_deaths_${index}_cause`" class="rbim-label">
+                            Cause of death<span class="rbim-required" aria-hidden="true">*</span>
+                        </label>
                         <input
                             :id="`${idPrefix}-female_deaths_${index}_cause`"
                             v-model="death.cause_of_death"
@@ -250,7 +254,9 @@
                     class="grid gap-3 sm:grid-cols-3"
                 >
                     <div>
-                        <label :for="`${idPrefix}-child_deaths_${index}_age`" class="rbim-label">Age</label>
+                        <label :for="`${idPrefix}-child_deaths_${index}_age`" class="rbim-label">
+                            Age<span class="rbim-required" aria-hidden="true">*</span>
+                        </label>
                         <input
                             :id="`${idPrefix}-child_deaths_${index}_age`"
                             v-model="death.age"
@@ -264,7 +270,9 @@
                         <p v-if="errors[`child_deaths.${index}.age`]" class="rbim-error">{{ errors[`child_deaths.${index}.age`] }}</p>
                     </div>
                     <div>
-                        <label :for="`${idPrefix}-child_deaths_${index}_sex`" class="rbim-label">Gender</label>
+                        <label :for="`${idPrefix}-child_deaths_${index}_sex`" class="rbim-label">
+                            Gender<span class="rbim-required" aria-hidden="true">*</span>
+                        </label>
                         <select
                             :id="`${idPrefix}-child_deaths_${index}_sex`"
                             v-model="death.sex_id"
@@ -278,7 +286,9 @@
                         <p v-if="errors[`child_deaths.${index}.sex_id`]" class="rbim-error">{{ errors[`child_deaths.${index}.sex_id`] }}</p>
                     </div>
                     <div>
-                        <label :for="`${idPrefix}-child_deaths_${index}_cause`" class="rbim-label">Cause of death</label>
+                        <label :for="`${idPrefix}-child_deaths_${index}_cause`" class="rbim-label">
+                            Cause of death<span class="rbim-required" aria-hidden="true">*</span>
+                        </label>
                         <input
                             :id="`${idPrefix}-child_deaths_${index}_cause`"
                             v-model="death.cause_of_death"

@@ -16,7 +16,7 @@ class BarangayPersonnelRepository implements BarangayPersonnelRepositoryInterfac
     public function all(): Collection
     {
         return BarangayPersonnel::query()
-            ->with(['position', 'status', 'user'])
+            ->with(['position', 'status', 'user', 'nameSuffix'])
             ->orderBy('personnel_last_name')
             ->orderBy('personnel_first_name')
             ->get();
@@ -26,7 +26,7 @@ class BarangayPersonnelRepository implements BarangayPersonnelRepositoryInterfac
         string $lastName,
         string $firstName,
         ?string $middleName,
-        ?string $suffix,
+        int $suffixId,
         string $dateOfBirth,
         ?int $excludePersonnelId = null,
     ): ?BarangayPersonnel {
@@ -44,14 +44,7 @@ class BarangayPersonnelRepository implements BarangayPersonnelRepositoryInterfac
             $query->where('personnel_middle_name', $middleName);
         }
 
-        if ($suffix === null || $suffix === '') {
-            $query->where(function ($builder): void {
-                $builder->whereNull('personnel_suffix')
-                    ->orWhere('personnel_suffix', '');
-            });
-        } else {
-            $query->where('personnel_suffix', $suffix);
-        }
+        $query->where('personnel_suffix_id', $suffixId);
 
         if ($excludePersonnelId !== null) {
             $query->where('personnel_id', '!=', $excludePersonnelId);

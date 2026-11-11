@@ -22,7 +22,6 @@ class StorePersonnelRequest extends FormRequest
             'personnel_last_name' => $this->titleCaseName($this->input('personnel_last_name')),
             'personnel_first_name' => $this->titleCaseName($this->input('personnel_first_name')),
             'personnel_middle_name' => $this->titleCaseName($this->input('personnel_middle_name')),
-            'personnel_suffix' => $this->titleCaseName($this->input('personnel_suffix')),
             'position_name' => $this->normalizePositionName($this->input('position_name')),
         ]);
     }
@@ -36,7 +35,7 @@ class StorePersonnelRequest extends FormRequest
             'personnel_last_name' => ['required', 'string', 'max:45', new ValidPersonnelName],
             'personnel_first_name' => ['required', 'string', 'max:45', new ValidPersonnelName],
             'personnel_middle_name' => ['nullable', 'string', 'max:45', new ValidPersonnelName],
-            'personnel_suffix' => ['nullable', 'string', 'max:10', new ValidPersonnelName],
+            'personnel_suffix_id' => ['required', 'integer', Rule::exists('suffix', 'suffix_id')],
             'personnel_date_of_birth' => ['required', 'date', 'before_or_equal:today'],
             'sex_id' => ['required', 'integer', Rule::exists('sex', 'sex_id')],
             'personnel_status_id' => ['sometimes', 'integer', Rule::exists('personnel_status', 'personnel_status_id')],

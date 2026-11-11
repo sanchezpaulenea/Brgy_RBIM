@@ -17,7 +17,7 @@ class PetCensusRepository implements PetCensusRepositoryInterface
      */
     private function defaultRelations(): array
     {
-        return ['petStatus', 'specie', 'breed', 'sex', 'household.head', 'household.street'];
+        return ['petStatus', 'breed.specie', 'sex', 'household.head', 'household.street'];
     }
 
     /**
@@ -34,7 +34,10 @@ class PetCensusRepository implements PetCensusRepositoryInterface
             )
             ->when(
                 ! empty($filters['specie_id']),
-                fn ($query) => $query->where('specie_id', $filters['specie_id']),
+                fn ($query) => $query->whereHas(
+                    'breed',
+                    fn ($breedQuery) => $breedQuery->where('specie_id', $filters['specie_id']),
+                ),
             )
             ->when(
                 ! empty($filters['breed_id']),
@@ -47,7 +50,7 @@ class PetCensusRepository implements PetCensusRepositoryInterface
                     $searchQuery
                         ->whereRaw('CAST(pet_census_id AS CHAR) LIKE ? ESCAPE \'\\\\\'', [$term])
                         ->orWhereHas(
-                            'specie',
+                            'breed.specie',
                             fn ($specieQuery) => $specieQuery->whereRaw(
                                 'LOWER(specie) LIKE ? ESCAPE \'\\\\\'',
                                 [$term],

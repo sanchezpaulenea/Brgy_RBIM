@@ -26,7 +26,7 @@ interface BarangayPersonnelRepositoryInterface
         string $lastName,
         string $firstName,
         ?string $middleName,
-        ?string $suffix,
+        int $suffixId,
         string $dateOfBirth,
         ?int $excludePersonnelId = null,
     ): ?BarangayPersonnel;

@@ -17,6 +17,7 @@ class EducationRepository implements EducationRepositoryInterface
             'highestLvlOfEduc',
             'currentEnrollmentStatus',
             'schoolLvl',
+            'schoolBarangay.municipalityCity.province',
         ];
     }
 

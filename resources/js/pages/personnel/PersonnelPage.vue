@@ -65,18 +65,22 @@
                         <p v-if="formErrors.personnel_middle_name" class="rbim-error">{{ formErrors.personnel_middle_name }}</p>
                     </div>
                     <div>
-                        <label for="personnel_suffix" class="rbim-label">Suffix</label>
-                        <input
+                        <label for="personnel_suffix" class="rbim-label">
+                            Suffix<span class="rbim-required" aria-hidden="true">*</span>
+                        </label>
+                        <select
                             id="personnel_suffix"
-                            v-model="form.personnel_suffix"
-                            type="text"
-                            maxlength="10"
+                            v-model="form.personnel_suffix_id"
                             class="rbim-input"
-                            :class="{ 'rbim-input-error': formErrors.personnel_suffix }"
-                            @input="validateName('personnel_suffix', 'Suffix')"
-                            @blur="validateName('personnel_suffix', 'Suffix')"
+                            :class="{ 'rbim-input-error': formErrors.personnel_suffix_id }"
+                            @change="formErrors.personnel_suffix_id = ''"
                         >
-                        <p v-if="formErrors.personnel_suffix" class="rbim-error">{{ formErrors.personnel_suffix }}</p>
+                            <option value="">Select suffix</option>
+                            <option v-for="suffix in suffixes" :key="suffix.id" :value="suffix.id">
+                                {{ suffix.label }}
+                            </option>
+                        </select>
+                        <p v-if="formErrors.personnel_suffix_id" class="rbim-error">{{ formErrors.personnel_suffix_id }}</p>
                     </div>
                     <BirthDateField
                         v-model="form.personnel_date_of_birth"
@@ -252,7 +256,7 @@ const emptyForm = () => ({
     personnel_last_name: '',
     personnel_first_name: '',
     personnel_middle_name: '',
-    personnel_suffix: '',
+    personnel_suffix_id: '',
     personnel_date_of_birth: '',
     sex_id: '',
     personnel_status_id: 1,
@@ -271,6 +275,7 @@ const {
 
 const items = ref([]);
 const positions = ref([]);
+const suffixes = ref([]);
 const loading = ref(false);
 const saving = ref(false);
 const updatingStatusId = ref(null);
@@ -379,7 +384,7 @@ function startEdit(person) {
         personnel_last_name: person.personnel_last_name,
         personnel_first_name: person.personnel_first_name,
         personnel_middle_name: person.personnel_middle_name ?? '',
-        personnel_suffix: person.personnel_suffix ?? '',
+        personnel_suffix_id: person.personnel_suffix_id ?? '',
         personnel_date_of_birth: person.personnel_date_of_birth?.slice?.(0, 10) ?? '',
         sex_id: person.sex_id ?? '',
         personnel_status_id: person.personnel_status_id ?? 1,
@@ -394,12 +399,14 @@ async function load() {
     error.value = '';
 
     try {
-        const [personnel, positionItems] = await Promise.all([
+        const [personnel, positionItems, suffixItems] = await Promise.all([
             personnelService.fetchPersonnel(),
             lookupService.fetchPersonnelPositions(),
+            lookupService.fetchLookup('suffix'),
         ]);
         items.value = personnel;
         positions.value = positionItems;
+        suffixes.value = suffixItems;
     } catch (err) {
         error.value = extractErrorMessage(err, 'Unable to load personnel.');
     } finally {
@@ -417,7 +424,7 @@ function buildPayload(confirmDuplicate = false) {
         personnel_last_name: form.personnel_last_name.trim(),
         personnel_first_name: form.personnel_first_name.trim(),
         personnel_middle_name: form.personnel_middle_name.trim(),
-        personnel_suffix: form.personnel_suffix.trim(),
+        personnel_suffix_id: Number(form.personnel_suffix_id),
         personnel_date_of_birth: form.personnel_date_of_birth,
         sex_id: Number(form.sex_id),
         confirm_duplicate: confirmDuplicate,
@@ -532,7 +539,10 @@ async function handleSave() {
     validateName('personnel_last_name', 'Last name', true);
     validateName('personnel_first_name', 'First name', true);
     validateName('personnel_middle_name', 'Middle name');
-    validateName('personnel_suffix', 'Suffix');
+
+    if (!form.personnel_suffix_id) {
+        formErrors.personnel_suffix_id = 'Suffix is required.';
+    }
 
     if (!form.personnel_date_of_birth) {
         formErrors.personnel_date_of_birth = 'Date of birth is required.';
@@ -621,7 +631,7 @@ async function handleStatusChange(person, event) {
                 personnel_last_name: person.personnel_last_name,
                 personnel_first_name: person.personnel_first_name,
                 personnel_middle_name: person.personnel_middle_name ?? '',
-                personnel_suffix: person.personnel_suffix ?? '',
+                personnel_suffix_id: person.personnel_suffix_id,
                 personnel_date_of_birth: person.personnel_date_of_birth?.slice?.(0, 10) ?? '',
                 ...(person.sex_id ? { sex_id: Number(person.sex_id) } : {}),
                 position_id: Number(person.position_id),

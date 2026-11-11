@@ -88,7 +88,7 @@
         </div>
         <div v-if="clans.length">
             <label :for="`${idPrefix}-clan`" class="rbim-label">
-                Clan<span class="rbim-required" aria-hidden="true">*</span>
+                Clan
             </label>
             <select
                 :id="`${idPrefix}-clan`"
@@ -132,51 +132,7 @@
             :error="errors.date_of_birth"
             @update:model-value="patch('date_of_birth', $event); delete errors.date_of_birth"
         />
-        <div>
-            <label :for="`${idPrefix}-birth_country`" class="rbim-label">
-                Birth Country
-            </label>
-            <input
-                :id="`${idPrefix}-birth_country`"
-                :value="form.birth_country"
-                type="text"
-                maxlength="45"
-                class="rbim-input"
-                :class="{ 'rbim-input-error': errors.birth_country }"
-                @input="patch('birth_country', $event.target.value)"
-            >
-            <p v-if="errors.birth_country" class="rbim-error">{{ errors.birth_country }}</p>
-        </div>
-        <div>
-            <label :for="`${idPrefix}-birth_province`" class="rbim-label">
-                Birth Province
-            </label>
-            <input
-                :id="`${idPrefix}-birth_province`"
-                :value="form.birth_province"
-                type="text"
-                maxlength="45"
-                class="rbim-input"
-                :class="{ 'rbim-input-error': errors.birth_province }"
-                @input="patch('birth_province', $event.target.value)"
-            >
-            <p v-if="errors.birth_province" class="rbim-error">{{ errors.birth_province }}</p>
-        </div>
-        <div>
-            <label :for="`${idPrefix}-birth_city`" class="rbim-label whitespace-nowrap">
-                Birth City/Municipality
-            </label>
-            <input
-                :id="`${idPrefix}-birth_city`"
-                :value="form.birth_city_municipality"
-                type="text"
-                maxlength="45"
-                class="rbim-input"
-                :class="{ 'rbim-input-error': errors.birth_city_municipality }"
-                @input="patch('birth_city_municipality', $event.target.value)"
-            >
-            <p v-if="errors.birth_city_municipality" class="rbim-error">{{ errors.birth_city_municipality }}</p>
-        </div>
+        <BirthPlaceFields v-model="form" :errors="errors" :id-prefix="idPrefix" />
         <LookupCombobox
             v-model="form.nationality_id"
             v-model:query="form.nationality_name"
@@ -265,6 +221,7 @@
 <script setup>
 import { computed } from 'vue';
 import BirthDateField from '@/components/BirthDateField.vue';
+import BirthPlaceFields from '@/components/BirthPlaceFields.vue';
 import LookupCombobox from '@/components/LookupCombobox.vue';
 import { useAuth } from '@/composables/useAuth';
 import { extractErrorMessage } from '@/services/http';

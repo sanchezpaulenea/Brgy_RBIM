@@ -329,22 +329,22 @@ async function handleAssignRole(account) {
 
     const roleName = roles.value.find((role) => Number(role.role_id) === roleId)?.role_name ?? 'this role';
 
-    const allowed = await askConfirm({
-        title: 'Assign role',
-        message: `Assign the ${roleName} role to ${account.username}?`,
-        confirmLabel: 'Assign role',
-    });
-
-    if (!allowed) {
-        return;
-    }
-
     assigningUserId.value = account.user_id;
     error.value = '';
     successMessage.value = '';
 
     try {
-        await userService.assignUserRole(account.user_id, roleId);
+        const updated = await askAdministratorPassword({
+            title: 'Assign role',
+            message: `Assign the ${roleName} role to "${account.username}". Enter your Admin or Super Admin password to save this change.`,
+            confirmLabel: 'Assign role',
+            run: (password) => userService.assignUserRole(account.user_id, roleId, password),
+        });
+
+        if (!updated) {
+            return;
+        }
+
         replaceUser(await userService.fetchUser(account.user_id));
         selectedRoleByUser[account.user_id] = '';
         successMessage.value = `Assigned ${roleName} to "${account.username}".`;

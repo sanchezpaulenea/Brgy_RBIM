@@ -150,7 +150,7 @@
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div>
                             <label for="edit_clan_id" class="rbim-label">
-                                Clan<span class="rbim-required" aria-hidden="true">*</span>
+                                Clan
                             </label>
                             <select
                                 id="edit_clan_id"
@@ -476,10 +476,6 @@ watch(pageCount, (count) => {
 
 async function handleUpdate() {
     clearEditErrors();
-
-    if (!toId(editForm.clan_id)) {
-        editErrors.clan_id = 'Clan is required.';
-    }
 
     if (!toId(editForm.street_id)) {
         editErrors.street_id = 'Street is required.';

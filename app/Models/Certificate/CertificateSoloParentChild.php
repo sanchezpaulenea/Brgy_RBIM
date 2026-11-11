@@ -14,7 +14,7 @@ class CertificateSoloParentChild extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'certificate_id',
+        'certificate_solo_parent_id',
         'child_name',
         'date_of_birth',
     ];
@@ -27,10 +27,10 @@ class CertificateSoloParentChild extends Model
     ];
 
     /**
-     * @return BelongsTo<Certificate, $this>
+     * @return BelongsTo<CertificateSoloParent, $this>
      */
-    public function certificate(): BelongsTo
+    public function soloParent(): BelongsTo
     {
-        return $this->belongsTo(Certificate::class, 'certificate_id', 'certificate_id');
+        return $this->belongsTo(CertificateSoloParent::class, 'certificate_solo_parent_id', 'certificate_solo_parent_id');
     }
 }

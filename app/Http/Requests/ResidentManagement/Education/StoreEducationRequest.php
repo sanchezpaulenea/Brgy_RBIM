@@ -2,30 +2,18 @@
 
 namespace App\Http\Requests\ResidentManagement\Education;
 
-use App\Http\Requests\Concerns\TitleCasesAttributes;
 use App\Models\ResidentManagement\Demographic\Resident;
 use App\Models\ResidentManagement\Education\CurrentEnrollmentStatus;
 use App\Models\ResidentManagement\Education\SchoolLvl;
-use App\Rules\ValidPlaceName;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class StoreEducationRequest extends FormRequest
 {
-    use TitleCasesAttributes;
-
     public function authorize(): bool
     {
         return true;
-    }
-
-    protected function prepareForValidation(): void
-    {
-        $this->mergeTitleCased([
-            'place_of_school_brgy',
-            'place_of_school_city_municipality',
-        ]);
     }
 
     /**
@@ -54,13 +42,7 @@ class StoreEducationRequest extends FormRequest
                 'integer',
                 Rule::exists('school_lvl', 'school_lvl_id'),
             ],
-            'place_of_school_brgy' => ['nullable', 'string', 'max:45', new ValidPlaceName('School barangay')],
-            'place_of_school_city_municipality' => [
-                'nullable',
-                'string',
-                'max:45',
-                new ValidPlaceName('School city / municipality'),
-            ],
+            'place_of_school_brgy_id' => ['nullable', 'integer', Rule::exists('barangay', 'barangay_id')],
         ];
     }
 
@@ -76,6 +58,7 @@ class StoreEducationRequest extends FormRequest
             'current_enrollement_status_id.exists' => 'The selected enrollment status does not exist.',
             'school_lvl_id.required' => 'School level is required.',
             'school_lvl_id.exists' => 'The selected school level does not exist.',
+            'place_of_school_brgy_id.exists' => 'The selected school barangay does not exist.',
         ];
     }
 
@@ -108,15 +91,8 @@ class StoreEducationRequest extends FormRequest
                     $validator->errors()->add('school_lvl_id', 'School level is required when the resident is enrolled.');
                 }
 
-                if (! is_string($this->input('place_of_school_brgy')) || trim((string) $this->input('place_of_school_brgy')) === '') {
-                    $validator->errors()->add('place_of_school_brgy', 'School barangay is required when the resident is enrolled.');
-                }
-
-                if (! is_string($this->input('place_of_school_city_municipality')) || trim((string) $this->input('place_of_school_city_municipality')) === '') {
-                    $validator->errors()->add(
-                        'place_of_school_city_municipality',
-                        'School city / municipality is required when the resident is enrolled.',
-                    );
+                if ($this->input('place_of_school_brgy_id') === null || $this->input('place_of_school_brgy_id') === '') {
+                    $validator->errors()->add('place_of_school_brgy_id', 'School barangay is required when the resident is enrolled.');
                 }
             },
         ];

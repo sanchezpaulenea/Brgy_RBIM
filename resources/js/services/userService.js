@@ -44,9 +44,10 @@ export async function fetchUserRoles(userId) {
     return data.roles;
 }
 
-export async function assignUserRole(userId, roleId) {
+export async function assignUserRole(userId, roleId, adminPassword) {
     const { data } = await http.post(`/users/${userId}/roles`, {
         role_id: roleId,
+        admin_password: adminPassword,
     });
 
     return data.user_role;

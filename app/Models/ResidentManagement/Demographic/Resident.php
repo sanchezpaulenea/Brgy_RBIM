@@ -2,6 +2,10 @@
 
 namespace App\Models\ResidentManagement\Demographic;
 
+use App\Models\Geographic\Barangay;
+use App\Models\Geographic\Country;
+use App\Models\Geographic\MunicipalityCity;
+use App\Models\Geographic\Province;
 use App\Models\HouseholdManagement\Clan;
 use App\Models\HouseholdManagement\Household;
 use App\Models\ResidentManagement\Ctc\Ctc;
@@ -18,6 +22,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 
 class Resident extends Model
 {
@@ -31,13 +37,14 @@ class Resident extends Model
         'last_name',
         'first_name',
         'middle_name',
-        'suffix',
+        'suffix_id',
         'relationship_to_hh_id',
         'sex_id',
         'date_of_birth',
-        'birth_city_municipality',
-        'birth_province',
-        'birth_country',
+        'birth_city_municipality_id',
+        'birth_province_id',
+        'birth_country_id',
+        'birth_barangay_id',
         'nationality_id',
         'religion_id',
         'ethnicity_id',
@@ -77,6 +84,174 @@ class Resident extends Model
     public function household(): BelongsTo
     {
         return $this->belongsTo(Household::class, 'household_id', 'household_id');
+    }
+
+    /**
+     * @return BelongsTo<Province, $this>
+     */
+    public function birthProvince(): BelongsTo
+    {
+        return $this->belongsTo(Province::class, 'birth_province_id', 'province_id');
+    }
+
+    /**
+     * @return BelongsTo<MunicipalityCity, $this>
+     */
+    public function birthMunicipality(): BelongsTo
+    {
+        return $this->belongsTo(MunicipalityCity::class, 'birth_city_municipality_id', 'municipality_city_id');
+    }
+
+    /**
+     * @return BelongsTo<Country, $this>
+     */
+    public function birthCountry(): BelongsTo
+    {
+        return $this->belongsTo(Country::class, 'birth_country_id', 'country_id');
+    }
+
+    /**
+     * @return BelongsTo<Barangay, $this>
+     */
+    public function birthBarangay(): BelongsTo
+    {
+        return $this->belongsTo(Barangay::class, 'birth_barangay_id', 'barangay_id');
+    }
+
+    public static function birthBarangayColumnExists(): bool
+    {
+        static $exists = null;
+
+        if ($exists === null) {
+            $exists = Schema::hasColumn('resident', 'birth_barangay_id');
+        }
+
+        return $exists;
+    }
+
+    /**
+     * The most specific selected place determines the parent ids.
+     *
+     * @param  array<string, mixed>  $input
+     * @return array{birth_barangay_id: ?int, birth_city_municipality_id: ?int, birth_province_id: ?int, birth_country_id: ?int}
+     */
+    public static function birthPlaceIds(array $input): array
+    {
+        $barangayId = self::positiveId($input['birth_barangay_id'] ?? null);
+        $municipalityId = self::positiveId($input['birth_city_municipality_id'] ?? null);
+        $provinceId = self::positiveId($input['birth_province_id'] ?? null);
+
+        if ($barangayId !== null) {
+            $barangay = Barangay::query()->with('municipalityCity.province')->find($barangayId);
+
+            if ($barangay === null) {
+                throw ValidationException::withMessages([
+                    'birth_barangay_id' => ['The selected birth barangay does not exist.'],
+                ]);
+            }
+
+            return [
+                'birth_barangay_id' => (int) $barangay->barangay_id,
+                'birth_city_municipality_id' => (int) $barangay->municipality_city_id,
+                'birth_province_id' => $barangay->municipalityCity?->province_id,
+                'birth_country_id' => $barangay->municipalityCity?->province?->country_id,
+            ];
+        }
+
+        if ($municipalityId !== null) {
+            $municipality = MunicipalityCity::query()->with('province')->find($municipalityId);
+
+            if ($municipality === null) {
+                throw ValidationException::withMessages([
+                    'birth_city_municipality_id' => ['The selected birth city or municipality does not exist.'],
+                ]);
+            }
+
+            return [
+                'birth_barangay_id' => null,
+                'birth_city_municipality_id' => (int) $municipality->municipality_city_id,
+                'birth_province_id' => (int) $municipality->province_id,
+                'birth_country_id' => $municipality->province?->country_id,
+            ];
+        }
+
+        if ($provinceId !== null) {
+            $province = Province::query()->find($provinceId);
+
+            if ($province === null) {
+                throw ValidationException::withMessages([
+                    'birth_province_id' => ['The selected birth province does not exist.'],
+                ]);
+            }
+
+            return [
+                'birth_barangay_id' => null,
+                'birth_city_municipality_id' => null,
+                'birth_province_id' => (int) $province->province_id,
+                'birth_country_id' => (int) $province->country_id,
+            ];
+        }
+
+        return [
+            'birth_barangay_id' => null,
+            'birth_city_municipality_id' => null,
+            'birth_province_id' => null,
+            'birth_country_id' => null,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function birthPlace(): array
+    {
+        $relations = ['birthProvince', 'birthMunicipality', 'birthCountry'];
+
+        if (self::birthBarangayColumnExists()) {
+            $relations[] = 'birthBarangay';
+        }
+
+        $this->loadMissing($relations);
+
+        return [
+            'birth_barangay_id' => self::birthBarangayColumnExists() ? $this->getAttribute('birth_barangay_id') : null,
+            'birth_barangay' => self::birthBarangayColumnExists() ? $this->birthBarangay?->barangay_name : null,
+            'birth_city_municipality_id' => $this->birth_city_municipality_id,
+            'birth_city_municipality' => $this->birthMunicipality?->municipality_city_name,
+            'birth_province_id' => $this->birth_province_id,
+            'birth_province' => $this->birthProvince?->province_name,
+            'birth_country_id' => $this->birth_country_id,
+            'birth_country' => $this->birthCountry?->country_name,
+        ];
+    }
+
+    private static function positiveId(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $id = (int) $value;
+
+        return $id > 0 ? $id : null;
+    }
+
+    /**
+     * @return BelongsTo<Suffix, $this>
+     */
+    public function nameSuffix(): BelongsTo
+    {
+        return $this->belongsTo(Suffix::class, 'suffix_id', 'suffix_id');
+    }
+
+    /**
+     * Printed suffix. "Not Applicable" is blank, matching the personnel name.
+     */
+    public function getSuffixAttribute(): string
+    {
+        $this->loadMissing('nameSuffix');
+
+        return $this->nameSuffix?->printed() ?? '';
     }
 
     /**

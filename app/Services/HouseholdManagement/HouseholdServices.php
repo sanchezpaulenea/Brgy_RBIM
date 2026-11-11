@@ -8,6 +8,7 @@ use App\Models\Logs\Action;
 use App\Models\ResidentManagement\Demographic\RelationshipToHouseholdHead;
 use App\Models\ResidentManagement\Demographic\Resident;
 use App\Models\ResidentManagement\Demographic\ResidentStatus;
+use App\Models\ResidentManagement\Demographic\Suffix;
 use App\Models\UserManagement\User;
 use App\Repositories\Interfaces\HouseholdManagement\HouseholdRepositoryInterface;
 use App\Repositories\Interfaces\Logs\AuditLogRepositoryInterface;
@@ -55,7 +56,7 @@ class HouseholdServices
                     $this->disableForeignKeyChecks();
 
                     $household = $this->householdRepository->create([
-                        'clan_id' => $data['clan_id'],
+                        'clan_id' => $data['clan_id'] ?? null,
                         'street_id' => $data['street_id'],
                         'number_of_house_story' => $data['number_of_house_story'],
                         'number_of_basement_level' => $this->basementLevelFromData($data),
@@ -69,13 +70,17 @@ class HouseholdServices
                         'last_name' => $headData['last_name'],
                         'first_name' => $headData['first_name'],
                         'middle_name' => $headData['middle_name'] ?? null,
-                        'suffix' => $headData['suffix'] ?? null,
+                        'suffix_id' => Suffix::idMatchingLabel(
+                            isset($headData['suffix']) ? (string) $headData['suffix'] : null,
+                            'head.suffix',
+                        ),
                         'relationship_to_hh_id' => RelationshipToHouseholdHead::HEAD,
                         'sex_id' => $headData['sex_id'],
                         'date_of_birth' => $headData['date_of_birth'],
-                        'birth_city_municipality' => $headData['birth_city_municipality'] ?? null,
-                        'birth_province' => $headData['birth_province'] ?? null,
-                        'birth_country' => $headData['birth_country'] ?? null,
+                        'birth_barangay_id' => $headData['birth_barangay_id'] ?? null,
+                        'birth_city_municipality_id' => $headData['birth_city_municipality_id'] ?? null,
+                        'birth_province_id' => $headData['birth_province_id'] ?? null,
+                        'birth_country_id' => $headData['birth_country_id'] ?? null,
                         'nationality_id' => $this->nullBlankLookupId($headData['nationality_id'] ?? null),
                         'religion_id' => $this->nullBlankLookupId($headData['religion_id'] ?? null),
                         'ethnicity_id' => $this->nullBlankLookupId($headData['ethnicity_id'] ?? null),
@@ -333,7 +338,7 @@ class HouseholdServices
             'questions.constructionMaterialOuterWall',
             'questions.commonDiseases',
             'questions.primaryNeeds',
-            'questions.intendToStay',
+            'questions.intendToStay.barangay.municipalityCity.province',
             'questions.femaleDeaths',
             'questions.childDeaths.sex',
             'pets.petStatus',
@@ -406,9 +411,14 @@ class HouseholdServices
             'date_of_birth' => $resident->date_of_birth?->format('Y-m-d'),
             'age' => $resident->age(),
             'age_in_months' => $resident->ageInMonths(),
-            'birth_city_municipality' => $resident->birth_city_municipality,
-            'birth_province' => $resident->birth_province,
-            'birth_country' => $resident->birth_country,
+            'birth_city_municipality' => $resident->birthPlace()['birth_city_municipality'],
+            'birth_city_municipality_id' => $resident->birth_city_municipality_id,
+            'birth_barangay' => $resident->birthPlace()['birth_barangay'],
+            'birth_barangay_id' => $resident->birthPlace()['birth_barangay_id'],
+            'birth_province' => $resident->birthPlace()['birth_province'],
+            'birth_province_id' => $resident->birth_province_id,
+            'birth_country' => $resident->birthPlace()['birth_country'],
+            'birth_country_id' => $resident->birth_country_id,
             'nationality_id' => $resident->nationality_id,
             'nationality' => $resident->nationality?->nationality,
             'religion_id' => $resident->religion_id,
