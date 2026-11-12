@@ -10,7 +10,7 @@
             :aria-expanded="open"
             maxlength="100"
             placeholder="Search or select a child"
-            class="rbim-input py-2"
+            class="rbim-input rbim-search py-2"
             @focus="open = true"
             @input="onInput"
             @blur="onBlur"

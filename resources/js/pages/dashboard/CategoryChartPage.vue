@@ -119,6 +119,15 @@
                                     @select-group="(group) => openSlice(group, panel)"
                                 />
                             </div>
+                            <DashboardModuleFilters
+                                v-if="panelFilterKeys(panel).length"
+                                v-model="filterState"
+                                class="mt-4"
+                                :category="selectedCategory"
+                                :options="optionResults"
+                                :keys="panelFilterKeys(panel)"
+                                @search="onFilterQuery"
+                            />
                         </div>
                         <DashboardPieCard
                             v-else
@@ -128,7 +137,17 @@
                             :loading="showSkeleton"
                             hint="Click a slice or a value to open the matching records."
                             @select-slice="(slice) => openSlice(slice, panel)"
-                        />
+                        >
+                            <template v-if="panelFilterKeys(panel).length" #filters>
+                                <DashboardModuleFilters
+                                    v-model="filterState"
+                                    :category="selectedCategory"
+                                    :options="optionResults"
+                                    :keys="panelFilterKeys(panel)"
+                                    @search="onFilterQuery"
+                                />
+                            </template>
+                        </DashboardPieCard>
                     </template>
                 </div>
 
@@ -137,13 +156,14 @@
                         <h2 class="text-sm font-bold uppercase tracking-wide text-slate-900">
                             {{ overviewTitle }}
                         </h2>
-                        <label class="flex items-center gap-3 text-sm font-medium text-slate-700">
-                            Search
+                        <label class="block">
+                            <span class="sr-only">Search records</span>
                             <input
                                 v-model="search"
                                 type="search"
                                 class="rbim-input w-56"
                                 placeholder="Search records"
+                                aria-label="Search records"
                                 @input="onOverviewSearch"
                             >
                         </label>
@@ -200,21 +220,8 @@
                     </div>
                 </section>
 
-                <article
-                    v-if="canViewReports && selectedCategory"
-                    class="rbim-card space-y-4 p-5 sm:p-6"
-                >
-                    <h3 class="text-sm font-semibold text-slate-900">Filters</h3>
-                    <DashboardModuleFilters
-                        v-model="filterState"
-                        :category="selectedCategory"
-                        :options="optionResults"
-                        @search="onFilterQuery"
-                    />
-                </article>
-
                 <DashboardDrilldown
-                    v-if="canViewReports && (preview || previewLoading || previewError)"
+                    v-if="preview || previewLoading || previewError"
                     :title="drillTitle"
                     :subtitle="drillSubtitle"
                     :preview="preview"
@@ -263,7 +270,6 @@ const route = useRoute();
 const router = useRouter();
 const { hasPermission } = useAuth();
 
-const canViewReports = computed(() => hasPermission('report.view'));
 const canExport = computed(() => hasPermission('report.create'));
 
 const statistics = ref(null);
@@ -397,6 +403,26 @@ function panelDataKey(panel) {
     return panel.dataKey ?? panel.key;
 }
 
+function panelFilterKeys(panel) {
+    const filters = selectedCategory.value?.filters ?? [];
+
+    if (!filters.length || !chart.value) {
+        return [];
+    }
+
+    const mapped = reportMapping(chart.value.key, panel)?.filter;
+
+    if (mapped && filters.some((filter) => filter.key === mapped)) {
+        return [mapped];
+    }
+
+    if (modulePanels.value.length === 1) {
+        return filters.map((filter) => filter.key);
+    }
+
+    return [];
+}
+
 function panelChart(panel) {
     return statistics.value?.charts?.[panelDataKey(panel)] ?? { metric: '', total: 0, groups: [], slices: [] };
 }
@@ -495,7 +521,7 @@ function onFilterQuery(key, value) {
 }
 
 async function openSlice(slice, panel = null) {
-    if (!canViewReports.value || !selectedCategory.value || !chart.value) {
+    if (!selectedCategory.value || !chart.value) {
         return;
     }
 
@@ -725,10 +751,6 @@ watch(() => JSON.stringify(overviewParams()), () => {
 
 onMounted(async () => {
     await Promise.all([load(), loadOverview()]);
-
-    if (!canViewReports.value) {
-        return;
-    }
 
     try {
         categories.value = await fetchReportCategories();

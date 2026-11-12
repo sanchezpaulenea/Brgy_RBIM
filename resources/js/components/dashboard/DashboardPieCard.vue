@@ -132,7 +132,13 @@
                     <p v-if="hint" class="mt-3 px-2 text-xs text-slate-400">
                         {{ hint }}
                     </p>
+                    <div v-if="$slots.filters" class="mt-4">
+                        <slot name="filters" />
+                    </div>
                 </div>
+            </div>
+            <div v-if="displayTotal === 0 && $slots.filters" class="mt-4">
+                <slot name="filters" />
             </div>
         </template>
     </article>

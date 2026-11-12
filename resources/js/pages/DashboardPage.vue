@@ -47,16 +47,27 @@
                     Refresh failed: {{ error }} Showing the last loaded statistics.
                 </p>
 
-                <section aria-label="Summary">
+                <section aria-label="Barangay Overview" class="space-y-3">
+                    <h3 class="text-sm font-bold uppercase tracking-wide text-slate-900">
+                        Barangay Overview
+                    </h3>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" :aria-busy="loading">
                         <template v-if="loading && !tiles.length">
                             <div
-                                v-for="item in 8"
+                                v-for="item in 12"
                                 :key="item"
                                 class="h-40 animate-pulse rounded-2xl bg-white ring-1 ring-slate-200"
                             />
                         </template>
-                        <StatTile v-for="tile in tiles" v-else :key="tile.id" :tile="tile" />
+                        <template v-else>
+                            <StatTile v-for="tile in overviewTiles" :key="tile.id" :tile="tile" />
+                            <CategoryCard
+                                v-for="card in OVERVIEW_CATEGORY_CARDS"
+                                :key="card.key"
+                                :card="card"
+                                layout="tile"
+                            />
+                        </template>
                     </div>
                 </section>
 
@@ -66,7 +77,7 @@
                     :aria-label="section.title"
                     class="space-y-3"
                 >
-                    <h3 class="text-base font-semibold text-slate-900">
+                    <h3 class="text-sm font-bold uppercase tracking-wide text-slate-900">
                         {{ section.title }}
                     </h3>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -83,7 +94,7 @@ import { computed, onMounted, ref } from 'vue';
 import CategoryCard from '@/components/dashboard/CategoryCard.vue';
 import StatTile from '@/components/dashboard/StatTile.vue';
 import { useAuth } from '@/composables/useAuth';
-import { DASHBOARD_CATEGORY_SECTIONS } from '@/constants/dashboardCharts';
+import { DASHBOARD_CATEGORY_SECTIONS, OVERVIEW_CATEGORY_CARDS, OVERVIEW_TILE_LABELS, OVERVIEW_TILE_ORDER } from '@/constants/dashboardCharts';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { fetchCensusTiles } from '@/services/censusStatisticService';
 import { extractErrorMessage } from '@/services/http';
@@ -100,6 +111,18 @@ const displayName = computed(() => (
 ));
 
 const updatedLabel = computed(() => (generatedAt.value ? formatDateTime(generatedAt.value) : ''));
+
+const overviewTiles = computed(() => {
+    const byId = new Map(tiles.value.map((tile) => [tile.id, tile]));
+
+    return OVERVIEW_TILE_ORDER
+        .map((id) => byId.get(id))
+        .filter(Boolean)
+        .map((tile) => ({
+            ...tile,
+            label: OVERVIEW_TILE_LABELS[tile.id] ?? tile.label,
+        }));
+});
 
 async function load() {
     loading.value = true;

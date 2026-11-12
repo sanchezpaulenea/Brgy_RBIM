@@ -99,13 +99,14 @@
                             {{ payload?.statistic?.table_title || 'Records' }}
                         </h2>
                         <div class="flex flex-wrap items-end gap-2">
-                            <label class="flex items-center gap-3 text-sm font-medium text-slate-700">
-                                Search
+                            <label class="block">
+                                <span class="sr-only">Search records</span>
                                 <input
                                     v-model="search"
                                     type="search"
                                     class="rbim-input w-56"
                                     placeholder="Search records"
+                                    aria-label="Search records"
                                     @input="onSearch"
                                 >
                             </label>

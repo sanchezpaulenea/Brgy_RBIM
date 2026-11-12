@@ -11,7 +11,7 @@
             autocomplete="off"
             :placeholder="placeholder"
             :disabled="disabled"
-            class="rbim-input"
+            class="rbim-input rbim-search"
             :class="{ 'rbim-input-error': error }"
             @focus="openDropdown"
             @input="openDropdown"

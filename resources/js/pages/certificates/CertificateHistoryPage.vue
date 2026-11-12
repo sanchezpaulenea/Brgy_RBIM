@@ -8,26 +8,21 @@
             </div>
 
             <form class="rbim-card grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3" @submit.prevent="applyFilters">
-                <div class="flex items-end gap-2 sm:col-span-2 lg:col-span-1">
-                    <div class="flex-1">
-                        <label for="certificate-history-search" class="rbim-label">Search</label>
-                        <input
-                            id="certificate-history-search"
-                            v-model="search"
-                            type="search"
-                            name="certificate-history-search"
-                            autocomplete="off"
-                            autocapitalize="off"
-                            spellcheck="false"
-                            maxlength="100"
-                            class="rbim-input py-2"
-                            placeholder="Search resident name"
-                            @keydown.enter.prevent="applyFilters"
-                        >
-                    </div>
-                    <button type="button" class="rbim-btn-outline py-2" :disabled="loading" @click="clearFilters">
-                        Refresh
-                    </button>
+                <div class="sm:col-span-2 lg:col-span-1">
+                    <label for="certificate-history-search" class="rbim-label">Search</label>
+                    <input
+                        id="certificate-history-search"
+                        v-model="search"
+                        type="search"
+                        name="certificate-history-search"
+                        autocomplete="off"
+                        autocapitalize="off"
+                        spellcheck="false"
+                        maxlength="100"
+                        class="rbim-input py-2"
+                        placeholder="Search resident name"
+                        @keydown.enter.prevent="applyFilters"
+                    >
                 </div>
             </form>
 
@@ -141,16 +136,6 @@ function applyFilters() {
     clearTimeout(searchTimer);
     page.value = 1;
     loadResidents();
-}
-
-function clearFilters() {
-    if (search.value) {
-        search.value = '';
-
-        return;
-    }
-
-    applyFilters();
 }
 
 function changePage(next) {

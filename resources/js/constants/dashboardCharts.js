@@ -239,47 +239,59 @@ export const CHART_SECTIONS = [
     },
 ];
 
+export const OVERVIEW_TILE_ORDER = [
+    'residents',
+    'households',
+    'clans',
+    'streets',
+    'voters',
+    'seniors',
+    'solo-parents',
+    'pwd',
+];
+
+export const OVERVIEW_TILE_LABELS = {
+    pwd: 'Person with Disability',
+};
+
+export const OVERVIEW_CATEGORY_CARDS = [
+    { key: 'household_status', label: 'Household Status', icon: 'household-status' },
+    { key: 'pets', label: 'Household with Pets', icon: 'paw' },
+    { key: 'education', label: 'Education Status', icon: 'education' },
+    { key: 'age', label: 'Age Distribution', icon: 'age' },
+];
+
 export const DASHBOARD_CATEGORY_SECTIONS = [
-    {
-        key: 'household',
-        title: 'Household statistics',
-        cards: [
-            { key: 'clan', label: 'Clan' },
-            { key: 'street', label: 'Street' },
-            { key: 'house_story_basement', label: 'House Story & Basement Level' },
-            { key: 'household_status', label: 'Household Status' },
-            { key: 'ownership', label: 'Ownership of Housing Unit & Lot' },
-            { key: 'fuel', label: 'Fuel for Lighting & Cooking' },
-            { key: 'water_source', label: 'Main Source of Drinking Water' },
-            { key: 'kitchen_garbage', label: 'Kitchen Garbage Disposal' },
-            { key: 'segregate_garbage', label: 'Segregate Garbage' },
-            { key: 'toilet_facility', label: 'Toilet Facility' },
-            { key: 'building_type', label: 'Type of Building/House' },
-            { key: 'construction_material', label: 'Construction Material of Outer Wall' },
-            { key: 'female_died', label: 'Female Member Died' },
-            { key: 'child_died', label: 'Child Below 5 Died' },
-            { key: 'common_disease', label: 'Common Diseases Causing Death' },
-            { key: 'primary_need', label: 'Primary Needs' },
-            { key: 'pets', label: 'Households with Pets' },
-        ],
-    },
     {
         key: 'resident',
         title: 'Resident statistics',
         cards: [
-            { key: 'relationship_to_hh', label: 'Relationship to Household Head' },
-            { key: 'nationality', label: 'Nationality' },
-            { key: 'marital_status', label: 'Marital Status' },
-            { key: 'education', label: 'Education' },
-            { key: 'economic', label: 'Economic' },
-            { key: 'health', label: 'Health' },
-            { key: 'infant_health', label: 'Infant Health' },
-            { key: 'women_health', label: 'Women’s Health' },
-            { key: 'sociocivic', label: 'Sociocivic' },
-            { key: 'migration', label: 'Migration' },
-            { key: 'ctc', label: 'Community Tax Certificate' },
-            { key: 'skills', label: 'Skills' },
-            { key: 'age', label: 'Age' },
+            { key: 'relationship_to_hh', label: 'Relationship to Household Head', icon: 'relationship' },
+            { key: 'nationality', label: 'Nationality', icon: 'flag' },
+            { key: 'marital_status', label: 'Marital Status', icon: 'ring' },
+            { key: 'economic', label: 'Employment and Livelihood', icon: 'briefcase' },
+            { key: 'health', label: 'Health and Social Welfare', icon: 'health' },
+            { key: 'women_health', label: 'Maternal Health and Family Planning', icon: 'maternal' },
+            { key: 'infant_health', label: 'Maternal and Child Health', icon: 'child-health' },
+            { key: 'ctc', label: 'Community Tax Certificate', icon: 'percent' },
+        ],
+    },
+    {
+        key: 'household',
+        title: 'Household statistics',
+        cards: [
+            { key: 'house_story_basement', label: 'House Story & Basement Level', icon: 'stories' },
+            { key: 'ownership', label: 'Ownership of Housing Unit and Lot', icon: 'document' },
+            { key: 'building_type', label: 'Type of Building/House', icon: 'house-search' },
+            { key: 'construction_material', label: 'Construction Material of Outer Wall', icon: 'house-tool' },
+            { key: 'kitchen_garbage', label: 'Kitchen Garbage Disposal', icon: 'trash' },
+            { key: 'segregate_garbage', label: 'Segregate Garbage', icon: 'recycle' },
+            { key: 'fuel', label: 'Fuel for Lighting & Cooking', icon: 'flame' },
+            { key: 'water_source', label: 'Main Source of Drinking Water', icon: 'water' },
+            { key: 'primary_need', label: 'Primary Needs', icon: 'plus' },
+            { key: 'common_disease', label: 'Common Diseases Causing Death', icon: 'disease' },
+            { key: 'female_died', label: 'Female Member Died', icon: 'pair' },
+            { key: 'child_died', label: 'Child Below 5 Died', icon: 'child' },
         ],
     },
 ];

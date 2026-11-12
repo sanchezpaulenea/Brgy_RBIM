@@ -1,10 +1,10 @@
 <template>
-    <div v-if="category" class="space-y-4">
+    <div v-if="category" class="space-y-3">
         <div
-            v-for="filter in category.filters"
+            v-for="filter in visibleFilters"
             v-show="filterIsVisible(filter, modelValue)"
             :key="filter.key"
-            class="space-y-3 rounded-lg border border-slate-200 p-4"
+            class="space-y-2 rounded-lg border border-slate-200 p-3"
         >
             <h3 class="text-sm font-semibold text-slate-900">{{ filter.label }}</h3>
 
@@ -143,6 +143,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import LookupCombobox from '@/components/LookupCombobox.vue';
 import { filterIsVisible } from '@/utils/dashboardAnalytics';
 
@@ -159,6 +160,22 @@ const props = defineProps({
         type: Object,
         default: () => ({}),
     },
+    keys: {
+        type: Array,
+        default: null,
+    },
+});
+
+const visibleFilters = computed(() => {
+    const filters = props.category?.filters ?? [];
+
+    if (!props.keys) {
+        return filters;
+    }
+
+    const allowed = new Set(props.keys);
+
+    return filters.filter((filter) => allowed.has(filter.key));
 });
 
 const emit = defineEmits(['update:modelValue', 'search']);

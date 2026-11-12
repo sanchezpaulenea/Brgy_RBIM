@@ -157,7 +157,7 @@ return [
             ],
         ],
         'pwd' => [
-            'label' => 'PWD',
+            'label' => 'Person with Disability',
             'icon' => 'pwd',
             'sensitive' => true,
             'source' => 'residents',

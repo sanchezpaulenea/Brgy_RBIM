@@ -21,7 +21,7 @@ class ReportController extends Controller
      */
     public function index(): JsonResponse
     {
-        $this->authorize('view', Report::class);
+        $this->authorize('filter', Report::class);
 
         return response()->json([
             'categories' => $this->reportService->listCategories(),
@@ -33,7 +33,7 @@ class ReportController extends Controller
      */
     public function options(ReportOptionsRequest $request): JsonResponse
     {
-        $this->authorize('view', Report::class);
+        $this->authorize('filter', Report::class);
 
         return response()->json([
             'items' => $this->reportService->getFilterOptions(
@@ -51,7 +51,7 @@ class ReportController extends Controller
      */
     public function preview(ReportPreviewRequest $request): JsonResponse
     {
-        $this->authorize('view', Report::class);
+        $this->authorize('filter', Report::class);
 
         $validated = $request->validated();
 

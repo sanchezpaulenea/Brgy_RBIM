@@ -58,11 +58,12 @@
                                 v-model="search"
                                 type="text"
                                 autocomplete="off"
-                                class="rbim-input py-2 pr-10"
+                                class="rbim-input rbim-search py-2 pr-10"
                                 placeholder="Search by first, middle, or last name"
                                 @keydown.enter.prevent="runSearch"
                             >
                             <button
+                                v-if="search"
                                 type="button"
                                 class="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-500 hover:text-slate-800"
                                 aria-label="Clear requester"
