@@ -47,16 +47,12 @@
             </div>
             <div>
                 <label class="rbim-label" :for="`${idPrefix}-suffix`">Suffix (optional)</label>
-                <input
+                <SuffixSelect
                     :id="`${idPrefix}-suffix`"
-                    :value="form.suffix"
-                    type="text"
-                    maxlength="45"
-                    placeholder="Jr., Sr., III"
-                    class="rbim-input"
+                    :model-value="form.suffix"
                     :disabled="nameLocked"
-                    @input="patch('suffix', $event.target.value)"
-                >
+                    @update:model-value="patch('suffix', $event)"
+                />
             </div>
         </div>
 
@@ -203,6 +199,7 @@
 import { computed } from 'vue';
 import BirthDateField from '@/components/BirthDateField.vue';
 import FormSectionCard from '@/components/FormSectionCard.vue';
+import SuffixSelect from '@/components/SuffixSelect.vue';
 import HouseholdEducationForm from '@/components/HouseholdEducationForm.vue';
 import BirthPlaceFields from '@/components/BirthPlaceFields.vue';
 import LookupCombobox from '@/components/LookupCombobox.vue';

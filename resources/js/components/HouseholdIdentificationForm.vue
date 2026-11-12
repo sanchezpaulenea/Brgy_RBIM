@@ -156,14 +156,10 @@
                 </div>
                 <div>
                     <label class="rbim-label" for="informant_suffix">Suffix (optional)</label>
-                    <input
+                    <SuffixSelect
                         id="informant_suffix"
                         v-model="form.informant.suffix"
-                        type="text"
-                        maxlength="45"
-                        placeholder="Jr., Sr., III"
-                        class="rbim-input"
-                    >
+                    />
                 </div>
             </div>
         </fieldset>
@@ -211,14 +207,10 @@
                 </div>
                 <div>
                     <label class="rbim-label" for="head_suffix">Suffix (optional)</label>
-                    <input
+                    <SuffixSelect
                         id="head_suffix"
                         v-model="form.head.suffix"
-                        type="text"
-                        maxlength="45"
-                        placeholder="Jr., Sr., III"
-                        class="rbim-input"
-                    >
+                    />
                 </div>
             </div>
         </fieldset>
@@ -241,6 +233,7 @@
 import FormSectionCard from '@/components/FormSectionCard.vue';
 import HelpTip from '@/components/HelpTip.vue';
 import LookupCombobox from '@/components/LookupCombobox.vue';
+import SuffixSelect from '@/components/SuffixSelect.vue';
 import { assignHouseNumber } from '@/utils/validation';
 
 const form = defineModel({ type: Object, required: true });

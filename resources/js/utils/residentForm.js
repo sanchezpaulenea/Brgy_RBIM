@@ -181,7 +181,7 @@ export function validateResidentForm(form, errors, { requireRelationship = true,
     assignResidentNameError(form, errors, 'last_name', 'Last Name', true);
     assignResidentNameError(form, errors, 'first_name', 'First Name', true);
     assignResidentNameError(form, errors, 'middle_name', 'Middle Name');
-    assignResidentNameError(form, errors, 'suffix', 'Suffix');
+    delete errors.suffix;
 
     if (requireRelationship && !toId(form.relationship_to_hh_id)) {
         errors.relationship_to_hh_id = 'Relationship to household head is required.';

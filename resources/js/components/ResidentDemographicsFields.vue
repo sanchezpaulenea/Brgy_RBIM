@@ -51,16 +51,12 @@
         </div>
         <div>
             <label :for="`${idPrefix}-suffix`" class="rbim-label">Suffix</label>
-            <input
+            <SuffixSelect
                 :id="`${idPrefix}-suffix`"
-                :value="form.suffix"
-                type="text"
-                maxlength="45"
-                class="rbim-input"
-                :class="{ 'rbim-input-error': errors.suffix }"
-                @input="onNameInput('suffix', $event.target.value, 'Suffix', false)"
-                @blur="emit('validate-name', 'suffix', 'Suffix', false)"
-            >
+                :model-value="form.suffix"
+                :invalid="Boolean(errors.suffix)"
+                @update:model-value="onSuffixChange"
+            />
             <p v-if="errors.suffix" class="rbim-error">{{ errors.suffix }}</p>
         </div>
         <div>
@@ -223,6 +219,7 @@ import { computed } from 'vue';
 import BirthDateField from '@/components/BirthDateField.vue';
 import BirthPlaceFields from '@/components/BirthPlaceFields.vue';
 import LookupCombobox from '@/components/LookupCombobox.vue';
+import SuffixSelect from '@/components/SuffixSelect.vue';
 import { useAuth } from '@/composables/useAuth';
 import { extractErrorMessage } from '@/services/http';
 import * as lookupService from '@/services/lookupService';
@@ -308,6 +305,11 @@ function patch(field, value) {
 function onNameInput(field, value, label, required) {
     patch(field, value);
     emit('validate-name', field, label, required);
+}
+
+function onSuffixChange(value) {
+    patch('suffix', value);
+    delete props.errors.suffix;
 }
 
 async function createNationality(name) {
