@@ -3,12 +3,6 @@
         <div class="space-y-6">
             <PageTabs :tabs="certificateTabs" active-name="certificate-history" />
 
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <RouterLink :to="{ name: 'certificate-history' }" class="text-sm font-medium text-brand hover:underline">
-                    ← Back to certificate history
-                </RouterLink>
-            </div>
-
             <div v-if="error" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {{ error }}
             </div>
@@ -91,7 +85,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { RouterLink, useRoute } from 'vue-router';
+import { useRoute } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageTabs from '@/components/PageTabs.vue';
 import { useSectionTabs } from '@/composables/useSectionTabs';

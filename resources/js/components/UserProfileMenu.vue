@@ -11,7 +11,7 @@
             <UserAvatar
                 :src="user?.avatar_url"
                 :preset="user?.avatar_preset"
-                size-class="h-16 w-16 sm:h-20 sm:w-20"
+                size-class="h-16 w-16 shrink-0 sm:h-20 sm:w-20"
                 decorative
             />
             <span class="min-w-0">
@@ -179,7 +179,25 @@
                         </div>
                     </div>
 
-                    <div class="px-4 pb-5">
+                    <div class="space-y-3 px-4 pb-5">
+                        <div v-if="canSelectAvatarPreset" class="grid grid-cols-2 gap-3">
+                            <button
+                                v-for="option in avatarPresetOptions"
+                                :key="option.value"
+                                type="button"
+                                class="flex flex-col items-center gap-2 rounded-2xl bg-white px-3 py-3 transition hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
+                                :class="selectedAvatarPreset === option.value && !user?.avatar_url ? 'ring-2 ring-brand' : 'ring-1 ring-slate-200'"
+                                :disabled="uploading"
+                                @click="choosePreset(option.value)"
+                            >
+                                <UserAvatar
+                                    :preset="option.value"
+                                    size-class="h-16 w-16"
+                                    decorative
+                                />
+                                <span class="text-sm font-medium text-slate-800">{{ option.label }}</span>
+                            </button>
+                        </div>
                         <input
                             id="profile-photo"
                             ref="photoInputRef"
@@ -204,11 +222,13 @@
                                 {{ uploading ? 'Uploading…' : 'Upload photo' }}
                             </span>
                         </button>
-                        <p v-if="photoError" class="mt-3 px-1 text-sm text-red-700" role="alert">
+                        <p v-if="photoError" class="px-1 text-sm text-red-700" role="alert">
                             {{ photoError }}
                         </p>
-                        <p v-else class="mt-3 px-1 text-xs text-slate-600">
-                            JPEG, PNG, WebP, or GIF. Maximum 2 MB.
+                        <p v-else class="px-1 text-xs text-slate-600">
+                            {{ canSelectAvatarPreset
+                                ? 'Choose a male or female avatar, or upload a JPEG, PNG, WebP, or GIF up to 2 MB.'
+                                : 'JPEG, PNG, WebP, or GIF. Maximum 2 MB.' }}
                         </p>
                     </div>
                 </div>
@@ -231,12 +251,17 @@ const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const PHOTO_MAX_BYTES = 2 * 1024 * 1024;
 
 const router = useRouter();
-const { user, roles, loading, logout, updateAvatar } = useAuth();
+const { user, roles, loading, isGuest, logout, updateAvatar } = useAuth();
 const { theme, setTheme } = useTheme();
 
 const themeOptions = [
     { value: 'light', label: 'Light' },
     { value: 'dark', label: 'Dark' },
+];
+
+const avatarPresetOptions = [
+    { value: 'male', label: 'Male' },
+    { value: 'female', label: 'Female' },
 ];
 
 const open = ref(false);
@@ -265,6 +290,12 @@ const pillName = computed(() => {
 });
 
 const positionLabel = computed(() => user.value?.position_name || 'No position assigned');
+
+const canSelectAvatarPreset = computed(() => (
+    isGuest.value || !user.value?.position_name
+));
+
+const selectedAvatarPreset = computed(() => user.value?.avatar_preset || 'male');
 
 const rolesLabel = computed(() => (
     roles.value.length ? roles.value.join(', ') : 'No role assigned'
@@ -332,6 +363,24 @@ async function onPhotoSelected(event) {
     } catch (error) {
         photoError.value = extractValidationErrors(error).photo
             || extractErrorMessage(error, 'Unable to upload the profile photo.');
+    } finally {
+        uploading.value = false;
+    }
+}
+
+async function choosePreset(preset) {
+    if (uploading.value || (selectedAvatarPreset.value === preset && !user.value?.avatar_url)) {
+        return;
+    }
+
+    photoError.value = '';
+    uploading.value = true;
+
+    try {
+        await updateAvatar({ avatarPreset: preset });
+    } catch (error) {
+        photoError.value = extractValidationErrors(error).avatar_preset
+            || extractErrorMessage(error, 'Unable to update the profile picture.');
     } finally {
         uploading.value = false;
     }

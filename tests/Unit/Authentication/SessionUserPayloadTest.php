@@ -52,4 +52,22 @@ class SessionUserPayloadTest extends TestCase
         $this->assertArrayHasKey('photo', $rules);
         $this->assertArrayHasKey('avatar_preset', $rules);
     }
+
+    public function test_guest_session_gets_a_default_avatar_preset(): void
+    {
+        $user = new User([
+            'username' => 'guest',
+            'must_change_password' => false,
+        ]);
+        $user->user_id = 9;
+        $user->avatar_preset = null;
+        $user->avatar_path = null;
+        $user->setRelation('personnel', null);
+
+        $service = $this->app->make(AuthenticationService::class);
+        $payload = $service->sessionUser($user);
+
+        $this->assertSame(User::AVATAR_MALE, $payload['avatar_preset']);
+        $this->assertNull($payload['avatar_url']);
+    }
 }

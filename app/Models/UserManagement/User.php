@@ -179,14 +179,17 @@ class User extends Authenticatable
 
     /**
      * The avatar follows the sex on the linked personnel record. Accounts
-     * without one keep their stored preset.
+     * without one keep their stored preset, then fall back to male so guest
+     * accounts still show a profile picture.
      */
-    public function resolvedAvatarPreset(): ?string
+    public function resolvedAvatarPreset(): string
     {
         return match ((int) $this->personnel?->sex_id) {
             Sex::MALE => self::AVATAR_MALE,
             Sex::FEMALE => self::AVATAR_FEMALE,
-            default => $this->avatar_preset,
+            default => in_array($this->avatar_preset, [self::AVATAR_MALE, self::AVATAR_FEMALE], true)
+                ? $this->avatar_preset
+                : self::AVATAR_MALE,
         };
     }
 

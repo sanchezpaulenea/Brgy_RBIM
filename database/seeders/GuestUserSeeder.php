@@ -23,22 +23,12 @@ class GuestUserSeeder extends Seeder
             return;
         }
 
-        $personnelId = DB::table('barangay_personnel')->insertGetId([
-            'position_id' => 1,
-            'personnel_last_name' => 'Guest',
-            'personnel_first_name' => 'Demo',
-            'personnel_middle_name' => null,
-            'personnel_suffix_id' => 12,
-            'sex_id' => 1,
-            'personnel_status_id' => 1,
-            'personnel_date_of_birth' => '1990-01-01',
-        ]);
-
         $userId = DB::table('user')->insertGetId([
             'username' => 'guest',
             'password_hash' => Hash::make('Temp12345'),
             'user_status_id' => 1,
-            'personnel_id' => $personnelId,
+            'personnel_id' => null,
+            'avatar_preset' => 'male',
             'must_change_password' => false,
         ]);
 

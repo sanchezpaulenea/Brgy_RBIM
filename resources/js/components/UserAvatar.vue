@@ -1,6 +1,6 @@
 <template>
     <span
-        class="inline-flex items-center justify-center overflow-hidden rounded-full bg-[#e4e4e4]"
+        class="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#e4e4e4]"
         :class="sizeClass"
         :aria-hidden="decorative"
     >
@@ -51,5 +51,9 @@ const props = defineProps({
     },
 });
 
-const imageSrc = computed(() => props.src || AVATAR_PRESET_IMAGES[props.preset] || null);
+const imageSrc = computed(() => (
+    props.src
+    || AVATAR_PRESET_IMAGES[props.preset]
+    || AVATAR_PRESET_IMAGES.male
+));
 </script>

@@ -4,6 +4,7 @@ namespace App\Services\UserManagement;
 
 use App\Models\BarangayPersonnel\BarangayPersonnel;
 use App\Models\Logs\Action;
+use App\Models\ResidentManagement\Demographic\Sex;
 use App\Models\UserManagement\Role;
 use App\Models\UserManagement\User;
 use App\Models\UserManagement\UserStatus;
@@ -70,6 +71,7 @@ class UserService
                 'user_status_id' => self::ACTIVE_STATUS_ID,
                 'personnel_id' => $personnelId,
                 'must_change_password' => true,
+                'avatar_preset' => $this->defaultAvatarPreset($personnelId),
             ]);
 
             if (! empty($data['role_id'])) {
@@ -299,6 +301,20 @@ class UserService
         }
 
         return $personnel->personnel_last_name.', '.$givenNames;
+    }
+
+    private function defaultAvatarPreset(?int $personnelId): string
+    {
+        if ($personnelId === null) {
+            return User::AVATAR_MALE;
+        }
+
+        $personnel = BarangayPersonnel::query()->find($personnelId);
+
+        return match ((int) $personnel?->sex_id) {
+            Sex::FEMALE => User::AVATAR_FEMALE,
+            default => User::AVATAR_MALE,
+        };
     }
 
     /**

@@ -71,7 +71,7 @@
                                         <button
                                             v-if="canUpdateRoleStatus"
                                             type="button"
-                                            class="rbim-btn-action"
+                                            :class="assignment.enable ? 'rbim-btn-gold border-transparent px-3 py-1.5 text-xs' : 'rbim-btn-action'"
                                             :disabled="updatingRoleId === assignment.user_role_id"
                                             @click="handleRoleStatus(account, assignment)"
                                         >
