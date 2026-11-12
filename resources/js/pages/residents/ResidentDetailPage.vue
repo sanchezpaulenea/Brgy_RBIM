@@ -3,10 +3,6 @@
         <div class="space-y-6">
             <PageTabs :tabs="residentTabs" active-name="residents" />
 
-            <RouterLink :to="{ name: 'residents' }" class="text-sm font-medium text-brand hover:underline">
-                ← Back to residents
-            </RouterLink>
-
             <div v-if="error" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {{ error }}
             </div>
