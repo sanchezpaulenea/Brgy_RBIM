@@ -787,7 +787,10 @@ class ReportRepository implements ReportRepositoryInterface
                         $apply($pets);
                     }
 
-                    $pets->orderByRaw('(select `specie` from `specie` where `specie`.`specie_id` = `pet_census`.`specie_id`) asc')
+                    $pets->orderByRaw('(select `specie`.`specie` 
+                                        from `specie` 
+                                        inner join `breed` on `specie`.`specie_id` = `breed`.`specie_id` 
+                                        where `breed`.`breed_id` = `pet_census`.`breed_id`) asc')
                         ->orderByRaw('(select `breed` from `breed` where `breed`.`breed_id` = `pet_census`.`breed_id`) asc')
                         ->orderBy('pet_census_id');
                 };
