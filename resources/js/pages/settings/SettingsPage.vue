@@ -16,7 +16,7 @@
                 No settings found.
             </div>
             <section v-for="group in settingGroups" :key="group.title" class="rbim-card overflow-hidden">
-                <header class="border-b border-slate-200 bg-slate-50 px-6 py-3">
+                <header class="border-b border-slate-200 bg-slate-50 py-3 pl-16 pr-6">
                     <h2 class="text-sm font-semibold text-slate-900">{{ group.title }}</h2>
                     <p class="mt-0.5 text-xs text-slate-500">{{ group.description }}</p>
                 </header>
@@ -43,10 +43,10 @@
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             <tr v-for="setting in group.settings" :key="setting.setting_id">
-                                <td class="whitespace-nowrap py-3 pl-24 pr-4 text-left font-medium text-slate-900">
+                                <td class="whitespace-nowrap py-3 pl-16 pr-4 text-left font-medium text-slate-900">
                                     {{ formatSettingLabel(setting.setting_key) }}
                                 </td>
-                                <td class="py-3 pl-24 pr-4">
+                                <td class="py-3" :class="group.centerValues ? 'px-4 text-center' : 'pl-24 pr-4'">
                                     <template v-if="setting.setting_key === 'punong_barangay_signature'" />
                                     <template v-else-if="canUpdateSettings && editingId === setting.setting_id">
                                         <input
@@ -58,7 +58,7 @@
                                             :max="rangeFor(setting)?.max"
                                             maxlength="45"
                                             class="rbim-input py-1.5"
-                                            :class="{ 'rbim-input-error': editError }"
+                                            :class="{ 'rbim-input-error': editError, 'text-center': group.centerValues }"
                                             @input="editError = ''"
                                         >
                                         <p v-if="editError" class="rbim-error">{{ editError }}</p>
@@ -231,6 +231,7 @@ const SETTING_GROUPS = [
     {
         title: 'Account and Security Settings',
         description: 'Password rules and sign-in protection for user accounts.',
+        centerValues: true,
         keys: [
             'password_min_length',
             'max_login_attempts',
@@ -241,6 +242,7 @@ const SETTING_GROUPS = [
     {
         title: 'Session and Audit Settings',
         description: 'Idle session handling. Retention periods are changed on Log Retention and Archiving.',
+        centerValues: true,
         keys: [
             'session_timeout_minutes',
             'audit_log_retention_days',
@@ -279,6 +281,7 @@ const settingGroups = computed(() => {
     const grouped = SETTING_GROUPS.map((group) => ({
         title: group.title,
         description: group.description,
+        centerValues: Boolean(group.centerValues),
         settings: group.keys
             .map((key) => settings.value.find((setting) => setting.setting_key === key))
             .filter(Boolean),

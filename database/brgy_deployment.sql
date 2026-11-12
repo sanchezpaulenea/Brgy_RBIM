@@ -1739,7 +1739,7 @@ INSERT INTO `primary_need_of_brgy` (`primary_need_id`, `primary_need`) VALUES
 DROP TABLE IF EXISTS `reason_for_leaving`;
 CREATE TABLE IF NOT EXISTS `reason_for_leaving` (
   `reason_for_leaving_id` int NOT NULL AUTO_INCREMENT,
-  `reason_for_leaving` varchar(45) NOT NULL,
+  `reason_for_leaving` varchar(100) NOT NULL,
   PRIMARY KEY (`reason_for_leaving_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -1751,7 +1751,7 @@ INSERT INTO `reason_for_leaving` (`reason_for_leaving_id`, `reason_for_leaving`)
 (1, 'Lack of employment'),
 (2, 'Perception of better income in other place'),
 (3, 'Schooling'),
-(4, 'Presence of relatives and friends in other pl'),
+(4, 'Presence of relatives and friends in other places'),
 (5, 'Employment/Job Relocation'),
 (6, 'Disaster-related Relocation'),
 (7, 'Retirement'),
@@ -1774,7 +1774,7 @@ INSERT INTO `reason_for_leaving` (`reason_for_leaving_id`, `reason_for_leaving`)
 DROP TABLE IF EXISTS `reason_for_transfer`;
 CREATE TABLE IF NOT EXISTS `reason_for_transfer` (
   `reason_for_transfer_id` int NOT NULL AUTO_INCREMENT,
-  `reason_for_transfer` varchar(45) NOT NULL,
+  `reason_for_transfer` varchar(100) NOT NULL,
   PRIMARY KEY (`reason_for_transfer_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -1786,7 +1786,7 @@ INSERT INTO `reason_for_transfer` (`reason_for_transfer_id`, `reason_for_transfe
 (1, 'Availability of jobs'),
 (2, 'Higher wage'),
 (3, 'Presence of schools or universities'),
-(4, 'Presence of relatives and friends in other pl'),
+(4, 'Presence of relatives and friends in other places'),
 (5, 'Housing'),
 (6, 'Not Applicable');
 
