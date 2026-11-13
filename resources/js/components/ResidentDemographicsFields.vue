@@ -128,6 +128,24 @@
             :error="errors.date_of_birth"
             @update:model-value="patch('date_of_birth', $event); delete errors.date_of_birth"
         />
+        <div>
+            <label :for="`${idPrefix}-marital_status`" class="rbim-label">
+                Marital Status<span class="rbim-required" aria-hidden="true">*</span>
+            </label>
+            <select
+                :id="`${idPrefix}-marital_status`"
+                :value="form.marital_status_id"
+                class="rbim-input"
+                :class="{ 'rbim-input-error': errors.marital_status_id }"
+                @change="patch('marital_status_id', $event.target.value); delete errors.marital_status_id"
+            >
+                <option value="">Select marital status</option>
+                <option v-for="option in maritalStatuses" :key="option.id" :value="option.id">
+                    {{ option.label }}
+                </option>
+            </select>
+            <p v-if="errors.marital_status_id" class="rbim-error">{{ errors.marital_status_id }}</p>
+        </div>
         <BirthPlaceFields v-model="form" :errors="errors" :id-prefix="idPrefix" />
         <LookupCombobox
             v-model="form.nationality_id"
@@ -174,24 +192,6 @@
             @create="createEthnicity"
             @change="errors.ethnicity_id = ''"
         />
-        <div>
-            <label :for="`${idPrefix}-marital_status`" class="rbim-label">
-                Marital Status<span class="rbim-required" aria-hidden="true">*</span>
-            </label>
-            <select
-                :id="`${idPrefix}-marital_status`"
-                :value="form.marital_status_id"
-                class="rbim-input"
-                :class="{ 'rbim-input-error': errors.marital_status_id }"
-                @change="patch('marital_status_id', $event.target.value); delete errors.marital_status_id"
-            >
-                <option value="">Select marital status</option>
-                <option v-for="option in maritalStatuses" :key="option.id" :value="option.id">
-                    {{ option.label }}
-                </option>
-            </select>
-            <p v-if="errors.marital_status_id" class="rbim-error">{{ errors.marital_status_id }}</p>
-        </div>
         </div>
         <div v-if="clans.length">
             <label :for="`${idPrefix}-sex`" class="rbim-label">

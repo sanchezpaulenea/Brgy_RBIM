@@ -14,7 +14,7 @@
             :placeholder="placeholder"
             :disabled="disabled"
             :maxlength="maxLength"
-            class="rbim-input rbim-search"
+            class="rbim-input"
             :class="{ 'rbim-input-error': error }"
             @focus="open = true"
             @input="onInput"
