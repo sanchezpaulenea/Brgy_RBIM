@@ -7,7 +7,7 @@
             <StatTileIcon :name="tile.icon" />
         </span>
         <span class="min-w-0 flex-1 text-center">
-            <span class="block text-[11px] font-semibold uppercase leading-tight tracking-wide text-slate-600">
+            <span class="block text-xs font-semibold uppercase leading-tight tracking-wide text-slate-600 sm:text-sm">
                 {{ tile.label }}
             </span>
             <span class="mt-0.5 block text-xl font-bold tabular-nums leading-none text-[#344d3f]">

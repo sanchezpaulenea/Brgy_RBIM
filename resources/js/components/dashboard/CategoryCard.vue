@@ -14,8 +14,8 @@
             <StatTileIcon :name="card.icon" />
         </span>
         <span
-            class="min-w-0 font-semibold uppercase leading-tight tracking-wide text-slate-800"
-            :class="layout === 'tile' ? 'flex-1 text-center text-[11px] text-slate-600' : 'text-left text-xs'"
+            class="min-w-0 flex-1 text-center font-semibold uppercase leading-tight tracking-wide"
+            :class="layout === 'tile' ? 'text-xs text-slate-600 sm:text-sm' : 'text-xs text-slate-800'"
         >
             {{ card.label }}
         </span>
