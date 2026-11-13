@@ -1,7 +1,7 @@
 <template>
     <RouterLink
         :to="{ name: 'dashboard-statistic', params: { statId: tile.id } }"
-        class="flex min-h-40 items-center gap-5 rounded-2xl bg-white px-6 py-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-[#247a3f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#247a3f]"
+        class="flex min-h-40 items-center gap-5 rounded-[2.75rem] border border-[#2f3e33] bg-white px-6 py-6 transition hover:-translate-y-0.5 hover:border-[#247a3f] hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#247a3f]"
     >
         <span class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#c6cbbb] text-[#344d3f]" aria-hidden="true">
             <StatTileIcon :name="tile.icon" />

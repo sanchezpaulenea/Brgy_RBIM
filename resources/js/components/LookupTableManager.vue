@@ -35,16 +35,22 @@
         </article>
 
         <div class="rbim-card overflow-hidden">
-            <div class="border-b border-slate-200 p-4 sm:w-72">
-                <label :for="`${inputId}-filter`" class="rbim-label">Search {{ itemLabel }}</label>
-                <input
-                    :id="`${inputId}-filter`"
-                    v-model="search"
-                    type="search"
-                    class="rbim-input py-2"
-                    :placeholder="`Search ${itemLabel} name`"
-                    @keydown.enter.prevent
-                >
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:px-5">
+                <h2 class="text-sm font-bold uppercase tracking-wide text-slate-900">
+                    {{ overviewTitle }}
+                </h2>
+                <label class="block">
+                    <span class="sr-only">Search {{ itemLabel }}</span>
+                    <input
+                        :id="`${inputId}-filter`"
+                        v-model="search"
+                        type="search"
+                        class="rbim-input rbim-search w-56"
+                        :placeholder="`Search ${itemLabel}`"
+                        :aria-label="`Search ${itemLabel}`"
+                        @keydown.enter.prevent
+                    >
+                </label>
             </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full table-fixed divide-y divide-slate-200 text-sm">
@@ -178,6 +184,7 @@ const columnWidthClass = computed(() => (props.canDelete ? 'w-1/4' : 'w-1/3'));
 const inputId = computed(() => `${props.fieldName}-input`);
 const addButtonLabel = computed(() => `Add ${props.itemLabel}`);
 const pluralLabel = computed(() => props.itemLabelPlural || `${props.itemLabel}s`);
+const overviewTitle = computed(() => `${capitalize(props.itemLabel)} Overview`);
 const idColumnLabel = computed(() => {
     const label = String(props.itemLabel ?? '').trim();
 

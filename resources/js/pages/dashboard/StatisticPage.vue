@@ -94,11 +94,11 @@
                 />
 
                 <section class="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
-                    <div class="flex flex-wrap items-end justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:px-5">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:px-5">
                         <h2 class="text-sm font-bold uppercase tracking-wide text-slate-900">
                             {{ payload?.statistic?.table_title || 'Records' }}
                         </h2>
-                        <div class="flex flex-wrap items-end gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
                             <label class="block">
                                 <span class="sr-only">Search records</span>
                                 <input

@@ -56,7 +56,7 @@
                             <div
                                 v-for="item in 12"
                                 :key="item"
-                                class="h-40 animate-pulse rounded-2xl bg-white ring-1 ring-slate-200"
+                                class="h-40 animate-pulse rounded-[2.75rem] border border-[#2f3e33] bg-white"
                             />
                         </template>
                         <template v-else>

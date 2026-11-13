@@ -1,9 +1,9 @@
 <template>
     <RouterLink
         :to="{ name: 'dashboard-category', params: { chartKey: card.key } }"
-        class="bg-white shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-[#247a3f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#247a3f]"
+        class="border border-[#2f3e33] bg-white transition hover:-translate-y-0.5 hover:border-[#247a3f] hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#247a3f]"
         :class="layout === 'tile'
-            ? 'flex min-h-40 items-center gap-5 rounded-2xl px-6 py-6'
+            ? 'flex min-h-40 items-center gap-5 rounded-[2.75rem] px-6 py-6'
             : 'flex min-h-[5.75rem] items-center gap-4 rounded-2xl px-5 py-4'"
     >
         <span
