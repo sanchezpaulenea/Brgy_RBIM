@@ -60,7 +60,10 @@
                 </div>
             </div>
 
-            <div v-if="displayTotal === 0" class="flex flex-col items-center justify-center py-16 text-center">
+            <div
+                v-if="displayTotal === 0 && !$slots.filters"
+                class="flex flex-col items-center justify-center py-16 text-center"
+            >
                 <span class="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                     <svg class="h-7 w-7" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
@@ -75,8 +78,33 @@
                 </p>
             </div>
 
-            <div v-else class="grid grid-cols-1 items-center gap-8 pt-6 @3xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] @3xl:gap-10">
-                <div ref="pieFrameRef" class="relative mx-auto aspect-square w-full" :class="compact ? 'max-w-[22rem]' : 'max-w-[34rem]'">
+            <div
+                v-else
+                class="grid grid-cols-1 items-center gap-8 pt-6 @3xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] @3xl:gap-10"
+            >
+                <div
+                    v-if="displayTotal === 0"
+                    class="flex flex-col items-center justify-center py-16 text-center"
+                >
+                    <span class="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                        <svg class="h-7 w-7" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+                            <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+                        </svg>
+                    </span>
+                    <p class="mt-4 text-sm font-semibold text-slate-700">
+                        No data
+                    </p>
+                    <p class="mt-1 max-w-sm text-sm text-slate-500">
+                        {{ emptyMessage }}
+                    </p>
+                </div>
+                <div
+                    v-else
+                    ref="pieFrameRef"
+                    class="relative mx-auto aspect-square w-full"
+                    :class="compact ? 'max-w-[22rem]' : 'max-w-[34rem]'"
+                >
                     <Pie
                         v-if="pieInView"
                         :key="renderKey"
@@ -89,56 +117,55 @@
                 </div>
 
                 <div class="@3xl:self-start">
-                    <div class="flex items-center justify-between px-2 pb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                        <span>Value</span>
-                        <span>Count · Share</span>
-                    </div>
-                    <ul class="space-y-1">
-                        <li v-for="(slice, index) in displaySlices" :key="slice.label">
-                            <button
-                                type="button"
-                                class="w-full cursor-pointer rounded-lg px-2 py-2 text-left transition hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
-                                :title="'Show matching records for ' + slice.label"
-                                @click="selectSlice(slice)"
-                            >
-                                <span class="flex items-center gap-3 text-sm">
-                                    <span
-                                        class="h-3 w-3 shrink-0 rounded-full"
-                                        :style="{ backgroundColor: colors[index] }"
-                                        aria-hidden="true"
-                                    />
-                                    <span class="min-w-0 flex-1 text-slate-700">
-                                        {{ slice.label }}
-                                        <span v-if="slice.kind === 'others'" class="text-xs text-slate-400">
-                                            ({{ slice.grouped }} values)
+                    <template v-if="displayTotal > 0">
+                        <div class="flex items-center justify-between px-2 pb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <span>Value</span>
+                            <span>Count · Share</span>
+                        </div>
+                        <ul class="space-y-1">
+                            <li v-for="(slice, index) in displaySlices" :key="slice.label">
+                                <button
+                                    type="button"
+                                    class="w-full cursor-pointer rounded-lg px-2 py-2 text-left transition hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
+                                    :title="'Show matching records for ' + slice.label"
+                                    @click="selectSlice(slice)"
+                                >
+                                    <span class="flex items-center gap-3 text-sm">
+                                        <span
+                                            class="h-3 w-3 shrink-0 rounded-full"
+                                            :style="{ backgroundColor: colors[index] }"
+                                            aria-hidden="true"
+                                        />
+                                        <span class="min-w-0 flex-1 text-slate-700">
+                                            {{ slice.label }}
+                                            <span v-if="slice.kind === 'others'" class="text-xs text-slate-400">
+                                                ({{ slice.grouped }} values)
+                                            </span>
+                                        </span>
+                                        <span class="shrink-0 font-semibold tabular-nums text-slate-900">
+                                            {{ formatNumber(slice.count) }}
+                                        </span>
+                                        <span class="w-16 shrink-0 text-right tabular-nums text-slate-500">
+                                            {{ formatShare(shares[index]) }}
                                         </span>
                                     </span>
-                                    <span class="shrink-0 font-semibold tabular-nums text-slate-900">
-                                        {{ formatNumber(slice.count) }}
+                                    <span class="mt-1.5 ml-6 block h-1.5 overflow-hidden rounded-full bg-slate-100" aria-hidden="true">
+                                        <span
+                                            class="block h-full rounded-full"
+                                            :style="{ width: `${barShares[index]}%`, backgroundColor: colors[index] }"
+                                        />
                                     </span>
-                                    <span class="w-16 shrink-0 text-right tabular-nums text-slate-500">
-                                        {{ formatShare(shares[index]) }}
-                                    </span>
-                                </span>
-                                <span class="mt-1.5 ml-6 block h-1.5 overflow-hidden rounded-full bg-slate-100" aria-hidden="true">
-                                    <span
-                                        class="block h-full rounded-full"
-                                        :style="{ width: `${barShares[index]}%`, backgroundColor: colors[index] }"
-                                    />
-                                </span>
-                            </button>
-                        </li>
-                    </ul>
-                    <p v-if="hint" class="mt-3 px-2 text-xs text-slate-400">
-                        {{ hint }}
-                    </p>
-                    <div v-if="$slots.filters" class="mt-4">
+                                </button>
+                            </li>
+                        </ul>
+                        <p v-if="hint" class="mt-3 px-2 text-xs text-slate-400">
+                            {{ hint }}
+                        </p>
+                    </template>
+                    <div v-if="$slots.filters" :class="displayTotal > 0 ? 'mt-4' : ''">
                         <slot name="filters" />
                     </div>
                 </div>
-            </div>
-            <div v-if="displayTotal === 0 && $slots.filters" class="mt-4">
-                <slot name="filters" />
             </div>
         </template>
     </article>

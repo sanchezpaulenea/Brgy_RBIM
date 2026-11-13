@@ -410,13 +410,24 @@ function panelFilterKeys(panel) {
         return [];
     }
 
+    const filterKeys = new Set(filters.map((filter) => filter.key));
     const mapped = reportMapping(chart.value.key, panel)?.filter;
 
-    if (mapped && filters.some((filter) => filter.key === mapped)) {
+    if (mapped && filterKeys.has(mapped)) {
         return [mapped];
     }
 
+    if (panel?.key && filterKeys.has(panel.key)) {
+        return [panel.key];
+    }
+
     if (modulePanels.value.length === 1) {
+        const chartMapped = reportMapping(chart.value.key)?.filter;
+
+        if (chartMapped && filterKeys.has(chartMapped)) {
+            return [chartMapped];
+        }
+
         return filters.map((filter) => filter.key);
     }
 
@@ -735,6 +746,12 @@ watch(() => route.params.chartKey, async () => {
     overview.value = null;
     await Promise.all([load(), loadOverview()]);
     resetModule();
+});
+
+watch(selectedCategory, (category, previous) => {
+    if (category && category.key !== previous?.key) {
+        resetModule();
+    }
 });
 
 watch(() => JSON.stringify(populationParams()), () => {

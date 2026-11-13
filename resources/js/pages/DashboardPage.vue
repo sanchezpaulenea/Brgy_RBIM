@@ -1,12 +1,12 @@
 <template>
     <AppLayout title="Dashboard">
-        <div class="space-y-8">
-            <header class="flex flex-wrap items-end justify-between gap-4">
+        <div class="space-y-5">
+            <header class="flex flex-wrap items-end justify-between gap-3">
                 <div class="min-w-0">
                     <h2 class="text-xl font-semibold text-slate-900">
                         Welcome back, {{ displayName }}!
                     </h2>
-                    <p class="mt-1 text-sm text-slate-600">
+                    <p class="mt-0.5 text-sm text-slate-600">
                         Choose a statistic to see its chart and matching records.
                     </p>
                 </div>
@@ -47,16 +47,16 @@
                     Refresh failed: {{ error }} Showing the last loaded statistics.
                 </p>
 
-                <section aria-label="Barangay Overview" class="space-y-3">
+                <section aria-label="Barangay Overview" class="space-y-2">
                     <h3 class="text-sm font-bold uppercase tracking-wide text-slate-900">
                         Barangay Overview
                     </h3>
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" :aria-busy="loading">
+                    <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4" :aria-busy="loading">
                         <template v-if="loading && !tiles.length">
                             <div
                                 v-for="item in 12"
                                 :key="item"
-                                class="h-40 animate-pulse rounded-[2.75rem] border border-[#2f3e33] bg-white"
+                                class="h-[6.5rem] animate-pulse rounded-[1.75rem] border border-[#2f3e33] bg-white"
                             />
                         </template>
                         <template v-else>
@@ -75,12 +75,12 @@
                     v-for="section in DASHBOARD_CATEGORY_SECTIONS"
                     :key="section.key"
                     :aria-label="section.title"
-                    class="space-y-3"
+                    class="space-y-2"
                 >
                     <h3 class="text-sm font-bold uppercase tracking-wide text-slate-900">
                         {{ section.title }}
                     </h3>
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
                         <CategoryCard v-for="card in section.cards" :key="card.key" :card="card" />
                     </div>
                 </section>

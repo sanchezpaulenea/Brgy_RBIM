@@ -1,15 +1,13 @@
 /*
- * Ranked slices take these colours in order so the largest value in every
- * chart has the same colour. Adjacent colours differ in both hue and
- * lightness so neighbouring slices stay distinct for colour-blind readers.
+ * Ranked slices follow the barangay chart palette: sage, forest green, lime,
+ * and soft yellow. Adjacent colours still differ in hue and lightness for
+ * colour-blind readers.
  */
 export const SLICE_PALETTE = [
-    '#2d4c39',
-    '#e0a526',
-    '#3b7dbf',
-    '#c4553a',
-    '#7a5ba6',
-    '#3fa392',
+    '#c6cbbb',
+    '#344d3f',
+    '#9fe030',
+    '#ffdc50',
 ];
 
 export const OTHERS_COLOR = '#94a3b8';

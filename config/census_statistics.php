@@ -13,13 +13,10 @@ return [
     'per_page' => 10,
 
     'colors' => [
+        '#c6cbbb',
         '#344d3f',
-        '#247a3f',
         '#9fe030',
         '#ffdc50',
-        '#c6cbbb',
-        '#1d4d32',
-        '#6b8f71',
     ],
 
     'age_groups' => [

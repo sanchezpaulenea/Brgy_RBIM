@@ -1,5 +1,5 @@
 <template>
-    <svg class="h-12 w-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <svg class="mx-auto h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <template v-if="name === 'stories'">
             <svg x="1" y="2.4" width="22" height="19.2" viewBox="0 0 640 512" fill="currentColor" stroke="none">
                 <defs>
