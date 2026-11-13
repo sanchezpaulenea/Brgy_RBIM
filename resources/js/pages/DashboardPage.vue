@@ -1,6 +1,6 @@
 <template>
     <AppLayout title="Dashboard">
-        <div class="space-y-10">
+        <div class="space-y-6">
             <header class="flex flex-wrap items-end justify-between gap-3">
                 <div class="min-w-0">
                     <h2 class="text-xl font-semibold text-slate-900">
@@ -47,11 +47,11 @@
                     Refresh failed: {{ error }} Showing the last loaded statistics.
                 </p>
 
-                <section aria-label="Barangay Overview" class="space-y-4">
-                    <h3 class="text-sm font-bold uppercase tracking-wide text-slate-900">
+                <section aria-label="Barangay Overview">
+                    <h3 class="mb-3 text-sm font-bold uppercase tracking-wide text-slate-900">
                         Barangay Overview
                     </h3>
-                    <div class="grid grid-cols-1 gap-x-7 gap-y-5 sm:grid-cols-2 lg:grid-cols-4" :aria-busy="loading">
+                    <div class="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4" :aria-busy="loading">
                         <template v-if="loading && !tiles.length">
                             <div
                                 v-for="item in 12"
@@ -75,12 +75,12 @@
                     v-for="section in DASHBOARD_CATEGORY_SECTIONS"
                     :key="section.key"
                     :aria-label="section.title"
-                    class="space-y-4"
+                    class="mt-12"
                 >
-                    <h3 class="text-sm font-bold uppercase tracking-wide text-slate-900">
+                    <h3 class="mb-3 text-sm font-bold uppercase tracking-wide text-slate-900">
                         {{ section.title }}
                     </h3>
-                    <div class="grid grid-cols-1 gap-x-7 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
+                    <div class="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
                         <CategoryCard v-for="card in section.cards" :key="card.key" :card="card" />
                     </div>
                 </section>
