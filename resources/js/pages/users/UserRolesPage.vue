@@ -18,16 +18,22 @@
                 Loading user roles...
             </div>
             <div v-else class="rbim-card overflow-hidden">
-                <div class="border-b border-slate-200 p-4 sm:w-72">
-                    <label for="user-role-search" class="rbim-label">Search user</label>
-                    <input
-                        id="user-role-search"
-                        v-model="search"
-                        type="search"
-                        class="rbim-input py-2"
-                        placeholder="Search username"
-                        @keydown.enter.prevent
-                    >
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:px-5">
+                    <h2 class="text-sm font-bold uppercase tracking-wide text-slate-900">
+                        User Role Overview
+                    </h2>
+                    <div class="sm:w-72">
+                        <label for="user-role-search" class="sr-only">Search user</label>
+                        <input
+                            id="user-role-search"
+                            v-model="search"
+                            type="search"
+                            class="rbim-input rbim-search py-2"
+                            placeholder="Search username"
+                            aria-label="Search username"
+                            @keydown.enter.prevent
+                        >
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full table-fixed divide-y divide-slate-200 text-sm">

@@ -7,29 +7,35 @@
                 {{ error }}
             </div>
 
-            <form class="rbim-card grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3" @submit.prevent="applyFilters">
-                <div class="sm:col-span-2 lg:col-span-1">
-                    <label for="certificate-history-search" class="rbim-label">Search</label>
-                    <input
-                        id="certificate-history-search"
-                        v-model="search"
-                        type="search"
-                        name="certificate-history-search"
-                        autocomplete="off"
-                        autocapitalize="off"
-                        spellcheck="false"
-                        maxlength="100"
-                        class="rbim-input py-2"
-                        placeholder="Search resident name"
-                        @keydown.enter.prevent="applyFilters"
-                    >
-                </div>
-            </form>
-
             <div v-if="loading" class="rbim-card p-8 text-center text-slate-500">
                 Loading certificate history...
             </div>
             <div v-else class="rbim-card overflow-hidden">
+                <form
+                    class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:px-5"
+                    @submit.prevent="applyFilters"
+                >
+                    <h2 class="text-sm font-bold uppercase tracking-wide text-slate-900">
+                        Certificate Overview
+                    </h2>
+                    <div class="sm:w-72">
+                        <label for="certificate-history-search" class="sr-only">Search resident name</label>
+                        <input
+                            id="certificate-history-search"
+                            v-model="search"
+                            type="search"
+                            name="certificate-history-search"
+                            autocomplete="off"
+                            autocapitalize="off"
+                            spellcheck="false"
+                            maxlength="100"
+                            class="rbim-input rbim-search py-2"
+                            placeholder="Search resident name"
+                            aria-label="Search resident name"
+                            @keydown.enter.prevent="applyFilters"
+                        >
+                    </div>
+                </form>
                 <div class="overflow-x-auto">
                     <table class="min-w-full table-fixed divide-y divide-slate-200 text-sm">
                         <thead class="bg-slate-50">
