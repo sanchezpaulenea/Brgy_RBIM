@@ -38,16 +38,21 @@
             </article>
 
             <div class="rbim-card overflow-hidden">
-                <div class="border-b border-slate-200 p-4 sm:w-72">
-                    <label for="position-filter" class="rbim-label">Search position</label>
-                    <input
-                        id="position-filter"
-                        v-model="search"
-                        type="search"
-                        class="rbim-input py-2"
-                        placeholder="Search position name"
-                        @keydown.enter.prevent
-                    >
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:px-5">
+                    <h2 class="text-sm font-bold uppercase tracking-wide text-slate-900">
+                        Personnel Position
+                    </h2>
+                    <div class="sm:w-72">
+                        <label for="position-filter" class="rbim-label">Search position</label>
+                        <input
+                            id="position-filter"
+                            v-model="search"
+                            type="search"
+                            class="rbim-input py-2"
+                            placeholder="Search position name"
+                            @keydown.enter.prevent
+                        >
+                    </div>
                 </div>
                 <div class="w-full overflow-x-auto" role="table">
                     <div

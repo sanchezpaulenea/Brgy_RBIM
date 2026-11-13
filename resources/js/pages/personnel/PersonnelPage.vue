@@ -135,26 +135,31 @@
                 Loading personnel...
             </div>
             <div v-else class="rbim-card overflow-hidden">
-                <div class="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-end">
-                    <div class="sm:w-72">
-                        <label for="personnel-filter-name" class="rbim-label">Search personnel name</label>
-                        <input
-                            id="personnel-filter-name"
-                            v-model="filters.name"
-                            type="search"
-                            class="rbim-input py-2"
-                            placeholder="Search personnel name"
-                            @keydown.enter.prevent
-                        >
-                    </div>
-                    <div class="sm:w-48">
-                        <label for="personnel-filter-status" class="rbim-label">Personnel Status</label>
-                        <select id="personnel-filter-status" v-model="filters.statusId" class="rbim-input rbim-filter py-2">
-                            <option value="all">All statuses</option>
-                            <option v-for="status in PERSONNEL_STATUSES" :key="status.id" :value="status.id">
-                                {{ status.label }}
-                            </option>
-                        </select>
+                <div class="flex flex-col gap-3 border-b border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                    <h2 class="text-sm font-bold uppercase tracking-wide text-slate-900">
+                        Barangay Personnel Overview
+                    </h2>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                        <div class="sm:w-72">
+                            <label for="personnel-filter-name" class="rbim-label">Search personnel name</label>
+                            <input
+                                id="personnel-filter-name"
+                                v-model="filters.name"
+                                type="search"
+                                class="rbim-input py-2"
+                                placeholder="Search personnel name"
+                                @keydown.enter.prevent
+                            >
+                        </div>
+                        <div class="sm:w-48">
+                            <label for="personnel-filter-status" class="rbim-label">Personnel Status</label>
+                            <select id="personnel-filter-status" v-model="filters.statusId" class="rbim-input rbim-filter py-2">
+                                <option value="all">All statuses</option>
+                                <option v-for="status in PERSONNEL_STATUSES" :key="status.id" :value="status.id">
+                                    {{ status.label }}
+                                </option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="w-full overflow-x-auto">

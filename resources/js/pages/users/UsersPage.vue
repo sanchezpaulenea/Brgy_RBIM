@@ -81,26 +81,37 @@
                 Loading user accounts...
             </div>
             <div v-else class="rbim-card overflow-hidden">
-                <div class="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-end sm:justify-between">
-                    <div class="sm:w-72">
-                        <label for="user-filter-user" class="rbim-label">Search user</label>
-                        <input
-                            id="user-filter-user"
-                            v-model="filters.username"
-                            type="search"
-                            class="rbim-input py-2"
-                            placeholder="Search user"
-                            @keydown.enter.prevent
-                        >
-                    </div>
-                    <div class="sm:w-48">
-                        <label for="user-filter-status" class="rbim-label">User status</label>
-                        <select id="user-filter-status" v-model="filters.statusId" class="rbim-input rbim-filter py-2">
-                            <option value="all">All statuses</option>
-                            <option v-for="status in userStatuses" :key="status.id" :value="status.id">
-                                {{ status.label }}
-                            </option>
-                        </select>
+                <div class="flex flex-col gap-3 border-b border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                    <h2 class="text-sm font-bold uppercase tracking-wide text-slate-900">
+                        User Account Overview
+                    </h2>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <div class="sm:w-72">
+                            <label for="user-filter-user" class="sr-only">Search user</label>
+                            <input
+                                id="user-filter-user"
+                                v-model="filters.username"
+                                type="search"
+                                class="rbim-input py-2"
+                                placeholder="Search user"
+                                aria-label="Search user"
+                                @keydown.enter.prevent
+                            >
+                        </div>
+                        <div class="sm:w-48">
+                            <label for="user-filter-status" class="sr-only">User status</label>
+                            <select
+                                id="user-filter-status"
+                                v-model="filters.statusId"
+                                class="rbim-input rbim-filter py-2"
+                                aria-label="User status"
+                            >
+                                <option value="all">All statuses</option>
+                                <option v-for="status in userStatuses" :key="status.id" :value="status.id">
+                                    {{ status.label }}
+                                </option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
