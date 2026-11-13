@@ -51,7 +51,7 @@
                     <h3 class="text-sm font-bold uppercase tracking-wide text-slate-900">
                         Barangay Overview
                     </h3>
-                    <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4" :aria-busy="loading">
+                    <div class="grid grid-cols-1 gap-x-7 gap-y-5 sm:grid-cols-2 lg:grid-cols-4" :aria-busy="loading">
                         <template v-if="loading && !tiles.length">
                             <div
                                 v-for="item in 12"
@@ -80,7 +80,7 @@
                     <h3 class="text-sm font-bold uppercase tracking-wide text-slate-900">
                         {{ section.title }}
                     </h3>
-                    <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+                    <div class="grid grid-cols-1 gap-x-7 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
                         <CategoryCard v-for="card in section.cards" :key="card.key" :card="card" />
                     </div>
                 </section>
