@@ -1,6 +1,6 @@
 <template>
     <AppLayout title="Dashboard">
-        <div class="space-y-5">
+        <div class="space-y-10">
             <header class="flex flex-wrap items-end justify-between gap-3">
                 <div class="min-w-0">
                     <h2 class="text-xl font-semibold text-slate-900">
@@ -47,7 +47,7 @@
                     Refresh failed: {{ error }} Showing the last loaded statistics.
                 </p>
 
-                <section aria-label="Barangay Overview" class="space-y-2">
+                <section aria-label="Barangay Overview" class="space-y-4">
                     <h3 class="text-sm font-bold uppercase tracking-wide text-slate-900">
                         Barangay Overview
                     </h3>
@@ -75,7 +75,7 @@
                     v-for="section in DASHBOARD_CATEGORY_SECTIONS"
                     :key="section.key"
                     :aria-label="section.title"
-                    class="space-y-2"
+                    class="space-y-4"
                 >
                     <h3 class="text-sm font-bold uppercase tracking-wide text-slate-900">
                         {{ section.title }}
